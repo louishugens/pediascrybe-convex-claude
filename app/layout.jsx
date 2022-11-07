@@ -1,14 +1,18 @@
 import './globals.css'
+import Header from './header'
 
-export default function RootLayout({ children }) {
+export default function RootLayout({children}) {
   return (
     <html lang="en">
-      {/*
-        <head /> will contain the components returned by the nearest parent
-        head.jsx. Find out more at https://beta.nextjs.org/docs/api-reference/file-conventions/head
-      */}
-      <head />
-      <body>{children}</body>
+      <head>
+        <title>Don&apos;t mind your handwriting no more | Prescrybr</title>
+        <meta name="description" content="Print and send prescription that people can read" />
+        <link rel="icon" href="/favicon.ico" />
+      </head>
+      <body className='py-2 px-4'>
+        <Header />
+        {children}
+      </body>
     </html>
   )
 }
