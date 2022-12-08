@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @unique
+  firstname String
+  lastname  String
+  email     String
+  profile   Profile  @default(doctor)
+  doctor    Doctor?  @relation(fields: [doctorId], references: [id])
+  doctorId  String?
+  patient   Patient? @relation(fields: [patientId], references: [id])
+  patientId String?
+}
+
+enum Profile {
+  admin
+  doctor
+  patient
+}
+
+model Appointment {
+  id              String    @id @unique @default(cuid())
+  startDate       DateTime
+  endDate         DateTime
+  cost            Int
+  motif           String
+  status          Status?   @default(offline)
+  transactionDate DateTime?
+  transactionId   String?
+  patientId       String?
+  doctorId        String?
+  findings        String?
+  exams           String?
+  medication      String?
+  Doctor          Doctor?   @relation(fields: [doctorId], references: [id])
+  Patient         Patient?  @relation(fields: [patientId], references: [id])
+}
+
+model Doctor {
+  id           String        @id @unique @default(cuid())
+  cost         Int?
+  duration     Int?
+  phone        String?
+  experience   Int?
+  isActive     Boolean       @default(false)
+  isCompleted  Boolean       @default(false)
+  isDoctor     Boolean       @default(false)
+  isMedPro     Boolean       @default(false)
+  spec         String?
+  summary      String?
+  title        String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @default(now())
+  availability Json?
+  Appointment  Appointment[]
+  Img          Img?
+  User         User[]
+  patients     Patient[]
+}
+
+model Img {
+  id        String  @id @unique
+  url       String
+  public_id String
+  doctorId  String? @unique
+  Doctor    Doctor? @relation(fields: [doctorId], references: [id])
+}
+
+model Patient {
+  id          String        @id @unique @default(cuid())
+  firstname   String
+  lastname    String
+  email       String
+  age         Int?
+  children    Int?
+  isCompleted Boolean       @default(false)
+  isDoctor    Boolean       @default(false)
+  phone       String?
+  profession  String?
+  religion    String?
+  sex         String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @default(now())
+  Appointment Appointment[]
+  User        User[]
+  Doctor      Doctor?       @relation(fields: [doctorId], references: [id])
+  doctorId    String?
+}
+
+enum Status {
+  pending
+  paid
+  offline
+}
