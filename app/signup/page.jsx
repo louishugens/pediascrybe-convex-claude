@@ -1,6 +1,6 @@
 'use client'
 import  {useState, CSSProperties} from 'react';
-import Doctor from '../doctor';
+import Doctor from '../../components/doctor';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import * as yup from "yup";
@@ -61,7 +61,7 @@ export default function Signup() {
 
     if(user){
       // const user = data.user
-      const {error} = await supabase.from('User')
+      const {error} = await supabase.from('Doctor')
       .insert(
         {id: user.user.id,  firstname, lastname, email, }
       )

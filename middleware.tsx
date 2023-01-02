@@ -20,7 +20,7 @@ export async function middleware(req: NextRequest) {
   // console.log('session :>> ', session);
   console.log(req.nextUrl.pathname)
 
-  if (!session && req.nextUrl.pathname.startsWith('/(app)/')) {
+  if (!session && req.nextUrl.pathname.startsWith('/user_only/')) {
     // Auth condition not met, redirect to home page.
     const redirectUrl = req.nextUrl.clone();
     redirectUrl.pathname = '/';

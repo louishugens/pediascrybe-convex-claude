@@ -7,23 +7,23 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @unique
-  firstname String
-  lastname  String
-  email     String
-  profile   Profile  @default(doctor)
-  doctor    Doctor?  @relation(fields: [doctorId], references: [id])
-  doctorId  String?
-  patient   Patient? @relation(fields: [patientId], references: [id])
-  patientId String?
-}
+// model User {
+//   id        String   @id @unique
+//   firstname String
+//   lastname  String
+//   email     String
+//   profile   Profile  @default(doctor)
+//   doctor    Doctor?  @relation(fields: [doctorId], references: [id])
+//   doctorId  String?
+//   patient   Patient? @relation(fields: [patientId], references: [id])
+//   patientId String?
+// }
 
-enum Profile {
-  admin
-  doctor
-  patient
-}
+// enum Profile {
+//   admin
+//   doctor
+//   patient
+// }
 
 model Appointment {
   id              String    @id @unique @default(cuid())
@@ -45,6 +45,9 @@ model Appointment {
 
 model Doctor {
   id           String        @id @unique @default(cuid())
+  firstname     String
+  lastname     String
+  email        String
   cost         Int?
   duration     Int?
   phone        String?
@@ -61,7 +64,7 @@ model Doctor {
   availability Json?
   Appointment  Appointment[]
   Img          Img?
-  User         User[]
+  // User         User[]
   patients     Patient[]
 }
 
@@ -89,7 +92,7 @@ model Patient {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @default(now())
   Appointment Appointment[]
-  User        User[]
+  // User        User[]
   Doctor      Doctor?       @relation(fields: [doctorId], references: [id])
   doctorId    String?
 }

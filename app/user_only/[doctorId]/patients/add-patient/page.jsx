@@ -4,6 +4,8 @@ import { useForm } from 'react-hook-form';
 import * as yup from "yup";
 import { yupResolver } from '@hookform/resolvers/yup';
 import PulseLoader from "react-spinners/PulseLoader"
+import { useRouter } from 'next/navigation';
+import useDoctor from '../../../../../utils/hooks/useDoctor';
 
 const AddPatient = () => {
   const schema = yup.object({
@@ -22,11 +24,44 @@ const AddPatient = () => {
     resolver: yupResolver(schema)
   });
 
-  const onSubmit = values => addPatient(values)
-  const addPatient = async values => {
-    const {firstname, lastname, email, age} = values
+  const doctor = useDoctor()
+  const router = useRouter()
 
+
+  const onSubmit = async (values) => {
+ 
+    try{
+      const {firstname, lastname, email, age} = values
+      const body = {firstname, lastname, email, age, id: doctor.id}
+      await fetch('/api/patients/addPatient', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+      router.refresh()
+      router.push(`/user_only/patients`)
+
+    }
+    catch(err){
+      console.log(err)
+    }
+    router.push(`/user_only/${doctor.id}/patients`)
   }
+  // const create = async values =>{
+  //   try{
+  //     const {name, price, costs} = values
+  //     const body = {name, price, companyId, costs}
+  //     await fetch('/api/create/article', {
+  //       method: 'POST',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify(body)
+  //     })
+  //     router.push(`/app/${companyId}/articles`)
+  //   }
+  //   catch(err){
+  //     console.log(err)
+  //   }
+  // }
 
 
   return (
@@ -69,7 +104,7 @@ const AddPatient = () => {
             <input
               placeholder="age of the patient"
               className="placeholder:italic bg-white shadow-md rounded-full py-2 px-4"
-              type="password"
+              type="number"
               {...register('age')}
             />
             <p className='px-4 pt-1 text-sm text-red-600'>{errors.age?.message}</p>

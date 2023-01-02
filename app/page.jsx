@@ -1,11 +1,10 @@
 'use client'
 import Link from 'next/link'
-import Doctor from './doctor'
+import Doctor from '../components/doctor'
 import { useForm } from 'react-hook-form';
 import * as yup from "yup";
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useRouter } from 'next/navigation';
-// import { supabaseClient } from '../utils/supabase';
 import supabase from '../utils/supabase';
 import Header from './header';
 
@@ -30,11 +29,11 @@ export default function Home() {
   const onSubmit = data => authenticateUser(data);
 
   const authenticateUser = async values => {
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data:{user}, error } = await supabase.auth.signInWithPassword({
       email: values.email,
       password: values.password,
     })
-    data && router.push('/user_only/dashboard')
+    user && router.push(`/user_only/${user.id}/dashboard`)
     error && console.log('error', error)
   }
 
