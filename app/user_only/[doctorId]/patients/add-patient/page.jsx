@@ -12,7 +12,7 @@ const AddPatient = () => {
     firstname: yup.string().required("Please enter patient's first name"),
     lastname: yup.string().required("Please enter patient's last name"),
     email: yup.string().email('Invalid email').required("Please enter patient's email"),
-    age: yup.number().required("Please enter patient's age"),
+    birthdate: yup.date().required("Please enter patient's birth date"),
 
   }).required();
 
@@ -31,8 +31,8 @@ const AddPatient = () => {
   const onSubmit = async (values) => {
  
     try{
-      const {firstname, lastname, email, age} = values
-      const body = {firstname, lastname, email, age, id: doctor.id}
+      const {firstname, lastname, email, birthdate} = values
+      const body = {firstname, lastname, email, birthdate, id: doctor.id}
       await fetch('/api/patients/addPatient', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -100,14 +100,14 @@ const AddPatient = () => {
             <p className='px-4 pt-1 text-sm text-red-600'>{errors.email?.message}</p>
           </label>
           <label className="flex flex-col mb-6 h-16">
-            <span className="font-medium">Age</span>
+            <span className="font-medium">Birth Date</span>
             <input
-              placeholder="age of the patient"
+              placeholder="Birth date of the patient"
               className="placeholder:italic bg-white shadow-md rounded-full py-2 px-4"
-              type="number"
-              {...register('age')}
+              type="date"
+              {...register('birthdate')}
             />
-            <p className='px-4 pt-1 text-sm text-red-600'>{errors.age?.message}</p>
+            <p className='px-4 pt-1 text-sm text-red-600'>{errors.birthdate?.message}</p>
           </label>
 
           <button className="py-2 px-4 rounded-full bg-green-500 text-lg font-semibold w-1/2 center mt-4 mx-auto" type='submit'>

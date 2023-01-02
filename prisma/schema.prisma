@@ -81,7 +81,7 @@ model Patient {
   firstname   String
   lastname    String
   email       String
-  age         Int?
+  birthdate   DateTime
   children    Int?
   isCompleted Boolean       @default(false)
   isDoctor    Boolean       @default(false)

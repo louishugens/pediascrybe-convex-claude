@@ -1,7 +1,7 @@
 import prisma from '../../../utils/prisma';
 
 module.exports = async (req, res) => {
-  const {firstname, lastname, email, age, id} = req.body
+  const {firstname, lastname, email, birthdate, id} = req.body
   console.log('body :>> ', req.body);
 
   try{
@@ -12,7 +12,7 @@ module.exports = async (req, res) => {
       data: {
         patients:{
           create:{
-            firstname, lastname, email, age
+            firstname, lastname, email, birthdate
           }
         }
       }
