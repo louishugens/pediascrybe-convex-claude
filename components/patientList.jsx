@@ -3,7 +3,7 @@ import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
 
 
-export default function PatientList({patients}) {
+export default function PatientList({patients, doctorId}) {
 
 
   return(
@@ -15,7 +15,7 @@ export default function PatientList({patients}) {
             <p className="text-sm font-light text-slate-900"><span className="font-medium"> 
               {formatDistanceToNow(new Date(patient.birthdate))}</span> hold</p>
             <div className="flex flex-row justify-between mt-4">
-              <Link href="#" className="py-2 px-4 rounded-full bg-green-500 text-sm font-light" >
+              <Link href={`/user_only/${doctorId}/patients/${patient.id}`} className="py-2 px-4 rounded-full bg-green-500 text-sm font-light" >
                 View
               </Link>
               <Link href='#' className="py-2 px-4 rounded-full bg-green-500 text-sm font-light" >

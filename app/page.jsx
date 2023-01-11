@@ -7,9 +7,15 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { useRouter } from 'next/navigation';
 import supabase from '../utils/supabase';
 import Header from './header';
+import { useState } from "react";
+import BeatLoader  from 'react-spinners/BeatLoader';
+
 
 
 export default function Home() {
+
+  let [loading, setLoading] = useState(false);
+  let [color, setColor] = useState("#ffffff");
 
   const router = useRouter()
 
@@ -29,6 +35,7 @@ export default function Home() {
   const onSubmit = data => authenticateUser(data);
 
   const authenticateUser = async values => {
+    setLoading(true)
     const { data:{user}, error } = await supabase.auth.signInWithPassword({
       email: values.email,
       password: values.password,
@@ -56,7 +63,17 @@ export default function Home() {
               <p className='px-4 pt-1 text-sm text-red-600'>{errors.password?.message}</p>
             </label>
             <button className='py-2 px-4 rounded-full bg-green-500 text-lg font-semibold w-1/2 center mt-4 mx-auto' type='submit'>
-              Log in
+              {
+                loading
+                ?
+                <BeatLoader
+                  color={color}
+                  size={10}
+                  aria-label="Loading Spinner"
+                  data-testid="loader"
+                />
+                :
+                  "Log in"}
             </button>
           </form>
         </div>

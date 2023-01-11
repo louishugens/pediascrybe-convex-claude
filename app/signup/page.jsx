@@ -6,10 +6,10 @@ import { useForm } from 'react-hook-form';
 import * as yup from "yup";
 import { yupResolver } from '@hookform/resolvers/yup';
 import PulseLoader from "react-spinners/PulseLoader"
-// import { supabaseClient } from '../../utils/supabase';
 import supabase from '../../utils/supabase';
 import { useRouter } from 'next/navigation';
 import Header from '../header';
+
 
 export default function Signup() {
 

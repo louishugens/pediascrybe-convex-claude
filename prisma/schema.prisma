@@ -84,17 +84,22 @@ model Patient {
   birthdate   DateTime
   children    Int?
   isCompleted Boolean       @default(false)
-  isDoctor    Boolean       @default(false)
   phone       String?
   profession  String?
   religion    String?
-  sex         String?
+  sex         Sex?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @default(now())
   Appointment Appointment[]
   // User        User[]
   Doctor      Doctor?       @relation(fields: [doctorId], references: [id])
   doctorId    String?
+  mothername  String?
+}
+
+enum Sex {
+  male
+  female
 }
 
 enum Status {

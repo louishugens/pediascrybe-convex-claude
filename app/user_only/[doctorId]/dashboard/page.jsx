@@ -28,7 +28,7 @@ export default async function Dashboard({ params: { doctorId } }) {
 
   const doctor = await getDoctor(doctorId)
   return (
-    <div className='pl-4'>
+    <div className=''>
       {doctor && <p className=' font-bold text-slate-900'>
         Hello <span className=' text-green-500'>
           Dr {doctor.firstname} {doctor.lastname}
