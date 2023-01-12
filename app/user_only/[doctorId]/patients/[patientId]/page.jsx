@@ -47,8 +47,11 @@ async function Patient({params: {doctorId, patientId }}) {
         </div>
         <p className="mt-4 text-slate-900 text-base font-semibold">Child Growth Charts</p>
         <div className="grid grid-cols-2 gap-4 mt-4 w-full">
-          <Chart data={gwfa} />
-          {/* <Chart data={gwfa2} /> */}
+          <Chart sex={patient.sex} type="wfa" title="Weight for Age" ylabel="Weight (in kg)" xlabel="Age (in days)" />
+          <Chart sex={patient.sex} type="wfl" title="Weight for Height" ylabel="Weight (in kg)" xlabel="Height (in cm)" />
+          <Chart sex={patient.sex} type="bfa" title="BMI for Age" ylabel="BMI (in kg/m^2)" xlabel="Age (in days)" />
+          <Chart sex={patient.sex} type="hcfa" title="Head Circumference for Age" ylabel="HC (in cm)" xlabel="Age (in days)" />
+          
         </div>
       </div>
     </>
