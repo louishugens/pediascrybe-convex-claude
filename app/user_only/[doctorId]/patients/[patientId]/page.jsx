@@ -30,8 +30,8 @@ async function Patient({params: {doctorId, patientId }}) {
 
   return (
     <>
-      <div className="flex flex-col">
-        <div className="basis-1 h-auto shadow-md rounded-lg p-4 bg-slate-50 ">
+      <div className="flex flex-col w-full items-center">
+        <div className="w-full h-auto shadow-md rounded-lg p-4 bg-slate-50 ">
           <div className="flex flex-row w-full justify-between">
             <p className=' font-bold text-slate-900'>{patient.firstname} {patient.lastname}</p>
             <Link 
@@ -45,9 +45,10 @@ async function Patient({params: {doctorId, patientId }}) {
             <p className="text-sm">Email: <span className="font-bold">{patient.email}</span></p>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4 mt-4">
+        <p className="mt-4 text-slate-900 text-base font-semibold">Child Growth Charts</p>
+        <div className="grid grid-cols-2 gap-4 mt-4 w-full">
           <Chart data={gwfa} />
-          <Chart data={gwfa2} />
+          {/* <Chart data={gwfa2} /> */}
         </div>
       </div>
     </>
