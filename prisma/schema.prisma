@@ -27,20 +27,23 @@ datasource db {
 
 model Appointment {
   id              String    @id @unique @default(cuid())
-  startDate       DateTime
-  endDate         DateTime
-  cost            Int
-  motif           String
+  startDate       DateTime  @default(now())
+  endDate         DateTime?
+  cost            Int?
+  motif           String?
   status          Status?   @default(offline)
   transactionDate DateTime?
   transactionId   String?
   patientId       String?
   doctorId        String?
-  findings        String?
+  findings         String?
   exams           String?
   medication      String?
   Doctor          Doctor?   @relation(fields: [doctorId], references: [id])
   Patient         Patient?  @relation(fields: [patientId], references: [id])
+  height          Float?
+  weight          Float?
+  head            Float?
 }
 
 model Doctor {
@@ -62,7 +65,7 @@ model Doctor {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @default(now())
   availability Json?
-  Appointment  Appointment[]
+  appointments  Appointment[]
   Img          Img?
   // User         User[]
   patients     Patient[]
@@ -90,7 +93,7 @@ model Patient {
   sex         Sex?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @default(now())
-  Appointment Appointment[]
+  appointments Appointment[]
   // User        User[]
   Doctor      Doctor?       @relation(fields: [doctorId], references: [id])
   doctorId    String?
