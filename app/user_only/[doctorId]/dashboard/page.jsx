@@ -27,6 +27,8 @@ async function getDoctor(doctorId){
 export default async function Dashboard({ params: { doctorId } }) {
 
   const doctor = await getDoctor(doctorId)
+  const patients = doctor.patients
+
   return (
     <div className=''>
       {doctor && <p className=' font-bold text-slate-900'>
@@ -34,7 +36,7 @@ export default async function Dashboard({ params: { doctorId } }) {
           Dr {doctor.firstname} {doctor.lastname}
         </span>
       </p>}
-      <Stats patients={doctor.patients} />
+      <Stats patients={patients} />
       
     </div>
   );
