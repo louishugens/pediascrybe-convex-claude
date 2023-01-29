@@ -19,7 +19,7 @@ async function getDoctor(doctorId){
   })
   return doctor
 }
-
+export const dynamic = 'force-dynamic';
 // export const dynamic = 'force-dynamic',
 //   revalidate = 0;
 
@@ -27,7 +27,7 @@ async function getDoctor(doctorId){
 export default async function Dashboard({ params: { doctorId } }) {
 
   const doctor = await getDoctor(doctorId)
-  const patients = doctor.patients
+  const patients = doctor.patients || []
 
   return (
     <div className=''>

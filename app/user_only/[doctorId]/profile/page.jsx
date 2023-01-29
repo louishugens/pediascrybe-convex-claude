@@ -13,6 +13,8 @@ async function getDoctor(doctorId){
   return doctor
 }
 
+export const dynamic = 'force-dynamic';
+
 const ProfilePage = async ({params: {doctorId}}) => {
   const doctor = await getDoctor(doctorId)
   return (

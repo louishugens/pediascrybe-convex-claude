@@ -19,6 +19,8 @@ import PlaygroundTheme from "../../../../../../components/playgroundTheme";
 import prepopulatedText from "../../../../../../components/sampleText";
 
 
+export const dynamic = 'force-dynamic';
+
 
 const AddAppointment = ({params: {doctorId, patientId}}) => {
   const schema = yup.object({

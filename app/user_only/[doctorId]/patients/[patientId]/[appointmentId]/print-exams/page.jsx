@@ -28,6 +28,8 @@ async function getDoctor(doctorId) {
   return doctor
 }
 
+export const dynamic = 'force-dynamic';
+
 const PrintPage = async ({params: {doctorId, patientId, appointmentId}}) => {
   let appointment = await getAppointment(appointmentId)
   const patient = await getPatient(patientId)

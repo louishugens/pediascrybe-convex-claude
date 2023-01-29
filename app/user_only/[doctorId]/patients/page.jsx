@@ -22,6 +22,8 @@ async function getDoctor(doctorId){
   return doctor
 }
 
+export const dynamic = 'force-dynamic';
+
 
 export default async function Patients({ params: { doctorId }}) {
 

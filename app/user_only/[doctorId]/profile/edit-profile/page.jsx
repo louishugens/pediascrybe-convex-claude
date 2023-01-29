@@ -9,6 +9,9 @@ async function getDoctor(doctorId){
   })
   return doctor
 }
+
+export const dynamic = 'force-dynamic';
+
 const EditProfile = async ({params: {doctorId}}) => {
   const doctor = await getDoctor(doctorId)
 

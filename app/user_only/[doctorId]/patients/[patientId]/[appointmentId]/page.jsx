@@ -11,6 +11,7 @@ async function getAppointment(appointmentId){
   })
   return appointment
 }
+export const dynamic = 'force-dynamic';
 const AppointmentPage = async ({params: {doctorId, patientId, appointmentId}}) => {
   const appointment = await getAppointment(appointmentId)
   return (
@@ -52,7 +53,7 @@ const AppointmentPage = async ({params: {doctorId, patientId, appointmentId}}) =
               {/* <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointmentId}/add-exams`} className='self-end mt-2 shadow bg-blue-500 rounded-full py-2 px-4 text-white '>
                 Add
               </Link> */}
-              <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointmentId}/print-exams`} className='self-end mt-2 shadow bg-slate-200 rounded-full py-2 px-4 text-blue-500'>
+              <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointmentId}/print-exams`} className='self-end mt-2 shadow text-slate-200 rounded-full py-2 px-4 bg-blue-500'>
                 Print
               </Link>
             </div>

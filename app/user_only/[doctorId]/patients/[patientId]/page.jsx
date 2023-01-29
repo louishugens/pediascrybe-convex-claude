@@ -25,6 +25,8 @@ async function getPatient(patientId){
   return patient
 }
 
+export const dynamic = 'force-dynamic';
+
 async function Patient({params: {doctorId, patientId }}) {
   const patient = await getPatient(patientId)
 

@@ -32,6 +32,8 @@ const editorConfig = {
 //   return appointment
 // }
 
+export const dynamic = 'force-dynamic';
+
 const AddExamsPage =  ({params: {doctorId, patientId, appointmentId}}) => {
   // const appointment = await getAppointment(appointmentId)
   return (
