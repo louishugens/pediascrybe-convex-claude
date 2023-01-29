@@ -35,7 +35,7 @@ const PrintPage = async ({params: {doctorId, patientId, appointmentId}}) => {
   // appointment.startDate = JSON.parse(JSON.stringify(appointment.startDate))
   return (
     <>
-      <Print appointment={appointment} patient={patient} doctor={doctor} data-superjson />
+      <Print appointment={appointment} patient={patient} doctor={doctor} exams={false} data-superjson />
     </>
   );
 };

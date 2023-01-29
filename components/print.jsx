@@ -6,10 +6,12 @@ import { format } from 'date-fns'
 import { useReactToPrint } from 'react-to-print';
 
 
-const Print = ({appointment, doctor, patient}) => {
+const Print = ({appointment, doctor, patient, exams}) => {
+  const string = exams ? "Tests" : "Prescriptions"
   const componentRef = useRef();
   const handlePrint = useReactToPrint({
     content: () => componentRef.current,
+    documentTitle: `${string}_${patient.firstname}_${patient.lastname}_${format(appointment.startDate, 'yyy-MM-dd')}`
   });
 
   console.log('appointment', appointment)
@@ -21,7 +23,7 @@ ref={componentRef}>
         <div className="flex flex-col items-center py-2">
             <h3 className=' text-2xl font-bold'><span className=' font-light'>Dr </span>{`${doctor.firstname} ${doctor.lastname}`}</h3>
             <h4 className=' text-xl font-light italic'>{doctor.spec}</h4>
-            <p className='text-lg font-semibold'>Laboratory Tests</p>
+            <p className='text-lg font-semibold'>{exams ? "Laboratory Tests" : "Medical Prescription"}</p>
         </div>
         <div className="py-4 grow">
           <div className="flex flex-col h-full ">
@@ -31,7 +33,7 @@ ref={componentRef}>
             </div>
             <div className="my-auto">
             {/* <p className="grow">Tests:</p> */}
-            <p className="grow">{appointment.exams}</p>
+            <p className="grow">{exams ? appointment.exams : appointment.medication}</p>
             </div>
           </div>
         </div>

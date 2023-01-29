@@ -40,7 +40,7 @@ const AppointmentPage = async ({params: {doctorId, patientId, appointmentId}}) =
             <p className="font-bold">Prescription</p>
             <p className="w-full h-40 bg-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.medication}</p>
             <div className="mt-1 flex flex-row-reverse">
-              <Link href="#" className='self-end mt-2 shadow bg-blue-500 rounded-full py-2 px-4 text-white'>
+              <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointmentId}/print-prescription`} className='self-end mt-2 shadow bg-blue-500 rounded-full py-2 px-4 text-white'>
                 Print
               </Link>
             </div>
@@ -52,7 +52,7 @@ const AppointmentPage = async ({params: {doctorId, patientId, appointmentId}}) =
               {/* <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointmentId}/add-exams`} className='self-end mt-2 shadow bg-blue-500 rounded-full py-2 px-4 text-white '>
                 Add
               </Link> */}
-              <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointmentId}/print`} className='self-end mt-2 shadow bg-slate-200 rounded-full py-2 px-4 text-blue-500'>
+              <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointmentId}/print-exams`} className='self-end mt-2 shadow bg-slate-200 rounded-full py-2 px-4 text-blue-500'>
                 Print
               </Link>
             </div>
