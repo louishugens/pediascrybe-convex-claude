@@ -5,9 +5,20 @@ import * as yup from "yup";
 import { yupResolver } from '@hookform/resolvers/yup';
 import PulseLoader from "react-spinners/PulseLoader"
 import { useRouter } from 'next/navigation';
-// import useDoctor from '../../../../../utils/hooks/useDoctor';
 import { useState } from "react";
 import BeatLoader  from 'react-spinners/BeatLoader';
+import { LexicalComposer } from "@lexical/react/LexicalComposer";
+import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
+import { ContentEditable } from "@lexical/react/LexicalContentEditable";
+import { ListPlugin } from "@lexical/react/LexicalListPlugin";
+// import { CheckListPlugin } from "@lexical/react/LexicalCheckListPlugin";
+import { ListItemNode, ListNode } from "@lexical/list";
+import OnChangePlugin from '@lexical/react/LexicalOnChangePlugin'
+import ToolbarPlugin from "../../../../../../components/listToolBar";
+import PlaygroundTheme from "../../../../../../components/playgroundTheme";
+import prepopulatedText from "../../../../../../components/sampleText";
+
+
 
 const AddAppointment = ({params: {doctorId, patientId}}) => {
   const schema = yup.object({
@@ -41,19 +52,21 @@ const AddAppointment = ({params: {doctorId, patientId}}) => {
     try{
       const {height, weight, head, motif, findings, exams, medication} = values
       const body = {height, weight, head, motif, findings, exams, medication, patientId, doctorId}
-      await fetch('/api/patients/addAppointment', {
+      const response = await fetch('/api/patients/addAppointment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       })
+      const appointment = await response.json()
+
       router.refresh()
-      router.push(`/user_only/${doctorId}/patients/${patientId}`)
+      router.push(`/user_only/${doctorId}/patients/${patientId}/${appointment.id}`)
 
     }
     catch(err){
       console.log(err)
     }
-    router.push(`/user_only/${doctorId}/patients/${patientId}`)
+    // router.push(`/user_only/${doctorId}/patients/${patientId}/${appointment.id}`)
   }
   // const create = async values =>{
   //   try{
@@ -178,3 +191,5 @@ const AddAppointment = ({params: {doctorId, patientId}}) => {
 }
 
 export default AddAppointment
+
+

@@ -4,12 +4,12 @@ import { format } from 'date-fns'
 import Link from 'next/link'
 
 async function getAppointment(appointmentId){
-  const apppointment = await prisma.appointment.findUnique({
+  const appointment = await prisma.appointment.findUnique({
     where:{
       id:appointmentId
     },
   })
-  return apppointment
+  return appointment
 }
 const AppointmentPage = async ({params: {doctorId, patientId, appointmentId}}) => {
   const appointment = await getAppointment(appointmentId)
@@ -17,12 +17,11 @@ const AppointmentPage = async ({params: {doctorId, patientId, appointmentId}}) =
     <div className='pt-4'>
       <div className="w-full h-auto shadow-md rounded-lg p-4 bg-slate-50 text-sm text-slate-900 ">
         <div className="flex flex-row justify-between">
-          <p className=''>Appointment of <span className='font-bold '>{format(appointment.startDate, 'yyy-MM-dd hh:mm:ss')}</span></p>
-          <Link href={`/user_only/${doctorId}/patients/${patientId}`} className="px-4 py-2 rounded-full bg-slate-200 text-slate-900">
+          <p className='text-blue-500'>Appointment of <span className='font-bold '>{format(appointment.startDate, 'yyy-MM-dd hh:mm:ss')}</span></p>
+          <Link href={`/user_only/${doctorId}/patients/${patientId}`} className="px-4 py-2 rounded-full bg-slate-200 text-blue-500">
             Leave
           </Link>
         </div>
-        
         <div className="grid gap-x-8 gap-y-4 grid-cols-3 mt-4">
           <p>Height: <span className='font-bold'>{appointment.height} cm</span></p>
           <p>Weight: <span className='font-bold'>{appointment.weight} kg</span></p>
@@ -49,8 +48,11 @@ const AppointmentPage = async ({params: {doctorId, patientId, appointmentId}}) =
           <div className="flex flex-col">
             <p className="font-bold">Lab exams</p>
             <p className="w-full h-40 bg-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.exams}</p>
-            <div className="mt-1 flex flex-row-reverse">
-              <Link href="#" className='self-end mt-2 shadow bg-blue-500 rounded-full py-2 px-4 text-white'>
+            <div className="mt-1 flex flex-row-reverse justify-between">
+              {/* <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointmentId}/add-exams`} className='self-end mt-2 shadow bg-blue-500 rounded-full py-2 px-4 text-white '>
+                Add
+              </Link> */}
+              <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointmentId}/print`} className='self-end mt-2 shadow bg-slate-200 rounded-full py-2 px-4 text-blue-500'>
                 Print
               </Link>
             </div>

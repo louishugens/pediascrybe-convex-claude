@@ -8,6 +8,9 @@ async function getAppointments(patientId){
     where:{
       patientId: patientId
     },
+    orderBy:{
+      startDate: 'desc'
+    },
     // include: {
     //   patients:{
     //     orderBy:{

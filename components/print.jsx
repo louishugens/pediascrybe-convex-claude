@@ -1,0 +1,58 @@
+'use client'
+import { EnvelopeIcon, PhoneIcon } from '@heroicons/react/24/solid'
+import {useRef} from 'react'
+// import { useReactToPrint } from 'react-to-print'
+import { format } from 'date-fns'
+import { useReactToPrint } from 'react-to-print';
+
+
+const Print = ({appointment, doctor, patient}) => {
+  const componentRef = useRef();
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+  });
+
+  console.log('appointment', appointment)
+
+  return (
+    <div className='pt-4 h-screen shadow-md rounded-lg'>
+      <div className="w-full h-screen  p-4 flex flex-col divide-y divide-slate-900" 
+ref={componentRef}>
+        <div className="flex flex-col items-center py-2">
+            <h3 className=' text-2xl font-bold'><span className=' font-light'>Dr </span>{`${doctor.firstname} ${doctor.lastname}`}</h3>
+            <h4 className=' text-xl font-light italic'>{doctor.spec}</h4>
+            <p className='text-lg font-semibold'>Laboratory Tests</p>
+        </div>
+        <div className="py-4 grow">
+          <div className="flex flex-col h-full ">
+            <div className="flex flex-row justify-between">
+            <p className="font-bold"><span className='font-light'>Patient: </span>{`${patient.firstname} ${patient.lastname}`}</p>
+              <p className="font-semibold"><span className='font-light'>Date: </span>{format(appointment.startDate, 'yyy-MM-dd')}</p>
+            </div>
+            <div className="my-auto">
+            {/* <p className="grow">Tests:</p> */}
+            <p className="grow">{appointment.exams}</p>
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col items-center py-2">
+          <p className="font-light text-sm flex flex-row">
+            <PhoneIcon className="h-3 w-3 mt-1"/>
+            <span>
+            : {doctor.phone}, &nbsp; 
+            </span>
+            <EnvelopeIcon className="h-3 w-3 mt-1"/>
+            <span>
+            : {doctor.email}
+            </span>
+          </p>
+        </div>
+      </div>
+      <button onClick={handlePrint} className="mb-2 shadow bg-blue-500 rounded-full py-2 px-4 text-white">Print this out!</button>
+    </div> 
+  )
+}
+
+export default Print
+
+

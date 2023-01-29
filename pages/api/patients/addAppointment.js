@@ -5,21 +5,19 @@ module.exports = async (req, res) => {
   console.log('body :>> ', req.body);
 
   try{
-    await prisma.patient.update({
-      where:{
-        id: patientId
-      },
+    const appointment = await prisma.appointment.create({
+      // where:{
+      //   id: patientId
+      // },
       data: {
-        appointments:{
-          create:{
-            height, weight, head, motif, findings, exams, medication, doctorId
-          }
-        }
+        // appointments:{
+        //   create:{
+            height, weight, head, motif, findings, exams, medication, doctorId, patientId
+        //   }
+        // }
       }
     })
-    res.json({
-      message: 'Appointment créé avec succès'
-    })
+    res.status(200).json(appointment)
   }
   catch(e){
     console.log('error :>> ', e);

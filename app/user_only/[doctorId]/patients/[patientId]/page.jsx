@@ -52,8 +52,8 @@ async function Patient({params: {doctorId, patientId }}) {
         <div className="flex flex-row w-full justify-between pt-4">
           <p className=' font-bold text-white'><span className=' text-green-500'>Appointment list</span></p>
           <Link 
-          className='self-end px-4 py-2 bg-blue-500 text-white rounded-full text-sm' 
-          href={`/user_only/${doctorId}/patients/${patientId}/add-appointment`}>Add Appointent</Link>
+          className='self-end px-4 py-2 bg-blue-500 text-slate-100 rounded-full text-sm shadow' 
+          href={`/user_only/${doctorId}/patients/${patientId}/add-appointment`}>Add Appointment</Link>
         </div>
         <Appointments doctorId={doctorId} patientId={patientId} />
 
