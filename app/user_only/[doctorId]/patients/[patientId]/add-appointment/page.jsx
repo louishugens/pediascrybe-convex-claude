@@ -93,7 +93,7 @@ const AddAppointment = ({params: {doctorId, patientId}}) => {
         <p className='text-1xl text-green-500 font-bold'>
           New Appointment
         </p>
-        <form className="flex flex-col mt-4 w-full" onSubmit={handleSubmit(onSubmit)}>
+        <form className="flex flex-col mt-4 w-full text-sm" onSubmit={handleSubmit(onSubmit)}>
           <div className="grid gap-x-8 gap-y-4 grid-cols-3">
             <label className="flex flex-col mb-4 h-16">
               <span className="font-medium">Height (in cm)</span>

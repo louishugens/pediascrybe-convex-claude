@@ -90,7 +90,7 @@ export default function Signup() {
           <h2 className="text-3xl text-slate-900 font-bold">
             Sign <span className="text-green-500">Up</span>
           </h2>
-          <p className="text-slate-900 text-base">
+          <p className="text-slate-900 text-sm">
             Already have an account?{' '}
             <Link href="/" className="text-green-500 font-semibold">
               Log in
@@ -110,12 +110,12 @@ export default function Signup() {
                 />
               </div>
             :
-            <form className="flex flex-col mt-3" onSubmit={handleSubmit(onSubmit)}>
+            <form className="flex flex-col mt-3 text-sm" onSubmit={handleSubmit(onSubmit)}>
               <label className="flex flex-col mb-4 h-16">
                 <span className="font-medium">First name</span>
                 <input
                   placeholder="John"
-                  className="placeholder:italic bg-white shadow-md rounded-full py-2 px-4"
+                  className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4"
                   type="text"
                   {...register('firstname')}
                 />
@@ -125,7 +125,7 @@ export default function Signup() {
                 <span className="font-medium">Last name</span>
                 <input
                   placeholder="Doe"
-                  className="placeholder:italic bg-white shadow-md rounded-full py-2 px-4"
+                  className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4"
                   type="text"
                   {...register('lastname')}
                 />
@@ -135,7 +135,7 @@ export default function Signup() {
                 <span className="font-medium">Email</span>
                 <input
                   placeholder="johndoe@example.com"
-                  className="placeholder:italic bg-white shadow-md rounded-full py-2 px-4"
+                  className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4"
                   type="email"
                   {...register('email')}
                 />
@@ -145,7 +145,7 @@ export default function Signup() {
                 <span className="font-medium">Password</span>
                 <input
                   placeholder="your password"
-                  className="placeholder:italic bg-white shadow-md rounded-full py-2 px-4"
+                  className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4"
                   type="password"
                   {...register('password')}
                 />

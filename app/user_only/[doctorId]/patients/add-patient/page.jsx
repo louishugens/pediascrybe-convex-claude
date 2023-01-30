@@ -77,7 +77,7 @@ const AddPatient = () => {
     <div className=''>
       <div className="flex flex-col w-full items-center">
         <p className=' text-2xl text-green-500 font-bold'>Add Patient</p>
-        <form className="flex flex-col mt-8 w-2/3" onSubmit={handleSubmit(onSubmit)}>
+        <form className="flex flex-col mt-8 w-2/3 text-sm" onSubmit={handleSubmit(onSubmit)}>
           <div className="grid gap-x-8 gap-y-4 grid-cols-2 mt-4">
             <label className="flex flex-col mb-4 h-16">
               <span className="font-medium">First name</span>
