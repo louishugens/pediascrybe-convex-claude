@@ -31,15 +31,15 @@ const AppointmentPage = async ({params: {doctorId, patientId, appointmentId}}) =
         <div className="grid gap-x-8 gap-y-4 grid-cols-2 mt-4">
           <div className="flex flex-col">
             <p className="font-bold">Symptoms</p>
-            <p className="w-full h-40 bg-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.motif}</p>
+            <p className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.motif}</p>
           </div>
           <div className="flex flex-col">
             <p className="font-bold">Diagnostic</p>
-            <p className="w-full h-40 bg-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.findings}</p>
+            <p className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.findings}</p>
           </div>
           <div className="flex flex-col">
             <p className="font-bold">Prescription</p>
-            <p className="w-full h-40 bg-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.medication}</p>
+            <p className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.medication}</p>
             <div className="mt-1 flex flex-row-reverse">
               <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointmentId}/print-prescription`} className='self-end mt-2 shadow bg-blue-500 rounded-full py-2 px-4 text-white'>
                 Print
@@ -48,7 +48,7 @@ const AppointmentPage = async ({params: {doctorId, patientId, appointmentId}}) =
           </div>
           <div className="flex flex-col">
             <p className="font-bold">Lab exams</p>
-            <p className="w-full h-40 bg-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.exams}</p>
+            <p className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.exams}</p>
             <div className="mt-1 flex flex-row-reverse justify-between">
               {/* <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointmentId}/add-exams`} className='self-end mt-2 shadow bg-blue-500 rounded-full py-2 px-4 text-white '>
                 Add

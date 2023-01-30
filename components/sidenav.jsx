@@ -5,6 +5,7 @@ import React from 'react'
 import supabase from '../utils/supabase';
 import { useRouter } from 'next/navigation';
 import useDoctor from '../utils/hooks/useDoctor';
+import { ArrowRightOnRectangleIcon, ListBulletIcon, PencilIcon, UserGroupIcon, UserPlusIcon } from '@heroicons/react/24/outline';
 
 const Sidenav = ({doctorId}) => {
 
@@ -16,25 +17,34 @@ const Sidenav = ({doctorId}) => {
   // const doctor = useDoctor()
 
   return (
-   <div className='rounded-2xl h-full w-36 bg-green-500 shadow-lg sticky'>
-      <div className="h-36 w-full bg-black/10 rounded-t-2xl pt-4">
+   <div className='h-full w-64  bg-green-50 shadow sticky px-8'>
+      <div className="pt-4">
         <Link href={`/user_only/${doctorId}/dashboard`}>
-          <div className="bg-white block rounded-full relative h-28  w-28 mx-auto">
-            <p className=' absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-6xl font-bold  text-green-500 italic'>P</p>
-          </div>
+          <p className='text-xl font-bold  text-green-500 italic'>Pediascrybe</p>
         </Link>
       </div>
-      <ul className='pt-4 text-sm'>
-        <li className='pl-4 pb-1 text-white'>
+      <ul className='pt-16 text-sm text-slate-900'>
+        <li className=' pb-2  flex flex-row'>
+          <UserGroupIcon className=' h-5 w-5 mr-4' />
           <Link href={`/user_only/${doctorId}/patients`}>Patients</Link>
         </li>
-        <li className='pl-4 pb-1 text-white'>
-          <Link href={`/user_only/${doctorId}/appointments`}>Appointments</Link>
+        <li className=' pb-2  flex flex-row'>
+          <UserPlusIcon className=' h-5 w-5 mr-4' />
+          <Link href={`/user_only/${doctorId}/patients/add-patient`}>Add Patient</Link>
         </li>
-        <li className='pl-4 pb-1 text-white'>
+        {/* <li className=' pb-2 '>
+          <Link href={`/user_only/${doctorId}/appointments`}>Appointments</Link>
+        </li> */}
+        <li className=' pb-2  flex flex-row'>
+          <ListBulletIcon className=' h-5 w-5 mr-4'/>
           <Link href={`/user_only/${doctorId}/profile`}>Profile</Link>
         </li>
-        <li className='pl-4 pb-1 text-white'>
+        <li className=' pb-2  flex flex-row'>
+          <PencilIcon className=' h-5 w-5 mr-4' />
+          <Link href={`/user_only/${doctorId}/profile/edit-profile`}>Edit Profile</Link>
+        </li>
+        <li className=' pb-2  flex flex-row'>
+          <ArrowRightOnRectangleIcon className=' h-5 w-5 mr-4' />
           <button onClick={handleLogout}>Sign out</button>
         </li>
       </ul>

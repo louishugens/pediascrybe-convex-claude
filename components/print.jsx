@@ -52,8 +52,8 @@ ref={componentRef}>
         </div>
       </div>
       <div className="flex flex-row justify-between pb-2">
-        <button onClick={handlePrint} className="shadow bg-blue-500 rounded-full py-2 px-4 text-white">Print this out!</button>
-        <Link href={`/user_only/${doctor.id}/patients/${patient.id}/${appointment.id}`} className="px-4 py-2 rounded-full bg-slate-200 text-blue-500">
+        <button onClick={handlePrint} className="shadow bg-blue-500 rounded-full py-2 px-4 text-white text-sm">Print this out!</button>
+        <Link href={`/user_only/${doctor.id}/patients/${patient.id}/${appointment.id}`} className="px-4 py-2 rounded-full bg-slate-200 text-blue-500 text-sm">
           Leave
         </Link>
       </div>
