@@ -14,7 +14,11 @@ async function getDoctor(doctorId){
       id:doctorId
     },
     include:{
-      patients: true,
+      patients: {
+        include:{
+          appointments: true,
+        },
+      },
     },
   })
   return doctor
@@ -27,7 +31,7 @@ export const dynamic = 'force-dynamic';
 export default async function Dashboard({ params: { doctorId } }) {
 
   const doctor = await getDoctor(doctorId)
-  const patients = doctor.patients || []
+  const patients = doctor.patients
 
   return (
     <div className=''>
