@@ -17,7 +17,6 @@ const Sidenav = ({doctorId, patientId}) => {
     !error && router.push('/')
   }
 
-  console.log('pathname :>> ', pathname);
 
   return (
    <div className='h-full w-64  bg-green-50 shadow sticky px-8'>
@@ -27,7 +26,7 @@ const Sidenav = ({doctorId, patientId}) => {
         </Link>
       </div>
       <ul className='pt-16 text-sm text-slate-900'>
-        <li className={(pathname === (`/user_only/${doctorId}/patients`) || pathname.includes(`/user_only/${doctorId}/patients/${patientId}`)) ? 'font-bold pb-2  flex flex-row': 'pb-2  flex flex-row'}>
+        <li className={pathname === (`/user_only/${doctorId}/patients`) ? 'font-bold pb-2  flex flex-row': 'pb-2  flex flex-row'}>
           <UserGroupIcon className=' h-5 w-5 mr-4' />
           <Link href={`/user_only/${doctorId}/patients`}>Patients</Link>
         </li>

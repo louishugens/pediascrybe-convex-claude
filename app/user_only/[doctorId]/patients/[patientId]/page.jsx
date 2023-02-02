@@ -51,12 +51,14 @@ async function Patient({params: {doctorId, patientId }}) {
           </div>
         </div> */}
           {/* <Charts sex={patient.sex} /> */}
+          <Link href={`/user_only/${doctorId}/patients/${patientId}/charts`} className="mt-4 text-sm bg-blue-500 text-slate-900 rounded-full px-4 py-2 self-start">Growth Charts</Link>
         <div className="flex flex-row w-full justify-between pt-4">
           <p className=' font-bold text-white'><span className=' text-green-500'>Appointment list</span></p>
           <Link 
           className='self-end px-4 py-2 bg-blue-500 text-slate-100 rounded-full text-sm shadow' 
           href={`/user_only/${doctorId}/patients/${patientId}/add-appointment`}>Add Appointment</Link>
         </div>
+        
         <Appointments doctorId={doctorId} patientId={patientId} />
 
       </div>

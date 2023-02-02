@@ -1,8 +1,8 @@
 'use client'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer, Tooltip } from "recharts";
 import * as CONST from '../utils/constants'
 
-function Chart({sex, type, title, ylabel, xlabel}) {
+function Chart({sex, type, title, ylabel, xlabel, formatted, name}) {
   let data
   if (sex == 'male') {
     switch (type) {
@@ -40,27 +40,26 @@ function Chart({sex, type, title, ylabel, xlabel}) {
         break;
     }
   }
-  
+ 
   return (
-    <div className="h-auto w-full shadow-md rounded-lg p-4 bg-slate-50 ">
+    <div className="h-[32rem] w-full shadow-md rounded-lg p-8 bg-slate-50 ">
       <div className="flex flex-col justify-center w-full items-center">
         <p className="text-slate-900 text-sm ">{title}</p>
-
       </div>
-      <LineChart width={500} height={300}>
-        <XAxis dataKey="category" type="category" allowDuplicatedCategory={false} label={{value: xlabel, position: "insideBottom", offset: -5}} tick={{fontSize: 12}} />
-        <YAxis dataKey="value" label={{ value: ylabel, angle: -90, position: 'insideLeft'}} tick={{fontSize: 12}} />
-        {/* <CartesianGrid strokeDasharray="3 3" /> */}
-        <Legend verticalAlign="bottom" height={16}/>
-        {/* <Tooltip /> */}
-        {/* {data.map((s) => ( */}
-          <Line dot={false} dataKey="value" data={data[0].data} name={data[0].name} key={data[0].name} stroke="#005fff99" strokeWidth={1} />
-          <Line dot={false} dataKey="value" data={data[1].data} name={data[1].name} key={data[1].name} stroke="#00537f99" strokeWidth={1} />
-          <Line dot={false} dataKey="value" data={data[2].data} name={data[2].name} key={data[2].name} stroke="#da5f3399" strokeWidth={1} />
-          <Line dot={false} dataKey="value" data={data[3].data} name={data[3].name} key={data[3].name} stroke="#00534499" strokeWidth={1} />
-          <Line dot={false} dataKey="value" data={data[4].data} name={data[4].name} key={data[4].name} stroke="#0f50cf99" strokeWidth={1} />
-        {/* ))} */}
-      </LineChart>
+      <ResponsiveContainer>
+        <LineChart width={900} height={600}>
+          <XAxis dataKey="category" type="category" allowDuplicatedCategory={false} label={{value: xlabel, position: "insideBottom", offset: -5}} tick={{fontSize: 12}} />
+          <YAxis dataKey="value" label={{ value: ylabel, angle: -90, position: 'insideLeft'}} tick={{fontSize: 12}} />
+          <Legend verticalAlign="bottom" height={16}/>
+          <Tooltip />
+          <Line dot={false} dataKey="value" data={data[0].data} name={data[0].name} key={data[0].name} stroke="#ff50ff" strokeWidth={1} />
+          <Line dot={false} dataKey="value" data={data[1].data} name={data[1].name} key={data[1].name} stroke="#00537f" strokeWidth={1} />
+          <Line dot={false} dataKey="value" data={data[2].data} name={data[2].name} key={data[2].name} stroke="#da5f33" strokeWidth={1} />
+          <Line dot={false} dataKey="value" data={data[3].data} name={data[3].name} key={data[3].name} stroke="#005344" strokeWidth={1} />
+          <Line dot={false} dataKey="value" data={data[4].data} name={data[4].name} key={data[4].name} stroke="#0ff0cf" strokeWidth={1} />
+          <Line dot={false} dataKey="value" data={formatted} name={name} key={name} stroke="#0000ff" strokeWidth={2} />
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   )
 }
