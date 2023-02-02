@@ -26,7 +26,7 @@ const Charts = async ({params: {patientId}}) => {
   appointments.map(appointment =>{
     if(appointment.height){
       
-      let app = {category: appointment.height.toPrecision(3), value: appointment.weight}
+      let app = {category: Number.parseFloat(appointment.height.toFixed(1)), value: appointment.weight}
       formatted.push(app)
     }  
   })
