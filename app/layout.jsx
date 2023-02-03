@@ -1,6 +1,6 @@
 import { Montserrat } from '@next/font/google'
 import  '../css/globals.css'
-
+import { AnalyticsWrapper } from '../components/analytics';
 
 // const montserrat = Montserrat({
 //   subsets: ['latin'],
@@ -20,6 +20,7 @@ export default function RootLayout({children}) {
         <head />
         <body >          
           {children}
+          <AnalyticsWrapper />
         </body>
     </html>
   )
