@@ -83,7 +83,7 @@ model Patient {
   id          String        @id @unique @default(cuid())
   firstname   String
   lastname    String
-  email       String
+  email       String?
   birthdate   DateTime
   children    Int?
   isCompleted Boolean       @default(false)
