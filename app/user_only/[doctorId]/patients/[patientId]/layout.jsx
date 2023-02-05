@@ -30,7 +30,7 @@ const Layout = async ({children, params: {doctorId, patientId }}) => {
             <p className=' font-bold text-slate-900'>{patient.firstname} {patient.lastname}</p>
             <Link 
             className='self-end px-4 py-2 bg-blue-500 text-white rounded-full text-sm' 
-            href={`/user_only/${doctorId}/patients/add-patient`}>Edit Patient</Link>
+            href={`/user_only/${doctorId}/patients/${patientId}/edit-patient`}>Edit Patient</Link>
           </div>
           <div className="grid grid-cols-3 gap-4 mt-4">
             <p className="text-sm">Birth date: <span className="font-bold">{format(new Date(patient.birthdate), 'dd-MM-yyyy')}</span></p>

@@ -3,13 +3,12 @@ import Link from 'next/link'
 import { useForm } from 'react-hook-form';
 import * as yup from "yup";
 import { yupResolver } from '@hookform/resolvers/yup';
-import PulseLoader from "react-spinners/PulseLoader"
 import { useRouter } from 'next/navigation';
-import useDoctor from '../../../../../utils/hooks/useDoctor';
 import { useState } from "react";
 import BeatLoader  from 'react-spinners/BeatLoader';
+import { format } from 'date-fns';
 
-const AddPatient = () => {
+const EditPatient = ({patient, doctorId}) => {
   const schema = yup.object({
     firstname: yup.string().required("Please enter patient's first name"),
     lastname:  yup.string().required("Please enter patient's last name"),
@@ -29,10 +28,22 @@ const AddPatient = () => {
     handleSubmit,
     formState: { errors },
   } = useForm({
+    defaultValues:{
+      firstname: patient.firstname || null,
+      lastname: patient.lastname || null,
+      email: patient.email || null,
+      phone: patient.phone || null,
+      // birthdate: format(new Date(patient.birthdate), 'MM-dd-yyyy') || null,
+      birthdate: new Date(patient.birthdate).toISOString().substr(0, 10) || null,
+      mothername: patient.mothername || null,
+      sex: patient.sex || null,
+      religion: patient.religion || null,
+    },
     resolver: yupResolver(schema)
   });
 
-  const doctor = useDoctor()
+  console.log(patient)
+
   const router = useRouter()
 
 
@@ -41,28 +52,28 @@ const AddPatient = () => {
  
     try{
       const {firstname, lastname, email, birthdate, mothername, sex, religion, phone} = values
-      const body = {firstname, lastname, email, birthdate, mothername, sex, religion, phone, id: doctor.id}
-      await fetch('/api/patients/addPatient', {
+      const body = {firstname, lastname, email, birthdate, mothername, sex, religion, phone, id: patient.id}
+      await fetch('/api/patients/updatePatient', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       })
       router.refresh()
-      router.push(`/user_only/patients`)
+      router.push(`/user_only/${doctorId}/patients/${patient.id}`)
 
     }
     catch(err){
       console.log(err)
     }
-    router.push(`/user_only/${doctor.id}/patients`)
+    router.push(`/user_only/${doctorId}/patients/${patient.id}`)
   }
 
 
 
   return (
-    <div className=''>
+    <div className='pt-4'>
       <div className="flex flex-col w-full items-center">
-        <p className=' text-2xl text-green-500 font-bold'>Add Patient</p>
+        <p className=' text-2xl text-green-500 font-bold'>Edit Patient</p>
         <form className="flex flex-col mt-8 w-2/3 text-sm" onSubmit={handleSubmit(onSubmit)}>
           <div className="grid gap-x-8 gap-y-4 grid-cols-2 mt-4">
             <label className="flex flex-col mb-4 h-16">
@@ -161,7 +172,7 @@ const AddPatient = () => {
                   data-testid="loader"
                 />
                 :
-                  "Add Patient"
+                  "Edit Patient"
             }
           </button>
         </form>
@@ -170,4 +181,4 @@ const AddPatient = () => {
   )
 }
 
-export default AddPatient
+export default EditPatient
