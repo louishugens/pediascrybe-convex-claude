@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { EyeIcon, PencilIcon, TrashIcon} from '@heroicons/react/24/outline'
 import { format } from "date-fns"
 import {useRouter} from 'next/navigation'
-import { BeatLoader } from 'react-spinners'
+import {BeatLoader} from 'react-spinners'
 import { useState } from 'react'
 
 const AppointmentComponent = ({appointment, doctorId, patientId}) => {

@@ -2,7 +2,6 @@ import prisma from '../../../utils/prisma';
 
 module.exports = async (req, res) => {
   const {height, weight, head, motif, findings, exams, medication, patientId, doctorId} = req.body
-  console.log('body :>> ', req.body);
 
   try{
     const appointment = await prisma.appointment.create({

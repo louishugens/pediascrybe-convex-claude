@@ -2,7 +2,6 @@ import prisma from '../../../utils/prisma';
 
 module.exports = async (req, res) => {
   const {id} = req.body
-  console.log('body :>> ', req.body);
 
   try{
     const patients = await prisma.doctor.findunique({

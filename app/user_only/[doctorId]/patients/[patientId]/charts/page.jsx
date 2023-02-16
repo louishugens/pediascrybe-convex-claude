@@ -32,9 +32,7 @@ async function getPatient(patientId){
 const Charts = async ({params: {patientId}}) => {
   const patient = await getPatient(patientId)
   const appointments = patient.appointments
-  // const wfa = await getWfa()
 
-  // console.log(wfa)
 
   let formatted = []
 

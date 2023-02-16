@@ -2,7 +2,6 @@ import prisma from '../../../utils/prisma';
 
 module.exports = async (req, res) => {
   const {firstname, lastname, email, birthdate, mothername, sex, religion, phone, id} = req.body
-  console.log('body :>> ', req.body);
 
   try{
     await prisma.patient.update({

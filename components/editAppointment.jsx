@@ -189,7 +189,7 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
                   data-testid="loader"
                 />
                 :
-                  "Add Appointment"
+                  "Update Appointment"
             }
           </button>
         </form>

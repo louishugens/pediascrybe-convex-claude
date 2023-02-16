@@ -3,7 +3,7 @@ import Sidenav from '../../../components/sidenav'
 export const dynamic = 'force-dynamic';
 
 const Layout = ({children, params: { doctorId, patientId }}) => {
-  console.log('patientId', patientId)
+
   return (
     <div className='flex flex-row relative h-screen w-screen'>
       <Sidenav doctorId={doctorId} patientId={patientId} />
