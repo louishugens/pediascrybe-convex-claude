@@ -70,7 +70,7 @@ export default function Signup() {
         setLoading(false)
         console.log('error :>> ', error);
       }else{
-        router.push('/success')
+        router.push('/signup/success')
       }
 
     }
