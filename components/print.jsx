@@ -36,6 +36,12 @@ ref={componentRef}>
             {/* <p className="grow">Tests:</p> */}
             <p className="grow">{exams ? appointment.exams : appointment.medication}</p>
             </div>
+            <div className="flex flex-row-reverse">
+              <div className="flex flex-row w-1/3">
+                <p>Signature:</p>
+                <div className=" flex-1 h-px ml-1 mt-4 bg-black"></div>
+              </div>
+            </div>
           </div>
         </div>
         <div className="flex flex-col items-center py-2">
