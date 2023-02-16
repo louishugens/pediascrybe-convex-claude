@@ -7,6 +7,7 @@ import * as CONST from '../../../../../utils/constants'
 import Chart from "../../../../../components/chart";
 import Charts from "../../../../../components/charts";
 import Appointments from "../../../../../components/appointments";
+import AppointmentComponent from "../../../../../components/appointment";
 
 
 async function getPatient(patientId){
@@ -25,32 +26,27 @@ async function getPatient(patientId){
   return patient
 }
 
+async function getAppointments(patientId){
+  const patient = await prisma.appointment.findMany({
+    where:{
+      patientId: patientId
+    },
+    orderBy:{
+      startDate: 'desc'
+    },
+  })
+  return patient
+}
+
 export const dynamic = 'force-dynamic';
 
 async function Patient({params: {doctorId, patientId }}) {
   const patient = await getPatient(patientId)
-
-  const {gwfa, gwfa2} = CONST
+  const appointments = await getAppointments(patientId)
 
   return (
     <>
       <div className="flex flex-col w-full items-center">
-        {/* <div className="w-full h-auto shadow-md rounded-lg p-4 bg-slate-50 ">
-          <div className="flex flex-row w-full justify-between">
-            <p className=' font-bold text-slate-900'>{patient.firstname} {patient.lastname}</p>
-            <Link 
-            className='self-end px-4 py-2 bg-blue-500 text-white rounded-full text-sm' 
-            href={`/user_only/${doctorId}/patients/add-patient`}>Edit Patient</Link>
-          </div>
-          <div className="grid grid-cols-3 gap-4 mt-4">
-            <p className="text-sm">Birth date: <span className="font-bold">{format(new Date(patient.birthdate), 'dd-MM-yyyy')}</span></p>
-            <p className="text-sm">Sex: <span className="font-bold">{patient.sex}</span></p>
-            <p className="text-sm">Phone: <span className="font-bold">{patient.phone}</span></p>
-            <p className="text-sm">Email: <span className="font-bold">{patient.email}</span></p>
-            <p className="text-sm">Mother&apos;s name: <span className="font-bold">{patient.mothername}</span></p>
-          </div>
-        </div> */}
-          {/* <Charts sex={patient.sex} /> */}
           <Link href={`/user_only/${doctorId}/patients/${patientId}/charts`} className="mt-4 text-sm bg-blue-500 text-slate-900 rounded-full px-4 py-2 self-start">Growth Charts</Link>
         <div className="flex flex-row w-full justify-between pt-4">
           <p className=' font-bold text-white'><span className=' text-green-500'>Appointment list</span></p>
@@ -58,8 +54,23 @@ async function Patient({params: {doctorId, patientId }}) {
           className='self-end px-4 py-2 bg-blue-500 text-slate-100 rounded-full text-sm shadow' 
           href={`/user_only/${doctorId}/patients/${patientId}/add-appointment`}>Add Appointment</Link>
         </div>
+        <table className="table-auto color-0 rounded-lg relative text-sm w-full mt-4 border-separate border-spacing-y-1.5">
+          <thead className="rounded-t-lg  bg-blue-50">
+            <tr className="rounded-full shadow">
+              <th className="text-left px-4 py-2 rounded-l-full">Date</th>
+              <th className="text-left px-4 py-2">Height</th>
+              <th className="text-left px-4 py-2">Weight</th>
+              <th className="text-left px-4 py-2">Head Circumference</th>
+              <th className="text-left px-4 py-2 rounded-r-full">Actions</th>
+            </tr>
+          </thead>
+          <tbody className='w-full'>
+            {appointments.map(appointment => <AppointmentComponent appointment={appointment} doctorId={doctorId} patientId={patientId} data-superjson key={appointment.id} />
+            )}
+          </tbody>
+        </table>
         
-        <Appointments doctorId={doctorId} patientId={patientId} />
+        {/* <Appointments doctorId={doctorId} patientId={patientId} /> */}
 
       </div>
     </>

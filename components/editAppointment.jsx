@@ -3,34 +3,31 @@ import Link from 'next/link'
 import { useForm } from 'react-hook-form';
 import * as yup from "yup";
 import { yupResolver } from '@hookform/resolvers/yup';
-import PulseLoader from "react-spinners/PulseLoader"
 import { useRouter } from 'next/navigation';
 import { useState } from "react";
 import BeatLoader  from 'react-spinners/BeatLoader';
-import { LexicalComposer } from "@lexical/react/LexicalComposer";
-import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
-import { ContentEditable } from "@lexical/react/LexicalContentEditable";
-import { ListPlugin } from "@lexical/react/LexicalListPlugin";
-// import { CheckListPlugin } from "@lexical/react/LexicalCheckListPlugin";
-import { ListItemNode, ListNode } from "@lexical/list";
-import OnChangePlugin from '@lexical/react/LexicalOnChangePlugin'
-import ToolbarPlugin from "../../../../../../components/listToolBar";
-import PlaygroundTheme from "../../../../../../components/playgroundTheme";
-import prepopulatedText from "../../../../../../components/sampleText";
+// import { LexicalComposer } from "@lexical/react/LexicalComposer";
+// import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
+// import { ContentEditable } from "@lexical/react/LexicalContentEditable";
+// import { ListPlugin } from "@lexical/react/LexicalListPlugin";
+// // import { CheckListPlugin } from "@lexical/react/LexicalCheckListPlugin";
+// import { ListItemNode, ListNode } from "@lexical/list";
+// import OnChangePlugin from '@lexical/react/LexicalOnChangePlugin'
+// import ToolbarPlugin from "../../../../../../components/listToolBar";
+// import PlaygroundTheme from "../../../../../../components/playgroundTheme";
+// import prepopulatedText from "../../../../../../components/sampleText";
 
 
-export const dynamic = 'force-dynamic';
 
-
-const AddAppointment = ({params: {doctorId, patientId}}) => {
+const EditAppointment = ({appointment, doctorId, patientId}) => {
   const schema = yup.object({
-    height: yup.number('Must be a number').nullable(true).transform((_, val) => val === Number(val) ? val : null),
-    weight:  yup.number().nullable(true).transform((_, val) => val === Number(val) ? val : null),
-    head: yup.number().nullable(true).transform((_, val) => val === Number(val) ? val : null),
-    motif: yup.string(),
-    findings: yup.string(),
-    exams: yup.string(),
-    medication: yup.string(),
+    height: yup.number('Must be a number').nullable(true).transform((_, val) => val ? Number(val) : null),
+    weight:  yup.number().nullable(true).transform((_, val) => val ? Number(val) : null),
+    head: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null),
+    motif: yup.string().nullable(true),
+    findings: yup.string().nullable(true),
+    exams: yup.string().nullable(true),
+    medication: yup.string().nullable(true),
   }).required();
   
   let [color, setColor] = useState("#ffffff")
@@ -41,6 +38,15 @@ const AddAppointment = ({params: {doctorId, patientId}}) => {
     handleSubmit,
     formState: { errors },
   } = useForm({
+    defaultValues:{
+      height: appointment.height || null,
+      weight: appointment.weight || null,
+      head: appointment.head || null,
+      motif: appointment.motif || null,
+      findings: appointment.findings || null,
+      exams: appointment.exams || null,
+      medication: appointment.medication || null,
+    },
     resolver: yupResolver(schema)
   });
 
@@ -53,13 +59,13 @@ const AddAppointment = ({params: {doctorId, patientId}}) => {
  
     try{
       const {height, weight, head, motif, findings, exams, medication} = values
-      const body = {height, weight, head, motif, findings, exams, medication, patientId, doctorId}
-      const response = await fetch('/api/patients/addAppointment', {
+      const body = {height, weight, head, motif, findings, exams, medication, appointmentId: appointment.id}
+      await fetch('/api/patients/updateAppointment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       })
-      const appointment = await response.json()
+      // const appointment = await response.json()
 
       router.refresh()
       router.push(`/user_only/${doctorId}/patients/${patientId}/${appointment.id}`)
@@ -192,6 +198,6 @@ const AddAppointment = ({params: {doctorId, patientId}}) => {
   )
 }
 
-export default AddAppointment
+export default EditAppointment
 
 

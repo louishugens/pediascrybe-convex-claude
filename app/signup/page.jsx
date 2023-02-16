@@ -33,7 +33,7 @@ export default function Signup() {
     lastname: yup.string().required('Please enter your last name'),
     email: yup.string().email('Invalid email').required('Please enter your email'),
     password: yup.string().required('Please enter your password'),
-    terms: yup.boolean().required('Please confirm you reada and accpept the terms').oneOf([true], "The terms and conditions must be accepted.")
+    terms: yup.boolean().required('Please confirm you read and accpept the terms').oneOf([true], "The terms and conditions must be accepted.")
   }).required();
 
   const router = useRouter();
@@ -70,7 +70,7 @@ export default function Signup() {
         setLoading(false)
         console.log('error :>> ', error);
       }else{
-        router.push('/')
+        router.push('/success')
       }
 
     }

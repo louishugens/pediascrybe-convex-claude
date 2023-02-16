@@ -1,7 +1,7 @@
 import Link from "next/link"
 import prisma from "../utils/prisma"
-import { format } from "date-fns"
 import { EyeIcon, PencilIcon, TrashIcon} from '@heroicons/react/24/outline'
+import AppointmentComponent from "./appointment"
 
 async function getAppointments(patientId){
   const patient = await prisma.appointment.findMany({
@@ -11,13 +11,6 @@ async function getAppointments(patientId){
     orderBy:{
       startDate: 'desc'
     },
-    // include: {
-    //   patients:{
-    //     orderBy:{
-    //       lastname: 'asc'
-    //     }
-    //   },
-    // },
   })
   return patient
 }
@@ -36,35 +29,10 @@ const Appointments = async ({doctorId, patientId}) => {
       </tr>
     </thead>
     <tbody className='w-full'>
-      {appointments.map(appointment => (
+      {appointments.map(appointment => <AppointmentComponent appointment={appointment} doctorId={doctorId} patientId={patientId} key={appointment.id} data-superjson />
         
-        <tr key={appointment.id} className="border-b text-sm font-light w-full bg-slate-50 shadow pt-12 rounded-full border-none border-spacing-x-2">
-          {/* <td className="px-4 py-1">{format(appointment.createdAt, 'E dd MMM yyyy  hh:mm:ss', { locale: fr })}</td>  */}
-          <td className="px-4 py-2 rounded-l-full mt-2">{format(appointment.startDate, 'yyy-MM-dd hh:mm:ss')}</td>
-          <td className="px-4 py-2">{appointment.height} cm</td>
-          <td className="px-4 py-2">{appointment.weight} kg</td>
-          <td className="px-4 py-2">{appointment.head} cm</td>
-          <td className="px-4 py-2 rounded-r-full">
-            <div className="flex flex-row justify-start">
-              <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointment.id}`} className="mr-2">
-                <EyeIcon className="h-4 w-4" />
-              </Link>
-              <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointment.id}`} className="mr-2">
-                <PencilIcon className="h-4 w-4" />
-              </Link>
-              <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointment.id}`}>
-                <TrashIcon className="h-4 w-4" />
-              </Link>
-            </div>
 
-          </td>
-          {/* <td className="px-4 py-1"> */}
-          {/* <Link href="/user_only/[companyId]/sales/[saleId]" as={`/user_only/${company.id}/sales/${sale.id}`} className="color-0-bg text-sm text-white px-2 pz-1 rounded-full">
-            Voir Article
-          </Link> */}
-          {/* </td> */}
-        </tr>
-      ))}
+      )}
     </tbody>
   </table>
   )

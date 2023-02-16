@@ -18,9 +18,23 @@ async function getPatient(patientId){
   return patient
 }
 
+// async function getWfa(patient){
+//   const res = await fetch('/api/charts/gwfadata');
+//   if (!res.ok) {
+//     // This will activate the closest `error.js` Error Boundary
+//     throw new Error('Failed to fetch data');
+//   }
+
+//   return res.json();
+
+// }
+
 const Charts = async ({params: {patientId}}) => {
   const patient = await getPatient(patientId)
   const appointments = patient.appointments
+  // const wfa = await getWfa()
+
+  // console.log(wfa)
 
   let formatted = []
 
