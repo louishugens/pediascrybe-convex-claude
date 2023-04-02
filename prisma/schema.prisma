@@ -37,8 +37,8 @@ model Appointment {
   patientId       String?
   doctorId        String?
   findings         String?
-  exams           String?
-  medication      String?
+  exams           Json?
+  medication      Json?
   Doctor          Doctor?   @relation(fields: [doctorId], references: [id])
   Patient         Patient?  @relation(fields: [patientId], references: [id])
   height          Float?

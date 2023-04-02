@@ -20,7 +20,7 @@ export default function Home() {
   const router = useRouter()
 
   const schema = yup.object({
-    email: yup.string().email('Invalid email').required('Please enter your first name'),
+    email: yup.string().email('Invalid email').required('Please enter your email'),
     password: yup.string().required('Please enter your password'),
   }).required();
 

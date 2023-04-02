@@ -1,6 +1,6 @@
 
 import prisma from '../../../../../../../utils/prisma';
-import AddExams from "../../../../../../../components/addExams";
+import AddPrescriptions from "../../../../../../../components/AddPrescriptions";
 
 async function getAppointment(appointmentId){
   const appointment = await prisma.appointment.findUnique({
@@ -16,12 +16,12 @@ async function getAppointment(appointmentId){
 export const dynamic = 'force-dynamic';
 
 
-const AddExamsPage = async ({params: {doctorId, patientId, appointmentId}}) => {
+const AddPrescriptionsPage = async ({params: {doctorId, patientId, appointmentId}}) => {
   const appointment = await getAppointment(appointmentId)
 
   return (
-    <AddExams appointment={appointment} doctorId={doctorId} patientId={patientId} data-superjson />
+    <AddPrescriptions appointment={appointment} doctorId={doctorId} patientId={patientId} data-superjson />
   )
 }
 
-export default AddExamsPage
+export default AddPrescriptionsPage

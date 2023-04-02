@@ -76,21 +76,34 @@ const AppointmentPageComponent = ({appointment, doctorId, patientId}) => {
         </div>
         <div className="flex flex-col">
           <p className="font-bold">Prescription</p>
-          <p className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.medication}</p>
-          <div className="mt-1 flex flex-row-reverse">
-            <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointment.id}/print-prescription`} className='self-end mt-2 shadow bg-blue-500 rounded-full py-2 px-4 text-white'>
+          <div className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.medication?.map((medication, index) =>(
+            <div key={index}>
+              <p className="font-bold">-{medication.drug}, <span className="italic font-normal">{medication.count} {medication.count > 1 ? "flacons": "flacon"}</span></p>
+              <p>{medication.posology}</p>
+            </div>
+          ))}</div>
+          <div className="mt-1 flex flex-row justify-between">
+          <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointment.id}/add-prescription`} className='self-end mt-2 shadow bg-slate-200 rounded-full py-1 px-4 text-blue-500'>
+              Add or edit
+            </Link>
+            <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointment.id}/print-prescription`} className='self-end mt-2 shadow bg-blue-500 rounded-full py-1 px-4 text-white'>
               Print
             </Link>
           </div>
         </div>
         <div className="flex flex-col">
           <p className="font-bold">Lab exams</p>
-          <p className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.exams}</p>
-          <div className="mt-1 flex flex-row-reverse justify-between">
+          <ul className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.exams?.map((exam, index) =>(
+            <li key={index}>-{exam.exam}</li>
+          ))}</ul>
+          <div className="mt-1 flex flex-row justify-between">
             {/* <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointmentId}/add-exams`} className='self-end mt-2 shadow bg-blue-500 rounded-full py-2 px-4 text-white '>
               Add
             </Link> */}
-            <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointment.id}/print-exams`} className='self-end mt-2 shadow text-slate-200 rounded-full py-2 px-4 bg-blue-500'>
+            <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointment.id}/add-exams`} className='self-end mt-2 shadow text-blue-500 rounded-full py-1 px-4 bg-slate-200'>
+              Add or edit
+            </Link>
+            <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointment.id}/print-exams`} className='self-end mt-2 shadow text-slate-200 rounded-full py-1 px-4 bg-blue-500'>
               Print
             </Link>
           </div>

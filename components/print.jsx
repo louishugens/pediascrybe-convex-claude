@@ -19,7 +19,7 @@ const Print = ({appointment, doctor, patient, exams}) => {
 
   return (
     <div className='pt-4 h-screen shadow-md rounded-lg'>
-      <div className="w-full h-screen  p-4 flex flex-col divide-y divide-slate-900" 
+      <div className="w-full h-screen  p-16 flex flex-col divide-y divide-slate-900" 
 ref={componentRef}>
         <div className="flex flex-col items-center py-2">
             <h3 className=' text-2xl font-bold'><span className=' font-light'>Dr </span>{`${doctor.firstname} ${doctor.lastname}`}</h3>
@@ -34,7 +34,22 @@ ref={componentRef}>
             </div>
             <div className="my-auto">
             {/* <p className="grow">Tests:</p> */}
-            <p className="grow">{exams ? appointment.exams : appointment.medication}</p>
+            <p className="grow">
+              {
+                exams 
+                ? 
+                  appointment.exams?.map((exam, index) =>(
+                    <p key={index} className="font-bold">-{exam.exam}</p>
+                  ))
+                : 
+                  appointment.medication?.map((medication, index) =>(
+                    <div key={index}>
+                      <p className="font-bold">-{medication.drug}, <span className="italic font-normal">{medication.count} {medication.count > 1 ? "flacons": "flacon"}</span></p>
+                      <p>{medication.posology}</p>
+                    </div>
+                  ))
+              }
+            </p>
             </div>
             <div className="flex flex-row-reverse">
               <div className="flex flex-row w-1/3">

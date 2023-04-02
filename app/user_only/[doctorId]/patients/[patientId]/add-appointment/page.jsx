@@ -24,13 +24,13 @@ export const dynamic = 'force-dynamic';
 
 const AddAppointment = ({params: {doctorId, patientId}}) => {
   const schema = yup.object({
-    height: yup.number('Must be a number').nullable(true).transform((_, val) => val === Number(val) ? val : null),
-    weight:  yup.number().nullable(true).transform((_, val) => val === Number(val) ? val : null),
-    head: yup.number().nullable(true).transform((_, val) => val === Number(val) ? val : null),
-    motif: yup.string(),
-    findings: yup.string(),
-    exams: yup.string(),
-    medication: yup.string(),
+    height: yup.number('Must be a number').nullable(true).transform((_, val) => val ? Number(val) : null),
+    weight:  yup.number().nullable(true).transform((_, val) => val ? Number(val) : null),
+    head: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null),
+    motif: yup.string().nullable(true),
+    findings: yup.string().nullable(true),
+    exams: yup.string().nullable(true),
+    medication: yup.string().nullable(true),
   }).required();
   
   let [color, setColor] = useState("#ffffff")
@@ -41,6 +41,15 @@ const AddAppointment = ({params: {doctorId, patientId}}) => {
     handleSubmit,
     formState: { errors },
   } = useForm({
+    defaultValues:{
+      height: null,
+      weight: null,
+      head: null,
+      motif: null,
+      findings: null,
+      exams: null,
+      medication: null,
+    },
     resolver: yupResolver(schema)
   });
 
