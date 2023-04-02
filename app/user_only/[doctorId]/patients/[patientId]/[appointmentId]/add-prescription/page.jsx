@@ -1,6 +1,6 @@
 
 import prisma from '../../../../../../../utils/prisma';
-import AddPrescriptions from "../../../../../../../components/AddPrescriptions";
+import AddPrescriptions from '../../../../../../../components/addPrescriptions';
 
 async function getAppointment(appointmentId){
   const appointment = await prisma.appointment.findUnique({
