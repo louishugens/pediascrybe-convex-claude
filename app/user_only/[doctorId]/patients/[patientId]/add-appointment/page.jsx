@@ -159,7 +159,7 @@ const AddAppointment = ({params: {doctorId, patientId}}) => {
               />
               <p className='px-4 pt-1 text-sm text-red-600'>{errors.findings?.message}</p>
             </label>
-            <label className="flex flex-col mb-4 h-40">
+            {/* <label className="flex flex-col mb-4 h-40">
               <span className="font-medium">Prescription (Rx)</span>
               <textarea
                 placeholder="Drug prescription"
@@ -168,8 +168,8 @@ const AddAppointment = ({params: {doctorId, patientId}}) => {
                 {...register('medication')}
               />
               <p className='px-4 pt-1 text-sm text-red-600'>{errors.medication?.message}</p>
-            </label>
-            <label className="flex flex-col mb-4 h-40">
+            </label> */}
+            {/* <label className="flex flex-col mb-4 h-40">
               <span className="font-medium">Lab exams</span>
               <textarea
                 placeholder="Lab tests"
@@ -178,7 +178,7 @@ const AddAppointment = ({params: {doctorId, patientId}}) => {
                 {...register('exams')}
               />
               <p className='px-4 pt-1 text-sm text-red-600'>{errors.exams?.message}</p>
-            </label>
+            </label> */}
           </div>
 
           <button className="py-2 px-4 rounded-full bg-green-500 text-lg font-semibold w-1/2 center mt-4 mx-auto" type='submit'>

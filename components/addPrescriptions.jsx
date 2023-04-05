@@ -11,7 +11,7 @@ const PrescriptionsSchema =  Yup.object({
   prescriptions: Yup.array().of(
     Yup.object().shape({
       drug: Yup.string().required('Please enter the drug name'),
-      count: Yup.number().required('Please enter the number of flacon').min(1),
+      count: Yup.number().required('Please enter the number of flacon').min(1, 'Must be greater than 1').nullable(false, 'Must not be empty'),
       posology: Yup.string().required('Please enter the posology'),
   })).required('Please add at least one prescription').min(1, 'Please add at least one prescription')
 }).required();
@@ -21,7 +21,7 @@ const AddPrescriptions = ({doctorId, patientId, appointment}) => {
   const [error, setError] = useState(null)
   const [color, setColor] = useState('#ffffff')
   const router = useRouter()
-  const [prescriptions, setPrescriptions] = useState(appointment.medication || [{drug: null, count: 1, posology: null}])
+  const [prescriptions, setPrescriptions] = useState(appointment.medication || [{drug: '', count: 1, posology: ''}])
 
   // console.log('user :>> ', user);
   // console.log('day :>> ', day);
@@ -108,7 +108,7 @@ const AddPrescriptions = ({doctorId, patientId, appointment}) => {
         })}
         <p className='px-4 pt-1 text-sm text-red-600'>{errors?.prescriptions?.message}</p>
         <div className="flex flex-row justify-between">
-          <button className='py-1 px-4 rounded-full bg-green-500 text-white text-sm  mt-4' type='button' onClick={() => append({drug: null, count: 1, posology: null})}>
+          <button className='py-1 px-4 rounded-full bg-green-500 text-white text-sm  mt-4' type='button' onClick={() => append({drug: '', count: 1, posology: ''})}>
             Add
           </button>
           {<button className='py-1 px-4 rounded-full bg-blue-500 text-white text-sm  mt-4' type='submit'>
