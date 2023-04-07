@@ -1,46 +1,49 @@
 'use client'
 import Link from 'next/link'
-import Doctor from '../../components/doctor'
+import Doctor from '../../../components/doctor'
 import { useForm } from 'react-hook-form';
 import * as yup from "yup";
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useRouter } from 'next/navigation';
-import supabase from '../../utils/supabase';
-import Header from '../header';
+import supabase from '../../../utils/supabase';
+import Header from '../../header';
 import { useState, useEffect } from "react";
 import BeatLoader  from 'react-spinners/BeatLoader';
 
 
-
-export default function Home() {
+export default function Home({searchParams}) {
 
   let [loading, setLoading] = useState(false);
   let [color, setColor] = useState("#ffffff");
-  const [reset, setReset] = useState(false)
+  const [reset, setReset] = useState(searchParams ? true : false)
+  const [errorMsg, setErrorMsg] = useState(null)
+
+  console.log('token :>> ', searchParams);
 
   const router = useRouter()
 
   const schema = yup.object({
-    email: yup.string().email('Invalid email').required('Please enter your email'),
-    // password: yup.string().required('Please enter your password'),
+    // email: yup.string().email('Invalid email').required('Please enter your email'),
+    password: yup.string().required('Please enter your password'),
   }).required();
 
-  useEffect(() => {
-    supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event == "PASSWORD_RECOVERY") {
-        // setReset
+  // useEffect(() => {
+  //   supabase.auth.onAuthStateChange(async (event, session) => {
+  //     if (event == "PASSWORD_RECOVERY") {
+  //       // setReset(true)
         
-        const newPassword = prompt("What would you like your new password to be?");
-        const { data, error } = await supabase.auth
-          .updateUser({ password: newPassword })
+  //       // const newPassword = prompt("What would you like your new password to be?");
+  //       // console.log('newPassword :>> ', newPassword);
+  //       // const { data, error } = await supabase.auth
+  //       //   .updateUser({ password: newPassword })
  
-        if (data) alert("Password updated successfully!")
-        console.log('data :>> ', data);
-        if (error) alert("There was an error updating your password.")
-        console.log('error :>> ', error);
-      }
-    })
-  }, [])
+  //       // if (data) alert("Password updated successfully!")
+  //       // console.log('data :>> ', data);
+  //       // if (error) alert("There was an error updating your password.")
+  //       // console.log('error :>> ', error);
+  //     }
+  //   })
+  // }, [])
 
   const {
     register,
@@ -56,12 +59,16 @@ export default function Home() {
 
   const handleReset = async values =>{
     setLoading(true)
-    const { data, error } = await supabase.auth.resetPasswordForEmail(values.email, {
-      redirectTo: `${base_url}/reset/password`,
-    })
+    const { data, error } = await supabase.auth
+          .updateUser({ password: values.password })
   
     if(data){
-      setReset(true)
+      setReset(false)
+      setLoading(false)
+    }
+
+    if(error) {
+      setErrorMsg(error.message)
       setLoading(false)
     }
   }
@@ -84,17 +91,18 @@ export default function Home() {
           <h2 className='text-3xl text-slate-900 font-bold'>Reset <span className='text-green-500'>password</span></h2>
           <p className='text-slate-900 text-sm'>Don&apos;t have an account yet? <Link href="/signup" className='text-green-500 font-semibold'>Sign up</Link></p>
           <form className='flex flex-col mt-16 text-sm' onSubmit={handleSubmit(onSubmit)}>
-            <p className='mb-8'>To reset your password please confirm your email first</p>
+            <p className='mb-8'>Please enter your new password:</p>
             {
               reset
               ?
-                <p>Email sent, please check</p>
-              :
-                <label className="flex flex-col mb-4 h-16">
-                  <span className='font-medium'>Email</span>
-                  <input placeholder='johndoe@example.com' className='placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4' type='email' {...register('email')}/>
-                  <p className='px-4 pt-1 text-sm text-red-600'>{errors.email?.message}</p>
+                <label className="flex flex-col mb-4">
+                  <span className='font-medium'>Password</span>
+                  <input placeholder='your password' className='placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4' type='password' {...register('password')}/>
+                  <p className='px-4 pt-1 text-sm text-red-600'>{errors.password?.message}</p>
                 </label>
+              :
+                <p>Password reset successfully</p>
+              
             }
             {/* <label className="flex flex-col mb-4">
               <span className='font-medium'>Password</span>
@@ -115,6 +123,7 @@ export default function Home() {
                   "Submit"}
             </button>
             <p className='text-sm mt-4 mx-auto text-slate-900'>You remember your password? <Link href={'#'} className="text-green-500 font-medium" >Log in here!</Link></p>
+            {errorMsg && <p className='text-sm mt-4 mx-auto font-medium text-red-500'>{errorMsg}</p>}
           </form>
           
         </div>

@@ -16,6 +16,7 @@ export default function Home() {
 
   let [loading, setLoading] = useState(false);
   let [color, setColor] = useState("#ffffff");
+  const [errorMsg, setErrorMsg] = useState(null)
 
   const router = useRouter()
 
@@ -41,7 +42,10 @@ export default function Home() {
       password: values.password,
     })
     user && router.push(`/user_only/${user.id}/dashboard`)
-    error && console.log('error', error)
+    if(error) {
+      setErrorMsg(error.message)
+      setLoading(false)
+    }
   }
 
   return (
@@ -75,8 +79,10 @@ export default function Home() {
                 :
                   "Log in"}
             </button>
-            <p className='text-sm mt-4 mx-auto text-slate-900'>You forgot your password: <Link href='/reset' className="text-green-500 font-medium" >Reset it here!</Link></p>
+            <p className='text-sm mt-4 mx-auto text-slate-900'>You forgot your password? <Link href='/reset' className="text-green-500 font-medium" >Reset it here!</Link></p>
+            {errorMsg && <p className='text-sm mt-4 mx-auto font-medium text-red-500'>{errorMsg}</p>}
           </form>
+          
           
         </div>
         <div className="basis-1/2">
