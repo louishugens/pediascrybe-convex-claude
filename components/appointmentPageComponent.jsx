@@ -60,10 +60,12 @@ const AppointmentPageComponent = ({appointment, doctorId, patientId}) => {
           </div>
         }
       </div>
-      <div className="grid gap-x-8 gap-y-4 grid-cols-3 mt-4">
+      <div className="grid gap-x-8 gap-y-4 grid-cols-3 mt-4 mb-4">
         <p>Height: <span className='font-bold'>{appointment.height} cm</span></p>
         <p>Weight: <span className='font-bold'>{appointment.weight} kg</span></p>
         <p>Head Circumference: <span className='font-bold'>{appointment.head} cm</span></p>
+        <p>Arm Circumference: <span className='font-bold'>{appointment.arm} cm</span></p>
+        <p>SaO2: <span className='font-bold'>{appointment.sao2} %</span></p>
       </div>
       <div className="grid gap-x-8 gap-y-4 grid-cols-2 mt-4">
         <div className="flex flex-col">

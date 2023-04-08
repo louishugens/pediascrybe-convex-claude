@@ -26,8 +26,8 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
     head: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null),
     motif: yup.string().nullable(true),
     findings: yup.string().nullable(true),
-    exams: yup.string().nullable(true),
-    medication: yup.string().nullable(true),
+    arm: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null),
+    sao2: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null),
   }).required();
   
   let [color, setColor] = useState("#ffffff")
@@ -44,8 +44,8 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
       head: appointment.head || null,
       motif: appointment.motif || null,
       findings: appointment.findings || null,
-      exams: appointment.exams || null,
-      medication: appointment.medication || null,
+      arm: appointment.arm || null,
+      sao2: appointment.sao2 || null,
     },
     resolver: yupResolver(schema)
   });
@@ -58,8 +58,8 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
     setLoading(true)
  
     try{
-      const {height, weight, head, motif, findings, exams, medication} = values
-      const body = {height, weight, head, motif, findings, exams, medication, appointmentId: appointment.id}
+      const {height, weight, head, motif, findings, arm, sao2} = values
+      const body = {height, weight, head, motif, findings, arm, sao2, appointmentId: appointment.id}
       await fetch('/api/patients/updateAppointment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -134,6 +134,28 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
               />
               <p className='px-4 pt-1 text-sm text-red-600'>{errors.head?.message}</p>
             </label>
+            <label className="flex flex-col mb-4 h-16">
+              <span className="font-medium">Arm circumference (in cm)</span>
+              <input
+                placeholder="Patient's head circumference in cm"
+                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
+                type="number"
+                step={0.001}
+                {...register('arm')}
+              />
+              <p className='px-4 pt-1 text-sm text-red-600'>{errors.arm?.message}</p>
+            </label>
+            <label className="flex flex-col mb-4 h-16">
+              <span className="font-medium">SaO2 (in %)</span>
+              <input
+                placeholder="Patient's SaO2 in %"
+                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
+                type="number"
+                step={0.001}
+                {...register('sao2')}
+              />
+              <p className='px-4 pt-1 text-sm text-red-600'>{errors.sao2?.message}</p>
+            </label>
           </div>
           <div className="grid gap-x-8 gap-y-4 grid-cols-2">
             <label className="flex flex-col mb-4 h-40">
@@ -156,26 +178,6 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
               />
               <p className='px-4 pt-1 text-sm text-red-600'>{errors.findings?.message}</p>
             </label>
-            {/* <label className="flex flex-col mb-4 h-40">
-              <span className="font-medium">Prescription (Rx)</span>
-              <textarea
-                placeholder="Drug prescription"
-                className="placeholder:italic placeholder:text-sm bg-white shadow-md h-40 rounded-md py-2 px-4 border-none"
-                type="text"
-                {...register('medication')}
-              />
-              <p className='px-4 pt-1 text-sm text-red-600'>{errors.medication?.message}</p>
-            </label> */}
-            {/* <label className="flex flex-col mb-4 h-40">
-              <span className="font-medium">Lab exams</span>
-              <textarea
-                placeholder="Lab tests"
-                className="placeholder:italic placeholder:text-sm bg-white shadow-md h-40 rounded-md py-2 px-4 border-none"
-                type="text"
-                {...register('exams')}
-              />
-              <p className='px-4 pt-1 text-sm text-red-600'>{errors.exams?.message}</p>
-            </label> */}
           </div>
 
           <button className="py-2 px-4 rounded-full bg-green-500 text-lg font-semibold w-1/2 center mt-4 mx-auto" type='submit'>

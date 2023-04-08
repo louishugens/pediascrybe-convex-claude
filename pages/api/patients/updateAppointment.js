@@ -1,7 +1,7 @@
 import prisma from '../../../utils/prisma';
 
 module.exports = async (req, res) => {
-  const {height, weight, head, motif, findings, exams, medication, appointmentId} = req.body
+  const {height, weight, head, motif, findings, arm, sao2, appointmentId} = req.body
 
   try{
     const appointment = await prisma.appointment.update({
@@ -9,7 +9,7 @@ module.exports = async (req, res) => {
         id: appointmentId
       },
       data: {
-        height, weight, head, motif, findings, exams, medication
+        height, weight, head, motif, findings, arm, sao2
       }
     })
     res.status(200).json(appointment)

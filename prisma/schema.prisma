@@ -44,6 +44,8 @@ model Appointment {
   height          Float?
   weight          Float?
   head            Float?
+  arm             Float?
+  sao2            Float?
 }
 
 model Doctor {

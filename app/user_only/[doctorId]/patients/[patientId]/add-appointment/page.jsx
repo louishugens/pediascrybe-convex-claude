@@ -29,8 +29,8 @@ const AddAppointment = ({params: {doctorId, patientId}}) => {
     head: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null),
     motif: yup.string().nullable(true),
     findings: yup.string().nullable(true),
-    exams: yup.string().nullable(true),
-    medication: yup.string().nullable(true),
+    arm: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null),
+    sao2: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null).max(100, "Percentage can't be more than 100"),
   }).required();
   
   let [color, setColor] = useState("#ffffff")
@@ -47,8 +47,8 @@ const AddAppointment = ({params: {doctorId, patientId}}) => {
       head: null,
       motif: null,
       findings: null,
-      exams: null,
-      medication: null,
+      arm: null,
+      sao2: null,
     },
     resolver: yupResolver(schema)
   });
@@ -61,8 +61,8 @@ const AddAppointment = ({params: {doctorId, patientId}}) => {
     setLoading(true)
  
     try{
-      const {height, weight, head, motif, findings, exams, medication} = values
-      const body = {height, weight, head, motif, findings, exams, medication, patientId, doctorId}
+      const {height, weight, head, motif, findings, arm, sao2} = values
+      const body = {height, weight, head, motif, findings, arm, sao2, patientId, doctorId}
       const response = await fetch('/api/patients/addAppointment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -136,6 +136,28 @@ const AddAppointment = ({params: {doctorId, patientId}}) => {
                 {...register('head')}
               />
               <p className='px-4 pt-1 text-sm text-red-600'>{errors.head?.message}</p>
+            </label>
+            <label className="flex flex-col mb-4 h-16">
+              <span className="font-medium">Arm circumference (in cm)</span>
+              <input
+                placeholder="Patient's arm circumference in cm"
+                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
+                type="number"
+                step={0.001}
+                {...register('arm')}
+              />
+              <p className='px-4 pt-1 text-sm text-red-600'>{errors.arm?.message}</p>
+            </label>
+            <label className="flex flex-col mb-4 h-16">
+              <span className="font-medium">SaO2 (in %)</span>
+              <input
+                placeholder="Patient's SaO2 in percentage"
+                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
+                type="number"
+                step={0.001}
+                {...register('sao2')}
+              />
+              <p className='px-4 pt-1 text-sm text-red-600'>{errors.sao2?.message}</p>
             </label>
           </div>
           <div className="grid gap-x-8 gap-y-4 grid-cols-2">

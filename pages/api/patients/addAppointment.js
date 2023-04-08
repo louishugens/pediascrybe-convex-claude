@@ -1,7 +1,7 @@
 import prisma from '../../../utils/prisma';
 
 module.exports = async (req, res) => {
-  const {height, weight, head, motif, findings, exams, medication, patientId, doctorId} = req.body
+  const {height, weight, head, motif, findings, arm, sao2, patientId, doctorId} = req.body
 
   try{
     const appointment = await prisma.appointment.create({
@@ -11,7 +11,7 @@ module.exports = async (req, res) => {
       data: {
         // appointments:{
         //   create:{
-            height, weight, head, motif, findings, exams, medication, doctorId, patientId
+            height, weight, head, motif, findings, arm, sao2, doctorId, patientId
         //   }
         // }
       }
