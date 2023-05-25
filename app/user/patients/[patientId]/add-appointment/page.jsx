@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { useForm } from 'react-hook-form';
 import * as yup from "yup";
 import { yupResolver } from '@hookform/resolvers/yup';
+import PulseLoader from "react-spinners/PulseLoader"
 import { useRouter } from 'next/navigation';
 import { useState } from "react";
 import BeatLoader  from 'react-spinners/BeatLoader';
@@ -18,8 +19,10 @@ import BeatLoader  from 'react-spinners/BeatLoader';
 // import prepopulatedText from "../../../../../../components/sampleText";
 
 
+export const dynamic = 'force-dynamic';
 
-const EditAppointment = ({appointment, doctorId, patientId}) => {
+
+const AddAppointment = ({params: {doctorId, patientId}}) => {
   const schema = yup.object({
     height: yup.number('Must be a number').nullable(true).transform((_, val) => val ? Number(val) : null),
     weight:  yup.number().nullable(true).transform((_, val) => val ? Number(val) : null),
@@ -27,7 +30,7 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
     motif: yup.string().nullable(true),
     findings: yup.string().nullable(true),
     arm: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null),
-    sao2: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null),
+    sao2: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null).max(100, "Percentage can't be more than 100"),
   }).required();
   
   let [color, setColor] = useState("#ffffff")
@@ -39,13 +42,13 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
     formState: { errors },
   } = useForm({
     defaultValues:{
-      height: appointment.height || null,
-      weight: appointment.weight || null,
-      head: appointment.head || null,
-      motif: appointment.motif || null,
-      findings: appointment.findings || null,
-      arm: appointment.arm || null,
-      sao2: appointment.sao2 || null,
+      height: null,
+      weight: null,
+      head: null,
+      motif: null,
+      findings: null,
+      arm: null,
+      sao2: null,
     },
     resolver: yupResolver(schema)
   });
@@ -59,13 +62,13 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
  
     try{
       const {height, weight, head, motif, findings, arm, sao2} = values
-      const body = {height, weight, head, motif, findings, arm, sao2, appointmentId: appointment.id}
-      await fetch('/api/patients/updateAppointment', {
+      const body = {height, weight, head, motif, findings, arm, sao2, patientId, doctorId}
+      const response = await fetch('/api/patients/addAppointment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       })
-      // const appointment = await response.json()
+      const appointment = await response.json()
 
       router.refresh()
       router.push(`/user/patients/${patientId}/${appointment.id}`)
@@ -74,7 +77,7 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
     catch(err){
       console.log(err)
     }
-    // router.push(`/user/patients/${patientId}/${appointment.id}`)
+    // router.push(`/user_only/${doctorId}/patients/${patientId}/${appointment.id}`)
   }
   // const create = async values =>{
   //   try{
@@ -137,7 +140,7 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
             <label className="flex flex-col mb-4 h-16">
               <span className="font-medium">Arm circumference (in cm)</span>
               <input
-                placeholder="Patient's head circumference in cm"
+                placeholder="Patient's arm circumference in cm"
                 className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
                 type="number"
                 step={0.001}
@@ -148,7 +151,7 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
             <label className="flex flex-col mb-4 h-16">
               <span className="font-medium">SaO2 (in %)</span>
               <input
-                placeholder="Patient's SaO2 in %"
+                placeholder="Patient's SaO2 in percentage"
                 className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
                 type="number"
                 step={0.001}
@@ -178,6 +181,26 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
               />
               <p className='px-4 pt-1 text-sm text-red-600'>{errors.findings?.message}</p>
             </label>
+            {/* <label className="flex flex-col mb-4 h-40">
+              <span className="font-medium">Prescription (Rx)</span>
+              <textarea
+                placeholder="Drug prescription"
+                className="placeholder:italic placeholder:text-sm bg-white shadow-md h-40 rounded-md py-2 px-4 border-none"
+                type="text"
+                {...register('medication')}
+              />
+              <p className='px-4 pt-1 text-sm text-red-600'>{errors.medication?.message}</p>
+            </label> */}
+            {/* <label className="flex flex-col mb-4 h-40">
+              <span className="font-medium">Lab exams</span>
+              <textarea
+                placeholder="Lab tests"
+                className="placeholder:italic placeholder:text-sm bg-white shadow-md h-40 rounded-md py-2 px-4 border-none"
+                type="text"
+                {...register('exams')}
+              />
+              <p className='px-4 pt-1 text-sm text-red-600'>{errors.exams?.message}</p>
+            </label> */}
           </div>
 
           <button className="py-2 px-4 rounded-full bg-green-500 text-lg font-semibold w-1/2 center mt-4 mx-auto" type='submit'>
@@ -191,7 +214,7 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
                   data-testid="loader"
                 />
                 :
-                  "Update Appointment"
+                  "Add Appointment"
             }
           </button>
         </form>
@@ -200,6 +223,6 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
   )
 }
 
-export default EditAppointment
+export default AddAppointment
 
 

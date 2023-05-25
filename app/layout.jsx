@@ -2,6 +2,9 @@ import { Montserrat } from '@next/font/google'
 import  '../css/globals.css'
 import { AnalyticsWrapper } from '../components/analytics';
 import GA from '../components/googleAnalytics';
+import SupabaseProvider from '@/utils/supabase-provider'
+import { createServerComponentSupabaseClient } from '@supabase/auth-helpers-nextjs'
+import { headers, cookies } from 'next/headers'
 
 // const montserrat = Montserrat({
 //   subsets: ['latin'],
@@ -14,14 +17,24 @@ const montserrat = Montserrat({
 })
 
 
-export default function RootLayout({children}) {
+export default async function RootLayout({children}) {
+  const supabase = createServerComponentSupabaseClient({
+    headers,
+    cookies,
+  })
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
 
   return (
     <html lang="en" className={montserrat.className}>
         <head />
         <body >  
-          <GA />        
-          {children}
+          <GA />  
+          <SupabaseProvider session={session}>
+            {children}
+          </SupabaseProvider>      
           <AnalyticsWrapper />
         </body>
     </html>

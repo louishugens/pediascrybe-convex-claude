@@ -62,7 +62,7 @@ const AddExams = ({doctorId, patientId, appointment}) => {
       console.log('user :>> ', newuser);
 
       router.refresh()
-      router.push(`/user_only/${doctorId}/patients/${patientId}/${appointment.id}`)
+      router.push(`/user/patients/${patientId}/${appointment.id}`)
 
     }
     catch(err){

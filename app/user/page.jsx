@@ -1,12 +1,12 @@
 // 'use client'
 // import React, { useEffect } from 'react'
 // import supabase from '../../../../utils/supabase';
-import createClient from '@/utils/supabase-server'
+import {createServerClient} from '@/utils/supabase-server'
 
 // import useDoctor from '../../../../utils/hooks/useDoctor'
 
-import Stats from "../../../../components/stats";
-import prisma from "../../../../utils/prisma";
+import Stats from "@/components/stats";
+import prisma from "@/utils/prisma";
 
 async function getDoctor(doctorId){
   const doctor = await prisma.doctor.findUnique({
@@ -28,7 +28,15 @@ export const dynamic = 'force-dynamic';
 //   revalidate = 0;
 
 
-export default async function Dashboard({ params: { doctorId } }) {
+export default async function Dashboard() {
+
+  const supabase = createServerClient()
+  
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
+  const doctorId = session?.user?.id
 
   const doctor = await getDoctor(doctorId)
   const patients = doctor.patients

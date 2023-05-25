@@ -41,7 +41,7 @@ export default function Home() {
       email: values.email,
       password: values.password,
     })
-    user && router.push(`/user_only/${user.id}/dashboard`)
+    user && router.push(`/user`)
     if(error) {
       setErrorMsg(error.message)
       setLoading(false)

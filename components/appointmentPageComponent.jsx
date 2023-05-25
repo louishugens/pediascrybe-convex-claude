@@ -23,7 +23,7 @@ const AppointmentPageComponent = ({appointment, doctorId, patientId}) => {
         })
 
         router.refresh()
-        router.push(`/user_only/${doctorId}/patients/${patientId}`)
+        router.push(`/user/patients/${patientId}`)
 
       }
       catch(err){
@@ -48,10 +48,10 @@ const AppointmentPageComponent = ({appointment, doctorId, patientId}) => {
           />
           :
           <div className="flex flex-row justify-start">
-            <Link href={`/user_only/${doctorId}/patients/${patientId}/`} className="mr-2">
+            <Link href={`/user/patients/${patientId}/`} className="mr-2">
               <ArrowUturnLeftIcon className="h-4 w-4" />
             </Link>
-            <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointment.id}/edit-appointment`} className="mr-2">
+            <Link href={`/user/patients/${patientId}/${appointment.id}/edit-appointment`} className="mr-2">
               <PencilIcon className="h-4 w-4" />
             </Link>
             <button onClick={handleDelete}>
@@ -85,10 +85,10 @@ const AppointmentPageComponent = ({appointment, doctorId, patientId}) => {
             </div>
           ))}</div>
           <div className="mt-1 flex flex-row justify-between">
-          <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointment.id}/add-prescription`} className='self-end mt-2 shadow bg-slate-200 rounded-full py-1 px-4 text-blue-500'>
+          <Link href={`/user/patients/${patientId}/${appointment.id}/add-prescription`} className='self-end mt-2 shadow bg-slate-200 rounded-full py-1 px-4 text-blue-500'>
               Add or edit
             </Link>
-            <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointment.id}/print-prescription`} className='self-end mt-2 shadow bg-blue-500 rounded-full py-1 px-4 text-white'>
+            <Link href={`/user/patients/${patientId}/${appointment.id}/print-prescription`} className='self-end mt-2 shadow bg-blue-500 rounded-full py-1 px-4 text-white'>
               Print
             </Link>
           </div>
@@ -99,13 +99,13 @@ const AppointmentPageComponent = ({appointment, doctorId, patientId}) => {
             <li key={index}>-{exam.exam}</li>
           ))}</ul>
           <div className="mt-1 flex flex-row justify-between">
-            {/* <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointmentId}/add-exams`} className='self-end mt-2 shadow bg-blue-500 rounded-full py-2 px-4 text-white '>
+            {/* <Link href={`/user/patients/${patientId}/${appointmentId}/add-exams`} className='self-end mt-2 shadow bg-blue-500 rounded-full py-2 px-4 text-white '>
               Add
             </Link> */}
-            <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointment.id}/add-exams`} className='self-end mt-2 shadow text-blue-500 rounded-full py-1 px-4 bg-slate-200'>
+            <Link href={`/user/patients/${patientId}/${appointment.id}/add-exams`} className='self-end mt-2 shadow text-blue-500 rounded-full py-1 px-4 bg-slate-200'>
               Add or edit
             </Link>
-            <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointment.id}/print-exams`} className='self-end mt-2 shadow text-slate-200 rounded-full py-1 px-4 bg-blue-500'>
+            <Link href={`/user/patients/${patientId}/${appointment.id}/print-exams`} className='self-end mt-2 shadow text-slate-200 rounded-full py-1 px-4 bg-blue-500'>
               Print
             </Link>
           </div>

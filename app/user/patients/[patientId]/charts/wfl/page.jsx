@@ -1,5 +1,5 @@
-import Chart from "../../../../../../../components/chart"
-import prisma from "../../../../../../../utils/prisma"
+import Chart from "@/components/chart"
+import prisma from "@/utils/prisma"
 
 async function getPatient(patientId){
   const patient = await prisma.patient.findUnique({

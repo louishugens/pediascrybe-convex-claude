@@ -21,29 +21,29 @@ const Sidenav = ({doctorId, patientId}) => {
   return (
    <div className='h-full w-64  bg-green-50 shadow sticky px-8'>
       <div className="pt-4">
-        <Link href={`/user_only/${doctorId}/dashboard`}>
+        <Link href={`/user`}>
           <p className='text-xl font-bold  text-green-500 italic'>Pediascrybe</p>
         </Link>
       </div>
       <ul className='pt-16 text-sm text-slate-900'>
-        <li className={pathname === (`/user_only/${doctorId}/patients`) ? 'font-bold pb-2  flex flex-row': 'pb-2  flex flex-row'}>
+        <li className={pathname === (`/user/patients`) ? 'font-bold pb-2  flex flex-row': 'pb-2  flex flex-row'}>
           <UserGroupIcon className=' h-5 w-5 mr-4' />
-          <Link href={`/user_only/${doctorId}/patients`}>Patients</Link>
+          <Link href={`/user/patients`}>Patients</Link>
         </li>
-        <li className={pathname === (`/user_only/${doctorId}/patients/add-patient`) ? 'font-bold pb-2 flex flex-row' :'pb-2  flex flex-row'}>
+        <li className={pathname === (`/user/patients/add-patient`) ? 'font-bold pb-2 flex flex-row' :'pb-2  flex flex-row'}>
           <UserPlusIcon className=' h-5 w-5 mr-4' />
-          <Link href={`/user_only/${doctorId}/patients/add-patient`}>Add Patient</Link>
+          <Link href={`/user/patients/add-patient`}>Add Patient</Link>
         </li>
         {/* <li className=' pb-2 '>
-          <Link href={`/user_only/${doctorId}/appointments`}>Appointments</Link>
+          <Link href={`/user/appointments`}>Appointments</Link>
         </li> */}
-        <li className={pathname === (`/user_only/${doctorId}/profile`) ? 'font-bold pb-2  flex flex-row' : ' pb-2  flex flex-row'}>
+        <li className={pathname === (`/user/profile`) ? 'font-bold pb-2  flex flex-row' : ' pb-2  flex flex-row'}>
           <ListBulletIcon className=' h-5 w-5 mr-4'/>
-          <Link href={`/user_only/${doctorId}/profile`}>Profile</Link>
+          <Link href={`/user/profile`}>Profile</Link>
         </li>
-        <li className={pathname === (`/user_only/${doctorId}/profile/edit-profile`) ? 'font-bold pb-2  flex flex-row' :' pb-2  flex flex-row'}>
+        <li className={pathname === (`/user/edit-profile`) ? 'font-bold pb-2  flex flex-row' :' pb-2  flex flex-row'}>
           <PencilIcon className=' h-5 w-5 mr-4' />
-          <Link href={`/user_only/${doctorId}/profile/edit-profile`}>Edit Profile</Link>
+          <Link href={`/user/edit-profile`}>Edit Profile</Link>
         </li>
         <li className=' pb-2  flex flex-row'>
           <ArrowRightOnRectangleIcon className=' h-5 w-5 mr-4' />

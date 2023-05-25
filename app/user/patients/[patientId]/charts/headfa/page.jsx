@@ -1,5 +1,6 @@
-import Chart from "../../../../../../../components/chart"
-import prisma from "../../../../../../../utils/prisma"
+import Chart from "@/components/chart"
+import prisma from "@/utils/prisma"
+import { differenceInDays } from 'date-fns'
 
 async function getPatient(patientId){
   const patient = await prisma.patient.findUnique({
@@ -9,7 +10,7 @@ async function getPatient(patientId){
     include: {
       appointments:{
         orderBy:{
-          height: 'asc'
+          startDate: 'asc'
         }
       },
     },
@@ -24,17 +25,14 @@ const Charts = async ({params: {patientId}}) => {
   let formatted = []
 
   appointments.map(appointment =>{
-    if(appointment.height){
-      
-      let app = {category: Number.parseFloat(appointment.height.toFixed(1)), value: appointment.weight}
+    if(appointment.weight){
+      let app = {category: differenceInDays(appointment.startDate, patient.birthdate), value: appointment.head}
       formatted.push(app)
     }  
   })
 
-  // console.log('formatted :>> ', formatted);
-
   return (
-    <Chart sex={patient.sex} type="wfl" title="Weight for Lenght" ylabel="Weight (in kg)" xlabel="Height (in cm)" formatted={formatted} name={patient.firstname} />
+    <Chart sex={patient.sex} type="hcfa" title="Head Circumference for Age" ylabel="HC (in cm)" xlabel="Age (in days)" formatted={formatted} name={patient.firstname}/>
   )
 }
 
