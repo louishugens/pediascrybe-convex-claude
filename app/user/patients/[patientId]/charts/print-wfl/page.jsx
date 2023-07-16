@@ -19,7 +19,7 @@ async function getPatient(patientId) {
     include: {
       appointments:{
         orderBy:{
-          startDate: 'asc'
+          height: 'asc'
         }
       },
     },
@@ -55,7 +55,7 @@ const PrintPage = async ({params: {patientId}}) => {
 
   let formatted = []
 
-  console.log('appointments :>> ', appointments);
+  // console.log('appointments :>> ', appointments);
   appointments.map(appointment =>{
     if(appointment.height && appointment.weight){
       
@@ -63,6 +63,8 @@ const PrintPage = async ({params: {patientId}}) => {
       formatted.push(app)
     }  
   })
+
+
 
   return (
     <>

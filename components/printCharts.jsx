@@ -17,6 +17,7 @@ const Print = ({type, title, ylabel, xlabel, doctor, patient, formatted}) => {
     documentTitle: `${string}_${type}_${patient.firstname}_${patient.lastname}_${format(new Date(), 'yyy-MM-dd')}`
   });
 
+  // console.log('formatted :>> ', formatted);
 
 
   const leave = type === 'wfa' ? '/' : `/${type}`

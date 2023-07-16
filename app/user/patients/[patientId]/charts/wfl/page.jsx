@@ -20,7 +20,7 @@ async function getPatient(patientId){
 const Charts = async ({params: {patientId}}) => {
   const patient = await getPatient(patientId)
   const appointments = patient.appointments
-  console.log('appointments :>> ', appointments);
+  // console.log('appointments :>> ', appointments);
 
   let formatted = []
 
@@ -32,7 +32,7 @@ const Charts = async ({params: {patientId}}) => {
     }  
   })
 
-  // console.log('formatted :>> ', formatted);
+
 
   return (
     <Chart patient={patient} type="wfl" title="Weight for Lenght" ylabel="Weight (in kg)" xlabel="Height (in cm)" formatted={formatted} name={patient.firstname} />

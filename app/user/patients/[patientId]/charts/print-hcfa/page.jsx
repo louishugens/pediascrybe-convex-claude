@@ -62,9 +62,11 @@ const PrintPage = async ({params: {patientId}}) => {
     }  
   })
 
+  console.log('print head formatted :>> ', formatted);
+
   return (
     <>
-      <Print type="hcfa" title="Head Circumference for Age" ylabel="HC (in cm)" xlabel="Age (in days)" patient={patient} doctor={doctor} data-superjson />
+      <Print type="hcfa" title="Head Circumference for Age" ylabel="HC (in cm)" xlabel="Age (in days)" patient={patient} doctor={doctor} formatted={formatted} data-superjson />
     </>
   );
 };
