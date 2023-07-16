@@ -20,11 +20,12 @@ async function getPatient(patientId){
 const Charts = async ({params: {patientId}}) => {
   const patient = await getPatient(patientId)
   const appointments = patient.appointments
+  console.log('appointments :>> ', appointments);
 
   let formatted = []
 
   appointments.map(appointment =>{
-    if(appointment.height){
+    if(appointment.height && appointment.weight){
       
       let app = {category: Number.parseFloat(appointment.height.toFixed(1)), value: appointment.weight}
       formatted.push(app)
@@ -34,7 +35,7 @@ const Charts = async ({params: {patientId}}) => {
   // console.log('formatted :>> ', formatted);
 
   return (
-    <Chart sex={patient.sex} type="wfl" title="Weight for Lenght" ylabel="Weight (in kg)" xlabel="Height (in cm)" formatted={formatted} name={patient.firstname} />
+    <Chart patient={patient} type="wfl" title="Weight for Lenght" ylabel="Weight (in kg)" xlabel="Height (in cm)" formatted={formatted} name={patient.firstname} />
   )
 }
 

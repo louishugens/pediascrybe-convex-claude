@@ -1,11 +1,8 @@
 'use client'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer, Tooltip } from "recharts";
 import * as CONST from '../utils/constants'
-import Link from 'next/link'
 
-function Chart({patient, type, title, ylabel, xlabel, formatted, name}) {
-  console.log('patient :>> ', patient);
-  const sex = patient.sex
+function Chart({sex, type, title, ylabel, xlabel, formatted, name}) {
   let data
   if (sex == 'male') {
     switch (type) {
@@ -45,15 +42,12 @@ function Chart({patient, type, title, ylabel, xlabel, formatted, name}) {
   }
  
   return (
-    <div className="h-[32rem] w-full shadow-md rounded-lg p-8 mb-8">
-      <div className="flex flex-row justify-between w-full items-start">
+    <div className="h-[28rem] w-[44rem]  relative py-8 mr-8">
+      <div className="flex flex-col justify-center w-full items-center">
         <p className="text-slate-900 text-sm ">{title}</p>
-        <Link href={`/user/patients/${patient.id}/charts/print-${type}`} className="px-4 py-2 rounded-full bg-slate-200 text-blue-500 text-sm">
-          Export
-        </Link>
       </div>
       <ResponsiveContainer>
-        <LineChart width={900} height={500}>
+        <LineChart>
           <XAxis dataKey="category" type="category" allowDuplicatedCategory={false} label={{value: xlabel, position: "insideBottom", offset: -5}} tick={{fontSize: 12}} />
           <YAxis dataKey="value" label={{ value: ylabel, angle: -90, position: 'insideLeft'}} tick={{fontSize: 12}} />
           <Legend verticalAlign="bottom" height={16}/>

@@ -44,8 +44,8 @@ const Charts = async ({params: {patientId}}) => {
   })
 
   return (
-    <Chart sex={patient.sex} type="wfa" title="Weight for Age" ylabel="Weight (in kg)" xlabel="Age (in days)" formatted={formatted} name={patient.firstname} />
+    <Chart patient={patient} type="wfa" title="Weight for Age" ylabel="Weight (in kg)" xlabel="Age (in days)" formatted={formatted} name={patient.firstname} />
   )
 }
-
+ 
 export default Charts
