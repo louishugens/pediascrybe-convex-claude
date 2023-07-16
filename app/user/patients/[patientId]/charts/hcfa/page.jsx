@@ -31,7 +31,6 @@ const Charts = async ({params: {patientId}}) => {
     }  
   })
 
-  console.log('head formatted :>> ', formatted);
 
   return (
     <Chart patient={patient} type="hcfa" title="Head Circumference for Age" ylabel="HC (in cm)" xlabel="Age (in days)" formatted={formatted} name={patient.firstname}/>

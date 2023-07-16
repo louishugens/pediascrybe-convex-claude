@@ -26,7 +26,7 @@ const Charts = async ({params: {patientId}}) => {
   let formatted = []
 
   appointments.map(appointment =>{
-    if(appointment.weight){
+    if(appointment.weight && appointment.height){
       let val = appointment.weight
       val = val / Math.pow(appointment.height / 100, 2)
       let app = {category: differenceInDays(appointment.startDate, patient.birthdate), value: val.toPrecision(5)}
@@ -34,6 +34,7 @@ const Charts = async ({params: {patientId}}) => {
     }  
   })
 
+  console.log('bmi formatted :>> ', formatted);
 
   return (
     <Chart patient={patient} type="bfa" title="BMI for Age" ylabel="BMI (in kg/m^2)" xlabel="Age (in days)" formatted={formatted} name={patient.firstname} />

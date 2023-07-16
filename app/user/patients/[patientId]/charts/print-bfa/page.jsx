@@ -57,13 +57,16 @@ const PrintPage = async ({params: {patientId}}) => {
   let formatted = []
 
   appointments.map(appointment =>{
-    if(appointment.weight){
+    if(appointment.weight && appointment.height){
       let val = appointment.weight
+      // console.log('val :>> ', val);
       val = val / Math.pow(appointment.height / 100, 2)
       let app = {category: differenceInDays(appointment.startDate, patient.birthdate), value: val.toPrecision(5)}
       formatted.push(app)
     }  
   })
+
+  console.log('print bfa formatted :>> ', formatted);
 
   return (
     <>

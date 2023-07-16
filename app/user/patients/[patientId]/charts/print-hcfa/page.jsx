@@ -62,7 +62,6 @@ const PrintPage = async ({params: {patientId}}) => {
     }  
   })
 
-  console.log('print head formatted :>> ', formatted);
 
   return (
     <>
