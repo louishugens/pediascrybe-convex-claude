@@ -23,7 +23,7 @@ const AppointmentComponent = ({appointment, doctorId, patientId}) => {
         })
 
         router.refresh()
-        router.push(`/user_only/${doctorId}/patients/${patientId}`)
+        router.push(`/user/patients/${patientId}`)
 
       }
       catch(err){
@@ -49,10 +49,10 @@ const AppointmentComponent = ({appointment, doctorId, patientId}) => {
           />
           :
           <div className="flex flex-row justify-start">
-            <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointment.id}`} className="mr-2">
+            <Link href={`/user/patients/${patientId}/${appointment.id}`} className="mr-2">
               <EyeIcon className="h-4 w-4" />
             </Link>
-            <Link href={`/user_only/${doctorId}/patients/${patientId}/${appointment.id}/edit-appointment`} className="mr-2">
+            <Link href={`/user/patients/${patientId}/${appointment.id}/edit-appointment`} className="mr-2">
               <PencilIcon className="h-4 w-4" />
             </Link>
             <button onClick={handleDelete}>

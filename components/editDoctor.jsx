@@ -50,13 +50,13 @@ const EditDoctor = ({doctor}) => {
         body: JSON.stringify(body)
       })
       router.refresh()
-      router.push(`/user_only/${doctor.id}/profile`)
+      router.push(`/user/profile`)
 
     }
     catch(err){
       console.log(err)
     }
-    router.push(`/user_only/${doctor.id}/profile`)
+    router.push(`/user/profile`)
   }
 
   return (
