@@ -5,28 +5,52 @@ import PatientList from '@/components/patientList'
 import { BeatLoader } from "react-spinners";
 import { Suspense } from "react";
 import {createServerClient} from '@/utils/supabase-server'
+import Search from "@/components/search";
 
 
-async function getDoctor(doctorId){
-  const doctor = await prisma.doctor.findUnique({
+async function getPatients(doctorId, search){
+  const patients = await prisma.patient.findMany({
     where:{
-      id:doctorId
+      doctorId:doctorId,
+      OR:[
+        {
+          firstname:{
+            contains: search,
+            mode: 'insensitive' 
+          }
+        },
+        {
+          lastname:{
+            contains: search,
+            mode: 'insensitive'
+          }
+        },
+        {
+          email:{
+            contains: search,
+            mode: 'insensitive'
+          }
+        },
+      ] 
+
     },
-    include: {
-      patients:{
-        orderBy:{
-          lastname: 'asc'
-        }
-      },
-    },
+    // include: {
+    //   patients:{
+    //     orderBy:{
+    //       lastname: 'asc'
+    //     }
+    //   },
+    // },
   })
-  return doctor
+  return patients
 }
 
 export const dynamic = 'force-dynamic';
 
 
-export default async function Patients() {
+export default async function Patients({params, searchParams}) {
+
+  const { search = '' } = searchParams
 
   const supabase = createServerClient()
   
@@ -36,7 +60,7 @@ export default async function Patients() {
 
   const doctorId = session?.user?.id
 
-  const {patients} = await getDoctor(doctorId)
+  const patients = await getPatients(doctorId, search)
 
   return (
     <div className='h-full'>
@@ -46,6 +70,7 @@ export default async function Patients() {
         className='self-end px-4 py-2 bg-blue-500 text-white rounded-full text-sm' 
         href={`/user/patients/add-patient`}>Add Patient</Link>
       </div>
+      <Search />
       <Suspense fallback={<Loading />}>
         <PatientList patients={patients} doctorId={doctorId} />
       </Suspense>

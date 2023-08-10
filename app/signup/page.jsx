@@ -119,7 +119,7 @@ export default function Signup() {
                   type="text"
                   {...register('firstname')}
                 />
-                <p className='px-4 pt-1 text-sm text-red-600'>{errors.firstname?.message}</p>
+                {errors?.firstname && <p className='px-4 pt-1 text-sm text-red-600'>{errors?.firstname?.message}</p>}
               </label>
               <label className="flex flex-col mb-4 h-16">
                 <span className="font-medium">Last name</span>
@@ -129,7 +129,7 @@ export default function Signup() {
                   type="text"
                   {...register('lastname')}
                 />
-                <p className='px-4 pt-1 text-sm text-red-600'>{errors.lastname?.message}</p>
+                {errors?.lastname && <p className='px-4 pt-1 text-sm text-red-600'>{errors?.lastname?.message}</p>}
               </label>
               <label className="flex flex-col mb-4 h-16">
                 <span className="font-medium">Email</span>
@@ -139,7 +139,7 @@ export default function Signup() {
                   type="email"
                   {...register('email')}
                 />
-                <p className='px-4 pt-1 text-sm text-red-600'>{errors.email?.message}</p>
+                {errors.email && <p className='px-4 pt-1 text-sm text-red-600'>{errors?.email?.message}</p>}
               </label>
               <label className="flex flex-col mb-6 h-16">
                 <span className="font-medium">Password</span>
@@ -149,7 +149,7 @@ export default function Signup() {
                   type="password"
                   {...register('password')}
                 />
-                <p className='px-4 pt-1 text-sm text-red-600'>{errors.password?.message}</p>
+                {errors?.email && <p className='px-4 pt-1 text-sm text-red-600'>{errors?.password?.message}</p>}
               </label>
               <label className="inline-flex relative items-center cursor-pointer">
                 <input
@@ -167,7 +167,7 @@ export default function Signup() {
                   </span>
                 </p>
               </label>
-              <p className='px-4 pt-1 text-xs text-red-600 mb-5'>{errors.terms?.message}</p>
+              {errors?.terms && <p className='px-4 pt-1 text-xs text-red-600 mb-5'>{errors.terms?.message}</p>}
 
               <button className="py-2 px-4 rounded-full bg-green-500 text-lg font-semibold w-1/2 center mt-4 mx-auto" type='submit'>
                 Create Account

@@ -3,7 +3,7 @@ import  '../css/globals.css'
 import { AnalyticsWrapper } from '../components/analytics';
 import GA from '../components/googleAnalytics';
 import SupabaseProvider from '@/utils/supabase-provider'
-import { createServerComponentSupabaseClient } from '@supabase/auth-helpers-nextjs'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { headers, cookies } from 'next/headers'
 
 // const montserrat = Montserrat({
@@ -18,7 +18,7 @@ const montserrat = Montserrat({
 
 
 export default async function RootLayout({children}) {
-  const supabase = createServerComponentSupabaseClient({
+  const supabase = createServerComponentClient({
     headers,
     cookies,
   })
