@@ -7,7 +7,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import useDoctor from '../utils/hooks/useDoctor';
 import { ArrowRightOnRectangleIcon, ListBulletIcon, PencilIcon, UserGroupIcon, UserPlusIcon } from '@heroicons/react/24/outline';
 
-const Sidenav = ({doctorId, patientId}) => {
+const Sidenav = () => {
 
   const router = useRouter()
   const pathname = usePathname();

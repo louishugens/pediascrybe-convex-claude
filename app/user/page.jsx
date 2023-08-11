@@ -24,8 +24,7 @@ async function getDoctor(doctorId){
   return doctor
 }
 export const dynamic = 'force-dynamic';
-// export const dynamic = 'force-dynamic',
-//   revalidate = 0;
+
 
 
 export default async function Dashboard() {

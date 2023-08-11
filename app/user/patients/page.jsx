@@ -1,4 +1,4 @@
-import "server-only";
+// import "server-only";
 import prisma from "@/utils/prisma"
 import Link from 'next/link'
 import PatientList from '@/components/patientList'
@@ -45,12 +45,13 @@ async function getPatients(doctorId, search){
   return patients
 }
 
-export const dynamic = 'force-dynamic';
+// export const dynamic = 'force-dynamic';
 
 
-export default async function Patients({params, searchParams}) {
+export default async function Patients({searchParams}) {
 
   const { search = '' } = searchParams
+  // const search = ''
 
   const supabase = createServerClient()
   

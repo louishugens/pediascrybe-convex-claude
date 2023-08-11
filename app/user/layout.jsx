@@ -1,8 +1,18 @@
 import Sidenav from '@/components/sidenav'
 
 export const dynamic = 'force-dynamic';
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from "next/headers";
+import { redirect } from 'next/navigation';
 
-const Layout = ({children, params: { doctorId, patientId }}) => {
+const Layout = async ({children, params: { doctorId, patientId }}) => {
+  const supabase = createServerComponentClient({cookies})
+  const { data: {session}} = await supabase.auth.getSession()
+
+  if (!session) {
+    redirect('/')
+  }
+
 
   return (
     <div className='flex flex-row relative h-screen w-screen'>
