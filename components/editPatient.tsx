@@ -54,14 +54,17 @@ const EditPatient = ({patient, doctorId}) => {
   const schema = z.object({
     firstname: z.string().nonempty({ message: "Please enter patient's first name" }),
     lastname:  z.string().nonempty({ message: "Please enter patient's last name" }),
-    email: z.string().email('Invalid email'),
+    email: z.string()
+    .refine(value => value === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value), {
+      message: 'Please enter a valid email or leave it empty.',
+    }),
     birthdate: z.date({required_error: "Please enter patient's birth date"}),
-    mothername: z.string(),
+    mothername: z.string().optional(),
     sex: z.string(),
-    religion: z.string(),
-    phone: z.string(),
-    allergies: z.string(),
-    history: z.string(),
+    religion: z.string().optional(),
+    phone: z.string().optional(),
+    allergies: z.string().optional(),
+    history: z.string().optional(),
   })
 
   type FormValues = z.infer<typeof schema>
@@ -73,14 +76,14 @@ const EditPatient = ({patient, doctorId}) => {
     defaultValues:{
       firstname: patient.firstname || null,
       lastname: patient.lastname || null,
-      email: patient.email || null,
-      phone: patient.phone || null,
+      email: patient.email || "",
+      phone: patient.phone || "",
       birthdate: new Date(patient.birthdate) || undefined,
-      mothername: patient.mothername || null,
-      sex: patient.sex || null,
+      mothername: patient.mothername || "",
+      sex: patient.sex || "",
       religion: patient.religion || "",
-      allergies: patient.allergies || null,
-      history: patient.history || null,
+      allergies: patient.allergies || "",
+      history: patient.history || "",
     },
     resolver: zodResolver(schema)
   });

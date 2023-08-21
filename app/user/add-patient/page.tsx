@@ -42,16 +42,16 @@ import {
 const AddPatient = () => {
 
   const schema = z.object({
-    firstname: z.string().nonempty({ message: "Please enter patient's first name" }),
-    lastname:  z.string().nonempty({ message: "Please enter patient's last name" }),
-    email: z.string().email('Invalid email'),
+    firstname: z.string({ required_error: "Please enter patient's first name" }),
+    lastname:  z.string({ required_error: "Please enter patient's last name" }),
+    email: z.string().optional(),
     birthdate: z.date({required_error: "Please enter patient's birth date"}),
-    mothername: z.string(),
-    sex: z.string(),
-    religion: z.string(),
-    phone: z.string(),
-    allergies: z.string(),
-    history: z.string(),
+    mothername: z.string().optional(),
+    sex: z.string({required_error: "Please enter patient's sex"}),
+    religion: z.string().optional(),
+    phone: z.string().optional(),
+    allergies: z.string().optional(),
+    history: z.string().optional(),
   })
 
 
