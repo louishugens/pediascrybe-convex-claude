@@ -46,6 +46,7 @@ model Appointment {
   head            Float?
   arm             Float?
   sao2            Float?
+  temperature     Float?
 }
 
 model Doctor {
@@ -100,6 +101,8 @@ model Patient {
   Doctor      Doctor?       @relation(fields: [doctorId], references: [id])
   doctorId    String?
   mothername  String?
+  allergies   String?
+  history     String?
 }
 
 enum Sex {

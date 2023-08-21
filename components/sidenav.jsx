@@ -26,13 +26,13 @@ const Sidenav = () => {
         </Link>
       </div>
       <ul className='pt-16 text-sm text-slate-900'>
-        <li className={pathname === (`/user/patients`) ? 'font-bold pb-2  flex flex-row': 'pb-2  flex flex-row'}>
+        <li className={pathname.includes(`/user/patients`) ? 'font-bold pb-2  flex flex-row': 'pb-2  flex flex-row'}>
           <UserGroupIcon className=' h-5 w-5 mr-4' />
           <Link href={`/user/patients`}>Patients</Link>
         </li>
-        <li className={pathname === (`/user/patients/add-patient`) ? 'font-bold pb-2 flex flex-row' :'pb-2  flex flex-row'}>
+        <li className={pathname === (`/user/add-patient`) ? 'font-bold pb-2 flex flex-row' :'pb-2  flex flex-row'}>
           <UserPlusIcon className=' h-5 w-5 mr-4' />
-          <Link href={`/user/patients/add-patient`}>Add Patient</Link>
+          <Link href={`/user/add-patient`}>Add Patient</Link>
         </li>
         {/* <li className=' pb-2 '>
           <Link href={`/user/appointments`}>Appointments</Link>

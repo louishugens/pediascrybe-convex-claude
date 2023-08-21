@@ -6,7 +6,12 @@ import type { NextRequest } from 'next/server';
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
   const supabase = createMiddlewareClient({ req, res });
-  await supabase.auth.getSession()
+  const {data: {session}, error} = await supabase.auth.getSession()
+
+  if (error) {
+    res.cookies.delete("sb-ayoxumbkhwltdnvulzyp-auth-token");
+    return ["error", res];
+  }
 
   return res;
 }

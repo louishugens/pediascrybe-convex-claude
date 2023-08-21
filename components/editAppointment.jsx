@@ -28,6 +28,7 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
     findings: yup.string().nullable(true),
     arm: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null),
     sao2: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null),
+    temperature: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null),
   }).required();
   
   let [color, setColor] = useState("#ffffff")
@@ -46,6 +47,7 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
       findings: appointment.findings || null,
       arm: appointment.arm || null,
       sao2: appointment.sao2 || null,
+      temperature: appointment.temperature || null,
     },
     resolver: yupResolver(schema)
   });
@@ -58,8 +60,8 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
     setLoading(true)
  
     try{
-      const {height, weight, head, motif, findings, arm, sao2} = values
-      const body = {height, weight, head, motif, findings, arm, sao2, appointmentId: appointment.id}
+      const {height, weight, head, motif, findings, arm, sao2, temperature} = values
+      const body = {height, weight, head, motif, findings, arm, sao2, temperature, appointmentId: appointment.id}
       await fetch('/api/patients/updateAppointment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -97,7 +99,7 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
     <div className='pt-4'>
       <div className="flex flex-col w-full">
         <p className='text-1xl text-green-500 font-bold'>
-          New Appointment
+          Update Appointment
         </p>
         <form className="flex flex-col mt-4 w-full text-sm" onSubmit={handleSubmit(onSubmit)}>
           <div className="grid gap-x-8 gap-y-4 grid-cols-3">
@@ -155,6 +157,17 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
                 {...register('sao2')}
               />
               <p className='px-4 pt-1 text-sm text-red-600'>{errors.sao2?.message}</p>
+            </label>
+            <label className="flex flex-col mb-4 h-16">
+              <span className="font-medium">Temperature (in °C)</span>
+              <input
+                placeholder="Patient's temperature in °C"
+                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
+                type="number"
+                step={0.001}
+                {...register('temperature')}
+              />
+              <p className='px-4 pt-1 text-sm text-red-600'>{errors.temperature?.message}</p>
             </label>
           </div>
           <div className="grid gap-x-8 gap-y-4 grid-cols-2">

@@ -1,7 +1,7 @@
 import prisma from '../../../utils/prisma';
 
 module.exports = async (req, res) => {
-  const {firstname, lastname, email, birthdate, religion, sex, mothername, phone, id} = req.body
+  const {firstname, lastname, email, birthdate, religion, sex, mothername, phone, id, allergies, history} = req.body
 
   try{
     await prisma.doctor.update({
@@ -11,7 +11,7 @@ module.exports = async (req, res) => {
       data: {
         patients:{
           create:{
-            firstname, lastname, email, birthdate, religion, sex, mothername, phone
+            firstname, lastname, email, birthdate, religion, sex, mothername, phone, allergies, history
           }
         }
       }

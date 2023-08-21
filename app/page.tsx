@@ -72,8 +72,8 @@ export default function Home() {
   return (
     <div className="py-2 px-4">
       <Header />
-      <div className='flex flex-row pt-4'>
-        <div className="basis-1/2 pl-4 mx-12">
+      <div className='flex flex-col md:flex-row pt-4'>
+        <div className=" w-full md:basis-1/2 pl-4 mx-6 md:mx-12">
           <h2 className='text-3xl text-slate-900 font-bold'>Log <span className='text-green-500'>In</span></h2>
           <p className='text-slate-900 text-sm'>
             Don&apos;t have an account yet? 
@@ -126,7 +126,11 @@ export default function Home() {
 
             </form>
           </Form> */}
-          <form className='flex flex-col mt-16 text-sm' onSubmit={handleSubmit(onSubmit)}>
+
+          <p className='text-slate-900 text-sm font-bold mt-16 md:hidden'>🌟 Unlock a Richer Experience: Connect from Your Laptop! 🌟</p>
+          <p className='text-slate-900 text-sm mt-4 md:hidden'>👋 Hello there! We&apos;re thrilled to invite you to a whole new level of engagement and convenience. 🚀 While our mobile app offers the portability you love, we&apos;re excited to share that a world of enhanced features and capabilities awaits you when you connect using your laptop!</p>
+          <p className='text-slate-900 text-sm mt-4 md:hidden'>See you on the larger side of life! 🎉</p>
+          <form className='md:flex flex-col mt-16 text-sm hidden' onSubmit={handleSubmit(onSubmit)}>
             <label className="flex flex-col mb-4 h-16">
               <span className='font-medium'>Email</span>
               <input placeholder='johndoe@example.com' className='placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4' type='email' {...register('email')}/>
@@ -156,7 +160,7 @@ export default function Home() {
           
           
         </div>
-        <div className="basis-1/2">
+        <div className="md:basis-1/2 w-full">
           <Doctor />
         </div>
       </div>

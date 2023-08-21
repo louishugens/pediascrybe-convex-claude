@@ -61,26 +61,27 @@ const AppointmentPageComponent = ({appointment, doctorId, patientId}) => {
         }
       </div>
       <div className="grid gap-x-8 gap-y-4 grid-cols-3 mt-4 mb-4">
-        <p>Height: <span className='font-bold'>{appointment.height} cm</span></p>
-        <p>Weight: <span className='font-bold'>{appointment.weight} kg</span></p>
-        <p>Head Circumference: <span className='font-bold'>{appointment.head} cm</span></p>
-        <p>Arm Circumference: <span className='font-bold'>{appointment.arm} cm</span></p>
-        <p>SaO2: <span className='font-bold'>{appointment.sao2} %</span></p>
+        <p className="font-semibold">Height: <span className='font-normal'>{appointment.height} cm</span></p>
+        <p className="font-semibold">Weight: <span className='font-normal'>{appointment.weight} kg</span></p>
+        <p className="font-semibold">Head Circumference: <span className='font-normal'>{appointment.head} cm</span></p>
+        <p className="font-semibold">Arm Circumference: <span className='font-normal'>{appointment.arm} cm</span></p>
+        <p className="font-semibold">SaO2: <span className='font-normal'>{appointment.sao2} %</span></p>
+        <p className="font-semibold">Temperature: <span className='font-normal'>{appointment.temperature} °C</span></p>
       </div>
       <div className="grid gap-x-8 gap-y-4 grid-cols-2 mt-4">
         <div className="flex flex-col">
-          <p className="font-bold">Symptoms</p>
+          <p className="font-semibold">Symptoms</p>
           <p className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.motif}</p>
         </div>
         <div className="flex flex-col">
-          <p className="font-bold">Diagnostic</p>
+          <p className="font-semibold">Diagnostic</p>
           <p className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.findings}</p>
         </div>
         <div className="flex flex-col">
-          <p className="font-bold">Prescription</p>
+          <p className="font-semibold">Prescription</p>
           <div className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.medication?.map((medication, index) =>(
             <div key={index}>
-              <p className="font-bold">-{medication.drug}, <span className="italic font-normal">{medication.count} {medication.count > 1 ? "flacons": "flacon"}</span></p>
+              <p className="font-semibold">-{medication.drug}, <span className="italic font-normal">{medication.count} {medication.count > 1 ? "flacons": "flacon"}</span></p>
               <p>{medication.posology}</p>
             </div>
           ))}</div>
@@ -94,7 +95,7 @@ const AppointmentPageComponent = ({appointment, doctorId, patientId}) => {
           </div>
         </div>
         <div className="flex flex-col">
-          <p className="font-bold">Lab exams</p>
+          <p className="font-semibold">Lab exams</p>
           <ul className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.exams?.map((exam, index) =>(
             <li key={index}>-{exam.exam}</li>
           ))}</ul>

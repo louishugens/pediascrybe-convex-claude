@@ -31,6 +31,7 @@ const AddAppointment = ({params: {doctorId, patientId}}) => {
     findings: yup.string().nullable(true),
     arm: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null),
     sao2: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null).max(100, "Percentage can't be more than 100"),
+    temperature: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null),
   }).required();
   
   let [color, setColor] = useState("#ffffff")
@@ -49,6 +50,7 @@ const AddAppointment = ({params: {doctorId, patientId}}) => {
       findings: null,
       arm: null,
       sao2: null,
+      temperature: null,
     },
     resolver: yupResolver(schema)
   });
@@ -61,8 +63,8 @@ const AddAppointment = ({params: {doctorId, patientId}}) => {
     setLoading(true)
  
     try{
-      const {height, weight, head, motif, findings, arm, sao2} = values
-      const body = {height, weight, head, motif, findings, arm, sao2, patientId, doctorId}
+      const {height, weight, head, motif, findings, arm, sao2, temperature} = values
+      const body = {height, weight, head, motif, findings, arm, sao2, temperature, patientId, doctorId}
       const response = await fetch('/api/patients/addAppointment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -158,6 +160,17 @@ const AddAppointment = ({params: {doctorId, patientId}}) => {
                 {...register('sao2')}
               />
               <p className='px-4 pt-1 text-sm text-red-600'>{errors.sao2?.message}</p>
+            </label>
+            <label className="flex flex-col mb-4 h-16">
+              <span className="font-medium">Temperature (in °C)</span>
+              <input
+                placeholder="Patient's temperature in °C"
+                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
+                type="number"
+                step={0.001}
+                {...register('temperature')}
+              />
+              <p className='px-4 pt-1 text-sm text-red-600'>{errors.temperature?.message}</p>
             </label>
           </div>
           <div className="grid gap-x-8 gap-y-4 grid-cols-2">

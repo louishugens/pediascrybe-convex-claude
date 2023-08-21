@@ -37,9 +37,9 @@ const ProfilePage = async () => {
         <div className="grid grid-cols-3 gap-4 mt-4">
           {/* <p className="text-sm">Birth date: <span className="font-bold">{format(new Date(patient.birthdate), 'dd-MM-yyyy')}</span></p> */}
           {/* <p className="text-sm">Sex: <span className="font-bold">{doctor.sex}</span></p> */}
-          <p className="text-sm">Email: <span className="font-bold">{doctor.email}</span></p>
-          <p className="text-sm">Phone: <span className="font-bold">{doctor.phone}</span></p>
-          <p className="text-sm">Specialty: <span className="font-bold">{doctor.spec}</span></p>
+          <p className="text-sm font-semibold">Email: <span className="font-normal">{doctor.email}</span></p>
+          <p className="text-sm font-semibold">Phone: <span className="font-normal">{doctor.phone}</span></p>
+          <p className="text-sm font-semibold">Specialty: <span className="font-normal">{doctor.spec}</span></p>
         </div>
       </div>
     </div>
