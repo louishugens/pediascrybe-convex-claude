@@ -87,7 +87,7 @@ const AddPatient = () => {
  
     try{
       const {firstname, lastname, email, birthdate, mothername, sex, religion, phone, allergies, history} = values
-      const body = {firstname, lastname, email, birthdate, mothername, sex, religion, phone, id: doctor?.id, allergies, history}
+      const body = {firstname, lastname, email, birthdate, mothername, sex, religion, phone, id: doctor!.id, allergies, history}
       await fetch('/api/patients/addPatient', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
