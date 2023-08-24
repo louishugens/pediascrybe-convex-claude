@@ -11,13 +11,13 @@ const Print = ({appointment, doctor, patient}) => {
 
   const string = 'appointment'
 
-  const componentRef = useRef();
+  const componentRef = useRef(null);
   const handlePrint = useReactToPrint({
-    content: () => componentRef.current as any,
+    content: () => componentRef.current,
     documentTitle: `${string}_${patient.firstname}_${patient.lastname}_${format(appointment.startDate, 'yyy-MM-dd')}`
   });
 
-  console.log('appointment', appointment)
+  // console.log('appointment', appointment)
 
   return (
     <div className="">
