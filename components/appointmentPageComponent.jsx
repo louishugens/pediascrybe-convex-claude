@@ -3,7 +3,7 @@ import { useState } from "react";
 import Link from "next/link"
 import { format } from 'date-fns'
 import { useRouter } from "next/navigation";
-import { ArrowUturnLeftIcon, PencilIcon, TrashIcon} from '@heroicons/react/24/outline'
+import { ArrowUturnLeftIcon, PencilIcon, TrashIcon, PrinterIcon} from '@heroicons/react/24/outline'
 import {BeatLoader} from 'react-spinners'
 
 const AppointmentPageComponent = ({appointment, doctorId, patientId}) => {
@@ -53,6 +53,9 @@ const AppointmentPageComponent = ({appointment, doctorId, patientId}) => {
             </Link>
             <Link href={`/user/patients/${patientId}/${appointment.id}/edit-appointment`} className="mr-2">
               <PencilIcon className="h-4 w-4" />
+            </Link>
+            <Link href={`/user/patients/${patientId}/${appointment.id}/print-appointment`} className="mr-2">
+              <PrinterIcon className="h-4 w-4" />
             </Link>
             <button onClick={handleDelete}>
               <TrashIcon className="h-4 w-4" />
