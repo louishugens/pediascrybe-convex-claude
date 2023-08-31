@@ -1,12 +1,11 @@
 'use client'
 import Link from 'next/link'
-import Doctor from '../../../components/doctor'
+import Doctor from '@/components/doctor'
 import { useForm } from 'react-hook-form';
 import * as yup from "yup";
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useRouter } from 'next/navigation';
-import supabase from '../../../utils/supabase';
-import Header from '../../header';
+import supabase from '@/utils/supabase';
 import { useState, useEffect } from "react";
 import BeatLoader  from 'react-spinners/BeatLoader';
 
@@ -84,12 +83,11 @@ export default function Home({searchParams}) {
   // }
 
   return (
-    <div className="py-2 px-4">
-      <Header />
-      <div className='flex flex-row pt-4'>
-        <div className="basis-1/2 pl-4 mx-12">
-          <h2 className='text-3xl text-slate-900 font-bold'>Reset <span className='text-green-500'>password</span></h2>
-          <p className='text-slate-900 text-sm'>Don&apos;t have an account yet? <Link href="/signup" className='text-green-500 font-semibold'>Sign up</Link></p>
+    <div className="pt-12 pb-2 px-8 md:px-16">
+      <div className='flex flex-col md:flex-row pt-4'>
+        <div className="md:basis-1/2 w-full">
+          <h2 className='text-3xl text-slate-900 font-bold'>Reset <span className='text-primary'>password</span></h2>
+          <p className='text-slate-900 text-sm'>Don&apos;t have an account yet? <Link href="/signup" className='text-primary font-semibold'>Sign up</Link></p>
           <form className='flex flex-col mt-16 text-sm' onSubmit={handleSubmit(onSubmit)}>
             <p className='mb-8'>Please enter your new password:</p>
             {
@@ -109,7 +107,7 @@ export default function Home({searchParams}) {
               <input placeholder='your password' className='placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4' type='password' {...register('password')}/>
               <p className='px-4 pt-1 text-sm text-red-600'>{errors.password?.message}</p>
             </label> */}
-            <button className='py-2 px-4 rounded-full bg-green-500 text-lg font-semibold w-1/2 center mt-4 mx-auto' type='submit'>
+            <button className='py-2 px-4 rounded-full bg-primary text-lg font-semibold w-1/2 center mt-4 mx-auto' type='submit'>
               {
                 loading
                 ?
@@ -122,7 +120,7 @@ export default function Home({searchParams}) {
                 :
                   "Submit"}
             </button>
-            <p className='text-sm mt-4 mx-auto text-slate-900'>You remember your password? <Link href={'#'} className="text-green-500 font-medium" >Log in here!</Link></p>
+            <p className='text-sm mt-4 mx-auto text-slate-900'>You remember your password? <Link href={'#'} className="text-primary font-medium" >Log in here!</Link></p>
             {errorMsg && <p className='text-sm mt-4 mx-auto font-medium text-red-500'>{errorMsg}</p>}
           </form>
           
