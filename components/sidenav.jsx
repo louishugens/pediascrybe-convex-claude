@@ -5,7 +5,7 @@ import React from 'react'
 import supabase from '../utils/supabase';
 import { useRouter, usePathname } from 'next/navigation';
 import useDoctor from '../utils/hooks/useDoctor';
-import { ArrowRightOnRectangleIcon, ListBulletIcon, PencilIcon, UserGroupIcon, UserPlusIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftOnRectangleIcon, ListBulletIcon, PencilIcon, UserGroupIcon, UserPlusIcon } from '@heroicons/react/24/outline';
 
 const Sidenav = () => {
 
@@ -46,7 +46,7 @@ const Sidenav = () => {
           <Link href={`/user/edit-profile`}>Edit Profile</Link>
         </li>
         <li className=' pb-2  flex flex-row'>
-          <ArrowRightOnRectangleIcon className=' h-5 w-5 mr-4' />
+          <ArrowLeftOnRectangleIcon className=' h-5 w-5 mr-4' />
           <button onClick={handleLogout}>Sign out</button>
         </li>
       </ul>

@@ -9,9 +9,14 @@ export async function middleware(req: NextRequest) {
   const {data: {session}, error} = await supabase.auth.getSession()
 
   if (error) {
+
+    console.log('error :>> ', error);
     res.cookies.delete("sb-ayoxumbkhwltdnvulzyp-auth-token");
     return ["error", res];
   }
 
   return res;
 }
+
+
+

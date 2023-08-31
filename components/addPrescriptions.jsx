@@ -1,11 +1,13 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm, Control, useFieldArray, useWatch  } from 'react-hook-form';
 import * as Yup from 'yup'
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useRouter } from 'next/navigation'
 import { BeatLoader } from 'react-spinners';
 import { XCircleIcon } from '@heroicons/react/24/outline';
+import { formatDistanceToNow } from "date-fns"
+import PulseLoader from "react-spinners/PulseLoader"
 
 const PrescriptionsSchema =  Yup.object({
   prescriptions: Yup.array().of(
@@ -16,15 +18,57 @@ const PrescriptionsSchema =  Yup.object({
   })).required('Please add at least one prescription').min(1, 'Please add at least one prescription')
 }).required();
 
-const AddPrescriptions = ({doctorId, patientId, appointment}) => {
+const AddPrescriptions = ({patient, patientId, appointment}) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [color, setColor] = useState('#ffffff')
   const router = useRouter()
   const [prescriptions, setPrescriptions] = useState(appointment.medication || [{drug: '', count: 1, posology: ''}])
+  const [thinking, setThinking] = useState(false)
 
-  // console.log('user :>> ', user);
-  // console.log('day :>> ', day);
+  useEffect(() => {
+    const fetchPrescriptionsSuggestions = async () => {
+      setThinking(true)
+
+        const messages = [
+          {role: "system", content: "Generate a list of drug prescriptions based on the patient's symptoms and diagnostics.\
+          provide it in JSON array format as in the following example : [{drug: \"Paracetamol\", count: 1, posology: \"1 pill twice a day\"}, ... ] \
+          send an empty array if no drugs are suggested. Only send the JSON and nothing else. Use same language as the one used in the symptoms and diagnostics."},
+          {role: "user", content: `The patient is ${formatDistanceToNow(new Date(patient.birthdate))}`},
+          // {role: "system", content: "mimic the pediatrician's language and resppond as if you where the pediatrician writing the diagnostic."},
+          // {role: "system", content: "summarize your findings in a few sentences."},
+          {role: "user", content: appointment.motif ? `The patient symptoms are ${appointment.motif}` : ''},
+          {role: "user", content: appointment.finding ? `The pediatrician's diagnostic is ${appointment.finding}` : ''},
+          // {role: "system", content: "Translate the list in the language the symptoms and diagnostics are provided."},
+        ]
+
+        
+        try {
+          const response = await fetch('/api/diagnostic', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({messages})
+          });
+          const data = await response.json();
+          console.log('data :>> ', data);
+          const myexams = JSON.parse(data)
+          console.log('myexams :>> ', myexams);
+          myexams.forEach(exam => {
+            prepend(exam)
+          }
+          )
+          setThinking(false)
+
+        } catch (error) {
+          console.error("Error fetching suggestions:", error);
+        }
+    };
+
+        fetchPrescriptionsSuggestions();
+
+  }, [patient.birthdate]);
   const {
     register,
     handleSubmit,
@@ -76,6 +120,7 @@ const AddPrescriptions = ({doctorId, patientId, appointment}) => {
     <div className="w-full h-auto shadow-md rounded-lg p-4 bg-slate-50 mt-4 text-sm">
       <p>Add prescriptions</p>
       <form className='mt-4' onSubmit={handleSubmit(onSubmit)}>
+      {thinking && <span className=' font-light text-primary'> ScrybeGPT thinking <PulseLoader color={"#21C55D"} size={5} aria-label="Loading Spinner" data-testid="loader"/></span> }
       {fields.map((field, index) => {
         return (
           <section key={field.id} className="relative pt-8">

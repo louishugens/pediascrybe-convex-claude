@@ -12,6 +12,19 @@ async function getAppointment(appointmentId){
   return appointment
 }
 
+async function getPatient(patientId) {
+  const patient = await prisma.patient.findUnique({
+    where: {
+      id: patientId,
+    },
+    include: {
+      appointments: true,
+    },
+  })
+
+  return patient
+}
+
 
 
 export const dynamic = 'force-dynamic';
@@ -27,9 +40,10 @@ const AddExamsPage = async ({params: {patientId, appointmentId}}) => {
   const doctorId = session?.user?.id
 
   const appointment = await getAppointment(appointmentId)
+  const patient = await getPatient(patientId)
 
   return (
-    <AddExams appointment={appointment} doctorId={doctorId} patientId={patientId} data-superjson />
+    <AddExams appointment={appointment} doctorId={doctorId} patient={patient} patientId={patientId} data-superjson />
   )
 }
 
