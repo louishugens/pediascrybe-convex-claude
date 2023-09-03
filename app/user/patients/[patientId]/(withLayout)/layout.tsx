@@ -1,8 +1,9 @@
-import "server-only";
+// import "server-only";
 import prisma from "@/utils/prisma"
 import Link from "next/link";
 import { format } from "date-fns";
 import {createServerClient} from '@/utils/supabase-server'
+import AddProfileDocument from "@/components/addProfileDocument";
 
 async function getPatient(patientId){
   const patient = await prisma.patient.findUnique({
@@ -36,6 +37,18 @@ const Layout = async ({children, params: { patientId }}) => {
       <div className="w-full h-auto shadow-md rounded-lg p-4 bg-slate-50 ">
           <div className="flex flex-row w-full justify-between">
             <p className=' font-bold text-slate-900'>{patient.firstname} {patient.lastname}</p>
+            {/* { 
+              patient.vectorId 
+              ?
+                <Link
+                  className='px-4 py-2 bg-primary text-white rounded-full text-sm'
+                  href={`/user/scrybegpt/${patientId}`}
+                >
+                  Chat
+                </Link>
+              :
+                <AddProfileDocument patient={patient} />
+            } */}
             <Link 
             className='self-end px-4 py-2 bg-blue-500 text-white rounded-full text-sm' 
             href={`/user/patients/${patientId}/edit-patient`}>Edit Patient</Link>

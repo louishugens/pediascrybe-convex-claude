@@ -7,53 +7,32 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// model User {
-//   id        String   @id @unique
-//   firstname String
-//   lastname  String
-//   email     String
-//   profile   Profile  @default(doctor)
-//   doctor    Doctor?  @relation(fields: [doctorId], references: [id])
-//   doctorId  String?
-//   patient   Patient? @relation(fields: [patientId], references: [id])
-//   patientId String?
-// }
-
-// enum Profile {
-//   admin
-//   doctor
-//   patient
-// }
-
 model Appointment {
-  id              String    @id @unique @default(cuid())
   startDate       DateTime  @default(now())
   endDate         DateTime?
   cost            Int?
   motif           String?
-  status          Status?   @default(offline)
   transactionDate DateTime?
   transactionId   String?
-  patientId       String?
+  findings        String?
   doctorId        String?
-  findings         String?
-  exams           Json?
-  medication      Json?
-  Doctor          Doctor?   @relation(fields: [doctorId], references: [id])
-  Patient         Patient?  @relation(fields: [patientId], references: [id])
+  id              String    @id @unique @default(cuid())
+  patientId       String?
+  status          Status?   @default(offline)
+  head            Float?
   height          Float?
   weight          Float?
-  head            Float?
+  exams           Json?
+  medication      Json?
   arm             Float?
   sao2            Float?
   temperature     Float?
+  vectorId        Int?
+  Doctor          Doctor?   @relation(fields: [doctorId], references: [id])
+  Patient         Patient?  @relation(fields: [patientId], references: [id])
 }
 
 model Doctor {
-  id           String        @id @unique @default(cuid())
-  firstname     String
-  lastname     String
-  email        String
   cost         Int?
   duration     Int?
   phone        String?
@@ -68,41 +47,52 @@ model Doctor {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @default(now())
   availability Json?
-  appointments  Appointment[]
+  id           String        @id @unique @default(cuid())
+  email        String
+  firstname    String
+  lastname     String
+  appointments Appointment[]
   Img          Img?
-  // User         User[]
   patients     Patient[]
 }
 
 model Img {
-  id        String  @id @unique
   url       String
   public_id String
   doctorId  String? @unique
+  id        String  @id @unique
   Doctor    Doctor? @relation(fields: [doctorId], references: [id])
 }
 
 model Patient {
-  id          String        @id @unique @default(cuid())
-  firstname   String
-  lastname    String
-  email       String?
-  birthdate   DateTime
-  children    Int?
-  isCompleted Boolean       @default(false)
-  phone       String?
-  profession  String?
-  religion    String?
-  sex         Sex?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @default(now())
+  firstname    String
+  lastname     String
+  email        String?
+  isCompleted  Boolean       @default(false)
+  phone        String?
+  profession   String?
+  religion     String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @default(now())
+  id           String        @id @unique @default(cuid())
+  doctorId     String?
+  birthdate    DateTime
+  mothername   String?
+  sex          Sex?
+  children     Int?
+  allergies    String?
+  history      String?
+  bloodtype    String?
+  vectorId     Int?
   appointments Appointment[]
-  // User        User[]
-  Doctor      Doctor?       @relation(fields: [doctorId], references: [id])
-  doctorId    String?
-  mothername  String?
-  allergies   String?
-  history     String?
+  Doctor       Doctor?       @relation(fields: [doctorId], references: [id])
+}
+
+model documents {
+  id        BigInt                 @id @default(autoincrement())
+  content   String?
+  metadata  Json?
+  embedding Unsupported("vector")?
 }
 
 enum Sex {

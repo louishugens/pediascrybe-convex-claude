@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import BeatLoader  from 'react-spinners/BeatLoader';
 import { formatDistanceToNow } from "date-fns"
 import { useDebouncedCallback } from 'use-debounce'
+import { generateDiagnosticPrompt } from '@/lib/prompts'
 
 
 
@@ -58,23 +59,7 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
     const fetchDiagnosticSuggestions = async () => {
       if (symptoms) {
         setThinking(true)
-        const messages = [
-          {role: "system", content: "You are a helpful medical assistant.\
-            You provide pediatricians with diagnostic suggestions based on patient's\
-            symptoms and age. You are talking to a pediatrician. If you don't have enough\
-            information, just type 'Insufficient information.'\
-            in the language the pediatrician is using. Also, use the pediatrician's language\
-            in your response. The user messages are delimited by tripple quotes."
-          },
-          {role: "user", content: `The patient is """${formatDistanceToNow(new Date(patient.birthdate))}"""`},
-          // {role: "system", content: "If you don't have enough information, just type 'Insufficient information'\
-          //  in the language the pediatrician is using."},
-          // {role: "system", content: "mimic the pediatrician's language and resppond as if you where the pediatrician writing the diagnostic."},
-          // {role: "system", content: "summarize your findings in a few sentences."},
-          {role: "user", content: `"""${symptoms}"""`},
-        ]
-
-        
+        const messages = generateDiagnosticPrompt(symptoms, patient.birthdate)
         try {
           const response = await fetch('/api/diagnostic', {
             method: 'POST',

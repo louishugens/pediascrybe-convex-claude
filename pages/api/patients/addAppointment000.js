@@ -5,15 +5,8 @@ module.exports = async (req, res) => {
 
   try{
     const appointment = await prisma.appointment.create({
-      // where:{
-      //   id: patientId
-      // },
       data: {
-        // appointments:{
-        //   create:{
-            height, weight, head, motif, findings, arm, sao2, temperature, doctorId, patientId
-        //   }
-        // }
+        height, weight, head, motif, findings, arm, sao2, temperature, doctorId, patientId
       }
     })
     res.status(200).json(appointment)

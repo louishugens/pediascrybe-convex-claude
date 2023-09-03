@@ -68,7 +68,7 @@ async function Patient({params: {patientId }}) {
             </tr>
           </thead>
           <tbody className='w-full'>
-            {appointments.map(appointment => <AppointmentComponent appointment={appointment} doctorId={doctorId} patientId={patientId} data-superjson key={appointment.id} />
+            {appointments.map(appointment => <AppointmentComponent   appointment={appointment} doctorId={doctorId} patientId={patientId} data-superjson key={appointment.id} />
             )}
           </tbody>
         </table>
