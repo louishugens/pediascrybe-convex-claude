@@ -28,8 +28,10 @@ model Appointment {
   sao2            Float?
   temperature     Float?
   vectorId        Int?
+  files           String[]
   Doctor          Doctor?   @relation(fields: [doctorId], references: [id])
   Patient         Patient?  @relation(fields: [patientId], references: [id])
+  uploadedFiles   File[]
 }
 
 model Doctor {
@@ -104,4 +106,19 @@ enum Status {
   pending
   paid
   offline
+}
+
+
+model File {
+  id           String        @id @unique @default(cuid())
+  url          String      @unique
+  name         String
+  fileType     FileType
+  appointment  Appointment @relation(fields: [appointmentId], references: [id])
+  appointmentId String
+}
+
+enum FileType {
+  IMAGE
+  PDF
 }

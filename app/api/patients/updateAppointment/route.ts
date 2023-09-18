@@ -8,7 +8,9 @@ export async function POST(req: Request) {
   if(req.method == 'POST') {
 
     const supabase = createRouteHandlerClient({cookies});
-    const { data: session, error } = await supabase.auth.getSession();
+    const { data: {session}, error } = await supabase.auth.getSession();
+
+
 
     if (!session) {
       return new Response(

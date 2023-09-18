@@ -4,11 +4,12 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { Document } from "langchain/document";
+
 export async function POST(req: Request) {
   if(req.method == 'POST') {
 
     const supabase = createRouteHandlerClient({cookies});
-    const { data: session, error } = await supabase.auth.getSession();
+    const { data: {session}, error } = await supabase.auth.getSession();
 
     if (!session) {
       return new Response(
@@ -38,6 +39,7 @@ export async function POST(req: Request) {
 
       const doc = new Document({ pageContent: JSON.stringify(patient),
         metadata: { patientId: patient.id}});
+
 
       const result = await store.addDocuments([doc]);
 

@@ -4,7 +4,9 @@ import Link from "next/link"
 import { format } from 'date-fns'
 import { useRouter } from "next/navigation";
 import { ArrowUturnLeftIcon, PencilIcon, TrashIcon, PrinterIcon} from '@heroicons/react/24/outline'
+import { FileIcon } from "lucide-react";
 import {BeatLoader} from 'react-spinners'
+import Image from "next/image";
 
 const AppointmentPageComponent = ({appointment, doctorId, patientId}) => {
   const [loading, setLoading] = useState(false)
@@ -71,17 +73,17 @@ const AppointmentPageComponent = ({appointment, doctorId, patientId}) => {
         <p className="font-semibold">SaO2: <span className='font-normal'>{appointment.sao2} %</span></p>
         <p className="font-semibold">Temperature: <span className='font-normal'>{appointment.temperature} °C</span></p>
       </div>
-      <div className="grid gap-x-8 gap-y-4 grid-cols-2 mt-4">
+      <div className="grid gap-x-8 gap-y-4 grid-cols-2 mt-8">
         <div className="flex flex-col">
-          <p className="font-semibold">Symptoms</p>
+          <p className="font-semibold mb-2">Symptoms</p>
           <p className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.motif}</p>
         </div>
         <div className="flex flex-col">
-          <p className="font-semibold">Diagnostic</p>
+          <p className="font-semibold mb-2">Diagnostic</p>
           <p className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.findings}</p>
         </div>
         <div className="flex flex-col">
-          <p className="font-semibold">Prescription</p>
+          <p className="font-semibold mb-2">Prescription</p>
           <div className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.medication?.map((medication, index) =>(
             <div key={index}>
               <p className="font-semibold">-{medication.drug}, <span className="italic font-normal">{medication.count} {medication.count > 1 ? "flacons": "flacon"}</span></p>
@@ -98,7 +100,7 @@ const AppointmentPageComponent = ({appointment, doctorId, patientId}) => {
           </div>
         </div>
         <div className="flex flex-col">
-          <p className="font-semibold">Lab exams</p>
+          <p className="font-semibold mb-2">Lab exams</p>
           <ul className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.exams?.map((exam, index) =>(
             <li key={index}>-{exam.exam}</li>
           ))}</ul>
@@ -115,6 +117,58 @@ const AppointmentPageComponent = ({appointment, doctorId, patientId}) => {
           </div>
         </div>
       </div>
+      {/* <div className="mt-8">
+        <div className="flex flex-row items-center justify-between">
+          <p className="font-semibold">Uploaded files</p>
+          {
+            appointment.uploadedFiles?.length < 3 &&
+            <Link href={`/user/patients/${patientId}/${appointment.id}/upload-file`} className='self-end mt-2 shadow bg-slate-200 rounded-full py-1 px-4 text-blue-500'>
+            Upload file
+          </Link>}
+        </div>
+        <div className="flex flex-row w-full h-auto items-end gap-4 mt-2">
+          {
+            appointment.uploadedFiles?.length > 0 
+            ?
+              appointment.uploadedFiles?.map((file, index) =>(
+                <div key={index} className="flex flex-col items-center">
+
+                  {
+                    file.fileType === 'IMAGE' 
+                    ?
+                    <Image 
+                      src={file.url}  
+                      width={100} 
+                      alt={`${file.name}`} 
+                      height={100} 
+                      className="h-20 w-20 rounded-md object-cover" 
+                    />
+                    :
+                    <>
+                      <div className="relative h-20 w-20">
+                        <FileIcon className="h-20 w-20 fill-muted stroke-primary stroke-1" />
+                        <p className="text-primary text-sm font-bold absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">PDF</p>
+                      </div>
+                    </>
+                  }
+                  <a 
+                    href={file.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-2 text-sm text-indigo-500 dark:text-indigo-400 hover:underline"
+                  >
+                    {file.name}
+                  </a>
+                </div>  
+              ))
+            :
+            <p className="italic text-muted-foreground">
+              No files uploaded yet
+            </p>
+          }
+
+        </div>
+      </div> */}
     </div>
   </div>
   )

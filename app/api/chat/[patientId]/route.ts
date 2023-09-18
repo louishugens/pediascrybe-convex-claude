@@ -56,13 +56,13 @@ const condenseQuestionPrompt = PromptTemplate.fromTemplate(
 );
 
 const ANSWER_TEMPLATE = `You are ScrybGPT, a medical assistant chatbot. You are helping a pediatricians\
- understand their patients' conditions. You are given a the patient's profile data and the appointments \
- data, and the pediatrician will ask you question. Answer the questions based on the data provided as context.
-
-Answer the question based only on the following context:
-{context}
-
-Question: {question}
+  understand their patients' conditions. You are given a the patient's profile data and the appointments \
+  data, and the pediatrician will ask you question. Answer the questions based on the data provided as context.
+  Answer the questions in the language of the question.
+  Answer the question based only on the following context:
+  {context}
+  in addition the general knowledge you have about the medical field.
+  Question: {question}
 `;
 const answerPrompt = PromptTemplate.fromTemplate(ANSWER_TEMPLATE);
 
@@ -88,9 +88,12 @@ export async function POST(req: Request, { params }: { params: { patientId: stri
 
   const supabase = createRouteHandlerClient({cookies});
   const patientId = params.patientId!
-  const documentContents = `The documents table contains the patient's profile data and the appointments data. The patient's profile data is stored in the pageContent column, 
-  and the appointments data is stored in the pageContent column. The patientId column is used to join the two types of document. The patientId is either in id or patientId field of the pageContent colunm.
+  const documentContents = `The documents table contains the patient's profile data and the appointments data. 
+  The pageContent column contains either profile or appointment data in stringified JSON format. So we need to parse pageContent to get more granular data.
+  The patientId column is used to join the two types of document. The patientId is either in id or patientId 
+  field of the pageContent colunm.
   the patientId we are looking for is ${patientId}.`;
+
   try {
     const body = await req.json();
     const messages = body.messages ?? [];
@@ -98,7 +101,9 @@ export async function POST(req: Request, { params }: { params: { patientId: stri
     const currentMessageContent = messages[messages.length - 1].content;
 
     const model = new ChatOpenAI({
+      // modelName: "gpt-3.5-turbo",
       modelName: "gpt-4",
+      temperature: 0.0,
     });
 
     // const client = createClient(
