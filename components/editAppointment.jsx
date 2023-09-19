@@ -6,29 +6,24 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { useRouter } from 'next/navigation';
 import { useState } from "react";
 import BeatLoader  from 'react-spinners/BeatLoader';
-// import { LexicalComposer } from "@lexical/react/LexicalComposer";
-// import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
-// import { ContentEditable } from "@lexical/react/LexicalContentEditable";
-// import { ListPlugin } from "@lexical/react/LexicalListPlugin";
-// // import { CheckListPlugin } from "@lexical/react/LexicalCheckListPlugin";
-// import { ListItemNode, ListNode } from "@lexical/list";
-// import OnChangePlugin from '@lexical/react/LexicalOnChangePlugin'
-// import ToolbarPlugin from "../../../../../../components/listToolBar";
-// import PlaygroundTheme from "../../../../../../components/playgroundTheme";
-// import prepopulatedText from "../../../../../../components/sampleText";
+
 
 
 
 const EditAppointment = ({appointment, doctorId, patientId}) => {
   const schema = yup.object({
-    height: yup.number('Must be a number').nullable(true).transform((_, val) => val ? Number(val) : null),
-    weight:  yup.number().nullable(true).transform((_, val) => val ? Number(val) : null),
-    head: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null),
+    height: yup.number('Must be a number').nullable(true).transform((_, val) => val ? Number(val) : null).min(0, "Height can't be less than 0"),
+    weight:  yup.number().nullable(true).transform((_, val) => val ? Number(val) : null).min(0, "Weight can't be less than 0"),
+    head: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null).min(0, "Head circumference can't be less than 0"),
     motif: yup.string().nullable(true),
     findings: yup.string().nullable(true),
-    arm: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null),
-    sao2: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null),
+    arm: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null).min(0, "Arm circumference can't be less than 0"),
+    sao2: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null).max(100, "SaO2 percentage can't be more than 100").min(0, "SaO2 percentage can't be less than 0"),  
     temperature: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null),
+    pulse: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null).min(0, "Pulse can't be less than 0"),
+    respiratory: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null).min(0, "Respiratory rate can't be less than 0"),
+    systolic: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null).min(0, "Systolic blood pressure can't be less than 0"),
+    diastolic: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null).min(0, "Diastolic blood pressure can't be less than 0"),
   }).required();
   
   let [color, setColor] = useState("#ffffff")
@@ -48,6 +43,10 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
       arm: appointment.arm || null,
       sao2: appointment.sao2 || null,
       temperature: appointment.temperature || null,
+      pulse: appointment.pulse || null,
+      respiratory: appointment.respiratory || null,
+      systolic: appointment.systolic || null,
+      diastolic: appointment.diastolic || null,
     },
     resolver: yupResolver(schema)
   });
@@ -60,8 +59,8 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
     setLoading(true)
  
     try{
-      const {height, weight, head, motif, findings, arm, sao2, temperature} = values
-      const body = {height, weight, head, motif, findings, arm, sao2, temperature, appointmentId: appointment.id}
+      const {height, weight, head, motif, findings, arm, sao2, temperature, pulse, respiratory, systolic, diastolic} = values
+      const body = {height, weight, head, motif, findings, arm, sao2, temperature, pulse, respiratory, systolic, diastolic, appointmentId: appointment.id}
       await fetch('/api/patients/updateAppointment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -109,7 +108,7 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
                 placeholder="Patient's height in cm"
                 className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
                 type="number"
-                step={0.001}
+                step={0.01}
                 {...register('height')}
               />
               <p className='px-4 pt-1 text-sm text-red-600'>{errors.height?.message}</p>
@@ -120,7 +119,7 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
                 placeholder="Patient's weight in kg"
                 className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
                 type="number"
-                step={0.001}
+                step={0.01}
                 {...register('weight')}
               />
               <p className='px-4 pt-1 text-sm text-red-600'>{errors.weight?.message}</p>
@@ -131,7 +130,7 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
                 placeholder="Patient's head circumference in cm"
                 className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
                 type="number"
-                step={0.001}
+                step={0.01}
                 {...register('head')}
               />
               <p className='px-4 pt-1 text-sm text-red-600'>{errors.head?.message}</p>
@@ -142,7 +141,7 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
                 placeholder="Patient's head circumference in cm"
                 className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
                 type="number"
-                step={0.001}
+                step={0.01}
                 {...register('arm')}
               />
               <p className='px-4 pt-1 text-sm text-red-600'>{errors.arm?.message}</p>
@@ -153,7 +152,7 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
                 placeholder="Patient's SaO2 in %"
                 className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
                 type="number"
-                step={0.001}
+                step={0.01}
                 {...register('sao2')}
               />
               <p className='px-4 pt-1 text-sm text-red-600'>{errors.sao2?.message}</p>
@@ -164,10 +163,54 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
                 placeholder="Patient's temperature in °C"
                 className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
                 type="number"
-                step={0.001}
+                step={0.01}
                 {...register('temperature')}
               />
               <p className='px-4 pt-1 text-sm text-red-600'>{errors.temperature?.message}</p>
+            </label>
+            <label className="flex flex-col mb-4 h-16">
+              <span className="font-medium">Pulse (in bpm)</span>
+              <input
+                placeholder="Patient's pulse in bpm"
+                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
+                type="number"
+                step={1}
+                {...register('pulse')}
+              />
+              <p className='px-4 pt-1 text-sm text-red-600'>{errors.pulse?.message}</p>
+            </label>
+            <label className="flex flex-col mb-4 h-16">
+              <span className="font-medium">Respiratory rate (in rpm)</span>
+              <input
+                placeholder="Patient's respiratory rate in rpm"
+                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
+                type="number"
+                step={1}
+                {...register('respiratory')}
+              />
+              <p className='px-4 pt-1 text-sm text-red-600'>{errors.respiratory?.message}</p>
+            </label>
+            <label className="flex flex-col mb-4 h-16">
+              <span className="font-medium">Systolic blood pressure (in mmHg)</span>
+              <input
+                placeholder="Patient's systolic blood pressure in mmHg"
+                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
+                type="number"
+                step={1}
+                {...register('systolic')}
+              />
+              <p className='px-4 pt-1 text-sm text-red-600'>{errors.systolic?.message}</p>
+            </label>
+            <label className="flex flex-col mb-4 h-16">
+              <span className="font-medium">Diastolic blood pressure (in mmHg)</span>
+              <input
+                placeholder="Patient's diastolic blood pressure in mmHg"
+                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
+                type="number"
+                step={1}
+                {...register('diastolic')}
+              />
+              <p className='px-4 pt-1 text-sm text-red-600'>{errors.diastolic?.message}</p>
             </label>
           </div>
           <div className="grid gap-x-8 gap-y-4 grid-cols-2">

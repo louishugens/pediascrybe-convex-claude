@@ -19,17 +19,20 @@ export async function POST(req: Request) {
       );
     }
 
-    const { height, weight, head, motif, findings, arm, sao2, temperature, pulse, respiratory, systolic, diastolic, doctorId, patientId } = await req.json()
+    const { firstname, lastname, email, birthdate, mothername, sex, religion, phone, id, allergies, history, bloodtype } = await req.json()
 
-    const appointment = await prisma.appointment.create({
+    const patient  =   await prisma.patient.update({
+      where:{
+        id: id
+      },
       data: {
-        height, weight, head, motif, findings, arm, sao2, temperature,  pulse, respiratory, systolic, diastolic, doctorId, patientId
+        firstname, lastname, email, birthdate, mothername, sex, religion, phone, allergies, history, bloodtype
       }
     })
 
     
 
-    if (appointment) {
+    if (patient) {
 
 
       const embeddings = new OpenAIEmbeddings();
@@ -39,21 +42,25 @@ export async function POST(req: Request) {
         tableName: "documents",
       });
 
-      const doc = new Document({ pageContent: JSON.stringify(appointment),
-        metadata: { patientId: appointment.patientId}});
+      if(patient.vectorId){
+        await store.delete({ids:[patient.vectorId]});
+      }
+      
+      const doc = new Document({ pageContent: JSON.stringify(patient),
+        metadata: { patientId: patient.id}});
 
       const result = await store.addDocuments([doc]);
 
-      await prisma.appointment.update({
+      await prisma.patient.update({
         where:{
-          id: appointment.id
+          id: patient.id
         },
         data: {
           vectorId: result[0]
         }
       })
 
-      return new Response(JSON.stringify(appointment), {
+      return new Response(JSON.stringify(patient), {
         status: 200
       });
     }else{
@@ -64,7 +71,6 @@ export async function POST(req: Request) {
        { status: 500 }
      );
     }
-
 
 
   }

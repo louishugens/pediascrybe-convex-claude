@@ -27,6 +27,10 @@ model Appointment {
   arm             Float?
   sao2            Float?
   temperature     Float?
+  pulse           Int?
+  respiratory     Int?
+  systolic        Float?
+  diastolic       Float?
   vectorId        Int?
   files           String[]
   Doctor          Doctor?   @relation(fields: [doctorId], references: [id])

@@ -52,8 +52,8 @@ const EditPatient = ({patient, doctorId}) => {
   // }).required();
 
   const schema = z.object({
-    firstname: z.string().nonempty({ message: "Please enter patient's first name" }),
-    lastname:  z.string().nonempty({ message: "Please enter patient's last name" }),
+    firstname: z.string({ required_error: "Please enter patient's first name" }),
+    lastname:  z.string({ required_error: "Please enter patient's last name" }),
     email: z.string()
     .refine(value => value === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value), {
       message: 'Please enter a valid email or leave it empty.',
@@ -65,6 +65,7 @@ const EditPatient = ({patient, doctorId}) => {
     phone: z.string().optional(),
     allergies: z.string().optional(),
     history: z.string().optional(),
+    bloodtype: z.string().optional(),
   })
 
   type FormValues = z.infer<typeof schema>
@@ -84,6 +85,7 @@ const EditPatient = ({patient, doctorId}) => {
       religion: patient.religion || "",
       allergies: patient.allergies || "",
       history: patient.history || "",
+      bloodtype: patient.bloodtype || "",
     },
     resolver: zodResolver(schema)
   });
@@ -97,8 +99,8 @@ const EditPatient = ({patient, doctorId}) => {
     setLoading(true)
  
     try{
-      const {firstname, lastname, email, birthdate, mothername, sex, religion, phone, allergies, history} = values
-      const body = {firstname, lastname, email, birthdate, mothername, sex, religion, phone, id: patient.id, allergies, history}
+      const {firstname, lastname, email, birthdate, mothername, sex, religion, phone, allergies, history, bloodtype} = values
+      const body = {firstname, lastname, email, birthdate, mothername, sex, religion, phone, id: patient.id, allergies, history, bloodtype}
       await fetch('/api/patients/updatePatient', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -276,6 +278,34 @@ const EditPatient = ({patient, doctorId}) => {
                       <Input placeholder="Allergies" {...field} />
                     </FormControl>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+                            <FormField
+                control={form.control}
+                name="bloodtype"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Blood Type
+                      </FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select the patient's blood type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="A+">A+</SelectItem>
+                        <SelectItem value="A-">A-</SelectItem>
+                        <SelectItem value="B+">B+</SelectItem>
+                        <SelectItem value="B-">B-</SelectItem>
+                        <SelectItem value="AB+">AB+</SelectItem>
+                        <SelectItem value="AB-">AB-</SelectItem>
+                        <SelectItem value="O+">O+</SelectItem>
+                        <SelectItem value="O-">O-</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </FormItem>
                 )}
               />

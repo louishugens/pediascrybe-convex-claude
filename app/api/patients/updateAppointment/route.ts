@@ -21,14 +21,14 @@ export async function POST(req: Request) {
       );
     }
 
-    const {height, weight, head, motif, findings, arm, sao2, temperature, appointmentId}  = await req.json()
+    const {height, weight, head, motif, findings, arm, sao2, temperature, pulse, respiratory, systolic, diastolic, appointmentId}  = await req.json()
 
     const appointment = await prisma.appointment.update({
       where:{
         id: appointmentId
       },
       data: {
-        height, weight, head, motif, findings, arm, sao2, temperature
+        height, weight, head, motif, findings, arm, sao2, temperature, pulse, respiratory, systolic, diastolic
       }
     })
 

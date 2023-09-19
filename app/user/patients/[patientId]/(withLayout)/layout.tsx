@@ -61,6 +61,7 @@ const Layout = async ({children, params: { patientId }}) => {
             <p className="text-sm font-semibold">Mother&apos;s name: <span className="font-normal">{patient.mothername}</span></p>
             <p className="text-sm font-semibold">Religion: <span className="font-normal">{patient.religion}</span></p>
             <p className="text-sm font-semibold">Allergies: <span className="font-normal">{patient.allergies}</span></p>
+            <p className="text-sm font-semibold">Blood type: <span className="font-normal">{patient.bloodtype}</span></p>
           </div>
           <p className="text-sm font-semibold mt-4">History: <span className="font-normal">{patient.history}</span></p>
         </div>

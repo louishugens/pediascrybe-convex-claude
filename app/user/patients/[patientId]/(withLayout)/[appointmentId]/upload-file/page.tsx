@@ -9,7 +9,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import { BeatLoader } from "react-spinners"
 
  
-import { Button } from "@/components/ui/button"
+// import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
@@ -28,8 +28,8 @@ export default function UploadPage({params: {patientId, appointmentId}}) {
   const [loading, setLoading] = useState(false)
 
   const schema = z.object({
-    url: z.string().nonempty({ message: "Please upload a file" }),
-    name: z.string().nonempty({ message: "Please enter a name for the file" }),
+    url: z.string({ required_error: "Please upload a file" }),
+    name: z.string({ required_error: "Please enter a name for the file" }),
   })
 
   const form = useForm<z.infer<typeof schema>>({
@@ -58,6 +58,7 @@ export default function UploadPage({params: {patientId, appointmentId}}) {
         toast.success("File saved!", {
           icon: '👏',
         })
+        router.refresh()
         router.push(`/user/patients/${patientId}/${appointmentId}/`)
         setLoading(false)
       }
@@ -82,6 +83,7 @@ export default function UploadPage({params: {patientId, appointmentId}}) {
                     onChange={field.onChange}
                   />
                 </FormControl>
+                <FormMessage>{form.formState.errors.url?.message}</FormMessage>
               </FormItem>
             )}
           />

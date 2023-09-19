@@ -7,9 +7,13 @@ import { ArrowUturnLeftIcon, PencilIcon, TrashIcon, PrinterIcon} from '@heroicon
 import { FileIcon } from "lucide-react";
 import {BeatLoader} from 'react-spinners'
 import Image from "next/image";
+import { X } from "lucide-react";
+import toast, {Toaster} from "react-hot-toast";
+import UploadedFile from "./uploadedFile";
 
 const AppointmentPageComponent = ({appointment, doctorId, patientId}) => {
   const [loading, setLoading] = useState(false)
+  const [loadingFile, setLoadingFile] = useState(false)
   let [color, setColor] = useState("#22C55E")
 
   const router = useRouter()
@@ -26,7 +30,6 @@ const AppointmentPageComponent = ({appointment, doctorId, patientId}) => {
 
         router.refresh()
         router.push(`/user/patients/${patientId}`)
-
       }
       catch(err){
         console.log(err)
@@ -72,6 +75,10 @@ const AppointmentPageComponent = ({appointment, doctorId, patientId}) => {
         <p className="font-semibold">Arm Circumference: <span className='font-normal'>{appointment.arm} cm</span></p>
         <p className="font-semibold">SaO2: <span className='font-normal'>{appointment.sao2} %</span></p>
         <p className="font-semibold">Temperature: <span className='font-normal'>{appointment.temperature} °C</span></p>
+        <p className="font-semibold">Pulse: <span className='font-normal'>{appointment.pulse} bpm</span></p>
+        <p className="font-semibold">Respiratory Rate: <span className="font-normal">{appointment.respiratory} rpm</span></p>
+        <p className="font-semibold">Systolic Blood Pressure: <span className='font-normal'>{appointment.systolic} mmHg</span></p>
+        <p className="font-semibold">Diastolic Blood Pressure: <span className='font-normal'>{appointment.diastolic} mmHg</span></p>
       </div>
       <div className="grid gap-x-8 gap-y-4 grid-cols-2 mt-8">
         <div className="flex flex-col">
@@ -117,7 +124,7 @@ const AppointmentPageComponent = ({appointment, doctorId, patientId}) => {
           </div>
         </div>
       </div>
-      {/* <div className="mt-8">
+      <div className="mt-8">
         <div className="flex flex-row items-center justify-between">
           <p className="font-semibold">Uploaded files</p>
           {
@@ -130,37 +137,9 @@ const AppointmentPageComponent = ({appointment, doctorId, patientId}) => {
           {
             appointment.uploadedFiles?.length > 0 
             ?
-              appointment.uploadedFiles?.map((file, index) =>(
-                <div key={index} className="flex flex-col items-center">
+              appointment.uploadedFiles?.map((file, index) => <UploadedFile key={index} file={file}/>
 
-                  {
-                    file.fileType === 'IMAGE' 
-                    ?
-                    <Image 
-                      src={file.url}  
-                      width={100} 
-                      alt={`${file.name}`} 
-                      height={100} 
-                      className="h-20 w-20 rounded-md object-cover" 
-                    />
-                    :
-                    <>
-                      <div className="relative h-20 w-20">
-                        <FileIcon className="h-20 w-20 fill-muted stroke-primary stroke-1" />
-                        <p className="text-primary text-sm font-bold absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">PDF</p>
-                      </div>
-                    </>
-                  }
-                  <a 
-                    href={file.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="ml-2 text-sm text-indigo-500 dark:text-indigo-400 hover:underline"
-                  >
-                    {file.name}
-                  </a>
-                </div>  
-              ))
+              )
             :
             <p className="italic text-muted-foreground">
               No files uploaded yet
@@ -168,8 +147,9 @@ const AppointmentPageComponent = ({appointment, doctorId, patientId}) => {
           }
 
         </div>
-      </div> */}
+      </div>
     </div>
+    <Toaster />
   </div>
   )
 }

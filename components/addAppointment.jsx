@@ -15,14 +15,18 @@ import { generateDiagnosticPrompt } from '@/lib/prompts'
 
 const AddAppointment = ({doctorId, patientId, patient}) => {
   const schema = yup.object({
-    height: yup.number('Must be a number').nullable(true).transform((_, val) => val ? Number(val) : null),
-    weight:  yup.number().nullable(true).transform((_, val) => val ? Number(val) : null),
-    head: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null),
+    height: yup.number('Must be a number').nullable(true).transform((_, val) => val ? Number(val) : null).min(0, "Height can't be less than 0"),
+    weight:  yup.number().nullable(true).transform((_, val) => val ? Number(val) : null).min(0, "Weight can't be less than 0"),
+    head: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null).min(0, "Head circumference can't be less than 0"),
     motif: yup.string().nullable(true),
     findings: yup.string().nullable(true),
-    arm: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null),
-    sao2: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null).max(100, "Percentage can't be more than 100"),
+    arm: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null).min(0, "Arm length can't be less than 0"),
+    sao2: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null).max(100, "Percentage can't be more than 100").min(0, "Percentage can't be less than 0"),
     temperature: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null),
+    pulse: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null).min(0, "Pulse can't be less than 0"),
+    respiratory: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null).min(0, "Respiratory rate can't be less than 0"),
+    systolic: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null).min(0, "Systolic blood pressure can't be less than 0"),
+    diastolic: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null).min(0, "Diastolic blood pressure can't be less than 0"),
   }).required();
   
   let [color, setColor] = useState("#ffffff")
@@ -48,6 +52,10 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
       findings: suggestions || null,
       arm: null,
       sao2: null,
+      pulse: null,
+      respiratory: null,
+      systolic: null,
+      diastolic: null,
       temperature: null,
     },
     resolver: yupResolver(schema)
@@ -97,8 +105,8 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
     setLoading(true)
  
     try{
-      const {height, weight, head, motif, findings, arm, sao2, temperature} = values
-      const body = {height, weight, head, motif, findings, arm, sao2, temperature, patientId, doctorId}
+      const {height, weight, head, motif, findings, arm, sao2, pulse, respiratory, systolic, diastolic, temperature} = values
+      const body = {height, weight, head, motif, findings, arm, sao2, temperature, pulse, respiratory, systolic, diastolic, patientId, doctorId}
       const response = await fetch('/api/patients/addAppointment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -132,7 +140,7 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
                 placeholder="Patient's height in cm"
                 className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
                 type="number"
-                step={0.001}
+                step={0.01}
                 {...register('height')}
               />
               <p className='px-4 pt-1 text-sm text-red-600'>{errors.height?.message}</p>
@@ -143,7 +151,7 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
                 placeholder="Patient's weight in kg"
                 className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
                 type="number"
-                step={0.001}
+                step={0.01}
                 {...register('weight')}
               />
               <p className='px-4 pt-1 text-sm text-red-600'>{errors.weight?.message}</p>
@@ -154,7 +162,7 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
                 placeholder="Patient's head circumference in cm"
                 className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
                 type="number"
-                step={0.001}
+                step={0.01}
                 {...register('head')}
               />
               <p className='px-4 pt-1 text-sm text-red-600'>{errors.head?.message}</p>
@@ -165,7 +173,7 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
                 placeholder="Patient's arm circumference in cm"
                 className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
                 type="number"
-                step={0.001}
+                step={0.01}
                 {...register('arm')}
               />
               <p className='px-4 pt-1 text-sm text-red-600'>{errors.arm?.message}</p>
@@ -176,7 +184,7 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
                 placeholder="Patient's SaO2 in percentage"
                 className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
                 type="number"
-                step={0.001}
+                step={0.01}
                 {...register('sao2')}
               />
               <p className='px-4 pt-1 text-sm text-red-600'>{errors.sao2?.message}</p>
@@ -187,10 +195,54 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
                 placeholder="Patient's temperature in °C"
                 className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
                 type="number"
-                step={0.001}
+                step={0.01}
                 {...register('temperature')}
               />
               <p className='px-4 pt-1 text-sm text-red-600'>{errors.temperature?.message}</p>
+            </label>
+            <label className="flex flex-col mb-4 h-16">
+              <span className="font-medium">Pulse (in bpm)</span>
+              <input
+                placeholder="Patient's pulse in bpm"
+                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
+                type="number"
+                step={1}
+                {...register('pulse')}
+              />
+              <p className='px-4 pt-1 text-sm text-red-600'>{errors.pulse?.message}</p>
+            </label>
+            <label className="flex flex-col mb-4 h-16">
+              <span className="font-medium">Respiratory rate (in rpm)</span>
+              <input
+                placeholder="Patient's respiratory rate in rpm"
+                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
+                type="number"
+                step={1}
+                {...register('respiratory')}
+              />
+              <p className='px-4 pt-1 text-sm text-red-600'>{errors.respiratory?.message}</p>
+            </label>
+            <label className="flex flex-col mb-4 h-16">
+              <span className="font-medium">Systolic blood pressure (in mmHg)</span>
+              <input
+                placeholder="Patient's systolic blood pressure in mmHg"
+                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
+                type="number"
+                step={1}
+                {...register('systolic')}
+              />
+              <p className='px-4 pt-1 text-sm text-red-600'>{errors.systolic?.message}</p>
+            </label>
+            <label className="flex flex-col mb-4 h-16">
+              <span className="font-medium">Diastolic blood pressure (in mmHg)</span>
+              <input
+                placeholder="Patient's diastolic blood pressure in mmHg"
+                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
+                type="number"
+                step={1}
+                {...register('diastolic')}
+              />
+              <p className='px-4 pt-1 text-sm text-red-600'>{errors.diastolic?.message}</p>
             </label>
           </div>
           <div className="grid gap-x-8 gap-y-4 grid-cols-2">
