@@ -1,13 +1,14 @@
-import { cache } from 'react';
+// 'use server'
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import prisma from "@/utils/prisma";
+
  
 const f = createUploadthing();
 
-export const dynamic = 'force-dynamic'
 
+
+// const cookieStore = cookies()
 
 const supabase = createRouteHandlerClient({cookies});
 
