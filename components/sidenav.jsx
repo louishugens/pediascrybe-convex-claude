@@ -14,6 +14,7 @@ const Sidenav = () => {
 
   const handleLogout = async () =>{
     const {error} = await supabase.auth.signOut()
+    router.refresh()
     !error && router.push('/')
   }
 
