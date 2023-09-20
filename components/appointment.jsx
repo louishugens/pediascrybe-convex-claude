@@ -24,7 +24,6 @@ const AppointmentComponent = ({appointment, doctorId, patientId}) => {
 
         router.refresh()
         router.push(`/user/patients/${patientId}`)
-
       }
       catch(err){
         console.log(err)
@@ -32,7 +31,7 @@ const AppointmentComponent = ({appointment, doctorId, patientId}) => {
     }
   }
   return (
-    <tr className="border-b text-sm font-light w-full bg-slate-50 shadow pt-12 rounded-full border-none border-spacing-x-2">
+    <tr key={appointment.id} className="border-b text-sm font-light w-full bg-slate-50 shadow pt-12 rounded-full border-none border-spacing-x-2">
       <td className="px-4 py-2 rounded-l-full mt-2">{format(appointment.startDate, 'yyy-MM-dd hh:mm:ss')}</td>
       <td className="px-4 py-2">{appointment.height} cm</td>
       <td className="px-4 py-2">{appointment.weight} kg</td>

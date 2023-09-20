@@ -5,21 +5,6 @@ import AppointmentComponent from "@/components/appointment";
 import {createServerClient} from '@/utils/supabase-server'
 
 
-// async function getPatient(patientId){
-//   const patient = await prisma.patient.findUnique({
-//     where:{
-//       id:patientId
-//     },
-//     // include: {
-//     //   patients:{
-//     //     orderBy:{
-//     //       lastname: 'asc'
-//     //     }
-//     //   },
-//     // },
-//   })
-//   return patient
-// }
 
 async function getAppointments(patientId){
   const patient = await prisma.appointment.findMany({
@@ -44,7 +29,6 @@ async function Patient({params: {patientId }}) {
 
   const doctorId = session?.user?.id
 
-  // const patient = await getPatient(patientId)
   const appointments = await getAppointments(patientId)
 
   return (
@@ -68,12 +52,11 @@ async function Patient({params: {patientId }}) {
             </tr>
           </thead>
           <tbody className='w-full'>
-            {appointments.map(appointment => <AppointmentComponent   appointment={appointment} doctorId={doctorId} patientId={patientId} data-superjson key={appointment.id} />
+            {appointments.map(appointment => <AppointmentComponent appointment={appointment} doctorId={doctorId} patientId={patientId} data-superjson key={appointment.id} />
             )}
           </tbody>
         </table>
         
-        {/* <Appointments doctorId={doctorId} patientId={patientId} /> */}
 
       </div>
     </>

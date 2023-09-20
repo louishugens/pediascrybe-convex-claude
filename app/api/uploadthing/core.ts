@@ -1,18 +1,17 @@
 // 'use server'
 import { createUploadthing, type FileRouter } from "uploadthing/next";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { createRouteHandlerClient, createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 
  
 const f = createUploadthing();
 
 
-
-// const cookieStore = cookies()
-
-const supabase = createRouteHandlerClient({cookies});
-
 async function getSessionId() {
+  // 'use server'
+
+  const supabase = createServerComponentClient({cookies});
+  // const supabase = createRouteHandlerClient({cookies});
 
   const { data: {session}, error } = await supabase.auth.getSession();
 
@@ -20,6 +19,7 @@ async function getSessionId() {
     throw new Error("Unauthorized");
   }
   const userId = session?.user?.id;
+  console.log('userId :>> ', userId);
   return {userId: userId}
 }
 

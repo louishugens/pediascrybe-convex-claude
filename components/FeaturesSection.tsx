@@ -32,7 +32,7 @@ const features = [
   },
   { 
     title: 'Chat with your patient\'s data', 
-    description: 'Interact with AI augmented with your patient\'s data to gain deeper insights into your patient\'s overall status.', 
+    description: 'Interact with AI on your patient\'s data to gain deeper insights into your patient\'s overall status.', 
     icon: '💬', 
     comingSoon: true 
   },
