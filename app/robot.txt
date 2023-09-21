@@ -1,0 +1,7 @@
+User-Agent: *
+Allow: /
+Disallow: /user/*
+Disallow: /signin/
+Disallow: /signup/
+
+Sitemap: https://www.pediascrybe.com/sitemap.xml
