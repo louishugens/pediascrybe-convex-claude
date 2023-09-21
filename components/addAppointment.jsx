@@ -63,39 +63,39 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
 
   const symptoms = watch('motif')
 
-  useEffect(() => {
-    const fetchDiagnosticSuggestions = async () => {
-      if (symptoms) {
-        setThinking(true)
-        const messages = generateDiagnosticPrompt(symptoms, patient.birthdate)
-        try {
-          const response = await fetch('/api/diagnostic', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({messages})
-          });
-          const data = await response.json();
-          console.log('data :>> ', data);
-          setSuggestions(data); 
-          setValue('findings', data); 
-          setThinking(false)
-        } catch (error) {
-          console.error("Error fetching suggestions:", error);
-        }
-      }
-    };
+  // useEffect(() => {
+  //   const fetchDiagnosticSuggestions = async () => {
+  //     if (symptoms) {
+  //       setThinking(true)
+  //       const messages = generateDiagnosticPrompt(symptoms, patient.birthdate)
+  //       try {
+  //         const response = await fetch('/api/diagnostic', {
+  //           method: 'POST',
+  //           headers: {
+  //             'Content-Type': 'application/json',
+  //           },
+  //           body: JSON.stringify({messages})
+  //         });
+  //         const data = await response.json();
+  //         console.log('data :>> ', data);
+  //         setSuggestions(data); 
+  //         setValue('findings', data); 
+  //         setThinking(false)
+  //       } catch (error) {
+  //         console.error("Error fetching suggestions:", error);
+  //       }
+  //     }
+  //   };
 
-    const timeoutId = setTimeout(() => {
-      if (symptoms){
-        fetchDiagnosticSuggestions();
-      }
-    }, 1500)
+  //   const timeoutId = setTimeout(() => {
+  //     if (symptoms){
+  //       fetchDiagnosticSuggestions();
+  //     }
+  //   }, 1500)
 
-    return () => clearTimeout(timeoutId);
+  //   return () => clearTimeout(timeoutId);
 
-  }, [symptoms, patient.birthdate, setValue]);
+  // }, [symptoms, patient.birthdate, setValue]);
 
   // const doctor = useDoctor()
   const router = useRouter()
@@ -113,6 +113,7 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
         body: JSON.stringify(body)
       })
       const appointment = await response.json()
+      console.log('appointment :>> ', appointment);
 
       router.refresh()
       router.push(`/user/patients/${patientId}/${appointment.id}`)

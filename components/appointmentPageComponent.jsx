@@ -82,7 +82,7 @@ const AppointmentPageComponent = ({appointment, doctorId, patientId}) => {
       </div>
       <div className="grid gap-x-8 gap-y-4 grid-cols-2 mt-8">
         <div className="flex flex-col">
-          <p className="font-semibold mb-2">Symptoms</p>
+          <p className="font-semibold mb-2">Signs and Symptoms</p>
           <p className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.motif}</p>
         </div>
         <div className="flex flex-col">

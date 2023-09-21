@@ -26,49 +26,50 @@ const AddPrescriptions = ({patient, patientId, appointment}) => {
   const [prescriptions, setPrescriptions] = useState(appointment.medication || [{drug: '', count: 1, posology: ''}])
   const [thinking, setThinking] = useState(false)
 
-  useEffect(() => {
-    const fetchPrescriptionsSuggestions = async () => {
-      setThinking(true)
+  // useEffect(() => {
+  //   const fetchPrescriptionsSuggestions = async () => {
+  //     setThinking(true)
 
-        const messages = [
-          {role: "system", content: "Generate a list of drug prescriptions based on the patient's symptoms and diagnostics.\
-          provide it in JSON array format as in the following example : [{drug: \"Paracetamol\", count: 1, posology: \"1 pill twice a day\"}, ... ] \
-          send an empty array if no drugs are suggested. Only send the JSON and nothing else. Use same language as the one used in the symptoms and diagnostics."},
-          {role: "user", content: `The patient is ${formatDistanceToNow(new Date(patient.birthdate))}`},
-          // {role: "system", content: "mimic the pediatrician's language and resppond as if you where the pediatrician writing the diagnostic."},
-          // {role: "system", content: "summarize your findings in a few sentences."},
-          {role: "user", content: appointment.motif ? `The patient symptoms are ${appointment.motif}` : ''},
-          {role: "user", content: appointment.finding ? `The pediatrician's diagnostic is ${appointment.finding}` : ''},
-          // {role: "system", content: "Translate the list in the language the symptoms and diagnostics are provided."},
-        ]
+  //       const messages = [
+  //         {role: "system", content: "Generate a list of drug prescriptions based on the patient's symptoms and diagnostics.\
+  //         provide it in JSON array format as in the following example : [{drug: \"Paracetamol\", count: 1, posology: \"1 pill twice a day\"}, ... ] \
+  //         send an empty array if no drugs are suggested. Only send the JSON and nothing else. Use same language as the one used in the symptoms and diagnostics."},
+  //         {role: "user", content: `The patient is ${formatDistanceToNow(new Date(patient.birthdate))}`},
+  //         // {role: "system", content: "mimic the pediatrician's language and resppond as if you where the pediatrician writing the diagnostic."},
+  //         // {role: "system", content: "summarize your findings in a few sentences."},
+  //         {role: "user", content: appointment.motif ? `The patient symptoms are ${appointment.motif}` : ''},
+  //         {role: "user", content: appointment.finding ? `The pediatrician's diagnostic is ${appointment.finding}` : ''},
+  //         // {role: "system", content: "Translate the list in the language the symptoms and diagnostics are provided."},
+  //       ]
 
         
-        try {
-          const response = await fetch('/api/diagnostic', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({messages})
-          });
-          const data = await response.json();
-          console.log('data :>> ', data);
-          const myexams = JSON.parse(data)
-          console.log('myexams :>> ', myexams);
-          myexams.forEach(exam => {
-            prepend(exam)
-          }
-          )
-          setThinking(false)
+  //       try {
+  //         const response = await fetch('/api/diagnostic', {
+  //           method: 'POST',
+  //           headers: {
+  //             'Content-Type': 'application/json',
+  //           },
+  //           body: JSON.stringify({messages})
+  //         });
+  //         const data = await response.json();
+  //         console.log('data :>> ', data);
+  //         const myexams = JSON.parse(data)
+  //         console.log('myexams :>> ', myexams);
+  //         myexams.forEach(exam => {
+  //           prepend(exam)
+  //         }
+  //         )
+  //         setThinking(false)
 
-        } catch (error) {
-          console.error("Error fetching suggestions:", error);
-        }
-    };
+  //       } catch (error) {
+  //         console.error("Error fetching suggestions:", error);
+  //       }
+  //   };
 
-        fetchPrescriptionsSuggestions();
+  //       fetchPrescriptionsSuggestions();
 
-  }, [patient.birthdate]);
+  // }, [patient.birthdate]);
+
   const {
     register,
     handleSubmit,

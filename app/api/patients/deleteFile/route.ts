@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { revalidateTag } from "next/cache";
 import { utapi } from "uploadthing/server";
+import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   if(req.method == 'POST') {
 

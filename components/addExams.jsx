@@ -24,47 +24,47 @@ const AddExams = ({patient, patientId, appointment}) => {
   const [exams, setExams] = useState(appointment.exams || [{exam: null}])
   const [thinking, setThinking] = useState(false)
 
-  useEffect(() => {
-    const fetchExamsSuggestions = async () => {
-      setThinking(true)
-        const messages = [
-          {role: "system", content: "Generate a list of lab exams based on the patient's symptoms and diagnostics.\
-          provide it in JSON array format as follow: [{exam: \"urines\"}, {exam: \"X-ray\"}] 'exam'. \
-          send an empty array if no exams are suggested. Only send the JSON and nothing else"},
-          {role: "user", content: `The patient is ${formatDistanceToNow(new Date(patient.birthdate))}`},
-          // {role: "system", content: "mimic the pediatrician's language and resppond as if you where the pediatrician writing the diagnostic."},
-          // {role: "system", content: "summarize your findings in a few sentences."},
-          {role: "user", content: appointment.motif ? `The patient symptoms are ${appointment.motif}` : ''},
-          {role: "user", content: appointment.finding ? `The pediatrician's diagnostic is ${appointment.finding}` : ''},
-          // {role: "system", content: "Translate the list in the language the symptoms and diagnostics are provided."},
-        ]
+  // useEffect(() => {
+  //   const fetchExamsSuggestions = async () => {
+  //     setThinking(true)
+  //       const messages = [
+  //         {role: "system", content: "Generate a list of lab exams based on the patient's symptoms and diagnostics.\
+  //         provide it in JSON array format as follow: [{exam: \"urines\"}, {exam: \"X-ray\"}] 'exam'. \
+  //         send an empty array if no exams are suggested. Only send the JSON and nothing else"},
+  //         {role: "user", content: `The patient is ${formatDistanceToNow(new Date(patient.birthdate))}`},
+  //         // {role: "system", content: "mimic the pediatrician's language and resppond as if you where the pediatrician writing the diagnostic."},
+  //         // {role: "system", content: "summarize your findings in a few sentences."},
+  //         {role: "user", content: appointment.motif ? `The patient symptoms are ${appointment.motif}` : ''},
+  //         {role: "user", content: appointment.finding ? `The pediatrician's diagnostic is ${appointment.finding}` : ''},
+  //         // {role: "system", content: "Translate the list in the language the symptoms and diagnostics are provided."},
+  //       ]
 
         
-        try {
-          const response = await fetch('/api/diagnostic', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({messages})
-          });
-          const data = await response.json();
-          console.log('data :>> ', data);
-          const myexams = JSON.parse(data)
-          console.log('myexams :>> ', myexams);
-          myexams.forEach(exam => {
-            prepend(exam)
-          }
-          )
-          setThinking(false)
-        } catch (error) {
-          console.error("Error fetching suggestions:", error);
-        }
-    };
+  //       try {
+  //         const response = await fetch('/api/diagnostic', {
+  //           method: 'POST',
+  //           headers: {
+  //             'Content-Type': 'application/json',
+  //           },
+  //           body: JSON.stringify({messages})
+  //         });
+  //         const data = await response.json();
+  //         console.log('data :>> ', data);
+  //         const myexams = JSON.parse(data)
+  //         console.log('myexams :>> ', myexams);
+  //         myexams.forEach(exam => {
+  //           prepend(exam)
+  //         }
+  //         )
+  //         setThinking(false)
+  //       } catch (error) {
+  //         console.error("Error fetching suggestions:", error);
+  //       }
+  //   };
 
-        fetchExamsSuggestions();
+  //       // fetchExamsSuggestions();
 
-  }, [patient.birthdate]);
+  // }, [patient.birthdate]);
 
   // console.log('user :>> ', user);
   // console.log('day :>> ', day);

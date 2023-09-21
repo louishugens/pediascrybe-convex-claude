@@ -61,13 +61,12 @@ export async function POST(req: Request) {
     }else{
       return new Response(
         JSON.stringify({
-       error: { statusCode: 500, message: 'article is not created' }
+       error: { statusCode: 500, message: 'appointment is not update sucessfully adding exams' }
        }),
        { status: 500 }
      );
+     
     }
-
-
 
   }
 
