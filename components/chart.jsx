@@ -4,7 +4,7 @@ import * as CONST from '../utils/constants'
 import Link from 'next/link'
 
 function Chart({patient, type, title, ylabel, xlabel, formatted, name}) {
-  console.log('patient :>> ', patient);
+  // console.log('patient :>> ', patient);
   const sex = patient.sex
   let data
   if (sex == 'male') {

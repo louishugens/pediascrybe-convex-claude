@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 
     const {patient} = await req.json()
 
-    console.log('patient :>> ', patient);
+    // console.log('patient :>> ', patient);
 
     if (patient) {
 
