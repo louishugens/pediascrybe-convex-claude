@@ -42,6 +42,10 @@ ref={componentRef}>
               <p className="font-semibold">Arm Circumference: <span className='font-normal'>{appointment.arm} cm</span></p>
               <p className="font-semibold">SaO2: <span className='font-normal'>{appointment.sao2} %</span></p>
               <p className="font-semibold">Temperature: <span className='font-normal'>{appointment.temperature} °C</span></p>
+              <p className="font-semibold">Pulse: <span className='font-normal'>{appointment.pulse} bpm</span></p>
+              <p className="font-semibold">Respiratory Rate: <span className="font-normal">{appointment.respiratory} rpm</span></p>
+              <p className="font-semibold">Systolic Blood Pressure: <span className='font-normal'>{appointment.systolic} mmHg</span></p>
+              <p className="font-semibold">Diastolic Blood Pressure: <span className='font-normal'>{appointment.diastolic} mmHg</span></p>
             </div>
             <div className="grid gap-x-8 gap-y-2 grid-cols-1 mt-4">
               <div className="flex flex-col">
