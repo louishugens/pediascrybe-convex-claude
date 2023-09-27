@@ -44,7 +44,7 @@ ref={componentRef}>
                 : 
                   appointment.medication?.map((medication, index) =>(
                     <div key={index}>
-                      <p className="font-bold">-{medication.drug}, <span className="italic font-normal">{medication.count} {medication.count > 1 ? "flacons": "flacon"}</span></p>
+                      <p className="font-bold">-{medication.drug}, <span className="italic font-normal">{medication.count} {medication.unit ? medication.unit : 'flacon'}</span></p>
                       <p>{medication.posology}</p>
                     </div>
                   ))
