@@ -49,7 +49,7 @@ ref={componentRef}>
             </div>
             <div className="grid gap-x-8 gap-y-2 grid-cols-1 mt-4">
               <div className="flex flex-col">
-                <p className="font-semibold">Symptoms</p>
+                <p className="font-semibold">Signs and Symptoms</p>
                 <p className="w-full h-auto px-2 pt-0 pb-2 mt-1">{appointment.motif}</p>
               </div>
               <div className="flex flex-col">

@@ -50,7 +50,7 @@ export async function POST(req: Request) {
           id: patient.id
         },
         data: {
-          vectorId: result[0]
+          vectorId: parseInt(result[0])
         }
       })
 

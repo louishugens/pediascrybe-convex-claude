@@ -15,7 +15,9 @@ async function getAppointments(patientId){
       startDate: 'desc'
     },
   })
+  
   return patient
+
 }
 
 export const dynamic = 'force-dynamic';

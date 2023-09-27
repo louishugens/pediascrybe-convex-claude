@@ -28,6 +28,5 @@ export async function POST(req: Request) {
   return new Response(JSON.stringify(response.choices[0].message.content), {
     status: 200
   });
- 
 
 }

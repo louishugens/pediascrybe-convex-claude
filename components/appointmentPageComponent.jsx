@@ -93,7 +93,7 @@ const AppointmentPageComponent = ({appointment, doctorId, patientId}) => {
           <p className="font-semibold mb-2">Prescription</p>
           <div className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.medication?.map((medication, index) =>(
             <div key={index}>
-              <p className="font-semibold">-{medication.drug}, <span className="italic font-normal">{medication.count} {medication.count > 1 ? "flacons": "flacon"}</span></p>
+              <p className="font-semibold">-{medication.drug}, <span className="italic font-normal">{medication.count} {medication.unit}</span></p>
               <p>{medication.posology}</p>
             </div>
           ))}</div>

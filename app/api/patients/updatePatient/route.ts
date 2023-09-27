@@ -44,7 +44,7 @@ export async function POST(req: Request) {
       });
 
       if(patient.vectorId){
-        await store.delete({ids:[patient.vectorId]});
+        await store.delete({ids:[patient.vectorId.toString()]});
       }
       
       const doc = new Document({ pageContent: JSON.stringify(patient),
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
           id: patient.id
         },
         data: {
-          vectorId: result[0]
+          vectorId: parseInt(result[0])
         }
       })
 

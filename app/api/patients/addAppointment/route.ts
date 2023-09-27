@@ -29,7 +29,6 @@ export async function POST(req: Request) {
     })
 
     
-
     if (appointment) {
 
 
@@ -45,14 +44,16 @@ export async function POST(req: Request) {
 
       const result = await store.addDocuments([doc]);
 
+
       await prisma.appointment.update({
         where:{
           id: appointment.id
         },
         data: {
-          vectorId: result[0]
+          vectorId: parseInt(result[0])
         }
       })
+      
 
       return new Response(JSON.stringify(appointment), {
         status: 200

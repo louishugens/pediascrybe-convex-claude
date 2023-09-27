@@ -215,7 +215,7 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
           </div>
           <div className="grid gap-x-8 gap-y-4 grid-cols-2">
             <label className="flex flex-col mb-4 h-40">
-              <span className="font-medium">Symptoms</span>
+              <span className="font-medium">Signs and Symptoms</span>
               <textarea
                 placeholder="How do the patient feel?"
                 className="placeholder:italic placeholder:text-sm bg-white shadow-md h-40 rounded-md py-2 px-4 border-none"

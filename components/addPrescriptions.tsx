@@ -1,22 +1,48 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { useForm, Control, useFieldArray, useWatch  } from 'react-hook-form';
+import { useForm, Control, useFieldArray, useWatch, FieldError  } from 'react-hook-form';
 import * as Yup from 'yup'
 import { yupResolver } from '@hookform/resolvers/yup';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation'
 import { BeatLoader } from 'react-spinners';
 import { XCircleIcon } from '@heroicons/react/24/outline';
 import { formatDistanceToNow } from "date-fns"
 import PulseLoader from "react-spinners/PulseLoader"
+import  * as z from "zod"
 
 const PrescriptionsSchema =  Yup.object({
   prescriptions: Yup.array().of(
     Yup.object().shape({
       drug: Yup.string().required('Please enter the drug name'),
-      count: Yup.number().required('Please enter the number of flacon').min(1, 'Must be greater than 1').nullable(false, 'Must not be empty'),
+      count: Yup.number().required('Please enter the number of flacon').min(1, 'Must be greater than 1').nullable(false),
+      unit: Yup.string().default('flacon'),
       posology: Yup.string().required('Please enter the posology'),
   })).required('Please add at least one prescription').min(1, 'Please add at least one prescription')
 }).required();
+
+
+export const formSchema = z.object({
+  prescriptions: z
+    .array(
+      z.object({
+        drug: z.string().min(1).max(255).refine((value) => value.trim() !== "", {
+          message: "Please enter the drug name",
+        }),
+        count: z
+          .number()
+          .min(1, { message: "Must be greater than 1" }),
+        unit: z.string().min(1).max(255).default("flacon"),
+        posology: z.string().min(1).max(255).refine((value) => value.trim() !== "", {
+          message: "Please enter the posology",
+        }),
+      })
+    )
+    .min(1, {
+      message: "Please add at least one prescription",
+    }),
+});
+
 
 const AddPrescriptions = ({patient, patientId, appointment}) => {
   const [loading, setLoading] = useState(false)
@@ -70,16 +96,19 @@ const AddPrescriptions = ({patient, patientId, appointment}) => {
 
   // }, [patient.birthdate]);
 
+  type FormValues = z.infer<typeof formSchema>
+
   const {
     register,
     handleSubmit,
     formState: { errors },
     watch,
     control,
-  } = useForm({
-    resolver: yupResolver(PrescriptionsSchema),
+  } = useForm<FormValues>({
+    // resolver: yupResolver(PrescriptionsSchema),
+    resolver: zodResolver(formSchema),
     defaultValues: {
-      prescriptions: prescriptions,
+      prescriptions: [...prescriptions, {drug: '', count: undefined, unit: 'flacon', posology: ''}],
     },
   });
 
@@ -116,10 +145,12 @@ const AddPrescriptions = ({patient, patientId, appointment}) => {
     }
   }
 
+  // console.log('errors :>> ', errors?.prescriptions?.[4].count);
+
 
   return (
     <div className="w-full h-auto shadow-md rounded-lg p-4 bg-slate-50 mt-4 text-sm">
-      <p>Add prescriptions</p>
+      <p className='font-bold'>Add medicines</p>
       <form className='mt-4' onSubmit={handleSubmit(onSubmit)}>
       {thinking && <span className=' font-light text-primary'> ScrybeGPT thinking <PulseLoader color={"#21C55D"} size={5} aria-label="Loading Spinner" data-testid="loader"/></span> }
       {fields.map((field, index) => {
@@ -127,7 +158,7 @@ const AddPrescriptions = ({patient, patientId, appointment}) => {
           <section key={field.id} className="relative pt-8">
             <XCircleIcon className='h-6 w-6 text-red-500 absolute right-0 top-0 mt-4 mr-4 cursor-pointer' onClick={() => remove(index)}/>
             <div className='grid grid-cols-12 gap-4'>
-              <div className="col-span-5">
+              <div className="col-span-4">
                 <label className="flex flex-col mb-4 h-16">
                   <span className='font-medium text-sm'>Drug {index + 1}</span>
                   <input placeholder='Paracetamol' className='placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full text-sm py-1 px-4' type='text' {...register(`prescriptions.${index}.drug`)}/>
@@ -137,11 +168,24 @@ const AddPrescriptions = ({patient, patientId, appointment}) => {
               <div className="col-span-2">
                 <label className="flex flex-col mb-4 h-16">
                   <span className='font-medium text-sm'>Count</span>
-                  <input placeholder='1' className='placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full text-sm py-1 px-4' type='text' {...register(`prescriptions.${index}.count`)}/>
+                  <input  
+                    className='placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full text-sm py-1 px-4' 
+                    type='number' 
+                    {...register(`prescriptions.${index}.count`, {
+                      setValueAs: (value) => Number(value),
+                    })}
+                  />
                   <p className='px-4 pt-1 text-sm text-red-600'>{errors?.prescriptions?.[index]?.count?.message}</p>
                 </label>
               </div>
-              <div className="col-span-5">
+              <div className="col-span-2">
+                <label className="flex flex-col mb-4 h-16">
+                  <span className='font-medium text-sm'>Unit</span>
+                  <input placeholder='flacon, bottle, vial, etc...' className='placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full text-sm py-1 px-4' type='text' {...register(`prescriptions.${index}.unit`)}/>
+                  <p className='px-4 pt-1 text-sm text-red-600'>{errors?.prescriptions?.[index]?.unit?.message}</p>
+                </label>
+              </div>
+              <div className="col-span-4">
                 <label className="flex flex-col mb-4 h-16">
                   <span className='font-medium text-sm'>Posology</span>
                   <input placeholder='1 pill twice a day for 7 days' className='placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full text-sm py-1 px-4' type='text' {...register(`prescriptions.${index}.posology`)}/>
@@ -149,12 +193,13 @@ const AddPrescriptions = ({patient, patientId, appointment}) => {
                 </label>
               </div>
             </div>
+            
           </section>
           )
         })}
-        <p className='px-4 pt-1 text-sm text-red-600'>{errors?.prescriptions?.message}</p>
+        <p className='px-4 pt-1 text-sm text-red-600'>{errors?.prescriptions?.root?.message as React.ReactNode}</p>
         <div className="flex flex-row justify-between">
-          <button className='py-1 px-4 rounded-full bg-green-500 text-white text-sm  mt-4' type='button' onClick={() => append({drug: '', count: 1, posology: ''})}>
+          <button className='py-1 px-4 rounded-full bg-green-500 text-white text-sm  mt-4' type='button' onClick={() => append({drug: '', count: 1, unit: 'flacon', posology: ''})}>
             Add
           </button>
           {<button className='py-1 px-4 rounded-full bg-blue-500 text-white text-sm  mt-4' type='submit'>
