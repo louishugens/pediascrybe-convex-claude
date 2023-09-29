@@ -40,6 +40,8 @@ const ProfilePage = async () => {
           <p className="text-sm font-semibold">Email: <span className="font-normal">{doctor.email}</span></p>
           <p className="text-sm font-semibold">Phone: <span className="font-normal">{doctor.phone}</span></p>
           <p className="text-sm font-semibold">Specialty: <span className="font-normal">{doctor.spec}</span></p>
+          <p className="text-sm font-semibold col-span-2">Address: <span className="font-normal">{doctor.address}</span></p>
+
         </div>
       </div>
     </div>

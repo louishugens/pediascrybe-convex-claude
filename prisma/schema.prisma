@@ -42,6 +42,7 @@ model Doctor {
   cost         Int?
   duration     Int?
   phone        String?
+  address      String?
   experience   Int?
   isActive     Boolean       @default(false)
   isCompleted  Boolean       @default(false)

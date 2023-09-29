@@ -5,6 +5,7 @@ import {useRef} from 'react'
 import { format } from 'date-fns'
 import { useReactToPrint } from 'react-to-print';
 import Link from 'next/link';
+import PrintHead from './printHeader';
 
 
 const Print = ({appointment, doctor, patient}) => {
@@ -22,19 +23,31 @@ const Print = ({appointment, doctor, patient}) => {
   return (
     <div className="">
     <div className='pt-4 min-h-screen  shadow-md rounded-lg overflow-y-auto'>
-      <div className="w-full h-screen p-16 flex flex-col divide-y divide-slate-900" 
+      <div className="w-full min-h-screen px-16 py-8 flex flex-col" 
 ref={componentRef}>
-        <div className="flex flex-col items-center py-2">
-          <h3 className=' text-2xl font-bold'><span className=' font-light'>Dr </span>{`${doctor.firstname} ${doctor.lastname}`}</h3>
-          <h4 className=' text-xl font-light italic'>{doctor.spec}</h4>
-          <p className='text-lg font-semibold'>Appointment</p>
-        </div>
+        <PrintHead doctor={doctor} />
         <div className="py-4 grow">
           <div className="flex flex-col h-full ">
-            <div className="flex flex-row justify-between">
-              <p className="font-bold"><span className='font-light'>Patient: </span>{`${patient.firstname} ${patient.lastname}`}</p>
+            <div className="flex flex-row justify-between pt-4 pb-8">
+              <p className='text-lg font-semibold'>Appointment</p>
               <p className="font-semibold"><span className='font-light'>Date: </span>{format(appointment.startDate, 'yyy-MM-dd')}</p>
             </div>
+          
+            <div className="flex flex-col mb-8">
+              <p className='text-xl font-light italic text-center'>Patient&apos;s info</p>
+              <div className="grid grid-cols-3 gap-4 mt-4">
+                <p className="text-base font-semibold">Birth date: <span className="font-normal ">{patient?.birthdate && format(new Date(patient.birthdate), 'dd-MM-yyyy')}</span></p>
+                <p className="text-base font-semibold">Sex: <span className="font-normal">{patient?.sex}</span></p>
+                <p className="text-base font-semibold">Phone: <span className="font-normal">{patient?.phone}</span></p>
+                <p className="text-base font-semibold">Email: <span className="font-normal">{patient?.email}</span></p>
+                <p className="text-base font-semibold">Mother&apos;s name: <span className="font-normal">{patient?.mothername}</span></p>
+                <p className="text-base font-semibold">Religion: <span className="font-normal">{patient?.religion}</span></p>
+                <p className="text-base font-semibold">Allergies: <span className="font-normal">{patient?.allergies}</span></p>
+                <p className="text-base font-semibold">Blood type: <span className="font-normal">{patient?.bloodtype}</span></p>
+              </div>
+              <p className="text-base font-semibold mt-4">History: <span className="font-normal">{patient?.history}</span></p>
+            </div>
+            <p className='text-xl font-light italic text-center mb-4'>Appointment&apos;s info</p>
             <div className="grid gap-x-4 gap-y-4 grid-cols-3 mt-4 mb-4">
               <p className="font-semibold">Height: <span className='font-normal'>{appointment.height} cm</span></p>
               <p className="font-semibold">Weight: <span className='font-normal'>{appointment.weight} kg</span></p>
@@ -76,25 +89,14 @@ ref={componentRef}>
                 </ul>
               </div>
             </div>
-            {/* <div className="flex flex-row-reverse">
-              <div className="flex flex-row w-1/3">
-                <p>Signature:</p>
-                <div className=" flex-1 h-px ml-1 mt-4 bg-black"></div>
-              </div>
-            </div> */}
+
           </div>
         </div>
-        <div className="flex flex-col items-center py-2">
-          <p className="font-light text-sm flex flex-row">
-            <PhoneIcon className="h-3 w-3 mt-1"/>
-            <span>
-            : {doctor.phone}, &nbsp; 
-            </span>
-            <EnvelopeIcon className="h-3 w-3 mt-1"/>
-            <span>
-            : {doctor.email}
-            </span>
-          </p>
+        <div className="flex flex-row-reverse py-4">
+          <div className="flex flex-row w-2/5">
+            <p>Signature:</p>
+            <div className=" flex-1 h-px ml-1 mt-4 bg-black"></div>
+          </div>
         </div>
       </div>
 

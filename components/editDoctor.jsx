@@ -1,5 +1,5 @@
 'use client'
-import { useForm } from 'react-hook-form';
+import { FieldError, useForm } from 'react-hook-form';
 import * as yup from "yup";
 import { yupResolver } from '@hookform/resolvers/yup';
 import PulseLoader from "react-spinners/PulseLoader"
@@ -14,7 +14,8 @@ const EditDoctor = ({doctor}) => {
     lastname:  yup.string().required("Please enter your last name"),
     email: yup.string().email('Invalid email').required("Please enter your email"),
     phone: yup.string().required("Please enter your last name"),
-    spec: yup.string().required("Please enter your specialty")
+    spec: yup.string().required("Please enter your specialty"),
+    address:yup.string(),
   }).required();
   
   let [color, setColor] = useState("#ffffff")
@@ -30,7 +31,8 @@ const EditDoctor = ({doctor}) => {
       lastname: doctor.lastname || '',
       email: doctor.email || '',
       phone: doctor.phone || '',
-      spec: doctor.spec || ''
+      spec: doctor.spec || '',
+      address: doctor.address || '',
     },
     resolver: yupResolver(schema)
   });
@@ -42,8 +44,8 @@ const EditDoctor = ({doctor}) => {
     setLoading(true)
  
     try{
-      const {firstname, lastname, email, phone, spec} = values
-      const body = {firstname, lastname, email, phone, spec, id: doctor.id}
+      const {firstname, lastname, email, phone, spec, address} = values
+      const body = {firstname, lastname, email, phone, spec, address, id: doctor.id}
       await fetch('/api/doctor/edit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -72,7 +74,7 @@ const EditDoctor = ({doctor}) => {
               type="text"
               {...register('firstname')}
             />
-            <p className='px-4 pt-1 text-sm text-red-600'>{errors.firstname?.message}</p>
+            <p className='px-4 pt-1 text-sm text-red-600'>{errors?.firstname?.message}</p>
           </label>
           <label className="flex flex-col mb-4 h-16">
             <span className="font-medium">Last name</span>
@@ -113,6 +115,16 @@ const EditDoctor = ({doctor}) => {
               {...register('spec')}
             />
             <p className='px-4 pt-1 text-sm text-red-600'>{errors.spec?.message}</p>
+          </label>
+          <label className="flex flex-col mb-4 h-16">
+            <span className="font-medium">Address</span>
+            <input
+              placeholder="13, rue des beaux arts, Paris"
+              className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
+              type="text"
+              {...register('address')}
+            />
+            <p className='px-4 pt-1 text-sm text-red-600'>{errors.address?.message}</p>
           </label>
         </div>
 
