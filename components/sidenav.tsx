@@ -23,7 +23,7 @@ const Sidenav = () => {
    <div className='h-full w-64  bg-green-50 shadow sticky px-8'>
       <div className="pt-4">
         <Link href="/user">
-          <p className='text-xl font-bold  text-green-500 italic'>Pediascrybe</p>
+          <p className='text-xl font-bold  text-primary italic'>Pediascrybe</p>
         </Link>
       </div>
       <ul className='pt-16 text-sm text-slate-900'>

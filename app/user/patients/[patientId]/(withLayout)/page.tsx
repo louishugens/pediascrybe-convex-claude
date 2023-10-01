@@ -36,7 +36,10 @@ async function Patient({params: {patientId }}) {
   return (
     <>
       <div className="flex flex-col w-full items-center">
+        <div className="flex flex-row w-full gap-4">
           <Link href={`/user/patients/${patientId}/charts`} className="mt-4 text-sm bg-blue-500 text-slate-100 rounded-full px-4 py-2 self-start">Growth Charts</Link>
+          <Link href={`/user/patients/${patientId}/reports`} className="mt-4 text-sm bg-blue-500 text-slate-100 rounded-full px-4 py-2 self-start">Reports and Certificates</Link>
+        </div>
         <div className="flex flex-row w-full justify-between pt-4">
           <p className=' font-bold text-white'><span className=' text-green-500'>Appointment list</span></p>
           <Link 
@@ -58,8 +61,6 @@ async function Patient({params: {patientId }}) {
             )}
           </tbody>
         </table>
-        
-
       </div>
     </>
   )

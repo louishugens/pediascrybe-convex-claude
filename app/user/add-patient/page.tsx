@@ -60,13 +60,7 @@ const AddPatient = () => {
   let [color, setColor] = useState("#ffffff")
   let [loading, setLoading] = useState(false)
 
-  // const {
-  //   register,
-  //   handleSubmit,
-  //   formState: { errors },
-  // } = useForm({
-  //   resolver: yupResolver(schema)
-  // });
+
 
   type FormValues = z.infer<typeof schema>
 

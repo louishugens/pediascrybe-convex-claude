@@ -142,6 +142,17 @@ body {
 }
 
 
+.ql-toolbar.ql-snow {
+  @apply rounded-t-md
+}
+
+.ql-container.ql-snow {
+  @apply rounded-b-md
+}
+
+.ql-container {
+  @apply text-sm !important
+}
 
 /* a {
   color: inherit;

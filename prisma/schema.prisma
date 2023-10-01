@@ -93,6 +93,7 @@ model Patient {
   vectorId     Int?
   appointments Appointment[]
   Doctor       Doctor?       @relation(fields: [doctorId], references: [id])
+  reports      Report[]
 }
 
 model documents {
@@ -113,17 +114,30 @@ enum Status {
   offline
 }
 
-
 model File {
-  id           String        @id @unique @default(cuid())
-  url          String      @unique
-  name         String
-  fileType     FileType
-  appointment  Appointment @relation(fields: [appointmentId], references: [id])
+  id            String      @id @unique @default(cuid())
+  url           String      @unique
+  name          String
+  fileType      FileType
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
   appointmentId String
 }
 
 enum FileType {
   IMAGE
   PDF
+}
+
+model Report {
+  id         String     @id @unique @default(cuid())
+  createdAt  DateTime   @default(now())
+  reportType ReportType
+  content    String
+  Patient    Patient?   @relation(fields: [patientId], references: [id])
+  patientId  String?
+}
+
+enum ReportType {
+  Report
+  Certificate
 }
