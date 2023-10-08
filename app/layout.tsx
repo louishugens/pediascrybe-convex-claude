@@ -7,6 +7,16 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { SiteHeader } from '@/components/siteHeader';
 import Footer from '@/components/Footer';
+import type { Metadata } from 'next'
+ 
+export const metadata: Metadata = {
+  title: 'Pediatric Care, Elevated by AI Integration | Pediascrybe',
+  description: 'Tailored for dedicated pediatricians, Pediascrybe streamlines patient data management like never before. Harness the power of advanced AI integration to elevate your practice. Experience efficiency and precision like never before.',
+  metadataBase: new URL('https://www.pediascrybe.com'),
+  alternates: {
+    canonical: '/',
+  },
+}
 
 
 const montserrat = Montserrat({
