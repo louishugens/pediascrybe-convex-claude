@@ -2,50 +2,87 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer, Tooltip } from "recharts";
 import * as CONST from '../utils/constants'
 import Link from 'next/link'
+import { useMemo } from "react";
 
 function Chart({patient, type, title, ylabel, xlabel, formatted, name}) {
   // console.log('patient :>> ', patient);
-  const sex = patient.sex
-  let data
-  if (sex == 'male') {
-    switch (type) {
-      case 'wfa':
-        data = CONST.bwfa
-        break;
-      case 'wfl':
-        data = CONST.bwfl
-        break;
-      case 'bfa':
-        data = CONST.bbfa
-        break;
-      case 'hcfa':
-        data = CONST.bhcfa
-        break;       
-      default:
-        break;
+  const data = useMemo(() => {
+    if(patient.sex === 'male') {
+      switch (type) {
+        case 'wfa':
+          return CONST.bwfa
+        case 'wfl':
+          return CONST.bwfl
+        case 'bfa':
+          return CONST.bbfa
+        case 'hcfa':
+          return CONST.bhcfa
+        default:
+          break;
+      }
     }
-  }
-  if (sex == 'female') {
-    switch (type) {
-      case 'wfa':
-        data = CONST.gwfa
-        break;
-      case 'wfl':
-        data = CONST.gwfl
-        break;
-      case 'bfa':
-        data = CONST.gbfa
-        break;
-      case 'hcfa':
-        data = CONST.ghcfa
-        break;
-      default:
-        break;
+    if(patient.sex ==='female') {
+      switch (type) {
+        case 'wfa':
+          return CONST.gwfa
+        case 'wfl':
+          return CONST.gwfl
+        case 'bfa':
+          return CONST.gbfa
+        case 'hcfa':
+          return CONST.ghcfa
+        default:
+          break;
+      }
     }
-  }
+  },
+  [patient, type]
+  )
+
+  // console.log('data :>> ', data);
+
+
+  // const sex = patient.sex
+  // let data
+  // if (sex == 'male') {
+  //   switch (type) {
+  //     case 'wfa':
+  //       data = CONST.bwfa
+  //       break;
+  //     case 'wfl':
+  //       data = CONST.bwfl
+  //       break;
+  //     case 'bfa':
+  //       data = CONST.bbfa
+  //       break;
+  //     case 'hcfa':
+  //       data = CONST.bhcfa
+  //       break;       
+  //     default:
+  //       break;
+  //   }
+  // }
+  // if (sex == 'female') {
+  //   switch (type) {
+  //     case 'wfa':
+  //       data = CONST.gwfa
+  //       break;
+  //     case 'wfl':
+  //       data = CONST.gwfl
+  //       break;
+  //     case 'bfa':
+  //       data = CONST.gbfa
+  //       break;
+  //     case 'hcfa':
+  //       data = CONST.ghcfa
+  //       break;
+  //     default:
+  //       break;
+  //   }
+  // }
  
   return (
-    <div className="h-[32rem] w-full shadow-md rounded-lg p-8 mb-8">
+    <div className="h-[40rem] w-full shadow-md rounded-lg p-8 mb-8">
       <div className="flex flex-row justify-between w-full items-start">
         <p className="text-slate-900 text-sm ">{title}</p>
         <Link href={`/user/patients/${patient.id}/charts/print-${type}`} className="px-4 py-2 rounded-full bg-slate-200 text-blue-500 text-sm">

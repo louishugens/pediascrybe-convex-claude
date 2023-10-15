@@ -20,14 +20,16 @@ const CTASection = () => {
   }, [controls, inView]);
 
   return (
-    <div ref={ref} className="relative h-screen flex items-center justify-center bg-primary text-white">
+    <div ref={ref} className="relative h-screen flex items-center justify-center bg-primary text-white overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0">
         <Image 
           src="/pediatre.jpg" 
           alt="Background" 
-          layout="fill" 
-          objectFit="cover" 
+          width={1920} 
+          height={1080}
+          // layout="fill" 
+          // objectFit="cover" 
           className="opacity-50" 
         />
       </div>
