@@ -2,7 +2,11 @@ import React from 'react'
 import prisma from '@/utils/prisma'
 import AppointmentPageComponent from '@/components/appointmentPageComponent'
 import {createServerClient} from '@/utils/supabase-server'
+import { Appointment, File } from '@prisma/client'
 
+interface AppointmentwithFiles extends Appointment{
+  uploadedFiles: File[]
+}
 
 async function getAppointment(appointmentId){
   
@@ -27,7 +31,7 @@ const AppointmentPage = async ({params: { patientId, appointmentId}}) => {
   const doctorId = session?.user?.id
   const appointment = await getAppointment(appointmentId)
   return (
-    <AppointmentPageComponent appointment={appointment} doctorId={doctorId} patientId={patientId} data-superjson />
+    <AppointmentPageComponent appointment={appointment as AppointmentwithFiles}  patientId={patientId} data-superjson />
   )
 }
 

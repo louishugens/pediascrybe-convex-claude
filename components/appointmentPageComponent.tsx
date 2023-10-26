@@ -10,8 +10,29 @@ import Image from "next/image";
 import { X } from "lucide-react";
 import toast, {Toaster} from "react-hot-toast";
 import UploadedFile from "./uploadedFile";
+// import { Appointment } from "@prisma/client";
+import { Appointment, File } from "@prisma/client";
+import { E } from "uploadthing/dist/types-5304bd74";
 
-const AppointmentPageComponent = ({appointment, doctorId, patientId}) => {
+interface AppointmentPageComponentProps {
+  appointment: Appointment&{
+    uploadedFiles: File[]
+  }
+  patientId: string
+}
+
+interface Medication{
+  drug: string
+  posology: string
+  count: number
+  unit: string
+}
+
+interface Exam{
+  exam: string
+}
+
+const AppointmentPageComponent = ({appointment, patientId}: AppointmentPageComponentProps) => {
   const [loading, setLoading] = useState(false)
   const [loadingFile, setLoadingFile] = useState(false)
   let [color, setColor] = useState("#22C55E")
@@ -36,6 +57,9 @@ const AppointmentPageComponent = ({appointment, doctorId, patientId}) => {
       }
     }
   }
+
+  const medications = appointment.medication as unknown as Medication[]
+  const exams = appointment.exams as unknown as Exam[]
 
   return (
     <div className='pt-4'>
@@ -91,7 +115,17 @@ const AppointmentPageComponent = ({appointment, doctorId, patientId}) => {
         </div>
         <div className="flex flex-col">
           <p className="font-semibold mb-2">Prescription</p>
-          <div className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.medication?.map((medication, index) =>(
+          {/* <div className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{Array.isArray(medications) && medications.map((medication, index) =>{
+            const typedMedication = medication as unknown as Medication
+          return(
+            <div key={index}>
+              {medication && typeof(medication) === 'object' &&<>
+              <p className="font-semibold">-{typedMedication.drug}, <span className="italic font-normal">{typedMedication?.count} {typedMedication.unit ? typedMedication.unit : 'flacon'}</span></p>
+              <p>{typedMedication.posology}</p>
+              </>}
+            </div>
+          )})}</div> */}
+          <div className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{medications?.map((medication, index) =>(
             <div key={index}>
               <p className="font-semibold">-{medication.drug}, <span className="italic font-normal">{medication.count} {medication.unit ? medication.unit : 'flacon'}</span></p>
               <p>{medication.posology}</p>
@@ -108,7 +142,7 @@ const AppointmentPageComponent = ({appointment, doctorId, patientId}) => {
         </div>
         <div className="flex flex-col">
           <p className="font-semibold mb-2">Lab exams</p>
-          <ul className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.exams?.map((exam, index) =>(
+          <ul className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{exams?.map((exam, index) =>(
             <li key={index}>-{exam.exam}</li>
           ))}</ul>
           <div className="mt-1 flex flex-row justify-between">
@@ -121,6 +155,18 @@ const AppointmentPageComponent = ({appointment, doctorId, patientId}) => {
             <Link href={`/user/patients/${patientId}/${appointment.id}/print-exams`} className='self-end mt-2 shadow text-slate-200 rounded-full py-1 px-4 bg-blue-500'>
               Print
             </Link>
+          </div>
+        </div>
+        <div className="flex flex-col">
+          <p className="font-semibold mb-2">Recommendations</p>
+          <p className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.recommendation}</p>
+          <div className="mt-1 flex flex-row justify-between">
+            <Link href={`/user/patients/${patientId}/${appointment.id}/add-recommendation`} className='self-end mt-2 shadow text-blue-500 rounded-full py-1 px-4 bg-slate-200'>
+              Add or edit
+            </Link>
+            {/* <Link href={`/user/patients/${patientId}/${appointment.id}/print-exams`} className='self-end mt-2 shadow text-slate-200 rounded-full py-1 px-4 bg-blue-500'>
+              Print
+            </Link> */}
           </div>
         </div>
       </div>

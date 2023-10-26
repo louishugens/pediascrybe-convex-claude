@@ -15,6 +15,7 @@ model Appointment {
   transactionDate DateTime?
   transactionId   String?
   findings        String?
+  recommendation  String?
   doctorId        String?
   id              String    @id @unique @default(cuid())
   patientId       String?
