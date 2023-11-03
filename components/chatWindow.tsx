@@ -99,7 +99,7 @@ export function ChatWindow(props: {
       <h2 className={`${messages.length > 0 ? "" : "hidden"} text-2xl`}>{emoji} {titleText}</h2>
       {messages.length === 0 ? emptyStateComponent : ""}
       <div
-        className="flex flex-col-reverse w-full mb-4 overflow-auto transition-[flex-grow] ease-in-out"
+        className="flex flex-col-reverse w-full mb-4 overflow-auto transition-[flex-grow] ease-in-out mt-4"
         ref={messageContainerRef}
       >
         {messages.length > 0 ? (

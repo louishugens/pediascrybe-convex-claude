@@ -164,9 +164,6 @@ const AppointmentPageComponent = ({appointment, patientId}: AppointmentPageCompo
             <Link href={`/user/patients/${patientId}/${appointment.id}/add-recommendation`} className='self-end mt-2 shadow text-blue-500 rounded-full py-1 px-4 bg-slate-200'>
               Add or edit
             </Link>
-            {/* <Link href={`/user/patients/${patientId}/${appointment.id}/print-exams`} className='self-end mt-2 shadow text-slate-200 rounded-full py-1 px-4 bg-blue-500'>
-              Print
-            </Link> */}
           </div>
         </div>
       </div>

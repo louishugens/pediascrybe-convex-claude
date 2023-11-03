@@ -62,7 +62,7 @@ const AddExams = ({patient, patientId, appointment}) => {
   //       }
   //   };
 
-  //       // fetchExamsSuggestions();
+  //       fetchExamsSuggestions();
 
   // }, [patient.birthdate]);
 

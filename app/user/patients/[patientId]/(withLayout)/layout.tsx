@@ -38,7 +38,7 @@ const Layout = async ({children, params: { patientId }}) => {
           <div className="flex flex-row w-full justify-between">
             <p className=' font-bold text-slate-900'>{patient?.firstname} {patient?.lastname}</p>
             {/* { 
-              patient.vectorId 
+              patient?.vectorId 
               ?
                 <Link
                   className='px-4 py-2 bg-primary text-white rounded-full text-sm'

@@ -213,9 +213,6 @@ const AddPatient = () => {
                 render={({ field }) => (
                   <FormItem className='flex flex-col gap-y-1'>
                     <FormLabel>Birth Date</FormLabel>
-                    {/* <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl> */}
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>

@@ -39,9 +39,10 @@ async function Patient({params: {patientId }}) {
         <div className="flex flex-row w-full gap-4">
           <Link href={`/user/patients/${patientId}/charts`} className="mt-4 text-sm bg-blue-500 text-slate-100 rounded-full px-4 py-2 self-start">Growth Charts</Link>
           <Link href={`/user/patients/${patientId}/reports`} className="mt-4 text-sm bg-blue-500 text-slate-100 rounded-full px-4 py-2 self-start">Reports and Certificates</Link>
+          {/* <Link href={`/user/patients/${patientId}/receipts`} className="mt-4 text-sm bg-blue-500 text-slate-100 rounded-full px-4 py-2 self-start">Receipts</Link> */}
         </div>
         <div className="flex flex-row w-full justify-between pt-4">
-          <p className=' font-bold text-white'><span className=' text-green-500'>Appointment list</span></p>
+          <p className=' font-bold text-white'><span className=' text-primary'>Appointment list</span></p>
           <Link 
           className='self-end px-4 py-2 bg-blue-500 text-slate-100 rounded-full text-sm shadow' 
           href={`/user/patients/${patientId}/add-appointment`}>Add Appointment</Link>

@@ -95,6 +95,7 @@ model Patient {
   appointments Appointment[]
   Doctor       Doctor?       @relation(fields: [doctorId], references: [id])
   reports      Report[]
+  receipts     Receipt[]
 }
 
 model documents {
@@ -141,4 +142,21 @@ model Report {
 enum ReportType {
   Report
   Certificate
+}
+
+model Receipt {
+  id        String   @id @unique @default(cuid())
+  createdAt DateTime @default(now())
+  service   String?
+  cost      Float?
+  date      DateTime?
+  currency  Currency?
+  Patient   Patient? @relation(fields: [patientId], references: [id])
+  patientId String?
+}
+
+enum Currency {
+  USD
+  EUR
+  LOCAL
 }
