@@ -91,7 +91,7 @@ ref={componentRef}>
               <div className="flex flex-col">
                 <p className="font-semibold">Prescription</p>
                 <div className="w-full h-auto px-2 pt-0 pb-2 mt-1">
-                  {medication.map((medication, index) =>(
+                  {medication?.map((medication, index) =>(
                     <div key={index}>
                       <p className="font-semibold">-{medication.drug}, <span className="italic font-normal">{medication.count} {medication.count > 1 ? "flacons": "flacon"}</span></p>
                       <p>{medication.posology}</p>
