@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "bunx prisma generate && next build",
+    "build": "bun prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "bunx prisma generate"
+    "postinstall": "bun prisma generate"
   },
   "dependencies": {
     "@heroicons/react": "^2.0.13",
