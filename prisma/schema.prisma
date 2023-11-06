@@ -147,16 +147,11 @@ enum ReportType {
 model Receipt {
   id        String   @id @unique @default(cuid())
   createdAt DateTime @default(now())
-  service   String?
+  services  Json?
   cost      Float?
   date      DateTime?
-  currency  Currency?
+  currency  String?
   Patient   Patient? @relation(fields: [patientId], references: [id])
   patientId String?
 }
 
-enum Currency {
-  USD
-  EUR
-  LOCAL
-}

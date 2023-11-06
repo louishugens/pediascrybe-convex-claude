@@ -10,8 +10,6 @@ import BeatLoader  from 'react-spinners/BeatLoader';
 import * as z from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Toaster, toast } from 'sonner'
-import countryList from 'react-select-country-list'
-import countryToCurrency from 'country-to-currency'
 import {
   Form,
   FormControl,
@@ -28,20 +26,31 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-
+} from "@/components/ui/select";
+import { Receipt } from '@prisma/client';
+import { XCircleIcon } from '@heroicons/react/24/outline';
+import countryList from 'react-select-country-list'
+import countryToCurrency from 'country-to-currency'
+import { CalendarIcon } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
-import { Calendar } from '@/components/ui/calendar';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { XCircleIcon } from '@heroicons/react/24/outline';
 
 
-const CreateReceiptPage = ({params:{patientId}}) => {
+interface Props {
+  receipt: Receipt,
+  patientId: string
+}
 
+interface Service {
+  service: string
+  price: number
+}
+
+const EditReceipt = ({patientId, receipt}: Props) => {
   const options = useMemo(() => countryList().getData(), [])
 
   const schema = z.object({
@@ -63,20 +72,27 @@ const CreateReceiptPage = ({params:{patientId}}) => {
   
   let [color, setColor] = useState("#ffffff")
   let [loading, setLoading] = useState(false)
+  const [id, setId] = useState(receipt.id)
 
+  const services = receipt.services as unknown as Service[]
 
+  console.log('receipt :>> ', receipt);
 
   type FormValues = z.infer<typeof schema>
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
+    defaultValues:{
+      currency: receipt.currency!,
+      date: receipt.date ? new Date(receipt.date) : undefined,
+      services: [...services, { service: '', price: undefined }]
+    }
   })
 
   type Doctor = {
     id: string
   }
 
-  console.log('serviceerror :>> ', form.formState.errors.services?.message);
 
   const doctor: Doctor | null = useDoctor()
   const router = useRouter()
@@ -88,8 +104,8 @@ const CreateReceiptPage = ({params:{patientId}}) => {
     try{
       const {services, date, currency} = values
       const myCurrency = currency.split('-')[0]
-      const body = {services, date, currency: myCurrency, patientId}
-      const res = await fetch('/api/patients/create-receipt', {
+      const body = {services, date, currency: myCurrency, patientId, id}
+      const res = await fetch(`/api/patients/edit-receipt`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
@@ -120,7 +136,7 @@ const CreateReceiptPage = ({params:{patientId}}) => {
   return ( 
   <div className="flex flex-col w-full items-center">
     <Toaster richColors position="top-center" />
-    <p className='text-lg text-primary font-bold mt-8'>Create Receipt</p>
+    <p className='text-lg text-primary font-bold mt-8'>Edit Receipt</p>
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex bg-muted rounded-md p-8 flex-col mt-8 w-2/3 text-sm">
         <FormField
@@ -213,8 +229,6 @@ const CreateReceiptPage = ({params:{patientId}}) => {
                       <SelectItem key={index} value={`${countryToCurrency[option.value]}-(${option.label})`}>{`${countryToCurrency[option.value]} (${option.label})`}</SelectItem>
                     ))
                   }
-                  {/* <SelectItem value="USD">USD</SelectItem>
-                  <SelectItem value="LOCAL">Local Currency</SelectItem> */}
                 </SelectContent>
                 </ScrollArea>
               </Select>
@@ -277,7 +291,7 @@ const CreateReceiptPage = ({params:{patientId}}) => {
                 data-testid="loader"
               />
               :
-                "Create receipt"
+                "Edit receipt"
           }
         </button>
       </form>
@@ -286,4 +300,4 @@ const CreateReceiptPage = ({params:{patientId}}) => {
    );
 }
  
-export default CreateReceiptPage;
+export default EditReceipt;

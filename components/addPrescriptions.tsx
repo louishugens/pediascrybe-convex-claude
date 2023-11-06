@@ -49,7 +49,7 @@ const AddPrescriptions = ({patient, patientId, appointment}) => {
   const [error, setError] = useState(null)
   const [color, setColor] = useState('#ffffff')
   const router = useRouter()
-  const [prescriptions, setPrescriptions] = useState(appointment.medication || [{drug: '', count: 1, posology: ''}])
+  const [prescriptions, setPrescriptions] = useState(appointment.medication || [{drug: '', count: 1, unit: '', posology: ''}])
   const [thinking, setThinking] = useState(false)
 
   // useEffect(() => {
@@ -108,7 +108,7 @@ const AddPrescriptions = ({patient, patientId, appointment}) => {
     // resolver: yupResolver(PrescriptionsSchema),
     resolver: zodResolver(formSchema),
     defaultValues: {
-      prescriptions: [...prescriptions, {drug: '', count: undefined, unit: 'flacon', posology: ''}],
+      prescriptions: [...prescriptions, {drug: '', count: undefined, unit: '', posology: ''}],
     },
   });
 

@@ -16,8 +16,8 @@ const ReceiptsPage = async ({params:{patientId}}) => {
   const receipts = await getReceipts(patientId)
   const headersList = headers()
   const locale = headersList.get('accept-language')
-  console.log('locale :>> ', locale);
-  console.log('receipts :>> ', receipts);
+  const lang = locale?.split(',')[0]
+
   return (  
     <div className='h-full mb-8 mt-4'>
       <div className='flex flex-row w-full h-auto gap-4'>
@@ -29,7 +29,7 @@ const ReceiptsPage = async ({params:{patientId}}) => {
         className='self-end px-4 py-2 bg-blue-500 text-white rounded-full text-sm' 
         href={`/user/patients/${patientId}/receipts/create-receipt`}>Create Receipt</Link>
       </div>
-      <ReceiptList receipts={receipts} patientId={patientId} />
+      <ReceiptList receipts={receipts} patientId={patientId} lang={lang!} />
     </div>
   );
 }

@@ -1,7 +1,5 @@
 'use client'
 import { Report } from "@prisma/client";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 import ReportItem from "./reportItem";
 
 interface Props {
@@ -9,9 +7,6 @@ interface Props {
   patientId: String
 }
 const ReportList = ({reports, patientId}: Props) => {
-  const [loading, setLoading] = useState(false)
-  const router = useRouter()
-
 
   
   return ( 

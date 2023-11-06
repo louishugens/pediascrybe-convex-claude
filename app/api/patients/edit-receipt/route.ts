@@ -20,9 +20,12 @@ export async function POST(req: Request) {
       );
     }
 
-    const {services, date, currency, patientId}= await req.json()
+    const {services, date, currency, patientId, id}= await req.json()
 
-    const report = await prisma.receipt.create({
+    const report = await prisma.receipt.update({
+      where:{
+        id: id
+      },
       data: {
         services, date, currency, patientId
       }

@@ -10,8 +10,14 @@ import { useRouter  } from "next/navigation";
 interface Props {
   receipt: Receipt,
   patientId: String
+  lang: string
 }
-const ReceiptItem = ({receipt, patientId}: Props) => {
+
+interface Service {
+  service: string
+  price: number
+} 
+const ReceiptItem = ({receipt, patientId, lang}: Props) => {
   const router = useRouter()
 
   const [loading, setLoading] = useState(false)
@@ -39,11 +45,19 @@ const ReceiptItem = ({receipt, patientId}: Props) => {
     }
   }
 
+  const services = receipt.services as unknown as Service[]
+
   return ( 
     <tr key={receipt.id} className="border-b text-sm font-light w-full bg-slate-50 shadow pt-12 rounded-full border-none border-spacing-x-2">
     <td className="px-4 py-2 rounded-l-full mt-2">{format(receipt.createdAt, 'yyy-MM-dd hh:mm:ss')}</td>
-    <td className="px-4 py-2">{receipt.service}</td>
-    <td className="px-4 py-2">{receipt.cost}</td>
+    <td className="px-4 py-2">{services[0]?.service}{services.length > 1 && ", ..."}</td>
+    {/* <td className="px-4 py-2">{receipt.cost}</td> */}
+    <td className="px-4 py-2">{
+      new Intl.NumberFormat(lang, {
+        style: 'currency',
+        currency: receipt.currency!
+      }).format(services?.reduce((sum, current) => sum + current.price, 0))}
+    </td>
     <td className="px-4 py-2 rounded-r-full">
       {
         loading

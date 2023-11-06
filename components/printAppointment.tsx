@@ -54,6 +54,7 @@ ref={componentRef}>
             <div className="flex flex-col mb-8">
               <p className='text-xl font-light italic text-center'>Patient&apos;s info</p>
               <div className="grid grid-cols-3 gap-4 mt-4">
+                <p className="text-base font-semibold">Name: <span className="font-bold">{`${patient?.firstname} ${patient?.lastname}`}</span></p>
                 <p className="text-base font-semibold">Birth date: <span className="font-normal ">{patient?.birthdate && format(new Date(patient.birthdate), 'dd-MM-yyyy')}</span></p>
                 <p className="text-base font-semibold">Sex: <span className="font-normal">{patient?.sex}</span></p>
                 <p className="text-base font-semibold">Phone: <span className="font-normal">{patient?.phone}</span></p>
