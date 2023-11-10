@@ -19,11 +19,14 @@ const AppointmentComponent = ({appointment, doctorId, patientId}) => {
         await fetch('/api/patients/deleteAppointment', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          next:{
+            tags: ['appointments'] 
+          },
           body: JSON.stringify(body)
         })
 
         router.refresh()
-        router.push(`/user/patients/${patientId}`)
+        // router.push(`/user/patients/${patientId}`)
       }
       catch(err){
         console.log(err)
