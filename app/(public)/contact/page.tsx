@@ -20,7 +20,7 @@ const Contact = () => {
             <div className="mb-4">
               <textarea placeholder="Your Message" rows={4} className="w-full p-2 rounded border"></textarea>
             </div>
-            <button type="submit" className="bg-primary text-white px-6 py-2 rounded-full">
+            <button type="submit" className="bg-primary text-foreground px-6 py-2 rounded-full">
               Send
             </button>
           </form>

@@ -46,10 +46,10 @@ export function SiteHeader() {
             >
               Contact
             </Link>
-            <Link href="/signin" className="text-sm text-primary border border-primary bg-muted px-4 py-1 rounded-full">
+            <Link href="/signin" className="text-sm text-foreground border border-primary bg-muted px-4 py-1 rounded-full">
               Login
             </Link>
-            <Link href="/signup" className="text-sm text-muted bg-primary px-4 py-1 rounded-full">
+            <Link href="/signup" className="text-sm text-foreground bg-primary px-4 py-1 rounded-full">
               Sign Up
             </Link>
             {/* <ModeToggle /> */}

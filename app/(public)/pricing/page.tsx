@@ -40,7 +40,7 @@ const Pricing = () => {
                   <li key={i} className="mb-2 text-muted-foreground">{feature}</li>
                 ))}
               </ul>
-              <Link href="/signup" className="bg-primary text-white px-8 py-4 rounded-full">
+              <Link href="/signup" className="bg-primary text-foreground px-8 py-4 rounded-full">
                 Get Started
               </Link>
             </div>

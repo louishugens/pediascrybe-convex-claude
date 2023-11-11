@@ -35,9 +35,18 @@ const Footer = () => {
           <div className="w-full md:w-1/4">
             <h2 className="text-xl font-semibold mb-4">Follow Us</h2>
             <div className="flex space-x-4">
-              <a href="#" className="text-2xl text-muted-foreground"><Facebook size={24} /></a>
-              <a href="#" className="text-2xl text-muted-foreground"><Twitter size={24} /></a>
-              <a href="#" className="text-2xl text-muted-foreground"><Linkedin size={24} /></a>
+              <a href="#" className="text-2xl text-muted-foreground" target="_blank" rel="noopener noreferrer" >
+                <Facebook size={24} />
+                <span className="sr-only">Facebook page</span>
+              </a>
+              <a href="#" className="text-2xl text-muted-foreground" target="_blank" rel="noopener noreferrer" >
+                <Twitter size={24} />
+                <span className="sr-only">Twitter page</span>
+              </a>
+              <a href="#" className="text-2xl text-muted-foreground" target="_blank" rel="noopener noreferrer" >
+                <Linkedin size={24} />
+                <span className="sr-only">Linkedin page</span>
+              </a>
             </div>
           </div>
         </div>
