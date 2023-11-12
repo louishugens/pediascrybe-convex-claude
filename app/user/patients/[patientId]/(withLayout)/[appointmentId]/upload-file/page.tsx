@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import FileUpoad from "@/components/fileUpload"
+import { el } from "date-fns/locale"
+import { revalidatePath } from "next/cache"
 
 export default function UploadPage({params: {patientId, appointmentId}}) {
 
@@ -50,7 +52,8 @@ export default function UploadPage({params: {patientId, appointmentId}}) {
           url,
           name,
           fileType,
-          appointmentId
+          appointmentId,
+          patientId
         }),
       })
       const file = await res.json()
@@ -58,8 +61,14 @@ export default function UploadPage({params: {patientId, appointmentId}}) {
         toast.success("File saved!", {
           icon: '👏',
         })
-        router.refresh()
+        // router.refresh()
+        // revalidatePath(`/user/patients/${patientId}/${appointmentId}/`)
         router.push(`/user/patients/${patientId}/${appointmentId}/`)
+        setLoading(false)
+      }else{
+        toast.error("Something went wrong!", {
+          icon: '😢',
+        })
         setLoading(false)
       }
   

@@ -12,7 +12,7 @@ import toast, {Toaster} from "react-hot-toast";
 import UploadedFile from "./uploadedFile";
 // import { Appointment } from "@prisma/client";
 import { Appointment, File } from "@prisma/client";
-import { E } from "uploadthing/dist/types-5304bd74";
+// import { E } from "uploadthing/dist/types-5304bd74";
 
 interface AppointmentPageComponentProps {
   appointment: Appointment&{

@@ -5,6 +5,8 @@ import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { Document } from "langchain/document";
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation"
 export async function POST(req: Request) {
   if(req.method == 'POST') {
 
@@ -20,7 +22,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { url, name, fileType, appointmentId } = await req.json()
+    const { url, name, fileType, appointmentId, patientId } = await req.json()
 
     const file = await prisma.file.create({
       data: {
@@ -56,7 +58,10 @@ export async function POST(req: Request) {
       //     vectorId: result[0]
       //   }
       // })
+      // revalidatePath(`/user/patients/${patientId}/${appointmentId}`)
 
+      revalidatePath(`/user/patients/${patientId}/${appointmentId}/`)
+      // redirect(`/user/patients/${patientId}/${appointmentId}/`)
       return new Response(JSON.stringify(file), {
         status: 200
       });

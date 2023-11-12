@@ -21,6 +21,7 @@ async function getAppointment(appointmentId){
   return appointment
 }
 export const dynamic = 'force-dynamic';
+
 const AppointmentPage = async ({params: { patientId, appointmentId}}) => {
   const supabase = createServerClient()
   
@@ -30,6 +31,7 @@ const AppointmentPage = async ({params: { patientId, appointmentId}}) => {
 
   const doctorId = session?.user?.id
   const appointment = await getAppointment(appointmentId)
+
   return (
     <AppointmentPageComponent appointment={appointment as AppointmentwithFiles}  patientId={patientId} data-superjson />
   )
