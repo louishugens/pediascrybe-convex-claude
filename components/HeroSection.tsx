@@ -60,7 +60,7 @@ const HeroSection = () => {
             height={600} 
             width={400} 
             priority 
-            placeholder='blur'
+            // placeholder='blur'
             quality={50}
           />
         </div>
