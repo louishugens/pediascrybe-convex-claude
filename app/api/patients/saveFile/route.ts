@@ -61,7 +61,7 @@ export async function POST(req: Request) {
       // revalidatePath(`/user/patients/${patientId}/${appointmentId}`)
 
       revalidatePath(`/user/patients/${patientId}/${appointmentId}/`)
-      // redirect(`/user/patients/${patientId}/${appointmentId}/`)
+      
       return new Response(JSON.stringify(file), {
         status: 200
       });

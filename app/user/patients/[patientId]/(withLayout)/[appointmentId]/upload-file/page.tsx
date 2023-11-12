@@ -61,7 +61,7 @@ export default function UploadPage({params: {patientId, appointmentId}}) {
         toast.success("File saved!", {
           icon: '👏',
         })
-        // router.refresh()
+        router.refresh()
         // revalidatePath(`/user/patients/${patientId}/${appointmentId}/`)
         router.push(`/user/patients/${patientId}/${appointmentId}/`)
         setLoading(false)

@@ -52,7 +52,7 @@ const HeroSection = () => {
           </motion.div>
         </motion.div>
         <div className="flex flex-col justify-center w-full h-full md:h-auto relative">
-          <Image className='absolute bottom-0 left-3/4 -translate-x-2/3' src="/doctor.png" alt="Doctor" height={500} width={400} />
+          <Image className='absolute bottom-0 left-3/4 -translate-x-2/3' src="/doctor.png" alt="Doctor" height={600} width={400} priority />
         </div>
       </div>
     </div>
