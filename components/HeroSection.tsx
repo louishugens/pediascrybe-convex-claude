@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import Image from 'next/image';
+import doctor from '@/public/doctor.png'
 
 import { motion } from 'framer-motion';
 
@@ -52,7 +53,16 @@ const HeroSection = () => {
           </motion.div>
         </motion.div>
         <div className="flex flex-col justify-center w-full h-full md:h-auto relative">
-          <Image className='absolute bottom-0 left-3/4 -translate-x-2/3' src="/doctor.png" alt="Doctor" height={600} width={400} priority />
+          <Image 
+            className='absolute bottom-0 left-3/4 -translate-x-2/3' 
+            src={doctor}
+            alt="Doctor" 
+            height={600} 
+            width={400} 
+            priority 
+            placeholder='blur'
+            quality={50}
+          />
         </div>
       </div>
     </div>
