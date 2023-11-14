@@ -73,7 +73,7 @@ export default function Signup() {
         setLoading(false)
         console.log('error :>> ', error);
       }else{
-        setLoading(false)
+        // setLoading(false)
         const res = await fetch('/api/send', {
           method: 'POST',
           body: JSON.stringify({ email, lastname }),
