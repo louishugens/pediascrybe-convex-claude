@@ -60,10 +60,17 @@ export default function Signup() {
     
 
     if(user){
-      // const user = data.user
+
+      const res = await fetch('/api/send', {
+        method: 'POST',
+        body: JSON.stringify({ email, lastname }),
+      })
+      const  emailres  = await res.json()
+      console.log('email :>> ', emailres);
+
       const {error} = await supabase.from('Doctor')
       .insert(
-        {id: user.user.id,  firstname, lastname, email, }
+        {id: user.user.id,  firstname, lastname, email }
       )
       if(error){
         setError(error)
