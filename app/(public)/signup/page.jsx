@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation';
 
 
 
+
 export default function Signup() {
 
   const override= {
@@ -61,12 +62,7 @@ export default function Signup() {
 
     if(user){
 
-      const res = await fetch('/api/send', {
-        method: 'POST',
-        body: JSON.stringify({ email, lastname }),
-      })
-      const  emailres  = await res.json()
-      console.log('email :>> ', emailres);
+
 
       const {error} = await supabase.from('Doctor')
       .insert(
@@ -77,6 +73,13 @@ export default function Signup() {
         setLoading(false)
         console.log('error :>> ', error);
       }else{
+        setLoading(false)
+        const res = await fetch('/api/send', {
+          method: 'POST',
+          body: JSON.stringify({ email, lastname }),
+        })
+        const  emailres  = await res.json()
+        console.log('email :>> ', emailres);
         router.push('/signup/success')
       }
 
