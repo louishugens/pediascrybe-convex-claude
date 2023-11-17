@@ -21,6 +21,7 @@ async function getAppointment(appointmentId){
   return appointment
 }
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 const AppointmentPage = async ({params: { patientId, appointmentId}}) => {
   const supabase = createServerClient()
