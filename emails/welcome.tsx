@@ -32,7 +32,7 @@ export const PediascrybeWelcome = ({
       <Preview>{previewText}</Preview>
       <Tailwind>
         <Body className="bg-white my-auto mx-auto font-sans">
-          <Container className="border border-solid border-[#eaeaea] bg-[#ffffff] rounded my-[40px] mx-auto p-[20px]">
+          <Container className="border border-solid border-[#eaeaea] bg-[#ffffff] rounded my-[40px] mx-auto p-[20px] w-full max-w-[645px]">
             <Section className="mt-[32px]">
               <Link href="https://www.pediascrybe.com">
               <Heading className="text-[#16A349] text-[32px] italic font-normal text-center p-0 my-[30px] mx-0">
