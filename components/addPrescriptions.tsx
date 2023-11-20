@@ -51,6 +51,78 @@ const AddPrescriptions = ({patient, patientId, appointment}) => {
   const router = useRouter()
   const [prescriptions, setPrescriptions] = useState(appointment.medication || [{drug: '', count: 1, unit: '', posology: ''}])
   const [thinking, setThinking] = useState(false)
+  let [generating, setGenerating] = useState(false)
+
+  const fetchPrescriptionsSuggestions = async () => {
+    setThinking(true)
+
+      const messages = [
+        // {role: "system", content: "Generate a list of drug prescriptions based on the patient's symptoms and diagnostics.\
+        // provide it in JSON array format as in the following example : [{drug: \"Paracetamol\", count: 1, unit: \"flacon\", posology: \"1 pill twice a day\"}, ... ] \
+        // Note this is a sample message, you can change it as you wish based on the symptoms, age and diagnostics you received. \
+        // send an empty array if no drugs are suggested. Only send the JSON and nothing else. Use same language as the one used in the symptoms and diagnostics."},
+        // {role: "user", content: `The patient is ${formatDistanceToNow(new Date(patient.birthdate))}`},
+        // {role: "user", content: appointment.motif ? `The patient symptoms are ${appointment.motif}` : ''},
+        // {role: "user", content: appointment.finding ? `The pediatrician's diagnostic is ${appointment.finding}` : ''},
+        // {role: "system", content: "Translate the list in the language the symptoms and diagnostics are provided."},
+        {
+          role: "system",
+          content: "As ScrybeGPT, a helpful medical assidtant, your task is to propose to pediatrician a list of drug prescriptions \
+                    for a patient, based on their symptoms and diagnostics. Follow these steps:\
+                    \
+                    1. Identify the language used for the symptoms.\
+                    2. Based on the age, symptoms, and diagnosis, determine appropriate list medications.\
+                    3. For each medication, decide the quantity (count), unit (e.g., flacon, bottle, vial), and posology (e.g., '1 pill twice a day').\
+                    4. Compile the medications into a JSON array. Each entry should include the drug name, count, unit, and posology.\
+                    5. If no medications are necessary, send an empty JSON array.\
+                    6. Ensure the JSON array is formatted correctly. Here is an example [{drug: \"Paracetamol\", count: 1, unit: \"flacon\", posology: \"1 pill twice a day\"}, ... ]\
+                    7. Above list is just an example, you can change it as you wish based on the symptoms, age and diagnostics you received. \
+                    8. Translate the values for each key in the JSON array into the language used for the symptoms.\
+        \
+                  Provide the output in the same language as the symptoms and diagnostics. Only send the JSON array as the response."
+        },
+        {
+          role: "user",
+          content: `The patient is ${formatDistanceToNow(new Date(patient.birthdate))}`
+        },
+        {
+          role: "user",
+          content: appointment.motif ? `The patient symptoms are ${appointment.motif}` : ''
+        },
+        {
+          role: "user",
+          content: appointment.finding ? `The pediatrician's diagnostic is ${appointment.finding}` : ''
+        },
+        {
+          role: "system",
+          content: "Submit the list of drug prescriptions in JSON array format. Here is an example [{drug: \"Paracetamol\", count: 1, unit: \"flacon\", posology: \"1 pill twice a day\"}, ... ]"
+        }
+        
+      ]
+
+      
+      try {
+        const response = await fetch('/api/diagnostic', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({messages})
+        });
+        const data = await response.json();
+        console.log('data :>> ', data);
+        const myexams = JSON.parse(data)
+        console.log('myexams :>> ', myexams);
+        myexams.forEach(exam => {
+          prepend(exam)
+        }
+        )
+        setThinking(false)
+
+      } catch (error) {
+        console.error("Error fetching suggestions:", error);
+      }
+  };
 
   // useEffect(() => {
   //   const fetchPrescriptionsSuggestions = async () => {
@@ -58,14 +130,42 @@ const AddPrescriptions = ({patient, patientId, appointment}) => {
 
   //       const messages = [
   //         {role: "system", content: "Generate a list of drug prescriptions based on the patient's symptoms and diagnostics.\
-  //         provide it in JSON array format as in the following example : [{drug: \"Paracetamol\", count: 1, posology: \"1 pill twice a day\"}, ... ] \
+  //         provide it in JSON array format as in the following example : [{drug: \"Paracetamol\", count: 1, unit: \"flacon\", posology: \"1 pill twice a day\"}, ... ] \
   //         send an empty array if no drugs are suggested. Only send the JSON and nothing else. Use same language as the one used in the symptoms and diagnostics."},
   //         {role: "user", content: `The patient is ${formatDistanceToNow(new Date(patient.birthdate))}`},
-  //         // {role: "system", content: "mimic the pediatrician's language and resppond as if you where the pediatrician writing the diagnostic."},
-  //         // {role: "system", content: "summarize your findings in a few sentences."},
   //         {role: "user", content: appointment.motif ? `The patient symptoms are ${appointment.motif}` : ''},
   //         {role: "user", content: appointment.finding ? `The pediatrician's diagnostic is ${appointment.finding}` : ''},
-  //         // {role: "system", content: "Translate the list in the language the symptoms and diagnostics are provided."},
+  //         {role: "system", content: "Translate the list in the language the symptoms and diagnostics are provided."},
+  //         // {
+  //         //   role: "system",
+  //         //   content: "As ScrybeGPT, your task is to generate a list of drug prescriptions for a patient, based on their symptoms and diagnostics. Follow these steps:\
+  //         //             \
+  //         //             1. Receive and understand the patient's age, symptoms, and pediatrician's diagnosis.\
+  //         //             2. Based on the age, symptoms, and diagnosis, determine appropriate medications.\
+  //         //             3. For each medication, decide the quantity (count), unit (e.g., flacon, pill), and posology (e.g., '1 pill twice a day').\
+  //         //             4. Compile the medications into a JSON array. Each entry should include the drug name, count, unit, and posology.\
+  //         //             5. If no medications are necessary, send an empty JSON array.\
+  //         //             6. Ensure the JSON array is formatted correctly.\
+  //         // \
+  //         //           Provide the output in the same language as the symptoms and diagnostics. Only send the JSON array as the response."
+  //         // },
+  //         // {
+  //         //   role: "user",
+  //         //   content: `The patient is ${formatDistanceToNow(new Date(patient.birthdate))}`
+  //         // },
+  //         // {
+  //         //   role: "user",
+  //         //   content: appointment.motif ? `The patient symptoms are ${appointment.motif}` : ''
+  //         // },
+  //         // {
+  //         //   role: "user",
+  //         //   content: appointment.finding ? `The pediatrician's diagnostic is ${appointment.finding}` : ''
+  //         // },
+  //         // {
+  //         //   role: "system",
+  //         //   content: "Translate the list into the language the symptoms and diagnostics are provided."
+  //         // }
+          
   //       ]
 
         
@@ -152,7 +252,13 @@ const AddPrescriptions = ({patient, patientId, appointment}) => {
     <div className="w-full h-auto shadow-md rounded-lg p-4 bg-slate-50 mt-4 text-sm">
       <p className='font-bold'>Add medicines</p>
       <form className='mt-4' onSubmit={handleSubmit(onSubmit)}>
-      {thinking && <span className=' font-light text-primary'> ScrybeGPT thinking <PulseLoader color={"#21C55D"} size={5} aria-label="Loading Spinner" data-testid="loader"/></span> }
+      {/* {
+        thinking 
+        ?
+          <span className=' font-light text-primary'> ScrybeGPT thinking <PulseLoader color={"#21C55D"} size={5} aria-label="Loading Spinner" data-testid="loader"/></span> 
+        :
+          <span className=' font-light text-primary'>Generate with ScrybeGPT? <span className='px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs cursor-pointer'  onClick={fetchPrescriptionsSuggestions}>Yes</span></span>
+      } */}
       {fields.map((field, index) => {
         return (
           <section key={field.id} className="relative pt-8">

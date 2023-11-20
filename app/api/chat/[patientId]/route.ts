@@ -103,6 +103,7 @@ export async function POST(req: Request, { params }: { params: { patientId: stri
     const model = new ChatOpenAI({
       // modelName: "gpt-3.5-turbo",
       modelName: "gpt-4",
+      // modelName: "gpt-4-1106-preview",
       temperature: 0.0,
     });
 

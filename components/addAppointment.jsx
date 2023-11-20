@@ -5,9 +5,9 @@ import * as yup from "yup";
 import { yupResolver } from '@hookform/resolvers/yup';
 import PulseLoader from "react-spinners/PulseLoader"
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import BeatLoader  from 'react-spinners/BeatLoader';
-import { formatDistanceToNow } from "date-fns"
+import { formatDistanceToNow, set } from "date-fns"
 import { useDebouncedCallback } from 'use-debounce'
 import { generateDiagnosticPrompt } from '@/lib/prompts'
 
@@ -33,6 +33,9 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
   let [loading, setLoading] = useState(false)
   const [suggestions, setSuggestions] = useState('');
   let [thinking, setThinking] = useState(false)
+  let [generating, setGenerating] = useState(false)
+
+
 
 
 
@@ -62,6 +65,42 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
   });
 
   const symptoms = watch('motif')
+
+  useEffect(() => {
+    if (!symptoms) {
+      setThinking(false)
+    }
+    const timeoutId = setTimeout(() => {
+      if (symptoms){
+        setThinking(true)
+      }
+    }, 1500)
+    return () => clearTimeout(timeoutId);
+
+  }, [symptoms, setValue]);
+
+  const fetchDiagnosticSuggestions = async () => {
+    if (symptoms) {
+      setGenerating(true)
+      const messages = generateDiagnosticPrompt(symptoms, patient.birthdate)
+      try {
+        const response = await fetch('/api/diagnostic', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({messages})
+        });
+        const data = await response.json();
+        console.log('data :>> ', data);
+        setSuggestions(data); 
+        setValue('findings', data); 
+        setGenerating(false)
+      } catch (error) {
+        console.error("Error fetching suggestions:", error);
+      }
+    }
+  };
 
   // useEffect(() => {
   //   const fetchDiagnosticSuggestions = async () => {
@@ -127,11 +166,12 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
 
 
 
+
   return (
     <div className='pt-4'>
       <div className="flex flex-col w-full">
         <p className='text-1xl text-green-500 font-bold'>
-          New Appointment
+          New Consultation
         </p>
         <form className="flex flex-col mt-4 w-full text-sm" onSubmit={handleSubmit(onSubmit)}>
           <div className="grid gap-x-8 gap-y-4 grid-cols-3">
@@ -258,10 +298,20 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
               <p className='px-4 pt-1 text-sm text-red-600'>{errors.motif?.message}</p>
             </label>
             <label className="flex flex-col mb-4 h-40 gap-y-2">
-              <span className="font-medium">
-                Diagnostic
-                {thinking && <span className=' font-light text-primary'> ScrybeGPT thinking <PulseLoader color={"#21C55D"} size={5} aria-label="Loading Spinner" data-testid="loader"/></span> }
-              </span>
+              <div className="font-medium flex flex-row justify-between">
+                <span>Diagnostic</span>
+                {/* {
+                  thinking && symptoms && 
+                    (
+                      generating
+                      ?
+                        <span className=' font-light text-primary flex flex-row gap-2'><span>ScrybeGPT thinking </span><PulseLoader className='my-auto' color={"#21C55D"} size={5} aria-label="Loading Spinner" data-testid="loader"/></span>
+                      :
+                        <span className=' font-light text-primary'>Generate with ScrybeGPT? <span className='px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs cursor-pointer'  onClick={fetchDiagnosticSuggestions}>Yes</span></span>
+                    )
+                  
+                } */}
+              </div>
               <textarea
                 placeholder="What do you beleive the patient is suffering from?"
                 className="placeholder:italic placeholder:text-sm bg-white shadow-md h-40 rounded-md py-2 px-4 border-none"

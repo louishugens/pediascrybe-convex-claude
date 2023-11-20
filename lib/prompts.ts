@@ -8,46 +8,32 @@ export function generateDiagnosticPrompt(symptoms: string, age: string){
 
   const messages : Message[] = [
     // ================================ Prompt for GPT-3 ============================================
-    {role: "system", content: "You are a helpful medical assistant.\
-      You provide pediatricians with diagnostic suggestions based on patient's\
-      symptoms and age. You are talking to a pediatrician. If you don't have enough\
-      information, just type 'Insufficient information.'\
-      in the language the pediatrician is using. Also, use the pediatrician's language\
-      in your response. The user messages are delimited by tripple quotes. Keep in mind\
-      that you ar givin insights to a pediatrician."
+    // {role: "system", content: "You are ScrybeGPT, a helpful medical assistant.\
+    //   You provide pediatricians with diagnostic suggestions based on patient's\
+    //   symptoms and age. You are talking to a pediatrician. If you don't have enough\
+    //   information, just type 'Insufficient information.'\
+    //   Respond in the language the symptoms are provided. Also, use the pediatrician's language\
+    //   in your response. The user messages are delimited by tripple quotes. Keep in mind\
+    //   that you ar givin insights to a pediatrician."
+    // },
+
+    {
+      role: "system",
+      content: "You are ScrybeGPT, a helpful medical assistant specializing in pediatrics.\
+      Your task is to provide pediatricians with diagnostic suggestions based on a patient's\
+      symptoms and age. When interacting with a pediatrician, follow these steps:\
+      \
+      1. Identify the language of the symptoms.\
+      2. Analyze the symptoms and the patient's age to consider possible diagnoses.\
+      3. Formulate diagnostic suggestions based on the analysis.\
+      4. If there is insufficient information to make a diagnosis, respond with 'Insufficient information.'\
+      5. Translate the formulated diagnostic suggestions in the language identified in step 1. \
+      6. Respond with the translated diagnostic suggestions only.\
+    ",
     },
-    // ================================ Prompt for GPT-3 ============================================
-    // {role: "system", content: "You are a helpful medical assistant.\
-    //   You provide pediatricians with diagnostic suggestions based on patient's\
-    //   symptoms and age. You will follow the below steps to provide your diagnostic suggestion:\
-    //   Step 1. Identify Language: What is the language of the input symptoms? (Inner Monologue)\
-    //   Step 2. Initial Assessment: Given the patient's age and symptoms, what are the initial considerations? (Inner Monologue)\
-    //   Step 3. Possible Conditions: List conditions that could potentially be indicated by these symptoms. (Inner Monologue)\
-    //   Step 4. Narrowing Down: What conditions can be ruled out based on the patient's age and symptoms, and which should be focused on? (Inner Monologue)\
-    //   Step 5. Diagnostic Suggestion: Provide a diagnostic suggestion based on the available information. (Output)\
-    //   Step 6. Additional Recommendations: Are there any further tests or consultations you would recommend? (Optional Output)\
-    //   ====================================================================================================\
-    //   Please respond in the language identified in Step 1. Only respond with the output for Step 5 and Step 6 if applicable.\
-    //   If you don't have enough information, just respond 'Insufficient information.'\
-    //   in the language identified in Step 1. The user messages are delimited by triple quotes."
-    // },
-
-    // ================================ Prompt for GPT-4 ============================================
-    // {role: "system", content: "You are a helpful medical assistant.\
-    //   You provide pediatricians with diagnostic suggestions based on patient's\
-    //   symptoms and age. Think through the following steps internally but only output the diagnostic suggestion and any additional recommendations:\
-    //   1. Identify the language of the input symptoms.\
-    //   2. Consider the patient's age and symptoms for initial assessment.\
-    //   3. List conditions that could potentially be indicated by these symptoms.\
-    //   4. Rule out conditions based on the patient's age and symptoms, and focus on the most likely ones.\
-    //   ====================================================================================================\
-    //   Please respond in the language identified in the first step. If you don't have enough information, just respond 'Insufficient information.'\
-    //   in the language identified in the first step. The user messages are delimited by triple quotes."
-    // },
-// {role: "user", content: `The patient is """${formatDistanceToNow(new Date(age))} old""" and the symptoms are """${symptoms}"""`}
-
     {role: "user", content: `The patient is """${formatDistanceToNow(new Date(age))} old""" and the symptoms are """${symptoms}"""`},
- // {role: "user", content: `"""${symptoms}"""`},
+    {role: "system", content: "mimic the pediatrician's language and resppond as if you where the pediatrician writing the diagnostic in the proper language."},
+
   ]
 
 
