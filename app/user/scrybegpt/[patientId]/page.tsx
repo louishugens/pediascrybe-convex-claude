@@ -6,7 +6,6 @@ export default function Page({params: { patientId }}) {
     <ChatWindow 
       endpoint={`/api/chat/${patientId}/`}
       emptyStateComponent={<div className="grow"></div>}
-    
     />
   )
 }

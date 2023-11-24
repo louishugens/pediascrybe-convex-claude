@@ -101,8 +101,8 @@ export async function POST(req: Request, { params }: { params: { patientId: stri
     const currentMessageContent = messages[messages.length - 1].content;
 
     const model = new ChatOpenAI({
-      // modelName: "gpt-3.5-turbo",
-      modelName: "gpt-4",
+      modelName: "gpt-3.5-turbo",
+      // modelName: "gpt-4",
       // modelName: "gpt-4-1106-preview",
       temperature: 0.0,
     });
@@ -138,9 +138,9 @@ export async function POST(req: Request, { params }: { params: { patientId: stri
       }
     });
 
-    // retriever.filter({ patientId: patientId });
 
-    // console.log('retriever :>> ', retriever.getRelevantDocuments("Blandine"));
+
+   
     /**
      * We use LangChain Expression Language to compose two chains.
      * To learn more, see the guide here:

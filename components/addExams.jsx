@@ -33,7 +33,7 @@ const AddExams = ({patient, patientId, appointment}) => {
                     \
                     1. Identify the laguage used for the symptoms.\
                     2. Based on the age, symptoms, and diagnosis, determine an appropriate set of lab exams that should be conducted.\
-                    3. Compile the recommended lab exams into a JSON array. Each entry in the array should be in the format: {exam: \"exam_name\"}.\
+                    3. Compile the recommended lab exams into a JSON array. The array should be in the format: [{exam: \"exam_name\"}, {exam: \"other_exam_name\"}].\
                     4. If no lab exams are necessary, send an empty JSON array.\
                     5. Ensure the JSON array is formatted correctly and contains only the required information.\
                     6. Translate the values for each key in the JSON array into the language used for the symptoms.\

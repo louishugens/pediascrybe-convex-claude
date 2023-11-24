@@ -75,7 +75,7 @@ const AddPrescriptions = ({patient, patientId, appointment}) => {
                     3. For each medication, decide the quantity (count), unit (e.g., flacon, bottle, vial), and posology (e.g., '1 pill twice a day').\
                     4. Compile the medications into a JSON array. Each entry should include the drug name, count, unit, and posology.\
                     5. If no medications are necessary, send an empty JSON array.\
-                    6. Ensure the JSON array is formatted correctly. Here is an example [{drug: \"Paracetamol\", count: 1, unit: \"flacon\", posology: \"1 pill twice a day\"}, ... ]\
+                    6. Ensure the JSON array is formatted correctly. Here is an example [{drug: \"drug name\", count: 1, unit: \"flacon\", posology: \"1 pill twice a day\"}, ... ]\
                     7. Above list is just an example, you can change it as you wish based on the symptoms, age and diagnostics you received. \
                     8. Translate the values for each key in the JSON array into the language used for the symptoms.\
         \
@@ -95,7 +95,10 @@ const AddPrescriptions = ({patient, patientId, appointment}) => {
         },
         {
           role: "system",
-          content: "Submit the list of drug prescriptions in JSON array format. Here is an example [{drug: \"Paracetamol\", count: 1, unit: \"flacon\", posology: \"1 pill twice a day\"}, ... ]"
+          content: "Submit the list of drug prescriptions in JSON array format and language."
+          // Here is an example \
+          // [{drug: \"drug name\", count: 1, unit: \"flacon\", posology: \"1 pill twice a day\"}, {drug: \"drug name 2\", count: 1, unit: \"bottle\", posology: \"2ml twice a day\"}, ... ] \
+          // Also make sure to translate the values for each key in the JSON array into the language used for the symptoms."
         }
         
       ]
