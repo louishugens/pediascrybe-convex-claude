@@ -45,23 +45,24 @@ model Doctor {
   phone        String?
   address      String?
   experience   Int?
-  isActive     Boolean       @default(false)
-  isCompleted  Boolean       @default(false)
-  isDoctor     Boolean       @default(false)
-  isMedPro     Boolean       @default(false)
+  isActive     Boolean        @default(false)
+  isCompleted  Boolean        @default(false)
+  isDoctor     Boolean        @default(false)
+  isMedPro     Boolean        @default(false)
   spec         String?
   summary      String?
   title        String?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @default(now())
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @default(now())
   availability Json?
-  id           String        @id @unique @default(cuid())
+  id           String         @id @unique @default(cuid())
   email        String
   firstname    String
   lastname     String
   appointments Appointment[]
   Img          Img?
   patients     Patient[]
+  Subscription Subscription[]
 }
 
 model Img {
@@ -145,13 +146,84 @@ enum ReportType {
 }
 
 model Receipt {
-  id        String   @id @unique @default(cuid())
-  createdAt DateTime @default(now())
+  id        String    @id @unique @default(cuid())
+  createdAt DateTime  @default(now())
   services  Json?
   cost      Float?
   date      DateTime?
   currency  String?
-  Patient   Patient? @relation(fields: [patientId], references: [id])
+  Patient   Patient?  @relation(fields: [patientId], references: [id])
   patientId String?
 }
 
+// ///////////////Stripe Payment////////////////////////
+
+model Product {
+  id          String   @id
+  active      Boolean?
+  name        String?
+  description String?
+  image       String?
+  metadata    Json?
+
+  price Price[]
+}
+
+model Price {
+  id                String                 @id
+  active            Boolean?
+  description       String?
+  unit_amount       Int?
+  product           Product                @relation(fields: [productId], references: [id])
+  currency          String?
+  pricing_type      Pricing_type?
+  interval          Pricing_plan_interval?
+  interval_count    Int?
+  trial_period_days Int?
+  metadata          Json?
+  productId         String
+  subscription      Subscription[]
+}
+
+enum Pricing_plan_interval {
+  day
+  week
+  month
+  year
+}
+
+enum Pricing_type {
+  one_time
+  recurring
+}
+
+model Subscription {
+  id                   String              @id
+  status               Subscription_status
+  metadata             Json?
+  price                Price               @relation(fields: [priceId], references: [id])
+  quantity             Int?
+  cancel_at_period_end Boolean?
+  created              DateTime            @default(now())
+  current_period_start DateTime            @default(now())
+  current_period_end   DateTime            @default(now())
+  ended_at             DateTime?           @default(now())
+  cancel_at            DateTime?           @default(now())
+  canceled_at          DateTime?           @default(now())
+  trial_start          DateTime?           @default(now())
+  trial_end            DateTime?           @default(now())
+  doctor               Doctor?             @relation(fields: [doctorId], references: [id])
+  doctorId             String?
+  priceId              String
+}
+
+enum Subscription_status {
+  trialing
+  active
+  canceled
+  incomplete
+  incomplete_expired
+  past_due
+  unpaid
+  paused
+}
