@@ -16,6 +16,7 @@ import { Toaster, toast } from 'sonner'
 const FormSchema = z.object({
   senderEmail: z.string({required_error: "Please add your email"}).email('Invalid email address'),
   message: z.string({required_error: 'Please enter your message'}),
+  name: z.string({required_error: 'Please enter your name'}),
 })
 
 
@@ -31,14 +32,14 @@ const Contact = () => {
 
   const submitMessage = async (data) => {
       setLoading(true);
-      const { senderEmail, message } = data;
+      const { senderEmail, message, name } = data;
 
       const res = await fetch('/api/contact', {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ senderEmail, message }),
+          body: JSON.stringify({ senderEmail, message, name }),
       });
 
       if (res.status === 200) {
@@ -69,12 +70,25 @@ const Contact = () => {
             <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-6">
               <FormField
                 control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Elon Musk" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="senderEmail"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="jdoe@gmail.com" {...field} />
+                      <Input placeholder="elon@x.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

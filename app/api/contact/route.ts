@@ -7,14 +7,14 @@ export async function POST(req) {
         return new Response(JSON.stringify({ message: 'Only POST requests allowed' }), { status: 405 });
     }
 
-    const { senderEmail, message } = await req.json();;
-    console.log("senderEmail, message>>",senderEmail, message)
+    const { senderEmail, message, name } = await req.json();;
+  
 
     try {
         await resend.emails.send({
             from: 'noreply@pediascrybe.com', // Replace with your sender email address
             to: 'louishugens@gmail.com', // Replace with your support email address
-            subject: 'New Contact Form Submission',
+            subject: `New Contact Form Submission from ${name}`,
             html: `Message from: ${senderEmail}<br /><br />${message}`,
         });
 
