@@ -60,7 +60,9 @@ export async function POST(req: Request) {
       // })
       // revalidatePath(`/user/patients/${patientId}/${appointmentId}`)
 
-      revalidatePath(`/user/patients/${patientId}/${appointmentId}/`)
+      console.log('path :>> ', `/user/patients/${patientId}/${appointmentId}`);
+      revalidatePath(`/user/patients/${patientId}/${appointmentId}`)
+      // revalidatePath(`/user/patients/${patientId}/${appointmentId}/upload-file`);
       
       return new Response(JSON.stringify(file), {
         status: 200

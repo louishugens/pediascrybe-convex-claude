@@ -27,7 +27,7 @@ async function getPatient(patientId) {
 
 
 
-export const dynamic = 'force-dynamic';
+// export const dynamic = 'force-dynamic';
 
 
 const AddPrescriptionsPage = async ({params: {patientId, appointmentId}}) => {

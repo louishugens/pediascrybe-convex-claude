@@ -68,7 +68,7 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
       })
       // const appointment = await response.json()
 
-      router.refresh()
+      // router.refresh()
       router.push(`/user/patients/${patientId}/${appointment.id}`)
 
     }
@@ -95,163 +95,161 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
 
 
   return (
-    <div className='pt-4'>
-      <div className="flex flex-col w-full">
-        <p className='text-1xl text-green-500 font-bold'>
-          Update Appointment
-        </p>
-        <form className="flex flex-col mt-4 w-full text-sm" onSubmit={handleSubmit(onSubmit)}>
-          <div className="grid gap-x-8 gap-y-4 grid-cols-3">
-            <label className="flex flex-col mb-4 h-16">
-              <span className="font-medium">Height (in cm)</span>
-              <input
-                placeholder="Patient's height in cm"
-                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
-                type="number"
-                step={0.01}
-                {...register('height')}
-              />
-              <p className='px-4 pt-1 text-sm text-red-600'>{errors.height?.message}</p>
-            </label>
-            <label className="flex flex-col mb-4 h-16">
-              <span className="font-medium">Weight (in kg)</span>
-              <input
-                placeholder="Patient's weight in kg"
-                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
-                type="number"
-                step={0.01}
-                {...register('weight')}
-              />
-              <p className='px-4 pt-1 text-sm text-red-600'>{errors.weight?.message}</p>
-            </label>
-            <label className="flex flex-col mb-4 h-16">
-              <span className="font-medium">Head circumference (in cm)</span>
-              <input
-                placeholder="Patient's head circumference in cm"
-                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
-                type="number"
-                step={0.01}
-                {...register('head')}
-              />
-              <p className='px-4 pt-1 text-sm text-red-600'>{errors.head?.message}</p>
-            </label>
-            <label className="flex flex-col mb-4 h-16">
-              <span className="font-medium">Arm circumference (in cm)</span>
-              <input
-                placeholder="Patient's head circumference in cm"
-                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
-                type="number"
-                step={0.01}
-                {...register('arm')}
-              />
-              <p className='px-4 pt-1 text-sm text-red-600'>{errors.arm?.message}</p>
-            </label>
-            <label className="flex flex-col mb-4 h-16">
-              <span className="font-medium">SaO2 (in %)</span>
-              <input
-                placeholder="Patient's SaO2 in %"
-                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
-                type="number"
-                step={0.01}
-                {...register('sao2')}
-              />
-              <p className='px-4 pt-1 text-sm text-red-600'>{errors.sao2?.message}</p>
-            </label>
-            <label className="flex flex-col mb-4 h-16">
-              <span className="font-medium">Temperature (in °C)</span>
-              <input
-                placeholder="Patient's temperature in °C"
-                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
-                type="number"
-                step={0.01}
-                {...register('temperature')}
-              />
-              <p className='px-4 pt-1 text-sm text-red-600'>{errors.temperature?.message}</p>
-            </label>
-            <label className="flex flex-col mb-4 h-16">
-              <span className="font-medium">Pulse (in bpm)</span>
-              <input
-                placeholder="Patient's pulse in bpm"
-                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
-                type="number"
-                step={1}
-                {...register('pulse')}
-              />
-              <p className='px-4 pt-1 text-sm text-red-600'>{errors.pulse?.message}</p>
-            </label>
-            <label className="flex flex-col mb-4 h-16">
-              <span className="font-medium">Respiratory rate (in rpm)</span>
-              <input
-                placeholder="Patient's respiratory rate in rpm"
-                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
-                type="number"
-                step={1}
-                {...register('respiratory')}
-              />
-              <p className='px-4 pt-1 text-sm text-red-600'>{errors.respiratory?.message}</p>
-            </label>
-            <label className="flex flex-col mb-4 h-16">
-              <span className="font-medium">Systolic blood pressure (in mmHg)</span>
-              <input
-                placeholder="Patient's systolic blood pressure in mmHg"
-                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
-                type="number"
-                step={1}
-                {...register('systolic')}
-              />
-              <p className='px-4 pt-1 text-sm text-red-600'>{errors.systolic?.message}</p>
-            </label>
-            <label className="flex flex-col mb-4 h-16">
-              <span className="font-medium">Diastolic blood pressure (in mmHg)</span>
-              <input
-                placeholder="Patient's diastolic blood pressure in mmHg"
-                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
-                type="number"
-                step={1}
-                {...register('diastolic')}
-              />
-              <p className='px-4 pt-1 text-sm text-red-600'>{errors.diastolic?.message}</p>
-            </label>
-          </div>
-          <div className="grid gap-x-8 gap-y-4 grid-cols-2">
-            <label className="flex flex-col mb-4 h-40">
-              <span className="font-medium">Signs and Symptoms</span>
-              <textarea
-                placeholder="How do the patient feel?"
-                className="placeholder:italic placeholder:text-sm bg-white shadow-md h-40 rounded-md py-2 px-4 border-none"
-                type="text"
-                {...register('motif')}
-              />
-              <p className='px-4 pt-1 text-sm text-red-600'>{errors.motif?.message}</p>
-            </label>
-            <label className="flex flex-col mb-4 h-40">
-              <span className="font-medium">Diagnotic</span>
-              <textarea
-                placeholder="What do you beleive the patient is suffering from?"
-                className="placeholder:italic placeholder:text-sm bg-white shadow-md h-40 rounded-md py-2 px-4 border-none"
-                type="text"
-                {...register('findings')}
-              />
-              <p className='px-4 pt-1 text-sm text-red-600'>{errors.findings?.message}</p>
-            </label>
-          </div>
+    <div className="flex flex-col w-full h-full py-4">
+      <p className='text-1xl text-primary font-bold'>
+        Update Appointment
+      </p>
+      <form className="flex flex-col mt-4 w-full text-sm" onSubmit={handleSubmit(onSubmit)}>
+        <div className="grid gap-x-8 gap-y-4 grid-cols-3">
+          <label className="flex flex-col mb-4 h-16">
+            <span className="font-medium">Height (in cm)</span>
+            <input
+              placeholder="Patient's height in cm"
+              className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
+              type="number"
+              step={0.01}
+              {...register('height')}
+            />
+            <p className='px-4 pt-1 text-sm text-red-600'>{errors.height?.message}</p>
+          </label>
+          <label className="flex flex-col mb-4 h-16">
+            <span className="font-medium">Weight (in kg)</span>
+            <input
+              placeholder="Patient's weight in kg"
+              className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
+              type="number"
+              step={0.01}
+              {...register('weight')}
+            />
+            <p className='px-4 pt-1 text-sm text-red-600'>{errors.weight?.message}</p>
+          </label>
+          <label className="flex flex-col mb-4 h-16">
+            <span className="font-medium">Head circumference (in cm)</span>
+            <input
+              placeholder="Patient's head circumference in cm"
+              className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
+              type="number"
+              step={0.01}
+              {...register('head')}
+            />
+            <p className='px-4 pt-1 text-sm text-red-600'>{errors.head?.message}</p>
+          </label>
+          <label className="flex flex-col mb-4 h-16">
+            <span className="font-medium">Arm circumference (in cm)</span>
+            <input
+              placeholder="Patient's head circumference in cm"
+              className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
+              type="number"
+              step={0.01}
+              {...register('arm')}
+            />
+            <p className='px-4 pt-1 text-sm text-red-600'>{errors.arm?.message}</p>
+          </label>
+          <label className="flex flex-col mb-4 h-16">
+            <span className="font-medium">SaO2 (in %)</span>
+            <input
+              placeholder="Patient's SaO2 in %"
+              className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
+              type="number"
+              step={0.01}
+              {...register('sao2')}
+            />
+            <p className='px-4 pt-1 text-sm text-red-600'>{errors.sao2?.message}</p>
+          </label>
+          <label className="flex flex-col mb-4 h-16">
+            <span className="font-medium">Temperature (in °C)</span>
+            <input
+              placeholder="Patient's temperature in °C"
+              className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
+              type="number"
+              step={0.01}
+              {...register('temperature')}
+            />
+            <p className='px-4 pt-1 text-sm text-red-600'>{errors.temperature?.message}</p>
+          </label>
+          <label className="flex flex-col mb-4 h-16">
+            <span className="font-medium">Pulse (in bpm)</span>
+            <input
+              placeholder="Patient's pulse in bpm"
+              className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
+              type="number"
+              step={1}
+              {...register('pulse')}
+            />
+            <p className='px-4 pt-1 text-sm text-red-600'>{errors.pulse?.message}</p>
+          </label>
+          <label className="flex flex-col mb-4 h-16">
+            <span className="font-medium">Respiratory rate (in rpm)</span>
+            <input
+              placeholder="Patient's respiratory rate in rpm"
+              className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
+              type="number"
+              step={1}
+              {...register('respiratory')}
+            />
+            <p className='px-4 pt-1 text-sm text-red-600'>{errors.respiratory?.message}</p>
+          </label>
+          <label className="flex flex-col mb-4 h-16">
+            <span className="font-medium">Systolic blood pressure (in mmHg)</span>
+            <input
+              placeholder="Patient's systolic blood pressure in mmHg"
+              className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
+              type="number"
+              step={1}
+              {...register('systolic')}
+            />
+            <p className='px-4 pt-1 text-sm text-red-600'>{errors.systolic?.message}</p>
+          </label>
+          <label className="flex flex-col mb-4 h-16">
+            <span className="font-medium">Diastolic blood pressure (in mmHg)</span>
+            <input
+              placeholder="Patient's diastolic blood pressure in mmHg"
+              className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
+              type="number"
+              step={1}
+              {...register('diastolic')}
+            />
+            <p className='px-4 pt-1 text-sm text-red-600'>{errors.diastolic?.message}</p>
+          </label>
+        </div>
+        <div className="grid gap-x-8 gap-y-4 grid-cols-2">
+          <label className="flex flex-col mb-4 h-40">
+            <span className="font-medium">Signs and Symptoms</span>
+            <textarea
+              placeholder="How do the patient feel?"
+              className="placeholder:italic placeholder:text-sm bg-white shadow-md h-40 rounded-md py-2 px-4 border-none"
+              type="text"
+              {...register('motif')}
+            />
+            <p className='px-4 pt-1 text-sm text-red-600'>{errors.motif?.message}</p>
+          </label>
+          <label className="flex flex-col mb-4 h-40">
+            <span className="font-medium">Diagnotic</span>
+            <textarea
+              placeholder="What do you beleive the patient is suffering from?"
+              className="placeholder:italic placeholder:text-sm bg-white shadow-md h-40 rounded-md py-2 px-4 border-none"
+              type="text"
+              {...register('findings')}
+            />
+            <p className='px-4 pt-1 text-sm text-red-600'>{errors.findings?.message}</p>
+          </label>
+        </div>
 
-          <button className="py-2 px-4 rounded-full bg-green-500 text-lg font-semibold w-1/2 center mt-4 mx-auto" type='submit'>
-            {
-                loading
-                ?
-                <BeatLoader
-                  color={color}
-                  size={10}
-                  aria-label="Loading Spinner"
-                  data-testid="loader"
-                />
-                :
-                  "Update Appointment"
-            }
-          </button>
-        </form>
-      </div>
+        <button className="py-2 px-4 rounded-full bg-green-500 text-lg font-semibold w-1/2 center mt-4 mx-auto" type='submit'>
+          {
+              loading
+              ?
+              <BeatLoader
+                color={color}
+                size={10}
+                aria-label="Loading Spinner"
+                data-testid="loader"
+              />
+              :
+                "Update Appointment"
+          }
+        </button>
+      </form>
     </div>
   )
 }

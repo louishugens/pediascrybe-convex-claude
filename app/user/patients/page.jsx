@@ -64,9 +64,9 @@ export default async function Patients({searchParams}) {
   const patients = await getPatients(doctorId, search)
 
   return (
-    <div className='h-full mb-8'>
+    <div className='h-full mb-8 pb-4'>
       <div className="flex flex-row w-full justify-between">
-        <p className=' font-bold text-white'><span className=' text-green-500'>Patient list</span></p>
+        <p className=' font-bold text-white'><span className=' text-primary'>Patient list</span></p>
         <Link 
         className='self-end px-4 py-2 bg-blue-500 text-white rounded-full text-sm' 
         href={`/user/add-patient`}>Add Patient</Link>

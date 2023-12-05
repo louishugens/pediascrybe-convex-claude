@@ -8,6 +8,9 @@ async function getReceipts(patientId:string) {
   const receipts = prisma.receipt.findMany({
     where:{
       patientId: patientId
+    },
+    orderBy:{
+      createdAt: 'desc'
     }
   })
   return receipts

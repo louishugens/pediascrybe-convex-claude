@@ -171,13 +171,7 @@ const AddExams = ({patient, patientId, appointment}) => {
       const newuser = await myuser.json()
 
       console.log('user :>> ', newuser);
-      setLoading(false)
-      // startTransition(()=>{
-      //   router.refresh();
-      //   router.push(`/user/patients/${patientId}/${appointment.id}`)
-      // })
 
-      router.refresh()
       router.push(`/user/patients/${patientId}/${appointment.id}`)
 
     }

@@ -14,7 +14,6 @@ async function getAppointment(appointmentId){
 
 
 
-export const dynamic = 'force-dynamic';
 
 
 const EditAppointmentPage = async ({params: {patientId, appointmentId}}) => {

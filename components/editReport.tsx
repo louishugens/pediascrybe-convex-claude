@@ -79,7 +79,7 @@ const EditReport = ({patientId, report}: Props) => {
       })
       const report = await res.json()
 
-      router.refresh()
+      // router.refresh()
       router.push(`/user/patients/${patientId}/reports/${report.id}`)
 
     }

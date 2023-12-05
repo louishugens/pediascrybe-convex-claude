@@ -5,6 +5,7 @@ import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { Document } from "langchain/document";
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 export async function POST(req: Request) {
   if(req.method == 'POST') {
 
@@ -59,6 +60,10 @@ export async function POST(req: Request) {
           vectorId: parseInt(result[0])
         }
       })
+
+
+      revalidatePath(`/user/patients/${appointment.patientId}/${appointment.id}`);
+      revalidatePath(`/user/patients/${appointment.patientId}/${appointment.id}/add-exams`);
 
       return new Response(JSON.stringify(appointment), {
         status: 200

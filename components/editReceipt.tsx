@@ -245,7 +245,7 @@ const EditReceipt = ({patientId, receipt}: Props) => {
 
         {fields.map((field, index) => {
           return (
-            <section key={field.id} className="relative pt-8">
+            <section key={field.id} className="relative mt-8">
               <XCircleIcon className='h-6 w-6 text-red-500 absolute right-0 top-0 mt-4 mr-4 cursor-pointer' onClick={() => remove(index)}/>
               <div className='grid grid-cols-12 gap-4'>
                 <div className="col-span-6">

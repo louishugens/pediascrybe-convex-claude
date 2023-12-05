@@ -10,7 +10,7 @@ async function getPatient(patientId){
   return patient
 }
 
-export const dynamic = 'force-dynamic';
+// export const dynamic = 'force-dynamic';
 
 const EditPatientPage = async ({params: { patientId}}) => {
   const supabase = createServerClient()

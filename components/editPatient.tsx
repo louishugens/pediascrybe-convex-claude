@@ -106,14 +106,14 @@ const EditPatient = ({patient, doctorId}) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       })
-      router.refresh()
-      router.push(`/user/patients/${patient.id}`)
+      // router.refresh()
+      router.push(`/user/patients/${patient.id}`, {scroll: true})
 
     }
     catch(err){
       console.log(err)
     }
-    router.push(`/user/patients/${patient.id}`)
+    // router.push(`/user/patients/${patient.id}`)
   }
 
 

@@ -64,7 +64,7 @@ export default function UploadPage({params: {patientId, appointmentId}}) {
         router.refresh()
         // revalidatePath(`/user/patients/${patientId}/${appointmentId}/`)
         router.push(`/user/patients/${patientId}/${appointmentId}/`)
-        setLoading(false)
+        // setLoading(false)
       }else{
         toast.error("Something went wrong!", {
           icon: '😢',

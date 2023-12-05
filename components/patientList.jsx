@@ -15,7 +15,7 @@ export default function PatientList({patients, doctorId}) {
           </div>
         )
       }
-      <div className="grid gap-4 grid-cols-3 mt-4">
+      <div className="grid gap-4 grid-cols-3 mt-4 pb-4">
         {
           patients.map((patient) => (
             <div className="basis-1/3 h-auto  rounded-lg p-4 border border-slate-300 hover:border-green-400 hover:shadow-md" key={patient.id}>

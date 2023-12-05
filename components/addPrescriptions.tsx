@@ -239,7 +239,7 @@ const AddPrescriptions = ({patient, patientId, appointment}) => {
 
       console.log('user :>> ', newuser);
 
-      router.refresh()
+
       router.push(`/user/patients/${patientId}/${appointment.id}`)
 
     }
