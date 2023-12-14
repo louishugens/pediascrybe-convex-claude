@@ -8,6 +8,8 @@ import { SiteHeader } from '@/components/siteHeader';
 import Footer from '@/components/Footer';
 import type { Metadata } from 'next'
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import {PHProvider, PostHogPageview} from './provider';
+import { Suspense } from 'react';
  
 export const metadata: Metadata = {
   title: 'Pediatric Care, Elevated by AI Integration | Pediascrybe',
@@ -27,7 +29,7 @@ const montserrat = Montserrat({
   subsets: ['latin']
 })
 
-export const dynamic = 'force-dynamic'
+// export const dynamic = 'force-dynamic'
 export default async function RootLayout({children}) {
   // const supabase = createServerComponentClient({cookies})
 
@@ -37,12 +39,17 @@ export default async function RootLayout({children}) {
 
   return (
     <html lang="en" className={montserrat.className}>
-      <body className='min-h-screen bg-background font-sans antialiased' >  
-        <GA />  
-        <div className='flex-1'>{children}</div>
-        <AnalyticsWrapper />
-        <SpeedInsights />
-      </body>
+      {/* <Suspense>
+        <PostHogPageview />
+      </Suspense> */}
+      <PHProvider>
+        <body className='min-h-screen bg-background font-sans antialiased' >  
+          <GA />  
+          <div className='flex-1'>{children}</div>
+          <AnalyticsWrapper />
+          <SpeedInsights />
+        </body>
+      </PHProvider>
     </html>
   )
 }
