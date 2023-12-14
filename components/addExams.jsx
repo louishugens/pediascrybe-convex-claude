@@ -8,6 +8,7 @@ import { BeatLoader } from 'react-spinners';
 import { XCircleIcon } from '@heroicons/react/24/outline';
 import { formatDistanceToNow } from "date-fns"
 import PulseLoader from "react-spinners/PulseLoader"
+import { refresh } from '@/app/actions';
 
 const ExamsSchema =  Yup.object({
   exams: Yup.array().of(
@@ -170,7 +171,7 @@ const AddExams = ({patient, patientId, appointment}) => {
       })
       const newuser = await myuser.json()
 
-      console.log('user :>> ', newuser);
+      refresh([`/user/patients/${patientId}/${appointment.id}`, `/user/patients/${appointment.patientId}/${appointment.id}/add-exams`])
 
       router.push(`/user/patients/${patientId}/${appointment.id}`)
 

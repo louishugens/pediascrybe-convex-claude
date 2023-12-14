@@ -1,6 +1,6 @@
 
 import prisma from '@/utils/prisma';
-import AddPrescriptions from '@/components/addPrescriptions';
+import AddExams from "@/components/addExams";
 // import {createServerClient} from '@/utils/supabase-server'
 // import supabase from '@/utils/supabase-ssr'
 // import { createServerClient, type CookieOptions } from '@supabase/ssr'
@@ -33,7 +33,7 @@ async function getPatient(patientId) {
 // export const dynamic = 'force-dynamic';
 
 
-const AddPrescriptionsPage = async ({params: {patientId, appointmentId}}) => {
+const AddExamsPage = async ({params: {patientId, appointmentId}}) => {
   // const supabase = createServerClient()
   // const cookieStore = cookies()
   // const supabase = createServerClient(
@@ -58,8 +58,8 @@ const AddPrescriptionsPage = async ({params: {patientId, appointmentId}}) => {
   const patient = await getPatient(patientId)
 
   return (
-    <AddPrescriptions appointment={appointment} patient={patient} patientId={patientId} data-superjson />
+    <AddExams appointment={appointment} patient={patient} patientId={patientId} data-superjson />
   )
 }
 
-export default AddPrescriptionsPage
+export default AddExamsPage

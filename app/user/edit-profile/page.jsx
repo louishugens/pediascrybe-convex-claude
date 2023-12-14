@@ -1,6 +1,7 @@
 import EditDoctor from "@/components/editDoctor"
 import prisma from "@/utils/prisma"
-import {createServerClient} from '@/utils/supabase-server'
+// import {createServerClient} from '@/utils/supabase-server'
+import supabase from '@/utils/supabase-ssr'
 
 async function getDoctor(doctorId){
   const doctor = await prisma.doctor.findUnique({
@@ -14,7 +15,7 @@ async function getDoctor(doctorId){
 export const dynamic = 'force-dynamic';
 
 const EditProfile = async () => {
-  const supabase = createServerClient()
+  // const supabase = createServerClient()
   
   const {
     data: { session },

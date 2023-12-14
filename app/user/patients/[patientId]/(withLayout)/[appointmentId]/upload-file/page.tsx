@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input"
 import FileUpoad from "@/components/fileUpload"
 import { el } from "date-fns/locale"
 import { revalidatePath } from "next/cache"
+import { refresh } from "@/app/actions"
 
 export default function UploadPage({params: {patientId, appointmentId}}) {
 
@@ -61,8 +62,9 @@ export default function UploadPage({params: {patientId, appointmentId}}) {
         toast.success("File saved!", {
           icon: '👏',
         })
-        router.refresh()
+        // router.refresh()
         // revalidatePath(`/user/patients/${patientId}/${appointmentId}/`)
+        refresh([`/user/patients/${patientId}/${appointmentId}`])
         router.push(`/user/patients/${patientId}/${appointmentId}/`)
         // setLoading(false)
       }else{

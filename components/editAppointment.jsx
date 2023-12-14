@@ -6,6 +6,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { useRouter } from 'next/navigation';
 import { useState } from "react";
 import BeatLoader  from 'react-spinners/BeatLoader';
+import { refresh } from '@/app/actions';
 
 
 
@@ -69,6 +70,13 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
       // const appointment = await response.json()
 
       // router.refresh()
+      refresh(
+        [
+          `/user/patients/${appointment.patientId}/`, 
+          `/user/patients/${appointment.patientId}/${appointment.id}`, 
+          `/user/patients/${appointment.patientId}/${appointment.id}/edit-appointment`
+        ]
+      )
       router.push(`/user/patients/${patientId}/${appointment.id}`)
 
     }

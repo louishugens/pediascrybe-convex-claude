@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { Editor } from '@/components/editor';
 import { Report } from '@prisma/client';
+import { refresh } from '@/app/actions';
 
 interface Props {
   report: Report,
@@ -79,7 +80,7 @@ const EditReport = ({patientId, report}: Props) => {
       })
       const report = await res.json()
 
-      // router.refresh()
+      refresh([`/user/patients/${patientId}/reports/${id}`, `/user/patients/${patientId}/reports/${id}/edit-report`, `/user/patients/${patientId}/reports/`])
       router.push(`/user/patients/${patientId}/reports/${report.id}`)
 
     }

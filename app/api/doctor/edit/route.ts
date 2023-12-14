@@ -1,10 +1,7 @@
 import prisma from "@/utils/prisma";
 import { cookies } from 'next/headers';
-// import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { revalidateTag } from "next/cache";
-import { NextResponse } from "next/server";
-// import supabase from "@/utils/supabase-rh";
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { revalidatePath } from "next/cache";
 
 export async function POST(req: Request) {
   if(req.method == 'POST') {
@@ -40,27 +37,35 @@ export async function POST(req: Request) {
       );
     }
 
-    const { appointmentId } = await req.json()
+    const { firstname, lastname, email, phone, spec, address, id} = await req.json()
 
-     const deletedFile  = await prisma.appointment.delete({
+    const doctor = await prisma.doctor.update({
       where:{
-        id: appointmentId
+        id: id
       },
+      data: {
+        firstname, lastname, email, phone, spec, address
+      }
     })
 
-    if (deletedFile) {
+    
+    if (doctor) {
 
-      revalidateTag("appointments")
-      return new NextResponse("Delete sucessfull", {
+      // revalidatePath(`/user/profile`)
+      // revalidatePath(`/user/edit-profile`)
+      
+      return new Response(JSON.stringify(doctor), {
         status: 200
       });
+      // return NextResponse.redirect(`/patients/${patientId}/appointments/${appointment.id}`)
     }else{
-      return new NextResponse(
+      return new Response(
         JSON.stringify({
-       error: { statusCode: 500, message: 'Appointment not deleted' }
+       error: { statusCode: 500, message: 'Doctor profile is not update sucessfully' }
        }),
        { status: 500 }
      );
+     
     }
 
   }

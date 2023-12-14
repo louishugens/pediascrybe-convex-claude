@@ -33,7 +33,7 @@
     ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx"
-, "components/printAppointment.tsx", "components/editDoctor.jsx", "components/print.tsx"  ],
+, "components/printAppointment.tsx", "components/editDoctor.tsx", "components/print.tsx"  ],
   "exclude": [
     "node_modules"
   ]

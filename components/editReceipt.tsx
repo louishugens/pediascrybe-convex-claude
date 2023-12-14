@@ -38,6 +38,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { refresh } from '@/app/actions';
 
 
 interface Props {
@@ -112,7 +113,7 @@ const EditReceipt = ({patientId, receipt}: Props) => {
       })
       const receipt = await res.json()
 
-      router.refresh()
+      refresh([`/user/patients/${patientId}/receipts/${id}`, `/user/patients/${patientId}/receipts/${id}/edit-receipt`, `/user/patients/${patientId}/receipts/`])
       router.push(`/user/patients/${patientId}/receipts/${receipt.id}`)
 
     }

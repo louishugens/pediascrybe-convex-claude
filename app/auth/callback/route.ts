@@ -1,8 +1,9 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+// import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+// import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 import type { NextRequest } from 'next/server'
+import supabase from "@/utils/supabase-rh";
 // import type { Database } from '@/lib/database.types'
 
 export const dynamic = 'force-dynamic'
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
   const code = requestUrl.searchParams.get('code')
 
   if (code) {
-    const supabase = createRouteHandlerClient({ cookies })
+    // const supabase = createRouteHandlerClient({ cookies })
     await supabase.auth.exchangeCodeForSession(code)
   }
 

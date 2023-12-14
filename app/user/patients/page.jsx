@@ -4,7 +4,8 @@ import Link from 'next/link'
 import PatientList from '@/components/patientList'
 import { BeatLoader } from "react-spinners";
 import { Suspense } from "react";
-import {createServerClient} from '@/utils/supabase-server'
+// import {createServerClient} from '@/utils/supabase-server'
+import supabase from '@/utils/supabase-ssr'
 import Search from "@/components/search";
 
 
@@ -53,7 +54,7 @@ export default async function Patients({searchParams}) {
   const { search = '' } = searchParams
   // const search = ''
 
-  const supabase = createServerClient()
+  // const supabase = createServerClient()
   
   const {
     data: { session },

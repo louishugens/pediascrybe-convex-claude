@@ -1,6 +1,9 @@
 import Print from "@/components/printReport";
 import prisma from "@/utils/prisma";
-import {createServerClient} from '@/utils/supabase-server'
+// import {createServerClient} from '@/utils/supabase-server'
+// import supabase from "@/utils/supabase-ssr";
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
 async function getPatient(patientId: string) {
   const patient = await prisma.patient.findUnique({
@@ -31,7 +34,20 @@ async function getReport(id:string) {
 }
 
 const ReportPage = async ({params:{patientId, reportId}}) => {
-  const supabase = createServerClient()
+  // const supabase = createServerClient()
+  const cookieStore = cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+      },
+    }
+  )
+
   
   const {
     data: { session },

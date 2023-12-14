@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Message as VercelChatMessage, StreamingTextResponse } from "ai";
 import { AttributeInfo } from "langchain/schema/query_constructor";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+// import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from 'next/headers';
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
 import { SupabaseTranslator } from "langchain/retrievers/self_query/supabase";
@@ -19,6 +19,9 @@ import {
 } from "langchain/schema/output_parser";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { OpenAI } from "langchain/llms/openai";
+// import supabase from "@/utils/supabase-rh";
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+// import { cookies } from 'next/headers';
 
 export const runtime = "edge";
 
@@ -86,7 +89,26 @@ const llm = new OpenAI();
  */
 export async function POST(req: Request, { params }: { params: { patientId: string } }) {
 
-  const supabase = createRouteHandlerClient({cookies});
+  // const supabase = createRouteHandlerClient({cookies});
+  const cookieStore = cookies()
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          cookieStore.set({ name, value, ...options })
+        },
+        remove(name: string, options: CookieOptions) {
+          cookieStore.set({ name, value: '', ...options })
+        },
+      },
+    }
+  )
   const patientId = params.patientId!
   const documentContents = `The documents table contains the patient's profile data and the appointments data. 
   The pageContent column contains either profile or appointment data in stringified JSON format. So we need to parse pageContent to get more granular data.

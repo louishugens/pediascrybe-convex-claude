@@ -1,6 +1,7 @@
 import prisma from "@/utils/prisma"
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
+import supabase from "@/utils/supabase-ssr"
 
 function getPatients(doctorId){
   const patients = prisma.patient.findMany({
@@ -16,7 +17,7 @@ function getPatients(doctorId){
 
 
 export default async function Page() {
-  const supabase = createServerComponentClient({ cookies})
+  // const supabase = createServerComponentClient({ cookies})
   const {
     data: { session },
   } = await supabase.auth.getSession()

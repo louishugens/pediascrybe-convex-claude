@@ -1,6 +1,7 @@
 import Print from "@/components/printCharts";
 import prisma from "@/utils/prisma";
-import {createServerClient} from '@/utils/supabase-server'
+// import {createServerClient} from '@/utils/supabase-server'
+import supabase from '@/utils/supabase-ssr'
 import { differenceInDays } from 'date-fns'
 
 async function getAppointment(appointmentId) {
@@ -40,7 +41,7 @@ async function getDoctor(doctorId) {
 export const dynamic = 'force-dynamic';
 
 const PrintPage = async ({params: {patientId}}) => {
-  const supabase = createServerClient()
+  // const supabase = createServerClient()
   
   const {
     data: { session },

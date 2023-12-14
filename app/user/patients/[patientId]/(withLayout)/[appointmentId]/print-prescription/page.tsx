@@ -1,6 +1,9 @@
 import Print from "@/components/print";
 import prisma from "@/utils/prisma";
-import {createServerClient} from '@/utils/supabase-server'
+// import {createServerClient} from '@/utils/supabase-server'
+// import supabase from '@/utils/supabase-ssr'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
 async function getAppointment(appointmentId) {
   const appointment = await prisma.appointment.findUnique({
@@ -28,11 +31,22 @@ async function getDoctor(doctorId) {
   })
   return doctor
 }
-
 export const dynamic = 'force-dynamic';
 
 const PrintPage = async ({params: { patientId, appointmentId}}) => {
-  const supabase = createServerClient()
+  // const supabase = createServerClient()
+  const cookieStore = cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+      },
+    }
+  )
   
   const {
     data: { session },
@@ -46,7 +60,7 @@ const PrintPage = async ({params: { patientId, appointmentId}}) => {
   // appointment.startDate = JSON.parse(JSON.stringify(appointment.startDate))
   return (
     <>
-      <Print appointment={appointment} patient={patient} doctor={doctor} exams={true} data-superjson />
+      <Print appointment={appointment} patient={patient} doctor={doctor} exams={false} data-superjson />
     </>
   );
 };

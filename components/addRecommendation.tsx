@@ -35,6 +35,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { refresh } from '@/app/actions';
 
 
 
@@ -127,9 +128,10 @@ const AddRecommendation = ({patient, patientId, appointment}) => {
       })
       const newuser = await myuser.json()
 
-      console.log('user :>> ', newuser);
+  
+      refresh([`/user/patients/${appointment.patientId}/${appointment.id}`, `/user/patients/${appointment.patientId}/${appointment.id}/add-recommendation`])
 
-      router.refresh()
+      
       router.push(`/user/patients/${patientId}/${appointment.id}`)
 
     }

@@ -38,6 +38,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { refresh } from '@/app/actions';
 
 const EditPatient = ({patient, doctorId}) => {
   // const schema = yup.object({
@@ -107,6 +108,7 @@ const EditPatient = ({patient, doctorId}) => {
         body: JSON.stringify(body)
       })
       // router.refresh()
+      refresh([`/user/patients/${patient.id}`, `/user/patients/${patient.id}/edit-patient`])
       router.push(`/user/patients/${patient.id}`, {scroll: true})
 
     }

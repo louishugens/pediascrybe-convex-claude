@@ -1,11 +1,11 @@
 'use client'
 import Link from 'next/link'
-import Doctor from '../../../components/doctor'
+import Doctor from '@/components/doctor'
 import { useForm } from 'react-hook-form';
 import * as yup from "yup";
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useRouter } from 'next/navigation';
-import supabase from '../../../utils/supabase';
+import supabase from '@/utils/supabase';
 import Header from '../../header';
 import { useState } from "react";
 import BeatLoader  from 'react-spinners/BeatLoader';import {
@@ -23,8 +23,8 @@ import * as z from "zod"
 import Image from 'next/image';
 
 const FormSchema = z.object({
-  email: z.string().email('Invalid email address').nonempty('Email is required'),
-  password: z.string().nonempty('Please enter your password').min(4, 'Password must be more that 4 character'),
+  email: z.string({required_error: 'Email is required'}).email('Invalid email address'),
+  password: z.string({required_error:'Please enter your password'}).min(4, 'Password must be more that 4 character'),
 });
 
 export default function Home() {

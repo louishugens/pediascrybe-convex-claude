@@ -6,6 +6,7 @@ import PulseLoader from "react-spinners/PulseLoader"
 import { useRouter } from 'next/navigation';
 import { useState } from "react";
 import BeatLoader  from 'react-spinners/BeatLoader';
+import { refresh } from '@/app/actions';
 
 
 const EditDoctor = ({doctor}) => {
@@ -46,12 +47,14 @@ const EditDoctor = ({doctor}) => {
     try{
       const {firstname, lastname, email, phone, spec, address} = values
       const body = {firstname, lastname, email, phone, spec, address, id: doctor.id}
-      await fetch('/api/doctor/edit', {
+      const res = await fetch('/api/doctor/edit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       })
-      router.refresh()
+
+      refresh(['/user/profile', '/user/edit-profile'])
+
       router.push(`/user/profile`)
 
     }
@@ -74,7 +77,7 @@ const EditDoctor = ({doctor}) => {
               type="text"
               {...register('firstname')}
             />
-            <p className='px-4 pt-1 text-sm text-red-600'>{errors?.firstname?.message}</p>
+            <p className='px-4 pt-1 text-sm text-red-600'>{errors?.firstname?.message?.toString()}</p>
           </label>
           <label className="flex flex-col mb-4 h-16">
             <span className="font-medium">Last name</span>
@@ -84,7 +87,7 @@ const EditDoctor = ({doctor}) => {
               type="text"
               {...register('lastname')}
             />
-            <p className='px-4 pt-1 text-sm text-red-600'>{errors.lastname?.message}</p>
+            <p className='px-4 pt-1 text-sm text-red-600'>{errors.lastname?.message?.toString()}</p>
           </label>
           <label className="flex flex-col mb-4 h-16">
             <span className="font-medium">Phone</span>
@@ -94,7 +97,7 @@ const EditDoctor = ({doctor}) => {
               type="tel"
               {...register('phone')}
             />
-            <p className='px-4 pt-1 text-sm text-red-600'>{errors.phone?.message}</p>
+            <p className='px-4 pt-1 text-sm text-red-600'>{errors.phone?.message?.toString()}</p>
           </label>
           <label className="flex flex-col mb-4 h-16">
             <span className="font-medium">Email</span>
@@ -104,7 +107,7 @@ const EditDoctor = ({doctor}) => {
               type="email"
               {...register('email')}
             />
-            <p className='px-4 pt-1 text-sm text-red-600'>{errors.email?.message}</p>
+            <p className='px-4 pt-1 text-sm text-red-600'>{errors.email?.message?.toString()}</p>
           </label>
           <label className="flex flex-col mb-4 h-16">
             <span className="font-medium">Specialty</span>
@@ -114,7 +117,7 @@ const EditDoctor = ({doctor}) => {
               type="text"
               {...register('spec')}
             />
-            <p className='px-4 pt-1 text-sm text-red-600'>{errors.spec?.message}</p>
+            <p className='px-4 pt-1 text-sm text-red-600'>{errors.spec?.message?.toString()}</p>
           </label>
           <label className="flex flex-col mb-4 h-16">
             <span className="font-medium">Address</span>
@@ -124,7 +127,7 @@ const EditDoctor = ({doctor}) => {
               type="text"
               {...register('address')}
             />
-            <p className='px-4 pt-1 text-sm text-red-600'>{errors.address?.message}</p>
+            <p className='px-4 pt-1 text-sm text-red-600'>{errors.address?.message?.toString()}</p>
           </label>
         </div>
 

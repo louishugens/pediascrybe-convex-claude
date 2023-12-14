@@ -10,6 +10,7 @@ import { XCircleIcon } from '@heroicons/react/24/outline';
 import { formatDistanceToNow } from "date-fns"
 import PulseLoader from "react-spinners/PulseLoader"
 import  * as z from "zod"
+import { refresh } from '@/app/actions';
 
 const PrescriptionsSchema =  Yup.object({
   prescriptions: Yup.array().of(
@@ -237,8 +238,8 @@ const AddPrescriptions = ({patient, patientId, appointment}) => {
       })
       const newuser = await myuser.json()
 
-      console.log('user :>> ', newuser);
 
+      refresh([`/user/patients/${patientId}/${appointment.id}`, `/user/patients/${patientId}/${appointment.id}/add-prescription`])
 
       router.push(`/user/patients/${patientId}/${appointment.id}`)
 

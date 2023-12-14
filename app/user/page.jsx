@@ -1,7 +1,8 @@
 // 'use client'
 // import React, { useEffect } from 'react'
 // import supabase from '../../../../utils/supabase';
-import {createServerClient} from '@/utils/supabase-server'
+// import {createServerClient} from '@/utils/supabase-server'
+import supabase from '@/utils/supabase-ssr'
 
 // import useDoctor from '../../../../utils/hooks/useDoctor'
 
@@ -29,7 +30,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function Dashboard() {
 
-  const supabase = createServerClient()
+  // const supabase = createServerClient()
   
   const {
     data: { session },
