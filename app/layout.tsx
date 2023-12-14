@@ -4,8 +4,6 @@ import { AnalyticsWrapper } from '@/components/analytics';
 import GA from '@/components/googleAnalytics';
 import SupabaseProvider from '@/utils/supabase-provider'
 // import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-// import supabase from '@/utils/supabase-ssr';
-import { cookies } from 'next/headers'
 import { SiteHeader } from '@/components/siteHeader';
 import Footer from '@/components/Footer';
 import type { Metadata } from 'next'

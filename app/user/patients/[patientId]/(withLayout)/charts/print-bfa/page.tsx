@@ -1,7 +1,8 @@
 import Print from "@/components/printCharts";
 import prisma from "@/utils/prisma";
 // import {createServerClient} from '@/utils/supabase-server'
-import supabase from '@/utils/supabase-ssr'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { cookies } from "next/headers";
 import { differenceInDays } from 'date-fns'
 
 async function getAppointment(appointmentId) {
@@ -42,6 +43,19 @@ export const dynamic = 'force-dynamic';
 
 const PrintPage = async ({params: {patientId}}) => {
   // const supabase = createServerClient()
+
+  const cookieStore = cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+      },
+    }
+  )
   
   const {
     data: { session },
@@ -52,19 +66,19 @@ const PrintPage = async ({params: {patientId}}) => {
 
   const patient = await getPatient(patientId)
   const doctor = await getDoctor(doctorId)
-  const appointments = patient.appointments
+  const appointments = patient?.appointments
   console.log('patientId :>> ', patientId);
 
-  let formatted = []
+  let formatted: { category: number; value: string }[] = [] // Fix: Specify the type of the `formatted` array
 
-  appointments.map(appointment =>{
+  appointments?.map(appointment =>{
     if(appointment.weight && appointment.height){
       let val = appointment.weight
       // console.log('val :>> ', val);
       val = val / Math.pow(appointment.height / 100, 2)
-      let app = {category: differenceInDays(appointment.startDate, patient.birthdate), value: val.toPrecision(5)}
-      formatted.push(app)
-    }  
+      let app = {category: differenceInDays(appointment.startDate, patient?.birthdate || new Date()), value: val.toPrecision(5)}
+      formatted.push(app) // Fix: Push the `app` object to the `formatted` array
+    }
   })
 
   console.log('print bfa formatted :>> ', formatted);

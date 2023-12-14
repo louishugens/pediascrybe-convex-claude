@@ -1,7 +1,5 @@
 import Print from "@/components/printReceipt";
 import prisma from "@/utils/prisma";
-// import {createServerClient} from '@/utils/supabase-server'
-// import supabase from "@/utils/supabase-ssr";
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { headers } from "next/headers";

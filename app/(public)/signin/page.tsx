@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import Image from 'next/image';
+import { Toaster, toast } from 'sonner'
 
 const FormSchema = z.object({
   email: z.string({required_error: 'Email is required'}).email('Invalid email address'),
@@ -64,6 +65,7 @@ export default function Home() {
     })
     user && router.push(`/user`)
     if(error) {
+      toast.error(error.message)
       console.log('error :>> ', error);
       // setErrorMsg(error.message)
       setLoading(false)
@@ -165,6 +167,10 @@ export default function Home() {
           <Doctor />
         </div>
       </div>
+      <Toaster 
+        position="top-center" 
+        richColors={true}
+      />
     </div>
   )
 }

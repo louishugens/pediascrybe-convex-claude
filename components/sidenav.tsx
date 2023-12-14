@@ -6,6 +6,7 @@ import supabase from '../utils/supabase';
 import { useRouter, usePathname } from 'next/navigation';
 import useDoctor from '../utils/hooks/useDoctor';
 import { ArrowLeftOnRectangleIcon, ListBulletIcon, PencilIcon, UserGroupIcon, UserPlusIcon } from '@heroicons/react/24/outline';
+import { refresh } from '@/app/actions';
 
 const Sidenav = () => {
 
@@ -14,6 +15,7 @@ const Sidenav = () => {
 
   const handleLogout = async () =>{
     const {error} = await supabase.auth.signOut()
+    refresh(['/'])
     router.refresh()
     !error && router.push('/')
   }

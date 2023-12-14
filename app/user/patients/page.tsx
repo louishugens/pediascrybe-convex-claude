@@ -5,7 +5,8 @@ import PatientList from '@/components/patientList'
 import { BeatLoader } from "react-spinners";
 import { Suspense } from "react";
 // import {createServerClient} from '@/utils/supabase-server'
-import supabase from '@/utils/supabase-ssr'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { cookies } from "next/headers";
 import Search from "@/components/search";
 
 
@@ -55,6 +56,18 @@ export default async function Patients({searchParams}) {
   // const search = ''
 
   // const supabase = createServerClient()
+  const cookieStore = cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+      },
+    }
+  )
   
   const {
     data: { session },

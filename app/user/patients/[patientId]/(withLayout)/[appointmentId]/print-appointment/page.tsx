@@ -1,7 +1,5 @@
 import Print from "@/components/printAppointment";
 import prisma from "@/utils/prisma";
-// import {createServerClient} from '@/utils/supabase-server'
-// import supabase from '@/utils/supabase-ssr'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
@@ -59,7 +57,7 @@ const PrintPage = async ({params: { patientId, appointmentId}}) => {
   let appointment = await getAppointment(appointmentId)
   const patient = await getPatient(patientId)
   const doctor = await getDoctor(doctorId)
-  // appointment.startDate = JSON.parse(JSON.stringify(appointment.startDate))
+
   return (
     <>
       <Print appointment={appointment} patient={patient} doctor={doctor} data-superjson />

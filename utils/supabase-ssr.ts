@@ -1,9 +1,10 @@
+
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
   const cookieStore = cookies()
 
-  const supabase = createServerClient(
+  const supabase =  createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -15,4 +16,4 @@ import { cookies } from 'next/headers'
     }
   )
 
-export default supabase
+export default  supabase

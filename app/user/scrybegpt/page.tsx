@@ -1,7 +1,6 @@
 import prisma from "@/utils/prisma"
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
-import supabase from "@/utils/supabase-ssr"
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { cookies } from "next/headers";
 
 function getPatients(doctorId){
   const patients = prisma.patient.findMany({
@@ -18,6 +17,21 @@ function getPatients(doctorId){
 
 export default async function Page() {
   // const supabase = createServerComponentClient({ cookies})
+
+  const cookieStore = cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+      },
+    }
+  )
+
+
   const {
     data: { session },
   } = await supabase.auth.getSession()

@@ -2,7 +2,6 @@
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 // import { createRouteHandlerClient, createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-// import supabase from "@/utils/supabase-ssr";
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 
  
