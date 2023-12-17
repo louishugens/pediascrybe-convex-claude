@@ -165,7 +165,6 @@ model Product {
   description String?
   image       String?
   metadata    Json?
-
   price Price[]
 }
 
@@ -227,3 +226,4 @@ enum Subscription_status {
   unpaid
   paused
 }
+

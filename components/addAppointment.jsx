@@ -10,6 +10,7 @@ import BeatLoader  from 'react-spinners/BeatLoader';
 import { formatDistanceToNow, set } from "date-fns"
 import { useDebouncedCallback } from 'use-debounce'
 import { generateDiagnosticPrompt } from '@/lib/prompts'
+import { refresh } from '@/app/actions';
 
 
 
@@ -154,7 +155,7 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
       const appointment = await response.json()
       console.log('appointment :>> ', appointment);
 
-      router.refresh()
+      refresh([`/user/patients/${patientId}`])
       router.push(`/user/patients/${patientId}/${appointment.id}`)
 
     }
