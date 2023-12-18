@@ -49,57 +49,69 @@ const Charts = async ({params: {patientId}}) => {
     
     let formatted = {}
 
-    if (Array.isArray(data.p03)) {
+    if (Array.isArray(data.p03) && Array.isArray(data.height)) {
 
-      for(let height = 65; height < data.p03.length; height += 0.1){
+      for(let i = 0; i < data.p03.length; i ++){
+        // let height = String(data.height[i])
+        let height = parseFloat(String(data.height[i]))
+        // console.log('height :>> ', height);
         if (!formatted[height]) {
           formatted[height] = { height, '3rd': 0, '15th': 0, '50th': 0, '85th': 0, '97th': 0};
           formatted[height][`${patient}`] = null
         }
-        formatted[Math.round(height)]['3rd'] += data.p03[Math.round(height)]
+        // console.log('data.p03[i] :>> ', data.p03[i]);
+        formatted[height]['3rd'] += data.p03[i]
       }
     }
 
-    if (Array.isArray(data.p15)) {
-      for(let i = 65; i < data.p15.length; i += 0.1){
-        formatted[i]['15th'] = data.p15[i]
+    if (Array.isArray(data.p15) && Array.isArray(data.height)) {
+      
+      for(let i = 0; i < data.p15.length; i ++){
+        let height = String(data.height[i])
+        formatted[height]['15th'] = data.p15[i]
       }
     }
 
-    if (Array.isArray(data.p50)) {
-      for(let i = 65; i < data.p50.length; i += 0.1){
-        formatted[i]['50th'] = data.p50[i]
+    if (Array.isArray(data.p50)  && Array.isArray(data.height)) {
+      for(let i = 0; i < data.p50.length; i ++){
+        let height = String(data.height[i])
+        formatted[height]['50th'] = data.p50[i]
       }
     }
 
-    if (Array.isArray(data.p85)) {
-      for(let i = 65; i < data.p85.length; i += 0.1){
-        formatted[i]['85th'] = data.p85[i]
+    if (Array.isArray(data.p85) && Array.isArray(data.height)) {
+      for(let i = 0; i < data.p85.length; i ++){
+        let height = String(data.height[i])
+        formatted[height]['85th'] = data.p85[i]
       }
     }
 
-    if (Array.isArray(data.p97)) {
-      for(let i = 65; i < data.p97.length; i += 0.1){
-        formatted[i]['97th'] = data.p97[i]
+    if (Array.isArray(data.p97) && Array.isArray(data.height)) {
+      for(let i = 0; i < data.p97.length; i ++){
+        let height = String(data.height[i])
+        formatted[height]['97th'] = data.p97[i]
       }
     }
 
-    // for(let i = 0; i < appointments.length; i++){
-    //   const day = differenceInDays(appointments[i].startDate, birthdate || new Date())
+    for(let i = 0; i < appointments.length; i++){
+      if(appointments[i].height && appointments[i].weight){
+        const height = appointments[i].height!!
+        if (!formatted[height]) {
+          formatted[height] = { height, '3rd': null, '15th': null, '50th': null, '85th': null, '97th': null};
+          formatted[height][`${patient}`] = null
+        }
+        formatted[height][`${patient}`] = appointments[i].weight
+      }
+    }
 
-    //   // const head = appointments[i]?.head?.toString() ?? '';
-
-    //   if(appointments[i].height && appointments[i].weight){
-    //     formatted[appointments[i].height!!][`${patient}`] = appointments[i].weight
-    //   }
-    // }
-
+    // sort by height
+    formatted = Object.values(formatted).sort((a: { height: number }, b: { height: number }) => a.height - b.height);
     const result = Object.values(formatted);
     return result
   }
 
   const data = referenceData ? formatReferenceData(referenceData, patient?.firstname ?? '', patient?.appointments ?? [], patient?.birthdate!!) : null;
-  console.log('data :>> ', data);
+
   return (
     <Chart patient={patient} type="wfa" title="Weight for lenght" unit={'kg'}  referenceData={data} />
   )

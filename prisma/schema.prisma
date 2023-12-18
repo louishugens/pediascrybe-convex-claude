@@ -227,77 +227,7 @@ enum Subscription_status {
   paused
 }
 
-model gwfa {
-  id        String   @id @unique @default(cuid())
-  p03       Json
-  p15       Json
-  p50       Json
-  p85       Json
-  p97       Json
-}
 
-model bwfa {
-  id        String   @id @unique @default(cuid())
-  p03       Json
-  p15       Json
-  p50       Json
-  p85       Json
-  p97       Json
-}
-
-model ghfa {
-  id        String   @id @unique @default(cuid())
-  p03       Json
-  p15       Json
-  p50       Json
-  p85       Json
-  p97       Json
-}
-
-model bhfa {
-  id        String   @id @unique @default(cuid())
-  p03       Json
-  p15       Json
-  p50       Json
-  p85       Json
-  p97       Json
-}
-
-model gbmafa {
-  id        String   @id @unique @default(cuid())
-  p03       Json
-  p15       Json
-  p50       Json
-  p85       Json
-  p97       Json
-}
-
-model bbmafa {
-  id        String   @id @unique @default(cuid())
-  p03       Json
-  p15       Json
-  p50       Json
-  p85       Json
-  p97       Json
-}
-
-model gwfh {
-  id        String   @id @unique @default(cuid())
-  p03       Json
-  p15       Json
-  p50       Json
-  p85       Json
-  p97       Json
-}
-
-model bwfh {
-  id        String   @id @unique @default(cuid())
-  p03       Json
-  p15       Json
-  p50       Json
-  p85       Json
-  p97       Json
-}
 
 model charts {
   id        String   @id @unique 
@@ -306,4 +236,5 @@ model charts {
   p50       Json
   p85       Json
   p97       Json
+  height    Json?
 }

@@ -1,7 +1,7 @@
 import Chart from "@/components/chart2"
 import prisma from "@/utils/prisma"
 import { differenceInDays } from 'date-fns'
-import { bhfa } from '@prisma/client';
+import { charts, Patient, Appointment } from '@prisma/client';
 
 async function getPatient(patientId){
   const patient = await prisma.patient.findUnique({
@@ -19,10 +19,11 @@ async function getPatient(patientId){
   return patient
 }
 
-async function getReferenceData(){
-  const referenceData = await prisma.bhfa.findUnique({
+async function getReferenceData(sex: Patient["sex"]){
+
+  const referenceData = await prisma.charts.findUnique({
     where:{
-      id: 'clq9la6sy0001m36wchm7xot4'
+      id: (sex === 'female') ? 'ghfa' : 'bhfa'
     }
   })
   return referenceData
@@ -31,7 +32,7 @@ async function getReferenceData(){
 const Charts = async ({params: {patientId}}) => {
   const patient = await getPatient(patientId)
   const appointments = patient?.appointments
-  const referenceData = await getReferenceData()
+  const referenceData = await getReferenceData(patient?.sex ?? null);
   // console.log('referenceData :>> ', referenceData);
 
 
@@ -44,7 +45,7 @@ const Charts = async ({params: {patientId}}) => {
     }
   })
 
-  const formatReferenceData = (data: bhfa, patient: string, appointments, birthdate) => {
+  const formatReferenceData = (data: charts, patient: string, appointments: Appointment[], birthdate: Date) => {
     
     let formatted = {}
 
@@ -86,8 +87,8 @@ const Charts = async ({params: {patientId}}) => {
     for(let i = 0; i < appointments.length; i++){
       const day = differenceInDays(appointments[i].startDate, birthdate || new Date())
       console.log('day :>> ', day);
-      const height = parseFloat(appointments[i]?.height)
-      console.log('height :>> ', height);
+      const height = appointments[i]?.height?.toString() ?? '';
+
       if(height){
         formatted[day][`${patient}`] = height
       }
@@ -97,10 +98,10 @@ const Charts = async ({params: {patientId}}) => {
     return result
   }
 
-  const data = referenceData ? formatReferenceData(referenceData, patient?.firstname ?? '', patient?.appointments, patient?.birthdate) : null;
+  const data = referenceData ? formatReferenceData(referenceData, patient?.firstname ?? '', patient?.appointments ?? [], patient?.birthdate!!) : null;
 
   return (
-    <Chart patient={patient} type="wfa" title="Height for Age"  unit={'cm'}  referenceData={data} />
+    <Chart patient={patient} type="wfa" title="Height for Age" unit={'cm'}  referenceData={data} />
   )
 }
  

@@ -5,8 +5,6 @@ import { Card, Title, LineChart } from "@tremor/react";
 
 import Link from 'next/link'
 import { useMemo } from "react";
-import { bhfa } from '@prisma/client';
-import { differenceInDays } from 'date-fns';
 import { PrinterIcon } from '@heroicons/react/24/outline';
 
 
@@ -14,66 +12,11 @@ import { PrinterIcon } from '@heroicons/react/24/outline';
 
 function Chart({patient, type, title, unit, referenceData}) {
   // console.log('patient :>> ', patient);
-  const formatReferenceData = (data: bhfa, patient: string, appointments, birthdate) => {
-    
-    let formatted = {}
-
-    if (Array.isArray(data.p03)) {
-      console.log('hello :>>');
-      for(let day = 0; day < data.p03.length; day++){
-        if (!formatted[day]) {
-          formatted[day] = { day, '3rd': 0, '15th': 0, '50th': 0, '85th': 0, '97th': 0};
-          formatted[day][`${patient}`] = null
-        }
-        formatted[day]['3rd'] += data.p03[day]
-      }
-    }
-
-    if (Array.isArray(data.p15)) {
-      for(let i = 0; i < data.p15.length; i++){
-        formatted[i]['15th'] = data.p15[i]
-      }
-    }
-
-    if (Array.isArray(data.p50)) {
-      for(let i = 0; i < data.p50.length; i++){
-        formatted[i]['50th'] = data.p50[i]
-      }
-    }
-
-    if (Array.isArray(data.p85)) {
-      for(let i = 0; i < data.p85.length; i++){
-        formatted[i]['85th'] = data.p85[i]
-      }
-    }
-
-    if (Array.isArray(data.p97)) {
-      for(let i = 0; i < data.p97.length; i++){
-        formatted[i]['97th'] = data.p97[i]
-      }
-    }
-
-    for(let i = 0; i < appointments.length; i++){
-      const day = differenceInDays(appointments[i].startDate, birthdate || new Date())
-      console.log('day :>> ', day);
-      const height = parseFloat(appointments[i]?.height)
-      console.log('height :>> ', height);
-      if(height){
-        formatted[day][`${patient}`] = height
-      }
-    }
-
-    const result = Object.values(formatted);
-    return result
-  }
-
 
   const data = useMemo(() => {
-    // return formatReferenceData(referenceData, patient.firstname, patient.appointments, patient.birthdate)
     return referenceData
   }, [referenceData])
-
-  console.log('data :>> ', data);
+  
   const valueFormatter = (number) => `${new Intl.NumberFormat("us").format(number).toString()} ${unit}`;
  
   return (
