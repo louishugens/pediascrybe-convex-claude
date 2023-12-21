@@ -301,7 +301,7 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
             <label className="flex flex-col mb-4 h-40 gap-y-2">
               <div className="font-medium flex flex-row justify-between">
                 <span>Diagnostic</span>
-                {/* {
+                {
                   thinking && symptoms && 
                     (
                       generating
@@ -311,7 +311,7 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
                         <span className=' font-light text-primary'>Generate with ScrybeGPT? <span className='px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs cursor-pointer'  onClick={fetchDiagnosticSuggestions}>Yes</span></span>
                     )
                   
-                } */}
+                }
               </div>
               <textarea
                 placeholder="What do you beleive the patient is suffering from?"

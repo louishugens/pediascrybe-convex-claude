@@ -96,7 +96,7 @@ const AddPrescriptions = ({patient, patientId, appointment}) => {
         },
         {
           role: "system",
-          content: "Submit the list of drug prescriptions in JSON array format and language."
+          content: "Submit the list of drug prescriptions in JSON array format and use the identified language for each value in the objects."
           // Here is an example \
           // [{drug: \"drug name\", count: 1, unit: \"flacon\", posology: \"1 pill twice a day\"}, {drug: \"drug name 2\", count: 1, unit: \"bottle\", posology: \"2ml twice a day\"}, ... ] \
           // Also make sure to translate the values for each key in the JSON array into the language used for the symptoms."
@@ -256,13 +256,13 @@ const AddPrescriptions = ({patient, patientId, appointment}) => {
     <div className="w-full h-auto shadow-md rounded-lg p-4 bg-slate-50 mt-4 text-sm">
       <p className='font-bold'>Add medicines</p>
       <form className='mt-4' onSubmit={handleSubmit(onSubmit)}>
-      {/* {
+      {
         thinking 
         ?
           <span className=' font-light text-primary'> ScrybeGPT thinking <PulseLoader color={"#21C55D"} size={5} aria-label="Loading Spinner" data-testid="loader"/></span> 
         :
           <span className=' font-light text-primary'>Generate with ScrybeGPT? <span className='px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs cursor-pointer'  onClick={fetchPrescriptionsSuggestions}>Yes</span></span>
-      } */}
+      }
       {fields.map((field, index) => {
         return (
           <section key={field.id} className="relative pt-8">
