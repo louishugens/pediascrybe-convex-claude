@@ -1,7 +1,7 @@
 'use client'
 // import { LineChart, Line, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer, Tooltip } from "recharts";
 import * as CONST from '../utils/constants'
-import { Card, Title, LineChart } from "@tremor/react";
+// import { Card, Title, LineChart } from "@tremor/react";
 
 import Link from 'next/link'
 import { useMemo } from "react";
@@ -28,7 +28,7 @@ function Chart({patient, type, title, unit, referenceData}) {
           <PrinterIcon className="h-4 w-4 ml-2" />
         </Link>
       </div>
-      <Card className='mt-6'>
+      {/* <Card className='mt-6'>
         <Title>{title}</Title>
         <LineChart
           className="mt-6 h-[30rem] "
@@ -48,7 +48,7 @@ function Chart({patient, type, title, unit, referenceData}) {
           showTooltip={true}
           connectNulls={true}
         />
-      </Card>
+      </Card> */}
     </div>
   )
 }
