@@ -21,7 +21,7 @@ async function getPatient(patientId){
 const Charts = async ({params: {patientId}}) => {
   const patient = await getPatient(patientId)
   const appointments = patient.appointments
-  console.log('patientId :>> ', patientId);
+  // console.log('patientId :>> ', patientId);
 
   let formatted = []
 
@@ -34,7 +34,7 @@ const Charts = async ({params: {patientId}}) => {
     }  
   })
 
-  console.log('bmi formatted :>> ', formatted);
+  // console.log('bmi formatted :>> ', formatted);
 
   return (
     <Chart patient={patient} type="bfa" title="BMI for Age" ylabel="BMI (in kg/m^2)" xlabel="Age (in days)" formatted={formatted} name={patient.firstname} />

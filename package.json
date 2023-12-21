@@ -61,7 +61,7 @@
     "react-select-country-list": "^2.2.3",
     "react-spinners": "^0.13.7",
     "react-to-print": "^2.14.11",
-    "recharts": "^2.2.0",
+    "recharts": "^2.10.3",
     "resend": "^2.0.0",
     "server-only": "^0.0.1",
     "slate": "^0.88.1",

@@ -82,18 +82,19 @@ function Chart({patient, type, title, ylabel, xlabel, formatted, name}) {
   // }
  
   return (
-    <div className="h-[40rem] w-full shadow-md rounded-lg p-8 mb-8">
-      <div className="flex flex-row justify-between w-full items-start">
+    <div className="w-full shadow-md rounded-lg p-8 mb-8">
+      <div className="flex flex-row justify-between w-full items-start mb-4">
         <p className="text-slate-900 text-sm ">{title}</p>
         <Link href={`/user/patients/${patient.id}/charts/print-${type}`} className="px-4 py-2 rounded-full bg-slate-200 text-blue-500 text-sm">
           Export
         </Link>
       </div>
-      <ResponsiveContainer>
+      {/* <div className="pb"> */}
+      <ResponsiveContainer height={500} >
         <LineChart width={900} height={500}>
-          <XAxis dataKey="category" type="category" allowDuplicatedCategory={false} label={{value: xlabel, position: "insideBottom", offset: -5}} tick={{fontSize: 12}} />
+          <XAxis dataKey="category" type="category" height={55} allowDuplicatedCategory={false} label={{value: xlabel, position: "insideBottom"}} tick={{fontSize: 12}} />
           <YAxis dataKey="value" label={{ value: ylabel, angle: -90, position: 'insideLeft'}} tick={{fontSize: 12}} />
-          <Legend verticalAlign="bottom" height={16}/>
+          <Legend verticalAlign="top" align="right" height={16}/>
           <Tooltip />
           <Line dot={false} dataKey="value" data={data[0].data} name={data[0].name} key={data[0].name} stroke="#ff50ff" strokeWidth={1} />
           <Line dot={false} dataKey="value" data={data[1].data} name={data[1].name} key={data[1].name} stroke="#00537f" strokeWidth={1} />
@@ -103,6 +104,7 @@ function Chart({patient, type, title, ylabel, xlabel, formatted, name}) {
           <Line dot={false} dataKey="value" data={formatted} name={name} key={name} stroke="#0000ff" strokeWidth={2} />
         </LineChart>
       </ResponsiveContainer>
+      {/* </div> */}
     </div>
   )
 }
