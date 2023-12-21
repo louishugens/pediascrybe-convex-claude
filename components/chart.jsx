@@ -1,5 +1,5 @@
 'use client'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer, Tooltip } from "recharts";
+import { LineChart, Line, XAxis, YAxis, Legend, ResponsiveContainer, Tooltip } from "recharts";
 import * as CONST from '../utils/constants'
 import Link from 'next/link'
 import { useMemo } from "react";
