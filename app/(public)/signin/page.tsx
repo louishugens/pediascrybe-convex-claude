@@ -22,6 +22,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import Image from 'next/image';
 import { Toaster, toast } from 'sonner'
+import posthog from 'posthog-js';
 
 const FormSchema = z.object({
   email: z.string({required_error: 'Email is required'}).email('Invalid email address'),
@@ -63,6 +64,7 @@ export default function Home() {
       email: values.email,
       password: values.password,
     })
+    posthog.identify(user?.email)
     user && router.push(`/user`)
     if(error) {
       toast.error(error.message)
