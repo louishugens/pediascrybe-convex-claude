@@ -8,6 +8,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import PulseLoader from "react-spinners/PulseLoader"
 import supabase from '@/utils/supabase';
 import { useRouter } from 'next/navigation';
+import posthog from 'posthog-js';
 
 
 
@@ -83,7 +84,9 @@ export default function Signup() {
         })
         const  emailres  = await res.json()
         console.log('email :>> ', emailres);
+        posthog.capture('Signup success')
         router.push('/signup/success')
+
       }
 
     }
