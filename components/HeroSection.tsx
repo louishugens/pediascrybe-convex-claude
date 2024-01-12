@@ -35,14 +35,16 @@ const HeroSection = () => {
             variants={item}
             className="scroll-m-20 text-2xl font-bold tracking-tight md:text-4xl"
           >
-            Pediatric Care, Elevated by Advanced AI Integration
+            Save Time, Enhance your Practice
+            {/* Pediatric Care, Elevated by Advanced AI Integration */}
           </motion.h1>
           <motion.p 
             variants={item}
             className="text-base md:text-xl text-muted-foreground"
           >
-            Tailored for dedicated pediatricians, <span className='text-primary italic font-bold'>Pediascrybe</span> streamlines patient data management like never before. 
-            Harness the power of advanced AI integration to elevate your practice. Experience efficiency and precision like never before.
+            Deliver exceptional pediatric care with our streamlined patient data management system and AI assistance.
+            {/* Tailored for dedicated pediatricians, <span className='text-primary italic font-bold'>Pediascrybe</span> streamlines patient data management like never before. 
+            Harness the power of advanced AI integration to elevate your practice. Experience efficiency and precision like never before. */}
           </motion.p>
           <motion.div
             variants={item}
