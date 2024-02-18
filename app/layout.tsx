@@ -42,6 +42,7 @@ export default async function RootLayout({children}) {
       {/* <Suspense>
         <PostHogPageview />
       </Suspense> */}
+      <Suspense >
       <PHProvider>
         <body className='min-h-screen bg-background font-sans antialiased' >  
           <GA />  
@@ -50,6 +51,7 @@ export default async function RootLayout({children}) {
           <SpeedInsights />
         </body>
       </PHProvider>
+      </Suspense>
     </html>
   )
 }

@@ -216,7 +216,7 @@ const CreateReport = ({patientId, patient, consultations}) => {
           />
         </div>
         <div className=" mt-8">
-       {/* {
+       {
           reportType && 
             (
               generating
@@ -226,7 +226,7 @@ const CreateReport = ({patientId, patient, consultations}) => {
                 <span className=' font-light text-primary'>Generate with ScrybeGPT? <span className='px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs cursor-pointer'  onClick={fetchReportSuggestions}>Yes</span></span>
             )
           
-        }  */}
+        } 
         </div>
         <FormField
             control={form.control}
