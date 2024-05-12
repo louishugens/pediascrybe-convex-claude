@@ -7,6 +7,9 @@ async function getReports(patientId:string) {
   const reports = prisma.report.findMany({
     where:{
       patientId: patientId
+    },
+    orderBy:{
+      createdAt: 'desc'
     }
   })
   return reports

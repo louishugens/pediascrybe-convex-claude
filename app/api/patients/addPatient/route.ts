@@ -43,11 +43,11 @@ export async function POST(req: Request) {
       );
     }
 
-    const { firstname, lastname, email, birthdate, mothername, sex, religion, phone, id, allergies, history, bloodtype } = await req.json()
+    const { firstname, lastname, email, birthdate, mothername, sex, religion, phone, id, allergies, history, bloodtype, electrophoresis } = await req.json()
 
     const patient  =   await prisma.patient.create({
       data: {
-            firstname, lastname, email, birthdate, religion, sex, mothername, phone, allergies, history, bloodtype, doctorId: id
+            firstname, lastname, email, birthdate, religion, sex, mothername, phone, allergies, history, bloodtype, electrophoresis, doctorId: id
           }
     })
 

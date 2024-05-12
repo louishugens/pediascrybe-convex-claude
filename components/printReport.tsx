@@ -54,7 +54,7 @@ const Print = ({doctor, patient, report}: Props) => {
         </div> */}
         <div className="py-4 grow">
           <div className="flex flex-col h-full ">
-            <p className='text-lg font-semibold text-center py-4 flex-none'>Medical {report.reportType}</p>
+            <p className='text-lg font-semibold text-center py-4 flex-none'>Medical {report.reportType === 'ReferenceNote' ? 'Reference Note' : report.reportType}</p>
             {/* <div className="flex flex-row justify-between flex-none">
               <p className="font-bold"><span className='font-light'>Patient: </span>{`${patient.firstname} ${patient.lastname}`}</p>
               <p className="font-semibold"><span className='font-light'>Date: </span>{format(report.createdAt, 'yyy-MM-dd')}</p>

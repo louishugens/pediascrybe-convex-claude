@@ -189,7 +189,7 @@ const CreateReport = ({patientId, patient, consultations}) => {
   return ( 
   <div className="flex flex-col w-full items-center">
     <Toaster richColors position="top-center" />
-    <p className='text-lg text-primary font-bold mt-8'>Create Report or Cetificate</p>
+    <p className='text-lg text-primary font-bold mt-8'>Create Report or Cetificate or Reference Note</p>
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex bg-muted rounded-md p-8 flex-col mt-8 w-2/3 text-sm">
         <div className="grid gap-x-8 gap-y-8 grid-cols-2 mt-4">
@@ -208,6 +208,7 @@ const CreateReport = ({patientId, patient, consultations}) => {
                   <SelectContent>
                     <SelectItem value="Report">Report</SelectItem>
                     <SelectItem value="Certificate">Certificate</SelectItem>
+                    <SelectItem value="ReferenceNote">Reference Note</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />

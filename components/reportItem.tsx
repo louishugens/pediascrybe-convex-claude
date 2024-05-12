@@ -42,7 +42,7 @@ const ReportItem = ({report, patientId}: Props) => {
   return ( 
     <tr key={report.id} className="border-b text-sm font-light w-full bg-slate-50 shadow pt-12 rounded-full border-none border-spacing-x-2">
     <td className="px-4 py-2 rounded-l-full mt-2">{format(report.createdAt, 'yyy-MM-dd hh:mm:ss')}</td>
-    <td className="px-4 py-2">{report.reportType}</td>
+    <td className="px-4 py-2">{report.reportType === 'ReferenceNote' ? 'Reference Note' : report.reportType}</td>
     <td className="px-4 py-2 rounded-r-full">
       {
         loading

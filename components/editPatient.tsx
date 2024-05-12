@@ -67,6 +67,7 @@ const EditPatient = ({patient, doctorId}) => {
     allergies: z.string().optional(),
     history: z.string().optional(),
     bloodtype: z.string().optional(),
+    electrophoresis: z.string().optional(),
   })
 
   type FormValues = z.infer<typeof schema>
@@ -87,6 +88,7 @@ const EditPatient = ({patient, doctorId}) => {
       allergies: patient.allergies || "",
       history: patient.history || "",
       bloodtype: patient.bloodtype || "",
+      electrophoresis: patient.electrophoresis || "",
     },
     resolver: zodResolver(schema)
   });
@@ -100,8 +102,8 @@ const EditPatient = ({patient, doctorId}) => {
     setLoading(true)
  
     try{
-      const {firstname, lastname, email, birthdate, mothername, sex, religion, phone, allergies, history, bloodtype} = values
-      const body = {firstname, lastname, email, birthdate, mothername, sex, religion, phone, id: patient.id, allergies, history, bloodtype}
+      const {firstname, lastname, email, birthdate, mothername, sex, religion, phone, allergies, history, bloodtype, electrophoresis} = values
+      const body = {firstname, lastname, email, birthdate, mothername, sex, religion, phone, id: patient.id, allergies, history, bloodtype, electrophoresis}
       await fetch('/api/patients/updatePatient', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -283,7 +285,7 @@ const EditPatient = ({patient, doctorId}) => {
                   </FormItem>
                 )}
               />
-                            <FormField
+              <FormField
                 control={form.control}
                 name="bloodtype"
                 render={({ field }) => (
@@ -308,6 +310,21 @@ const EditPatient = ({patient, doctorId}) => {
                         <SelectItem value="O-">O-</SelectItem>
                       </SelectContent>
                     </Select>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="electrophoresis"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Electrophoresis
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="Electrophoresis" {...field} />
+                    </FormControl>
+                    <FormMessage />
                   </FormItem>
                 )}
               />

@@ -51,7 +51,7 @@ export async function POST(req: Request) {
         id: id
       },
       data: {
-        reportType, content, patientId
+        reportType, content, patientId, createdAt: new Date()
       }
     })
 

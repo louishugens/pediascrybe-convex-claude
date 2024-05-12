@@ -44,14 +44,14 @@ export async function POST(req: Request) {
       );
     }
 
-    const { firstname, lastname, email, birthdate, mothername, sex, religion, phone, id, allergies, history, bloodtype } = await req.json()
+    const { firstname, lastname, email, birthdate, mothername, sex, religion, phone, id, allergies, history, bloodtype, electrophoresis } = await req.json()
 
     const patient  =   await prisma.patient.update({
       where:{
         id: id
       },
       data: {
-        firstname, lastname, email, birthdate, mothername, sex, religion, phone, allergies, history, bloodtype
+        firstname, lastname, email, birthdate, mothername, sex, religion, phone, allergies, history, bloodtype, electrophoresis
       }
     })
 

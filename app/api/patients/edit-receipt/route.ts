@@ -52,7 +52,7 @@ export async function POST(req: Request) {
         id: id
       },
       data: {
-        services, date, currency, patientId
+        services, date, currency, patientId, createdAt: new Date()
       }
     })
 

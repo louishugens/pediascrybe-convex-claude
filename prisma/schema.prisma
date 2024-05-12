@@ -92,6 +92,7 @@ model Patient {
   allergies    String?
   history      String?
   bloodtype    String?
+  electrophoresis String?
   vectorId     Int?
   appointments Appointment[]
   Doctor       Doctor?       @relation(fields: [doctorId], references: [id])
@@ -143,6 +144,7 @@ model Report {
 enum ReportType {
   Report
   Certificate
+  ReferenceNote
 }
 
 model Receipt {

@@ -53,6 +53,7 @@ const AddPatient = () => {
     allergies: z.string().optional(),
     history: z.string().optional(),
     bloodtype: z.string().optional(),
+    electrophoresis: z.string().optional(),
   })
 
 
@@ -81,9 +82,9 @@ const AddPatient = () => {
     setLoading(true)
  
     try{
-      const {firstname, lastname, email, birthdate, mothername, sex, religion, phone, allergies, history, bloodtype} = values
+      const {firstname, lastname, email, birthdate, mothername, sex, religion, phone, allergies, history, bloodtype, electrophoresis} = values
       console.log('bloodtype :>> ', bloodtype);
-      const body = {firstname, lastname, email, birthdate, mothername, sex, religion, phone, id: doctor!.id, allergies, history, bloodtype}
+      const body = {firstname, lastname, email, birthdate, mothername, sex, religion, phone, id: doctor!.id, allergies, history, bloodtype, electrophoresis}
       await fetch('/api/patients/addPatient', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -286,6 +287,21 @@ const AddPatient = () => {
                         <SelectItem value="O-">O-</SelectItem>
                       </SelectContent>
                     </Select>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="electrophoresis"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Electrophoresis
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="Electrophoresis" {...field} />
+                    </FormControl>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
