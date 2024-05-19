@@ -23,7 +23,7 @@ async function getReferenceData(sex: Patient["sex"]){
 
   const referenceData = await prisma.charts.findUnique({
     where:{
-      id: (sex === 'female') ? 'ghfa' : 'bhfa'
+      id: (sex === 'female') ? 'gwfa' : 'bwfa'
     }
   })
   return referenceData
@@ -35,12 +35,11 @@ const Charts = async ({params: {patientId}}) => {
   const referenceData = await getReferenceData(patient?.sex ?? null);
 
 
-
   let formatted: { category: number; value: number; }[] = []
 
   appointments?.map(appointment =>{
-    if(appointment.height){
-      let app = {category: differenceInDays(appointment.startDate, patient?.birthdate ?? new Date()), value: appointment.height}
+    if(appointment.weight){
+      let app = {category: differenceInDays(appointment.startDate, patient?.birthdate ?? new Date()), value: appointment.weight}
       formatted.push(app)
     }
   })
@@ -65,6 +64,7 @@ const Charts = async ({params: {patientId}}) => {
       }
       formatted.push(percentile)
     }
+
     if (Array.isArray(data.p15)) {
       let percentile: formattedData = {name: `15th`, data: []}
       for(let day = 0; day < data.p15.length; day++){
@@ -74,6 +74,7 @@ const Charts = async ({params: {patientId}}) => {
       }
       formatted.push(percentile)
     }
+
     if (Array.isArray(data.p50)) {
       let percentile: formattedData = {name: `50th`, data: []}
       for(let day = 0; day < data.p50.length; day++){
@@ -83,6 +84,7 @@ const Charts = async ({params: {patientId}}) => {
       }
       formatted.push(percentile)
     }
+
     if (Array.isArray(data.p85)) {
       let percentile: formattedData = {name: `85th`, data: []}
       for(let day = 0; day < data.p85.length; day++){
@@ -92,6 +94,7 @@ const Charts = async ({params: {patientId}}) => {
       }
       formatted.push(percentile)
     }
+
     if (Array.isArray(data.p97)) {
       let percentile: formattedData = {name: `97th`, data: []}
       for(let day = 0; day < data.p97.length; day++){
@@ -100,20 +103,21 @@ const Charts = async ({params: {patientId}}) => {
         }
       }
       formatted.push(percentile)
-    } 
+    }
 
     return formatted
 
   }
 
+
   const data = referenceData ? formatReferenceData(referenceData) : null;
 
+
+
   return (
-    <Chart patient={patient} type="wfa" title="Height for Age" ylabel="Height (in cm)" xlabel="Age (in days)" name={patient?.firstname} formatted={formatted}   referenceData={data} />
+    <Chart patient={patient} type="wfa" title="Weight for Age" ylabel="Weight (in kg)" xlabel="Age (in days)" name={patient?.firstname} formatted={formatted}  referenceData={data} />
+    // <Chart patient={patient} type="wfa" title="Weight for Age" unit={'kg'}  referenceData={data} />
   )
 }
  
 export default Charts
-
-
-

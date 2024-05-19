@@ -80,7 +80,7 @@ const formatReferenceData = (data: referenceData) => {
 }
 
 
-function Chart({patient, type, title, ylabel, xlabel, formatted, name, referenceData}) {
+function Chart({ title, ylabel, xlabel, formatted, name, referenceData}) {
 
   const data: typeof referenceData = useMemo(() => {
       return referenceData
@@ -89,15 +89,12 @@ function Chart({patient, type, title, ylabel, xlabel, formatted, name, reference
   )
 
   return (
-    <div className="w-full shadow-md rounded-lg p-8 mb-8">
-      <div className="flex flex-row justify-between w-full items-start">
+    <div className="h-[28rem] w-[44rem]  relative py-8 mr-8">
+      <div className="flex flex-col justify-center w-full items-center">
         <p className="text-slate-900 text-sm ">{title}</p>
-        <Link href={`/user/patients/${patient.id}/charts/print-${type}`} className="px-4 py-2 rounded-full bg-slate-200 text-blue-500 text-sm">
-          Export
-        </Link>
       </div>
-      <ResponsiveContainer height={550} >
-        <LineChart width={900} height={200}>
+      <ResponsiveContainer >
+        <LineChart>
           <XAxis dataKey="category" type="category" height={40} allowDuplicatedCategory={false} label={{value: xlabel, position: "insideBottom", offset: -2}} tick={{fontSize: 12}} />
           <YAxis dataKey="value" label={{ value: ylabel, angle: -90, position: 'insideLeft'}} tick={{fontSize: 12}} />
           <Legend verticalAlign="top" align="right" height={12}/>

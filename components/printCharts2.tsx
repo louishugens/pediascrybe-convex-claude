@@ -5,12 +5,12 @@ import {useRef} from 'react'
 import { format } from 'date-fns'
 import { useReactToPrint } from 'react-to-print';
 import Link from 'next/link';
-import Chart from './chartPrint'
+import Chart from './chartPrint2'
 import { differenceInDays } from 'date-fns'
 import PrintHead from './printHeader';
 
 
-const Print = ({type, title, ylabel, xlabel, doctor, patient, formatted}) => {
+const Print = ({type, title, ylabel, xlabel, doctor, patient, formatted, referenceData}) => {
   const string = 'Chart'
   const componentRef = useRef(null);
   const handlePrint = useReactToPrint({
@@ -44,7 +44,7 @@ ref={componentRef}>
             <div className="my-auto">
             {/* <p className="grow">Tests:</p> */}
             <div className="grow relative">
-              <Chart sex={patient.sex} type={type} title={title} ylabel={ylabel} xlabel={xlabel} formatted={formatted} name={patient.firstname} />
+              <Chart  title={title} ylabel={ylabel} xlabel={xlabel} formatted={formatted} name={patient.firstname} referenceData={referenceData} />
             </div>
             </div>
             {/* <div className="flex flex-row-reverse">
