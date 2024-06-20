@@ -62,8 +62,6 @@ const Charts = async ({params: {patientId}}) => {
   })
 
 
-
-
   const formatReferenceData = (data: charts) => {
 
     type formattedPercentile = {
