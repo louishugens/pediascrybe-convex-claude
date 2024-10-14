@@ -29,7 +29,7 @@ const Layout = async ({children, params: {  patientId }}) => {
 
 
   return (
-    <div className='flex flex-row relative h-screen w-screen'>
+    <div className='flex relative h-screen w-screen overflow-hidden'>
       <Sidenav />
       <div className="h-full w-full overflow-y-scroll px-8 py-4">
         {children}

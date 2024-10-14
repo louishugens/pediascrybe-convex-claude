@@ -63,6 +63,7 @@ model Doctor {
   Img          Img?
   patients     Patient[]
   Subscription Subscription[]
+  trackedVaccines Vaccin[]
 }
 
 model Img {
@@ -74,30 +75,31 @@ model Img {
 }
 
 model Patient {
-  firstname    String
-  lastname     String
-  email        String?
-  isCompleted  Boolean       @default(false)
-  phone        String?
-  profession   String?
-  religion     String?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @default(now())
-  id           String        @id @unique @default(cuid())
-  doctorId     String?
-  birthdate    DateTime
-  mothername   String?
-  sex          Sex?
-  children     Int?
-  allergies    String?
-  history      String?
-  bloodtype    String?
-  electrophoresis String?
-  vectorId     Int?
-  appointments Appointment[]
-  Doctor       Doctor?       @relation(fields: [doctorId], references: [id])
-  reports      Report[]
-  receipts     Receipt[]
+  firstname         String
+  lastname          String
+  email             String?
+  isCompleted       Boolean             @default(false)
+  phone             String?
+  profession        String?
+  religion          String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @default(now())
+  id                String              @id @unique @default(cuid())
+  doctorId          String?
+  birthdate         DateTime
+  mothername        String?
+  sex               Sex?
+  children          Int?
+  allergies         String?
+  history           String?
+  bloodtype         String?
+  electrophoresis   String?
+  vectorId          Int?
+  appointments      Appointment[]
+  Doctor            Doctor?             @relation(fields: [doctorId], references: [id])
+  reports           Report[]
+  receipts          Receipt[]
+  VaccinationRecord VaccinationRecord[]
 }
 
 model documents {
@@ -167,7 +169,7 @@ model Product {
   description String?
   image       String?
   metadata    Json?
-  price Price[]
+  price       Price[]
 }
 
 model Price {
@@ -229,14 +231,84 @@ enum Subscription_status {
   paused
 }
 
-
-
 model charts {
-  id        String   @id @unique 
-  p03       Json
-  p15       Json
-  p50       Json
-  p85       Json
-  p97       Json
-  height    Json?
+  id     String @id @unique
+  p03    Json
+  p15    Json
+  p50    Json
+  p85    Json
+  p97    Json
+  height Json?
 }
+
+model Vaccin {
+  id                 String              @id @unique @default(cuid())
+  name               String
+  doses              Dose[]
+  records            VaccinationRecord[]
+  doctorId           String?
+  doctor             Doctor?             @relation(fields: [doctorId], references: [id])
+}
+
+model VaccinationRecord {
+  id           String   @id @unique @default(cuid())
+  date         DateTime
+  notes        String?
+  patient      Patient  @relation(fields: [patientId], references: [id])
+  patientId    String
+  vaccin       Vaccin   @relation(fields: [vaccinId], references: [id])
+  vaccinId     String
+  manufacturer String
+  lotNumber    String
+  dose         Dose     @relation(fields: [doseId], references: [id])
+  doseId       String
+
+  @@unique([patientId, vaccinId])
+}
+
+model Dose {
+  id                String              @id @unique @default(cuid())
+  doseCount         Int?
+  maxAge            Int?
+  doseType          DoseType
+  Vaccin            Vaccin?             @relation(fields: [vaccinId], references: [id])
+  vaccinId          String?
+  VaccinationRecord VaccinationRecord[]
+}
+
+model VaccinReference {
+  id    String                @id @unique @default(cuid())
+  name  String
+  doses VaccinReferenceDose[]
+}
+
+model VaccinReferenceDose {
+  id                String          @id @unique @default(cuid())
+  doseCount         Int?
+  maxAge            Int?
+  doseType          DoseType
+  vaccinReferenceId String
+  vaccinReference   VaccinReference @relation(fields: [vaccinReferenceId], references: [id])
+}
+
+enum VaccineManufacturer {
+  Pfizer
+  Moderna
+  JohnsonAndJohnson
+  AstraZeneca
+  Sanofi
+  GlaxoSmithKline
+  Merck
+  Novavax
+  Sinovac
+  Sinopharm
+  BharatBiotech
+  SerumInstituteOfIndia
+}
+
+enum DoseType {
+  regular
+  annual
+  booster
+}
+

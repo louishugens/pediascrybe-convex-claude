@@ -11,18 +11,29 @@ let prisma: PrismaClient
 if (process.env.NODE_ENV === 'production') {
   prisma = new PrismaClient()
 } else {
-  if (!global.prisma) {
-    global.prisma = new PrismaClient()
+  if (!globalThis.prismaGlobal) {
+    globalThis.prismaGlobal = new PrismaClient()
   }
-  prisma = global.prisma
+  prisma = globalThis.prismaGlobal
 }
 export default prisma
 
 
-// declare global {
-//   var prisma: PrismaClient | undefined;
+// import { PrismaClient } from "@prisma/client/edge";
+// // import { withAccelerate } from "@prisma/extension-accelerate";
+
+// // Learn more about instantiating PrismaClient in Next.js here: https://www.prisma.io/docs/data-platform/accelerate/getting-started
+
+// const prismaClientSingleton = () => {
+//   return new PrismaClient();
 // };
 
-// export default prisma = globalThis.prisma || new PrismaClient();
+// declare const globalThis: {
+//   prismaGlobal: ReturnType<typeof prismaClientSingleton>;
+// } & typeof global;
 
-// if (process.env.NODE_ENV !== "production") globalThis.prisma = prisma;
+// const prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
+
+// export default prisma;
+
+// if (process.env.NODE_ENV !== "production") globalThis.prismaGlobal = prisma;
