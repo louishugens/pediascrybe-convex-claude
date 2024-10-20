@@ -14,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PlusCircle, Trash2 } from 'lucide-react'
 import { updateVaccines } from '@/app/actions'
 import { Label } from "@/components/ui/label"
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 // Define the schema for our form
 const formSchema = z.object({
@@ -49,6 +51,7 @@ export default function UpdateDoctorVaccines({
   doctorId: string
 }) {
   const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -184,8 +187,10 @@ export default function UpdateDoctorVaccines({
         }));
       console.log('updatedVaccines', updatedVaccines)
       await updateVaccines(updatedVaccines);
+      router.push('/user/profile')
     } catch (error) {
       console.error('Error saving vaccines:', error)
+      toast.error('Error saving vaccines')
     } finally {
       setIsLoading(false)
     }
