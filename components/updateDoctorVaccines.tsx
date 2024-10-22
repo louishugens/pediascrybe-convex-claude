@@ -28,8 +28,8 @@ const formSchema = z.object({
       doses: z.array(
         z.object({
           id: z.string(),
-          doseCount: z.number(),
-          maxAge: z.number(),
+          doseCount: z.coerce.number().nullish(),
+          maxAge: z.coerce.number().nullish(),
           doseType: z.nativeEnum(DoseType),
         })
       ),
@@ -52,6 +52,7 @@ export default function UpdateDoctorVaccines({
 }) {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  // console.log('doctorVaccines', doctorVaccines)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -64,8 +65,8 @@ export default function UpdateDoctorVaccines({
         isCustom: false,
         doses: vaccine.doses.map(dose => ({
           id: dose.id,
-          doseCount: dose.doseCount ?? 0,
-          maxAge: dose.maxAge ?? 0,
+          doseCount: dose.doseCount,
+          maxAge: dose.maxAge,
           doseType: dose.doseType,
         })),
       }))
@@ -74,8 +75,11 @@ export default function UpdateDoctorVaccines({
 
   const { fields, append, remove, update } = useFieldArray({
     control: form.control,
-    name: "vaccines"
+    name: "vaccines",
+    keyName: "fieldId"
   })
+
+  console.log('fields', fields)
 
   const addNewVaccine = () => {
     append({
@@ -86,14 +90,15 @@ export default function UpdateDoctorVaccines({
       isCustom: true,
       doses: [{
         id: `new-dose-${Date.now()}`,
-        doseCount: 1,
-        maxAge: 0,
+        doseCount: null,
+        maxAge: null,
         doseType: DoseType.regular,
       }]
     })
   }
 
   const addNewDose = (vaccineIndex: number) => {
+
     const vaccine = fields[vaccineIndex];
     update(vaccineIndex, {
       ...vaccine,
@@ -102,7 +107,7 @@ export default function UpdateDoctorVaccines({
         {
           id: `new-dose-${Date.now()}`,
           doseCount: vaccine.doses.length + 1,
-          maxAge: 0,
+          maxAge: null,
           doseType: DoseType.regular,
         }
       ]
@@ -172,7 +177,6 @@ export default function UpdateDoctorVaccines({
 
   async function onSubmit(data: FormValues) {
     setIsLoading(true)
-    console.log('data', data)
     try {
       const updatedVaccines = data.vaccines
         .filter(v => v.isSelected)
@@ -181,11 +185,10 @@ export default function UpdateDoctorVaccines({
           doses: vaccine.doses.map(dose => ({
             ...dose,
             vaccinId: vaccine.id,
-            doseCount: dose.doseCount || null,
-            maxAge: dose.maxAge || null,
+            doseCount: dose.doseCount === 0 ? 0 : (dose.doseCount || null),
+            maxAge: dose.maxAge === 0 ? 0 : (dose.maxAge || null),
           })),
         }));
-      console.log('updatedVaccines', updatedVaccines)
       await updateVaccines(updatedVaccines);
       router.push('/user/profile')
     } catch (error) {
@@ -296,34 +299,10 @@ export default function UpdateDoctorVaccines({
                       </div>
                       <FormField
                         control={form.control}
-                        name={`vaccines.${index}.doses.${doseIndex}.doseCount`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className='font-semibold'>Dose Count <span className='text-muted-foreground text-sm font-normal'>(1 is the first dose or unique dose, 2 is the second dose, etc.)</span></FormLabel>
-                            <FormControl>
-                              <Input type="number" {...field} onChange={(e) => field.onChange(parseInt(e.target.value))} />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`vaccines.${index}.doses.${doseIndex}.maxAge`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className='font-semibold'>Max Age <span className='text-muted-foreground text-sm font-normal'>(Max age in months to receive the dose, 0 is at birth)</span></FormLabel>
-                            <FormControl>
-                              <Input type="number" {...field} onChange={(e) => field.onChange(parseInt(e.target.value))} />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
                         name={`vaccines.${index}.doses.${doseIndex}.doseType`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className='font-semibold'>Dose Type</FormLabel>
+                            <FormLabel className='font-semibold'>Dose Type <span className='text-muted-foreground text-sm font-normal'>(Regular, Booster, or Annual)</span></FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
                                 <SelectTrigger>
@@ -338,6 +317,41 @@ export default function UpdateDoctorVaccines({
                                ))}
                               </SelectContent>
                             </Select>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`vaccines.${index}.doses.${doseIndex}.doseCount`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className='font-semibold'>Dose Count <span className='text-muted-foreground text-sm font-normal'>(1 is the first dose or unique dose, 2 is the second dose, etc.)</span></FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                {...field} 
+                                value={field.value ?? ''} 
+                                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)} 
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`vaccines.${index}.doses.${doseIndex}.maxAge`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className='font-semibold'>Max Age <span className='text-muted-foreground text-sm font-normal'>(Max age in months to receive the dose, 0 is at birth)</span></FormLabel>
+                            <FormControl>
+                              {/* <Input type="number" {...field} onChange={(e) => field.onChange(parseInt(e.target.value))} /> */}
+                              <Input 
+                                type="number" 
+                                {...field} 
+                                value={field.value ?? ''} 
+                                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)} 
+                              />
+                            </FormControl>
                           </FormItem>
                         )}
                       />
