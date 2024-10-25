@@ -5,6 +5,9 @@ import { cookies } from "next/headers";
 import { redirect } from 'next/navigation';
 // import supabase from '@/utils/supabase-ssr';
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { Toaster } from "@/components/ui/sonner"
+
+
 
 const Layout = async ({children, params: {  patientId }}) => {
   // const supabase = createServerComponentClient({cookies})
@@ -33,6 +36,7 @@ const Layout = async ({children, params: {  patientId }}) => {
       <Sidenav />
       <div className="h-full w-full overflow-y-scroll px-8 py-4">
         {children}
+        <Toaster richColors position="top-center" toastOptions={{ duration: 10000 }} closeButton={true} />
       </div>
     </div>
   )

@@ -9,6 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip"
+import { toast } from 'sonner'
 
 export function DeleteVaccinComponent({ vaccineId }: { vaccineId: string }) {
   const [isDeleting, setIsDeleting] = useState(false)
@@ -16,7 +17,12 @@ export function DeleteVaccinComponent({ vaccineId }: { vaccineId: string }) {
   const handleDelete = async () => {
     setIsDeleting(true)
     try {
-      await deleteVaccine(vaccineId)
+      const res = await deleteVaccine(vaccineId)
+      if (res.success) {
+        toast.success('Vaccine deleted successfully')
+      } else {
+        toast.error(res.error)
+      }
     } catch (error) {
       console.error('Failed to delete vaccine:', error)
     } finally {

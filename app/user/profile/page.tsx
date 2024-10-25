@@ -13,7 +13,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from '@/components/ui/button';
 import { Info, X } from 'lucide-react';
 import { DeleteVaccinComponent } from '@/components/deleteVaccinComponent';
-
+import { numberToOrdinal } from '@/lib/utils';
 async function getDoctor(doctorId){
   const doctor = await prisma.doctor.findUnique({
     where:{
@@ -54,15 +54,6 @@ const ProfilePage = async () => {
   const doctorId = session?.user?.id
   const doctor = await getDoctor(doctorId)
 
-  function numberToOrdinal(num: number): string {
-    const ordinals = ['First', 'Second', 'Third', 'Fourth', 'Fifth'];
-    
-    if (num >= 1 && num <= 5) {
-      return ordinals[num - 1];
-    } else {
-      return 'Number out of range';
-    }
-  }
   return (
     <div className='flex flex-col w-full'>
       <div className="w-full h-auto shadow-md rounded-lg p-4 bg-slate-50 ">
@@ -81,7 +72,7 @@ const ProfilePage = async () => {
           <p className="text-sm font-semibold col-span-2">Address: <span className="font-normal">{doctor?.address}</span></p>
         </div>
       </div>
-      {/* <div className="w-full h-auto shadow-md rounded-lg p-4 bg-slate-50 mt-4">
+      <div className="w-full h-auto shadow-md rounded-lg p-4 bg-slate-50 mt-4">
         <div className="flex flex-row items-center justify-between mb-4">
           <p className="text-sm font-semibold">Tracked Vaccines</p>
           {doctor?.trackedVaccines.length ? <Link href="/user/profile/add-vaccines" className="text-sm font-semibold text-white bg-blue-500 rounded-full px-4 py-2">Update Vaccines</Link> : <Link href="/user/profile/add-vaccines" className="text-sm font-semibold text-white bg-blue-500 rounded-full px-4 py-2">Add Vaccines</Link>}
@@ -93,10 +84,10 @@ const ProfilePage = async () => {
                 <DeleteVaccinComponent vaccineId={vaccine.id} />
                 <Popover>
                   <PopoverTrigger>
-                    <Button variant="ghost" size="sm" className="h-auto px-4 py-2 space-x-4">
-                      <Info className="h-4 w-4" />
-                      <p className="text-sm font-semibold">{vaccine.name}</p>
-                    </Button>
+                    <div className="h-auto px-4 py-2 space-x-2 bg-white hover:bg-slate-100 rounded-md flex flex-row items-start cursor-pointer">
+                      <Info className="h-3 w-3 mt-1" />
+                      <p className="text-sm font-semibold text-left">{vaccine.name}</p>
+                    </div>
                   </PopoverTrigger>
                   <PopoverContent>
                     <div className="pl-4 py-2">
@@ -104,7 +95,7 @@ const ProfilePage = async () => {
                       {vaccine.doses.map((dose) => (
                         <div key={dose.id} className="py-2">
                           {dose?.doseCount && <p className="text-sm">Dose count: <span className="font-semibold">{numberToOrdinal(dose.doseCount)}</span></p>}
-                          <p className="text-sm">Dose type: {dose.doseType}</p>
+                          <p className="text-sm">Dose type: {dose.doseType.charAt(0).toUpperCase() + dose.doseType.slice(1)}</p>
                           {dose?.maxAge !== null && <p className="text-sm">Max age: {dose.maxAge == 0 ? `At birth` : `${dose.maxAge} months`}</p>}
                         </div>
                       ))}
@@ -115,7 +106,7 @@ const ProfilePage = async () => {
             </Card>
           ))}
         </div>
-      </div> */}
+      </div>
     </div>
   )
 }

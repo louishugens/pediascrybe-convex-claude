@@ -134,8 +134,8 @@ export default function UpdateDoctorVaccines({
         isCustom: false,
         doses: vaccine.doses.map(dose => ({
           id: dose.id,
-          doseCount: dose.doseCount ?? 0,
-          maxAge: dose.maxAge ?? 0,
+          doseCount: dose.doseCount,
+          maxAge: dose.maxAge,
           doseType: dose.doseType,
         })),
       })
@@ -155,8 +155,8 @@ export default function UpdateDoctorVaccines({
         isCustom: false,
         doses: selectedVaccine.doses.map(dose => ({
           id: `new-dose-${Date.now()}-${dose.id}`,
-          doseCount: dose.doseCount ?? 0,
-          maxAge: dose.maxAge ?? 0,
+          doseCount: dose.doseCount,
+          maxAge: dose.maxAge,
           doseType: dose.doseType,
         })),
       })
@@ -190,10 +190,15 @@ export default function UpdateDoctorVaccines({
           })),
         }));
       await updateVaccines(updatedVaccines);
+      toast.success('Vaccines updated successfully')
       router.push('/user/profile')
     } catch (error) {
-      console.error('Error saving vaccines:', error)
-      toast.error('Error saving vaccines')
+      if (error.success) {
+        toast.success('Vaccines updated successfully')
+        router.push('/user/profile')
+      } else {
+        toast.error(error.error)
+      }
     } finally {
       setIsLoading(false)
     }
@@ -218,7 +223,7 @@ export default function UpdateDoctorVaccines({
           Add New Vaccine
         </Button>
       </div>
-      <div className="mb-6">
+      <div className="mb-6 px-4 space-y-2">
         <Label htmlFor="referenceVaccine">Add from reference vaccines</Label>
         <Select onValueChange={handleReferenceVaccineSelection}>
           <SelectTrigger id="referenceVaccine">
@@ -284,7 +289,7 @@ export default function UpdateDoctorVaccines({
                   />
                   <h2 className="text-sm font-medium mt-6">Doses</h2>
                   {field.doses.map((dose, doseIndex) => (
-                    <div key={dose.id} className=" space-y-2">
+                    <div key={dose.id} className=" space-y-2 mt-4">
                       <div className="flex items-center justify-between">
                         <h4 className="text-sm font-medium">Dose</h4>
                         <Button

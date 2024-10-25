@@ -54,6 +54,7 @@ async function Patient({params: {patientId }}) {
       <div className="flex flex-col w-full items-center">
         <div className="flex flex-row w-full gap-4">
           <Link href={`/user/patients/${patientId}/charts`} className="mt-4 text-sm bg-blue-500 text-slate-100 rounded-full px-4 py-2 self-start">Growth Charts</Link>
+          <Link href={`/user/patients/${patientId}/vaccines`} className="mt-4 text-sm bg-blue-500 text-slate-100 rounded-full px-4 py-2 self-start">Vaccines</Link>
           <Link href={`/user/patients/${patientId}/reports`} className="mt-4 text-sm bg-blue-500 text-slate-100 rounded-full px-4 py-2 self-start">Reports, Certificates and Reference Notes</Link>
           <Link href={`/user/patients/${patientId}/receipts`} className="mt-4 text-sm bg-blue-500 text-slate-100 rounded-full px-4 py-2 self-start">Receipts</Link>
         </div>

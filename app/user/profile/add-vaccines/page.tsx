@@ -47,7 +47,7 @@ export default async function AddVaccines() {
     )
     
   return (
-    <div className='h-screen mb-8 pb-4 overflow-y-auto'>
+    <div className='h-screen mb-8 pb-4 overflow-y-auto '>
       <UpdateDoctorVaccines doctorVaccines={doctorVaccines} referenceVaccines={referenceVaccines} doctorId={doctorId} />
     </div>
   )

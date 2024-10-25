@@ -99,7 +99,7 @@ model Patient {
   Doctor            Doctor?             @relation(fields: [doctorId], references: [id])
   reports           Report[]
   receipts          Receipt[]
-  VaccinationRecord VaccinationRecord[]
+  VaccinationRecords VaccinationRecord[]
 }
 
 model documents {
@@ -262,8 +262,7 @@ model VaccinationRecord {
   lotNumber    String
   dose         Dose     @relation(fields: [doseId], references: [id])
   doseId       String
-
-  @@unique([patientId, vaccinId])
+  @@unique([patientId, vaccinId, doseId])
 }
 
 model Dose {
@@ -271,7 +270,7 @@ model Dose {
   doseCount         Int?
   maxAge            Int?
   doseType          DoseType
-  Vaccin            Vaccin?             @relation(fields: [vaccinId], references: [id])
+  Vaccin            Vaccin?             @relation(fields: [vaccinId], references: [id], onDelete: Cascade)
   vaccinId          String?
   VaccinationRecord VaccinationRecord[]
 }
@@ -310,5 +309,6 @@ enum DoseType {
   regular
   annual
   booster
+  unique
 }
 

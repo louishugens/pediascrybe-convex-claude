@@ -1,9 +1,10 @@
 'use server'
 import supabase from "@/utils/supabase-ssr"
-import { Dose, Vaccin } from "@prisma/client"
+import { Dose, Vaccin, VaccinationRecord } from "@prisma/client"
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import prisma from "@/utils/prisma"
+import { Prisma } from '@prisma/client'
 
 export async function refresh(paths: string[]) {
   for (const path of paths) {
@@ -173,9 +174,62 @@ export async function updateVaccines(vaccines: (Vaccin & {doses: Dose[]})[]) {
 
 export async function deleteVaccine(vaccineId: string) {
   const doctorId = await verifySession()
-  await prisma.vaccin.delete({
-    where: { id: vaccineId, doctorId },
-    include: { doses: true }, // Include doses to ensure they are deleted
+  
+  try {
+    await prisma.vaccin.delete({
+      where: { id: vaccineId, doctorId },
+      include: { doses: true },
+    })
+
+    revalidatePath('/user/profile')
+    return { success: true }
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+      return {
+        success: false,
+        error: "Cannot delete this vaccine as it has associated vaccination records."
+      }
+    }
+    console.error('Error deleting vaccine:', error)
+    return {
+      success: false,
+      error: "An unexpected error occurred while deleting the vaccine."
+    }
+  }
+}
+
+export async function addVaccinationRecord(vaccinationRecord: Omit<VaccinationRecord, 'id'>) {
+  const doctorId = await verifySession()
+  if(!doctorId) {
+    redirect('/login')
+  }
+  
+  try {
+    const newVaccinationRecord = await prisma.vaccinationRecord.create({
+      data: vaccinationRecord,
+    })
+    
+    revalidatePath(`/user/patients/${newVaccinationRecord.patientId}/vaccines`)
+    return { success: true, data: newVaccinationRecord }
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      return { 
+        success: false, 
+        error: 'This dose for this vaccine has already been recorded for this patient.' 
+      }
+    }
+    // Handle other errors
+    console.error('Error adding vaccination record:', error)
+    return { 
+      success: false, 
+      error: 'An unexpected error occurred while adding the vaccination record.' 
+    }
+  }
+}
+
+export async function deleteVaccinationRecord(vaccinationRecordId: string, patientId: string) {
+  await prisma.vaccinationRecord.delete({
+    where: { id: vaccinationRecordId },
   })
-  revalidatePath('/user/profile')
+  revalidatePath(`/user/patients/${patientId}/vaccines`)
 }
