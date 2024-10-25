@@ -18,7 +18,7 @@ export function VaccineRecordsPrint({ records }: VaccineRecordsPrintProps) {
 
 
   return (
-    <Table className="text-xs">
+    <Table className="text-[10px]">
       <TableHeader>
         <TableRow>
           <TableHead>Name</TableHead>

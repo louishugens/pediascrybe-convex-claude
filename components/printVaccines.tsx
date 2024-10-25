@@ -4,7 +4,7 @@ import {useRef} from 'react'
 import { format } from 'date-fns'
 import { useReactToPrint } from 'react-to-print';
 import Link from 'next/link';
-import PrintHead from '@/components/printHeader';
+import PrintHead from '@/components/printHeaderVax';
 import { Doctor, Patient, VaccinationRecord, Vaccin, Dose } from '@prisma/client';
 import { VaccineRecordsPrint } from '@/components/vaccineRecordsPrint';
 
@@ -25,7 +25,7 @@ const Print = ({doctor, patient, vaccines}: Props) => {
   const componentRef = useRef(null);
   const handlePrint = useReactToPrint({
     content: () => componentRef.current,
-    documentTitle: `${string}_${patient.firstname}_${patient.lastname}_${format(new Date(), 'yyyy-MM-dd')}`
+    documentTitle: `${string}_${patient.firstname}_${patient.lastname}_${format(new Date(), 'yyyy-MM-dd-mm-ss')}`
   });
 
   return (
@@ -41,12 +41,12 @@ const Print = ({doctor, patient, vaccines}: Props) => {
       >
         <PrintHead doctor={doctor} />
         <div className="py-4 grow text-sm">
-          <div className="flex flex-row justify-between flex-none">
-            <p className="font-bold"><span className='font-light'>Patient: </span>{`${patient.firstname} ${patient.lastname}`}</p>
-            <p className="font-semibold"><span className='font-light'>Date: </span>{format(new Date(), 'yyy-MM-dd')}</p>
+          <div className="flex flex-row justify-between">
+            <p className="font-medium"><span className='font-light'>Patient: </span>{`${patient.firstname} ${patient.lastname}`}</p>
+            <p className='font-bold'>Vaccination Records</p>
+            <p className="font-medium"><span className='font-light'>Date: </span>{format(new Date(), 'yyy-MM-dd')}</p>
           </div>
-          <div className="flex flex-col h-full ">
-            <p className='text-lg font-semibold text-center py-4 flex-none'>Vaccination Records</p>
+          <div className="flex flex-col h-full mt-8">
             <VaccineRecordsPrint records={vaccines} />
           </div>
         </div>
