@@ -30,6 +30,9 @@ const formSchema = z.object({
   manufacturer: z.string().min(1, 'Manufacturer is required'),
   expiration: z.date(),
   doseId: z.string(),
+  dosage: z.string(),
+  route: z.string(),
+  site: z.string(),
 })
 
 // Infer the form values type from the schema
@@ -51,6 +54,9 @@ export default function AddVaccineForm({ vaccines, patientId }: { vaccines: (Vac
       expiration: new Date(),
       manufacturer: '',
       doseId: selectedDose?.id,
+      dosage: '',
+      route: '',
+      site: '',
     },
   })
 
@@ -167,13 +173,51 @@ export default function AddVaccineForm({ vaccines, patientId }: { vaccines: (Vac
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="manufacturer"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Manufacturer</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="dosage"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Vaccine Dosage</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="route"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Vaccine Administration Route</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="site"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Vaccine Administration Site</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>

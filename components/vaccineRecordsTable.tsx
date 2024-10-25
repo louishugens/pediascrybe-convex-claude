@@ -1,10 +1,11 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { VaccinationRecord, Dose, Vaccin } from "@prisma/client"
-import { Button } from "./ui/button";
-import { TrashIcon } from "lucide-react";
+import { PencilIcon, EyeIcon } from "lucide-react";
+import Link from "next/link";
 import { deleteVaccinationRecord } from "@/app/actions";
 import VaccineRecordDeleteButton from "./vaccineRecordDeleteButton";
 import { numberToOrdinal } from "@/lib/utils";
+import VaccineRecordView from "./vaccineRecordView";
 type VaccineRecordWithDetails = VaccinationRecord & {
   vaccin: Vaccin;
   dose: Dose;
@@ -46,7 +47,13 @@ export function VaccineRecordsTable({ records }: VaccineRecordsTableProps) {
             <TableCell>{record.dose.doseType.charAt(0).toUpperCase() + record.dose.doseType.slice(1)}</TableCell>
             <TableCell>{record.dose.doseCount ? numberToOrdinal(record.dose.doseCount) : ''}</TableCell>
             <TableCell>
-              <VaccineRecordDeleteButton recordId={record.id} patientId={record.patientId} />
+              <div className="flex flex-row gap-2">
+                <VaccineRecordView vaccinationRecord={record} />
+                <Link href={`/user/patients/${record.patientId}/vaccines/${record.id}`} className="text-black">
+                  <PencilIcon className="w-4 h-4" />
+                </Link>
+                <VaccineRecordDeleteButton recordId={record.id} patientId={record.patientId} />
+              </div>
             </TableCell>
           </TableRow>
         ))}

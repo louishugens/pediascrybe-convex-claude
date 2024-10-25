@@ -239,3 +239,17 @@ export async function deleteVaccinationRecord(vaccinationRecordId: string, patie
     return { success: false, error: 'An unexpected error occurred while deleting the vaccination record.' }
   }
 }
+
+export async function updateVaccinationRecord(vaccinationRecord: VaccinationRecord) {
+  try {
+    await prisma.vaccinationRecord.update({
+      where: { id: vaccinationRecord.id },
+      data: vaccinationRecord,
+    })
+    revalidatePath(`/user/patients/${vaccinationRecord.patientId}/vaccines`)
+    return { success: true }
+  } catch (error) {
+    console.error('Error updating vaccination record:', error)
+    return { success: false, error: 'An unexpected error occurred while updating the vaccination record.' }
+  }
+}   

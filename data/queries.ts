@@ -79,3 +79,18 @@ export async function getDoctorTrackedVaccines() {
   })
   return doctor?.trackedVaccines
 }
+
+export async function getVaccinationRecord(vaccinationRecordId: string) {
+  const doctorId = await verifySession()
+  if(!doctorId) {
+    redirect('/login')
+  }
+  const vaccinationRecord = await prisma.vaccinationRecord.findUnique({
+    where: { id: vaccinationRecordId },
+    include: {
+      vaccin: true,
+      dose: true
+    },
+  })
+  return vaccinationRecord
+}

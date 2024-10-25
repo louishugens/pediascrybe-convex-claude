@@ -25,18 +25,22 @@ const Print = ({doctor, patient, vaccines}: Props) => {
   const componentRef = useRef(null);
   const handlePrint = useReactToPrint({
     content: () => componentRef.current,
-    documentTitle: `${string}_${patient.firstname}_${patient.lastname}_${format(new Date(), 'yyy-MM-dd')}`
+    documentTitle: `${string}_${patient.firstname}_${patient.lastname}_${format(new Date(), 'yyyy-MM-dd')}`
   });
 
-
   return (
-    <div className='pt-4 h-auto relative '>
+    <div className='pt-4 h-auto relative'>
+      <style type="text/css" media="print">{`
+        @page {
+          size: landscape;
+        }
+      `}</style>
       <div 
-        className="w-full min-h-screen shadow-md rounded-lg px-16 py-8 flex flex-col  break-after-page relative" 
+        className="w-full min-h-screen shadow-md rounded-lg px-8 py-8 flex flex-col break-after-page relative" 
         ref={componentRef}
       >
         <PrintHead doctor={doctor} />
-        <div className="py-4 grow">
+        <div className="py-4 grow text-sm">
           <div className="flex flex-row justify-between flex-none">
             <p className="font-bold"><span className='font-light'>Patient: </span>{`${patient.firstname} ${patient.lastname}`}</p>
             <p className="font-semibold"><span className='font-light'>Date: </span>{format(new Date(), 'yyy-MM-dd')}</p>
@@ -47,8 +51,8 @@ const Print = ({doctor, patient, vaccines}: Props) => {
           </div>
         </div>
         <div className="flex flex-row-reverse">
-          <div className="flex flex-row w-2/5">
-            <p>Signature:</p>
+          <div className="flex flex-row w-1/4">
+            <p className='text-sm'>Signature:</p>
             <div className=" flex-1 h-px ml-1 mt-4 bg-black"></div>
           </div>
         </div>
@@ -64,5 +68,3 @@ const Print = ({doctor, patient, vaccines}: Props) => {
 }
 
 export default Print
-
-
