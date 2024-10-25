@@ -228,8 +228,14 @@ export async function addVaccinationRecord(vaccinationRecord: Omit<VaccinationRe
 }
 
 export async function deleteVaccinationRecord(vaccinationRecordId: string, patientId: string) {
-  await prisma.vaccinationRecord.delete({
-    where: { id: vaccinationRecordId },
-  })
-  revalidatePath(`/user/patients/${patientId}/vaccines`)
+  try {
+    await prisma.vaccinationRecord.delete({
+      where: { id: vaccinationRecordId },
+    })
+    revalidatePath(`/user/patients/${patientId}/vaccines`)
+    return { success: true }
+  } catch (error) {
+    console.error('Error deleting vaccination record:', error)
+    return { success: false, error: 'An unexpected error occurred while deleting the vaccination record.' }
+  }
 }
