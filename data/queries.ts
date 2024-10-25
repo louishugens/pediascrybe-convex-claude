@@ -13,6 +13,33 @@ export async function verifySession() {
   return data.user
 }
 
+export async function getDoctor() {
+  const user = await verifySession()
+  if (!user) {
+    redirect('/login')
+  }
+
+  const doctor = await prisma.doctor.findUnique({
+    where: {
+      id: user.id,
+    },
+  })
+  return doctor
+}
+
+
+export async function getPatient(patientId: string) {
+  const user = await verifySession()
+  if (!user) {
+    redirect('/login')
+  }
+  const patient = await prisma.patient.findUnique({
+    where: {
+      id: patientId,
+    },
+  })
+  return patient
+}
 
 export async function getPatientVaccineRecords(patientId: string) {
   const user = await verifySession()

@@ -260,6 +260,7 @@ model VaccinationRecord {
   vaccinId     String
   manufacturer String
   lotNumber    String
+  expiration   DateTime
   dose         Dose     @relation(fields: [doseId], references: [id])
   doseId       String
   @@unique([patientId, vaccinId, doseId])

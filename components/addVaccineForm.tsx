@@ -28,6 +28,7 @@ const formSchema = z.object({
   date: z.date(),
   notes: z.string().nullable(),
   manufacturer: z.string().min(1, 'Manufacturer is required'),
+  expiration: z.date(),
   doseId: z.string(),
 })
 
@@ -47,6 +48,7 @@ export default function AddVaccineForm({ vaccines, patientId }: { vaccines: (Vac
       patientId,
       date: new Date(),
       notes: null,
+      expiration: new Date(),
       manufacturer: '',
       doseId: selectedDose?.id,
     },
@@ -112,105 +114,149 @@ export default function AddVaccineForm({ vaccines, patientId }: { vaccines: (Vac
             selectedDose && <Form {...form} >
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 ">
               <FormField
-              control={form.control}
-              name="date"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Date Administered</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-[240px] pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) =>
-                          date > new Date() || date < new Date("1900-01-01")
-                        }
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Date Administered</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-[240px] pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) =>
+                            date > new Date() || date < new Date("1900-01-01")
+                          }
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="lotNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Lot Number</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="lotNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Lot Number</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="manufacturer"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Manufacturer</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="expiration"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Vaccine Expiration Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-[240px] pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) =>
+                            date < new Date() 
+                          }
+                          initialFocus
+                          fromYear={new Date().getFullYear()}
+                          toYear={new Date().getFullYear() + 30}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="manufacturer"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Manufacturer</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className='flex flex-col gap-2'>
-              <p className='text-sm font-medium'>Dose Type </p>
-              <p className='text-sm'>{selectedDose?.doseType.charAt(0).toUpperCase() + selectedDose?.doseType.slice(1)}</p>
-            </div>
-
-           { selectedDose?.doseCount && <div className='flex flex-col gap-2'>
-                <p className='text-sm font-medium'>Dose Count </p>
-                <p className='text-sm'>{numberToOrdinal(selectedDose.doseCount)}</p>
+              <div className='flex flex-col gap-2'>
+                <p className='text-sm font-medium'>Dose Type </p>
+                <p className='text-sm'>{selectedDose?.doseType.charAt(0).toUpperCase() + selectedDose?.doseType.slice(1)}</p>
               </div>
-            }
 
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      {...field} 
-                      value={field.value || ''} 
-                      onChange={(e) => field.onChange(e.target.value || null)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              { 
+                selectedDose?.doseCount && <div className='flex flex-col gap-2'>
+                  <p className='text-sm font-medium'>Dose Count </p>
+                  <p className='text-sm'>{numberToOrdinal(selectedDose.doseCount)}</p>
+                </div>
+              }
 
-            <Button type="submit" disabled={form.formState.isSubmitting}> {form.formState.isSubmitting ? <BeatLoader size={10} /> : 'Add Vaccination Record'}</Button>
-          </form>
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        {...field} 
+                        value={field.value || ''} 
+                        onChange={(e) => field.onChange(e.target.value || null)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button type="submit" disabled={form.formState.isSubmitting}> {form.formState.isSubmitting ? <BeatLoader size={10} /> : 'Add Vaccination Record'}</Button>
+            </form>
           </Form>
           }
         </>
