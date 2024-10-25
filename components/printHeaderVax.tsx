@@ -6,25 +6,27 @@ const PrintHead = ({doctor}) => {
     <div className="flex flex-col items-start py-2 w-full border-b-2 border-black">
       <h3 className=' text-2xl font-bold'><span className=' font-light'>Dr </span>{`${doctor.firstname} ${doctor.lastname}`}</h3>
       <h4 className=' text-xl font-light italic'>{doctor.spec}</h4>
-      <div className="flex flex-row">
-        <p className="font-light text-sm flex flex-row">
-          <PhoneIcon className="h-3 w-3 mt-1"/>
+      <div className="flex flex-row text-xs">
+        <p className="font-light flex flex-row">
+          <PhoneIcon className="h-3 w-3 ml-1 mt-1"/>
         <span>
         : {doctor.phone}, &nbsp; 
         </span>
         </p>
         <p className="font-light text-sm flex flex-row">
-          <EnvelopeIcon className="h-3 w-3 mt-1"/>
+          <EnvelopeIcon className="h-3 w-3 ml-1 mt-1"/>
           <span>
-            : {doctor.email}
+            : {doctor.email}, &nbsp;
           </span>
         </p>
-      {doctor.address && <p className='font-light text-sm flex flex-row'>
-          <MapPinIcon className="h-3 w-3 mt-1"/>
+       {
+        doctor.address && <p className='font-light text-sm flex flex-row'>
+          <MapPinIcon className="h-3 w-3 ml-1 mt-1"/>
           <span>
             : {doctor.address}
           </span>
-        </p>}
+        </p>
+        }
       </div>
     </div>
    );
