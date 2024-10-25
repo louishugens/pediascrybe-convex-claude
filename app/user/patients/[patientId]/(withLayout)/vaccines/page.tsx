@@ -23,9 +23,13 @@ export default async function Page({ params }: { params: { patientId: string } }
             <Link href={`/user/patients/${params.patientId}/vaccines/add-record`} className='text-black'>
               <PlusIcon className='w-4 h-4' />
             </Link>
-            <Link href={`/user/patients/${params.patientId}/vaccines/print`} className='text-black'>
-              <PrinterIcon className='w-4 h-4' />
-            </Link>
+            {
+              vaccineRecords.length > 0 && (
+                <Link href={`/user/patients/${params.patientId}/vaccines/print`} className='text-black'>
+                  <PrinterIcon className='w-4 h-4' />
+                </Link>
+              )
+            }
           </div>
         </div>
         <div className=''>
