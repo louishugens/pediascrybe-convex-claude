@@ -21,6 +21,7 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
     head: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null).min(0, "Head circumference can't be less than 0"),
     motif: yup.string().nullable(true),
     findings: yup.string().nullable(true),
+    otherRemarks: yup.string().nullable(true),
     arm: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null).min(0, "Arm length can't be less than 0"),
     sao2: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null).max(100, "Percentage can't be more than 100").min(0, "Percentage can't be less than 0"),
     temperature: yup.number().nullable(true).transform((_, val) => val ? Number(val) : null),
@@ -61,6 +62,7 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
       systolic: null,
       diastolic: null,
       temperature: null,
+      otherRemarks: null,
     },
     resolver: yupResolver(schema)
   });
@@ -145,8 +147,8 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
     setLoading(true)
  
     try{
-      const {height, weight, head, motif, findings, arm, sao2, pulse, respiratory, systolic, diastolic, temperature} = values
-      const body = {height, weight, head, motif, findings, arm, sao2, temperature, pulse, respiratory, systolic, diastolic, patientId, doctorId}
+      const {height, weight, head, motif, findings, arm, sao2, pulse, respiratory, systolic, diastolic, temperature, otherRemarks} = values
+      const body = {height, weight, head, motif, findings, arm, sao2, temperature, pulse, respiratory, systolic, diastolic, otherRemarks, patientId, doctorId}
       const response = await fetch('/api/patients/addAppointment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -320,6 +322,16 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
                 {...register('findings')}
               />
               <p className='px-4 pt-1 text-sm text-red-600'>{errors.findings?.message}</p>
+            </label>
+            <label className="flex flex-col mb-4 h-40 gap-y-2">
+              <span className="font-medium">Other remarks</span>
+              <textarea
+                placeholder="Any other remarks about the patient?"
+                className="placeholder:italic placeholder:text-sm bg-white shadow-md h-40 rounded-md py-2 px-4 border-none"
+                type="text"
+                {...register('otherRemarks')}
+              />
+              <p className='px-4 pt-1 text-sm text-red-600'>{errors.otherRemarks?.message}</p>
             </label>
             {/* <label className="flex flex-col mb-4 h-40">
               <span className="font-medium">Prescription (Rx)</span>

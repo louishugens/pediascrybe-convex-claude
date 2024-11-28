@@ -114,6 +114,10 @@ const AppointmentPageComponent = ({appointment, patientId}: AppointmentPageCompo
           <p className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.findings}</p>
         </div>
         <div className="flex flex-col">
+          <p className="font-semibold mb-2">Other remarks</p>
+          <p className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.otherRemarks}</p>
+        </div>
+        <div className="flex flex-col">
           <p className="font-semibold mb-2">Prescription</p>
           {/* <div className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{Array.isArray(medications) && medications.map((medication, index) =>{
             const typedMedication = medication as unknown as Medication

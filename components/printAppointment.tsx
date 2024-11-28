@@ -90,6 +90,10 @@ ref={componentRef}>
                 <p className="w-full h-auto px-2 pt-0 pb-2 mt-1">{appointment?.findings}</p>
               </div>
               <div className="flex flex-col">
+                <p className="font-semibold">Other remarks</p>
+                <p className="w-full h-auto px-2 pt-0 pb-2 mt-1">{appointment?.otherRemarks}</p>
+              </div>
+              <div className="flex flex-col">
                 <p className="font-semibold">Prescription</p>
                 <div className="w-full h-auto px-2 pt-0 pb-2 mt-1">
                   {medication?.map((medication, index) =>(
