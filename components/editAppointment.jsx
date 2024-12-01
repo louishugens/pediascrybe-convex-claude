@@ -41,6 +41,7 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
       head: appointment.head || null,
       motif: appointment.motif || null,
       findings: appointment.findings || null,
+      otherRemarks: appointment.otherRemarks || null,
       arm: appointment.arm || null,
       sao2: appointment.sao2 || null,
       temperature: appointment.temperature || null,
@@ -60,8 +61,8 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
     setLoading(true)
  
     try{
-      const {height, weight, head, motif, findings, arm, sao2, temperature, pulse, respiratory, systolic, diastolic} = values
-      const body = {height, weight, head, motif, findings, arm, sao2, temperature, pulse, respiratory, systolic, diastolic, appointmentId: appointment.id}
+      const {height, weight, head, motif, findings, otherRemarks, arm, sao2, temperature, pulse, respiratory, systolic, diastolic} = values
+      const body = {height, weight, head, motif, findings, otherRemarks, arm, sao2, temperature, pulse, respiratory, systolic, diastolic, appointmentId: appointment.id}
       await fetch('/api/patients/updateAppointment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -240,6 +241,16 @@ const EditAppointment = ({appointment, doctorId, patientId}) => {
               {...register('findings')}
             />
             <p className='px-4 pt-1 text-sm text-red-600'>{errors.findings?.message}</p>
+          </label>
+          <label className="flex flex-col mb-4 h-40">
+            <span className="font-medium">Other remarks</span>
+            <textarea
+              placeholder="Any other remarks about the patient?"
+              className="placeholder:italic placeholder:text-sm bg-white shadow-md h-40 rounded-md py-2 px-4 border-none"
+              type="text"
+              {...register('otherRemarks')}
+            />
+            <p className='px-4 pt-1 text-sm text-red-600'>{errors.otherRemarks?.message}</p>
           </label>
         </div>
 
