@@ -1,6 +1,6 @@
 'use client'
 import {useState} from 'react'
-import { X, FileIcon } from 'lucide-react'
+import { X, FileIcon, VideoIcon } from 'lucide-react'
 import Image from 'next/image'
 import { BeatLoader } from 'react-spinners'
 import toast, { Toaster } from 'react-hot-toast'
@@ -32,6 +32,8 @@ const UploadedFile = ({file}) => {
       toast.error(err.message)
     }
   } 
+
+  console.log(file)
 
 return(
   <div  className="flex flex-col items-center">
@@ -67,6 +69,28 @@ return(
               />
             </div>
           }
+        </div>
+      :
+      file.fileType === 'VIDEO'
+      ?
+        <div className="relative h-20 w-20">
+          <VideoIcon className="h-20 w-20 fill-muted stroke-primary stroke-1" />
+          <button
+            onClick={deleteFile}
+            className="bg-red-500 text-white p-1 rounded-full absolute -top-2 -right-2 shadow-sm"
+            type="button"
+          >
+            <X className="h-3 w-3" />
+          </button>
+          {loading && (
+            <div className="absolute top-0 left-0 w-20 h-20 bg-white/70">
+              <BeatLoader
+                color={color}
+                size={8}
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+              />
+            </div>
+          )}
         </div>
       :
       <>

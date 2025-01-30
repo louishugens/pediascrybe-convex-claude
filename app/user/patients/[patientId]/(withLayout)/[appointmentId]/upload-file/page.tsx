@@ -41,7 +41,11 @@ export default function UploadPage({params: {patientId, appointmentId}}) {
 
   async function onSubmit(data: z.infer<typeof schema>) {
     setLoading(true)
-    const fileType = data.url?.split('.').pop() === 'pdf' ? 'PDF' : 'IMAGE'
+    const extension = data.url?.split('.').pop()?.toLowerCase() ?? ''
+    const videoFormats = ['mp4', 'mov', 'avi', 'wmv', 'flv']
+    const isVideo = videoFormats.includes(extension)
+    const fileType = isVideo ? 'VIDEO' : 
+                    extension === 'pdf' ? 'PDF' : 'IMAGE'
     const { url, name } = data
 
       const res = await fetch(`/api/patients/saveFile`, {
@@ -81,7 +85,9 @@ export default function UploadPage({params: {patientId, appointmentId}}) {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="w-2/3 h-full">
           <h3 className="text-2xl font-bold mb-4 text-center">Upload a file</h3>
-          <p className="text-center text-muted-foreground mb-4">Max file size: 4mb</p>
+          <p className="text-center text-muted-foreground mb-4">
+            Supported formats: PDF, Images, Videos (MP4, MOV, AVI, WMV, FLV) • Max size: 4MB
+          </p>
           <FormField
             name="url"
             control={form.control}

@@ -1,4 +1,4 @@
-'use client'
+
 import toast, { Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { X, FileIcon } from 'lucide-react';
@@ -9,14 +9,25 @@ import { UploadDropzone } from "@/lib/uploadthing"
 import "@uploadthing/react/styles.css"
 import { url } from 'inspector';
 
+const videoMimeTypes = {
+  mp4: 'video/mp4',
+  mov: 'video/quicktime',
+  avi: 'video/x-msvideo',
+  webm: 'video/webm'
+} as const;
+
 interface FileUploadProps {
   endpoint: "appointmentFile",
   value: string,
   onChange: (url?: string) => void,
 }
 export default function FileUpoad({endpoint, value,  onChange}: FileUploadProps) {
+  const extension = value?.split('.').pop()?.toLowerCase();
+  const isPDF = extension === 'pdf';
+  const isVideo = ['mp4', 'mov', 'avi', 'webm'].includes(extension || '');
+  const fileType = isPDF ? 'PDF' : isVideo ? 'VIDEO' : 'IMAGE';
 
-  const fileType = value?.split('.').pop() === 'pdf' ? 'PDF' : 'IMAGE'
+  console.log(fileType)
 
   // const router = useRouter()
 
@@ -43,13 +54,28 @@ export default function FileUpoad({endpoint, value,  onChange}: FileUploadProps)
 
   if (value && fileType !== "PDF") {
     return (
-      <div className="relative h-20 w-20">
-        <Image
-          fill
-          src={value}
-          alt="Upload"
-          className="rounded-md object-cover"
-        />
+      <div className="relative h-48 w-full">
+        {fileType === 'IMAGE' ? (
+          <Image
+            fill
+            src={value}
+            alt="Upload"
+            className="rounded-md object-cover"
+          />
+        ) : (
+          <video
+            controls
+            className="w-full h-full rounded-md object-contain"
+            playsInline
+            preload="metadata"
+          >
+            <source 
+              src={value} 
+              type={videoMimeTypes[extension as keyof typeof videoMimeTypes]} 
+            />
+            Your browser does not support the video tag.
+          </video>
+        )}
         <button
           onClick={() => onChange("")}
           className="bg-red-500 text-white p-1 rounded-full absolute -top-2 -right-2 shadow-sm"

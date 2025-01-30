@@ -133,6 +133,7 @@ model File {
 enum FileType {
   IMAGE
   PDF
+  VIDEO
 }
 
 model Report {

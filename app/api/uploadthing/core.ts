@@ -45,6 +45,7 @@ export const ourFileRouter = {
   appointmentFile: f({
     image: { maxFileSize: "4MB", maxFileCount: 1 },
     pdf: { maxFileSize: "4MB", maxFileCount: 1 }, 
+    video: { maxFileSize: "32MB", maxFileCount: 1 },
   })
   .middleware(() => getSessionId())
   .onUploadComplete(async ({ metadata, file }) => {
