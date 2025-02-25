@@ -5,13 +5,14 @@ import { useForm } from 'react-hook-form';
 import * as yup from "yup";
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useRouter } from 'next/navigation';
-import supabase from '@/utils/supabase';
-import { useState, useEffect } from "react";
+import { createClient } from '@/utils/supabase/client';
+import { useState, useEffect, use } from "react";
 import BeatLoader  from 'react-spinners/BeatLoader';
 
 
-export default function Home({searchParams}) {
-
+export default function Home(props) {
+  const searchParams = use(props.searchParams);
+  const supabase = createClient()
   let [loading, setLoading] = useState(false);
   let [color, setColor] = useState("#ffffff");
   const [reset, setReset] = useState(searchParams ? true : false)
@@ -30,12 +31,12 @@ export default function Home({searchParams}) {
   //   supabase.auth.onAuthStateChange(async (event, session) => {
   //     if (event == "PASSWORD_RECOVERY") {
   //       // setReset(true)
-        
+
   //       // const newPassword = prompt("What would you like your new password to be?");
   //       // console.log('newPassword :>> ', newPassword);
   //       // const { data, error } = await supabase.auth
   //       //   .updateUser({ password: newPassword })
- 
+
   //       // if (data) alert("Password updated successfully!")
   //       // console.log('data :>> ', data);
   //       // if (error) alert("There was an error updating your password.")

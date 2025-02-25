@@ -3,7 +3,8 @@ import AddVaccineForm from '@/components/addVaccineForm'
 import { getDoctorTrackedVaccines } from '@/data/queries'
 import Link from 'next/link'
 
-export default async function Page({ params }: { params: { patientId: string } }) {
+export default async function Page(props: { params: Promise<{ patientId: string }> }) {
+  const params = await props.params;
 
   const trackedVaccines = await getDoctorTrackedVaccines()
 

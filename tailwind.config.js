@@ -115,7 +115,9 @@ module.exports = {
   				'2': 'hsl(var(--chart-2))',
   				'3': 'hsl(var(--chart-3))',
   				'4': 'hsl(var(--chart-4))',
-  				'5': 'hsl(var(--chart-5))'
+  				'5': 'hsl(var(--chart-5))',
+  				'6': 'hsl(var(--chart-6))',
+  				'7': 'hsl(var(--blue-700))'
   			}
   		},
   		borderRadius: {
@@ -157,10 +159,27 @@ module.exports = {
   			'dark-tremor-dropdown': '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)'
   		},
   		fontSize: {
-  			'tremor-label': ["0.75rem"],
-  			'tremor-default': ["0.875rem", { lineHeight: "1.25rem" }],
-  			'tremor-title': ["1.125rem", { lineHeight: "1.75rem" }],
-  			'tremor-metric': ["1.875rem", { lineHeight: "2.25rem" }]
+  			'tremor-label': [
+  				'0.75rem'
+  			],
+  			'tremor-default': [
+  				'0.875rem',
+  				{
+  					lineHeight: '1.25rem'
+  				}
+  			],
+  			'tremor-title': [
+  				'1.125rem',
+  				{
+  					lineHeight: '1.75rem'
+  				}
+  			],
+  			'tremor-metric': [
+  				'1.875rem',
+  				{
+  					lineHeight: '2.25rem'
+  				}
+  			]
   		}
   	}
   },

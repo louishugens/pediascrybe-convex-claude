@@ -5,20 +5,19 @@ import {useRef} from 'react'
 import { format } from 'date-fns'
 import { useReactToPrint } from 'react-to-print';
 import Link from 'next/link';
-import Chart from './chartPrint'
+// import Chart from './chartPrint'
+import Chart from './chartShad'
 import { differenceInDays } from 'date-fns'
 import PrintHead from './printHeader';
 
 
-const Print = ({type, title, ylabel, xlabel, doctor, patient, formatted}) => {
+const Print = ({type, title, ylabel, xlabel, doctor, patient, data, yUnit, xUnit, mesure}) => {
   const string = 'Chart'
   const componentRef = useRef(null);
   const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
+    contentRef: componentRef,
     documentTitle: `${string}_${type}_${patient.firstname}_${patient.lastname}_${format(new Date(), 'yyy-MM-dd')}`
   });
-
-  // console.log('formatted :>> ', formatted);
 
   const path = type.split('-')[0]
 
@@ -44,7 +43,7 @@ ref={componentRef}>
             <div className="my-auto">
             {/* <p className="grow">Tests:</p> */}
             <div className="grow relative">
-              <Chart sex={patient.sex} type={type} title={title} ylabel={ylabel} xlabel={xlabel} formatted={formatted} name={patient.firstname} />
+              <Chart type={type} title={title} ylabel={ylabel} xlabel={xlabel} data={data} yUnit={yUnit} xUnit={xUnit} name={patient.firstname} patient={patient} showTitle={false} mesure={mesure} />
             </div>
             </div>
             {/* <div className="flex flex-row-reverse">
@@ -69,7 +68,7 @@ ref={componentRef}>
         </div> */}
       </div>
       <div className="flex flex-row justify-between mt-6 pb-2 px-4">
-        <button onClick={handlePrint} className="shadow bg-blue-500 rounded-full py-2 px-4 text-white text-sm">Print this out!</button>
+        <button onClick={ () => handlePrint()} className="shadow bg-blue-500 rounded-full py-2 px-4 text-white text-sm">Print this out!</button>
         <Link href={`/user/patients/${patient.id}/charts${leave}`} className="px-4 py-2 rounded-full bg-slate-200 text-blue-500 text-sm">
           Leave
         </Link>

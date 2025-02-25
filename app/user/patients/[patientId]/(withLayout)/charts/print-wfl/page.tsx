@@ -1,7 +1,7 @@
 import Print from "@/components/printCharts";
 import prisma from "@/utils/prisma";
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { cookies } from "next/headers";
+import { createClient } from '@/utils/supabase/server'
+import { Patient, charts } from "@prisma/client";
 
 async function getAppointment(appointmentId) {
   const appointment = await prisma.appointment.findUnique({
@@ -37,23 +37,27 @@ async function getDoctor(doctorId) {
   return doctor
 }
 
+async function getReferenceData(sex: Patient["sex"]){
+
+  const referenceData = await prisma.charts.findUnique({
+    where:{
+      id: (sex === 'female') ? 'gwfh' : 'bwfh'
+    }
+  })
+  return referenceData
+}
+
 export const dynamic = 'force-dynamic';
 
-const PrintPage = async ({params: {patientId}}) => {
-  // const supabase = createServerClient()
-  const cookieStore = cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  )
-  
+const PrintPage = async props => {
+  const params = await props.params;
+
+  const {
+    patientId
+  } = params;
+
+  const supabase = await createClient()
+
   const {
     data: { session },
   } = await supabase.auth.getSession()
@@ -64,25 +68,62 @@ const PrintPage = async ({params: {patientId}}) => {
   const patient = await getPatient(patientId)
   const doctor = await getDoctor(doctorId)
   const appointments = patient?.appointments
+  const referenceData = await getReferenceData(patient?.sex ?? null);
 
+  let formatted: { length: number; value: number; }[] = []
 
-  let formatted: { category: number; value: number; }[] = [];
-
-  // console.log('appointments :>> ', appointments);
   appointments?.map(appointment =>{
-    if(appointment.height && appointment.weight){
-      
-      let app = {category: Number.parseFloat(appointment.height.toFixed(1)), value: appointment.weight}
-
-      formatted.push(app);
-    }  
+    if(appointment.weight && appointment.height){
+      let app = {length: appointment.height, value: appointment.weight}
+      formatted.push(app)
+    }
   })
+
+  const formatReferenceData = (data: charts, formatted: { length: number; value: number; }[]) => {
+    const format: { 
+      length: number | undefined; 
+      '3rd': number | undefined; 
+      '15th': number | undefined; 
+      '50th': number | undefined; 
+      '85th': number | undefined; 
+      '97th': number | undefined; 
+      [key: string]: number | undefined
+    }[] = [];
+
+    const maxLength = Math.max(
+      (data.p03 as number[])?.length || 0,
+      (data.p15 as number[])?.length || 0,
+      (data.p50 as number[])?.length || 0,
+      (data.p85 as number[])?.length || 0,
+      (data.p97 as number[])?.length || 0
+    );
+
+    // Start at 45 cm and increment by 0.1 cm
+    for (let i = 0; i < maxLength; i++) {
+      const lengthValue = 45 + (i * 0.1);
+      const patientDataForDay = formatted.find(item => Math.abs(item.length - lengthValue) < 0.05);
+
+      format.push({ 
+        length: lengthValue, 
+        '3rd': data.p03?.[i] ?? null, 
+        '15th': data.p15?.[i] ?? null, 
+        '50th': data.p50?.[i] ?? null, 
+        '85th': data.p85?.[i] ?? null, 
+        '97th': data.p97?.[i] ?? null,
+        [patient?.firstname ?? 'patient']: patientDataForDay?.value ?? null
+      });
+    }
+
+    return format;
+  };
+
+  const data = referenceData ? formatReferenceData(referenceData, formatted) : [];
 
 
 
   return (
     <>
-      <Print type="wfl" title="Weight for Lenght" ylabel="Weight (in kg)" xlabel="Height (in cm)" patient={patient} doctor={doctor} formatted={formatted} data-superjson />
+      <Print type="wfl" title="Weight for Lenght" ylabel="Weight (in kg)" xlabel="Height (in cm)" patient={patient} doctor={doctor} data={data} yUnit="kg" xUnit="cm" mesure="length" />
     </>
   );
 };

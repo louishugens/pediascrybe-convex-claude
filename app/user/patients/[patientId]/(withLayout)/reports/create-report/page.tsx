@@ -19,7 +19,12 @@ async function getConsultations(patientId) {
   return consultations;
 }
 
-const CreateReportPage = async ({params:{patientId}}) => {
+const CreateReportPage = async props => {
+  const params = await props.params;
+
+  const {
+    patientId
+  } = params;
 
   const patient = await getPatient(patientId)
   const consultations = await getConsultations(patientId)

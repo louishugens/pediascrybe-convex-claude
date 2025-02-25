@@ -1,73 +1,56 @@
 import prisma from "@/utils/prisma";
-import { cookies } from 'next/headers';
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { revalidatePath } from "next/cache";
+import { createClient } from '@/utils/supabase/server'
+
 
 export async function POST(req: Request) {
   if(req.method == 'POST') {
+    try {
+      const supabase = await createClient()
 
-    // const supabase = createRouteHandlerClient({cookies});
-    const cookieStore = cookies()
+      const { data: {session}, error } = await (await supabase).auth.getSession();
 
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value
-          },
-          set(name: string, value: string, options: CookieOptions) {
-            cookieStore.set({ name, value, ...options })
-          },
-          remove(name: string, options: CookieOptions) {
-            cookieStore.set({ name, value: '', ...options })
-          },
-        },
+      if (!session) {
+        return new Response(
+          JSON.stringify({
+            error: { statusCode: 500, message: 'Session is not defined' }
+          }),
+          { status: 500 }
+        );
       }
-    )
-    const { data: {session}, error } = await supabase.auth.getSession();
 
-    if (!session) {
+      const { firstname, lastname, email, phone, spec, address, id} = await req.json()
+
+      const doctor = await prisma.doctor.update({
+        where:{
+          id: id
+        },
+        data: {
+          firstname, lastname, email, phone, spec, address
+        }
+      })
+
+      
+      if (doctor) {
+        
+        return new Response(JSON.stringify(doctor), {
+          status: 200
+        });
+      }else{
+        return new Response(
+          JSON.stringify({
+         error: { statusCode: 500, message: 'Doctor profile is not update sucessfully' }
+         }),
+         { status: 500 }
+       );
+       
+      }
+    } catch (error) {
       return new Response(
         JSON.stringify({
-          error: { statusCode: 500, message: 'Session is not defined' }
+          error: { statusCode: 500, message: 'An error occurred' }
         }),
         { status: 500 }
       );
     }
-
-    const { firstname, lastname, email, phone, spec, address, id} = await req.json()
-
-    const doctor = await prisma.doctor.update({
-      where:{
-        id: id
-      },
-      data: {
-        firstname, lastname, email, phone, spec, address
-      }
-    })
-
-    
-    if (doctor) {
-
-      // revalidatePath(`/user/profile`)
-      // revalidatePath(`/user/edit-profile`)
-      
-      return new Response(JSON.stringify(doctor), {
-        status: 200
-      });
-      // return NextResponse.redirect(`/patients/${patientId}/appointments/${appointment.id}`)
-    }else{
-      return new Response(
-        JSON.stringify({
-       error: { statusCode: 500, message: 'Doctor profile is not update sucessfully' }
-       }),
-       { status: 500 }
-     );
-     
-    }
-
   }
-
 }

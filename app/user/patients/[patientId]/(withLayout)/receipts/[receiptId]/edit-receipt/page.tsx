@@ -9,7 +9,14 @@ async function getReceipt(receiptId){
   })
   return receipt
 }
-const EditReceiptPage = async ({params:{patientId, receiptId}}) => {
+const EditReceiptPage = async props => {
+  const params = await props.params;
+
+  const {
+    patientId,
+    receiptId
+  } = params;
+
   const receipt = await getReceipt(receiptId)
   return ( 
     <>

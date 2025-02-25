@@ -1,7 +1,8 @@
 import Chart from "@/components/chartShad"
 import prisma from "@/utils/prisma"
 import { differenceInDays } from 'date-fns'
-import { charts, Patient, Appointment } from '@prisma/client';
+import { charts, Patient } from '@prisma/client';
+
 
 async function getPatient(patientId){
   const patient = await prisma.patient.findUnique({
@@ -18,12 +19,11 @@ async function getPatient(patientId){
   })
   return patient
 }
-
 async function getReferenceData(sex: Patient["sex"]){
 
   const referenceData = await prisma.charts.findUnique({
     where:{
-      id: (sex === 'female') ? 'gwfa' : 'bwfa'
+      id: (sex === 'female') ? 'ghcfa' : 'bhcfa'
     }
   })
   return referenceData
@@ -39,19 +39,14 @@ const Charts = async props => {
   const patient = await getPatient(patientId)
   const appointments = patient?.appointments
   const referenceData = await getReferenceData(patient?.sex ?? null);
-
-
   let formatted: { age: number; value: number; }[] = []
 
   appointments?.map(appointment =>{
-    if(appointment.weight){
-      let app = {age: differenceInDays(appointment.startDate, patient?.birthdate ?? new Date()), value: appointment.weight}
+    if(appointment.head){
+      let app = {age: differenceInDays(appointment.startDate, patient?.birthdate ?? new Date()), value: appointment.head}
       formatted.push(app)
-    }
+    }  
   })
-
-  // console.log(formatted)
-
   const formatReferenceData = (data: charts, formatted: { age: number; value: number; }[]) => {
     const format: { 
       age: number; 
@@ -89,12 +84,10 @@ const Charts = async props => {
     return format;
   };
 
-  const data = referenceData ? formatReferenceData(referenceData, formatted) : [];
-
-
+  const data = referenceData ? formatReferenceData(referenceData, formatted) : null;
   return (
-    <Chart patient={patient} type="wfa" title="Weight for Age" ylabel={'Weight (kg)'} xlabel={'Age (days)'} name={patient?.firstname ?? 'patient'}  data={data} showTitle={true} mesure={'age'} xUnit={'days'} yUnit={'kg'}   />
-  );
+    <Chart patient={patient} type="hcfa" title="Head Circumference for Age" ylabel="HC (in cm)" xlabel="Age (in days)" name={patient?.firstname} data={data} yUnit={'cm'} xUnit={'days'} showTitle={true} mesure={'age'}/>
+  )
 }
- 
+
 export default Charts

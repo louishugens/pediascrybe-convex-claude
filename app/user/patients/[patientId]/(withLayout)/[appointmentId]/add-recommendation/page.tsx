@@ -28,15 +28,21 @@ async function getPatient(patientId) {
 
 
 
-const AddRecommendationPage = async ({params: {patientId, appointmentId}}) => {
+const AddRecommendationPage = async props => {
+  const params = await props.params;
+
+  const {
+    patientId,
+    appointmentId
+  } = params;
 
   const appointment = await getAppointment(appointmentId)
   const patient = await getPatient(patientId)
 
   return (
     // <AddPrescriptions appointment={appointment} patient={patient} patientId={patientId} data-superjson />
-    <AddRecommendation appointment={appointment} patient={patient} patientId={patientId} data-superjson />
-  )
+    (<AddRecommendation appointment={appointment} patient={patient} patientId={patientId} data-superjson />)
+  );
 }
 
 export default AddRecommendationPage

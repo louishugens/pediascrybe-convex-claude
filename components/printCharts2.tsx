@@ -14,7 +14,7 @@ const Print = ({type, title, ylabel, xlabel, doctor, patient, formatted, referen
   const string = 'Chart'
   const componentRef = useRef(null);
   const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
+    contentRef: componentRef,
     documentTitle: `${string}_${type}_${patient.firstname}_${patient.lastname}_${format(new Date(), 'yyy-MM-dd')}`
   });
 
@@ -69,7 +69,7 @@ ref={componentRef}>
         </div> */}
       </div>
       <div className="flex flex-row justify-between mt-6 pb-2 px-4">
-        <button onClick={handlePrint} className="shadow bg-blue-500 rounded-full py-2 px-4 text-white text-sm">Print this out!</button>
+        <button onClick={ () => handlePrint()} className="shadow bg-blue-500 rounded-full py-2 px-4 text-white text-sm">Print this out!</button>
         <Link href={`/user/patients/${patient.id}/charts${leave}`} className="px-4 py-2 rounded-full bg-slate-200 text-blue-500 text-sm">
           Leave
         </Link>

@@ -9,8 +9,9 @@ type VaccineRecordWithDetails = VaccinationRecord & {
   vaccin: Vaccin;
   dose: Dose;
 }
-export default async function Page({ params }: { params: { patientId: string } }) {
-  const vaccineRecords: VaccineRecordWithDetails[] = await getPatientVaccineRecords(params.patientId) 
+export default async function Page(props: { params: Promise<{ patientId: string }> }) {
+  const params = await props.params;
+  const vaccineRecords: VaccineRecordWithDetails[] = await getPatientVaccineRecords(params.patientId)
   return (
     <div className='h-full mb-8 mt-4'>
       <div className='flex flex-col gap-4 w-full h-fit bg-slate-50 rounded-lg p-4'>

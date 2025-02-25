@@ -17,7 +17,13 @@ async function getPatient(patientId){
   return patient
 }
 
-const Charts = async ({params: {patientId}}) => {
+const Charts = async props => {
+  const params = await props.params;
+
+  const {
+    patientId
+  } = params;
+
   const patient = await getPatient(patientId)
   const appointments = patient.appointments
   // console.log('appointments :>> ', appointments);

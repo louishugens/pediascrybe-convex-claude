@@ -1,8 +1,6 @@
-import Print from "@/components/printCharts2";
+import Print from "@/components/printCharts";
 import prisma from "@/utils/prisma";
-// import {createServerClient} from '@/utils/supabase-server'
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { cookies } from "next/headers";
+import { createClient } from '@/utils/supabase/server'
 import { differenceInDays } from 'date-fns'
 import { charts, Patient } from "@prisma/client";
 
@@ -52,22 +50,16 @@ async function getReferenceData(sex: Patient["sex"]){
 
 export const dynamic = 'force-dynamic';
 
-const PrintPage = async ({params: {patientId}}) => {
-  // const supabase = createServerClient()
+const PrintPage = async props => {
+  const params = await props.params;
 
-  const cookieStore = cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  )
-  
+  const {
+    patientId
+  } = params;
+
+  const supabase = await createClient()
+
+
   const {
     data: { session },
   } = await supabase.auth.getSession()
@@ -81,84 +73,61 @@ const PrintPage = async ({params: {patientId}}) => {
   const referenceData = await getReferenceData(patient?.sex ?? null);
 
 
-  let formatted: { category: number; value: number }[] = [] 
+  let formatted: { age: number; value: number; }[] = []
 
   appointments?.map(appointment =>{
     if(appointment.height){
       if(differenceInDays(appointment.startDate, patient?.birthdate ?? new Date()) / 30.4375 > 60){
-        let app = {category: Math.floor(differenceInDays(appointment.startDate, patient?.birthdate ?? new Date())/30.4375), value: appointment.height}
+        let app = {age: Math.floor(differenceInDays(appointment.startDate, patient?.birthdate ?? new Date())/30.4375), value: appointment.height}
         formatted.push(app)
       }
     }
   })
 
-  const formatReferenceData = (data: charts) => {
+  const formatReferenceData = (data: charts, formatted: { age: number; value: number; }[]) => {
 
-    type formattedPercentile = {
-      category: number;
-      value: number;
+    const format: { 
+      age: number; 
+      '3rd': number; 
+      '15th': number; 
+      '50th': number; 
+      '85th': number; 
+      '97th': number; 
+      [key: string]: number 
+    }[] = [];
+
+    const maxLength = Math.max(
+      (data.p03 as number[])?.length || 0,
+      (data.p15 as number[])?.length || 0,
+      (data.p50 as number[])?.length || 0,
+      (data.p85 as number[])?.length || 0,
+      (data.p97 as number[])?.length || 0
+    );
+
+    for (let index = 0; index < maxLength; index++) {
+      const patientDataForDay = formatted.find(item => item.age === index);
+
+
+      format.push({ 
+        age: index, 
+        '3rd': data.p03?.[index] ?? null, 
+        '15th': data.p15?.[index] ?? null, 
+        '50th': data.p50?.[index] ?? null, 
+        '85th': data.p85?.[index] ?? null, 
+        '97th': data.p97?.[index] ?? null,
+        [patient?.firstname ?? 'patient']: patientDataForDay?.value ?? null
+      });
     }
 
-    type formattedData = { name: string; data: formattedPercentile[] }
+    return format;
 
-    const formatted: formattedData[] = []
+  }
 
-    if (Array.isArray(data.p03)) {
-      let percentile: formattedData = {name: `3rd`, data: []}
-      for(let day = 0; day < data.p03.length; day++){
-        if (data.p03[day]) {
-          percentile.data.push({category: day + 61, value: data.p03[day] as number})
-        }
-      }
-      formatted.push(percentile)
-    }
-
-    if (Array.isArray(data.p15)) {
-      let percentile: formattedData = {name: `15th`, data: []}
-      for(let day = 0; day < data.p15.length; day++){
-        if (data.p15[day]) {
-          percentile.data.push({category: day + 61, value: data.p15[day] as number})
-        }
-      }
-      formatted.push(percentile)
-    }
-    if (Array.isArray(data.p50)) {
-      let percentile: formattedData = {name: `50th`, data: []}
-      for(let day = 0; day < data.p50.length; day++){
-        if (data.p50[day]) {
-          percentile.data.push({category: day + 61, value: data.p50[day] as number})
-        }
-      }
-      formatted.push(percentile)
-    }
-    if (Array.isArray(data.p85)) {
-      let percentile: formattedData = {name: `85th`, data: []}
-      for(let day = 0; day < data.p85.length; day++){
-        if (data.p85[day]) {
-          percentile.data.push({category: day + 61, value: data.p85[day] as number})
-        }
-      }
-      formatted.push(percentile)
-    }
-    if (Array.isArray(data.p97)) {
-      let percentile: formattedData = {name: `97th`, data: []}
-      for(let day = 0; day < data.p97.length; day++){
-        if (data.p97[day]) {
-          percentile.data.push({category: day + 61, value: data.p97[day] as number})
-        }
-      }
-      formatted.push(percentile)
-    } 
-
-    return formatted
-
-  } 
-
-  const data = referenceData ? formatReferenceData(referenceData) : null;
+  const data = referenceData ? formatReferenceData(referenceData, formatted) : null;
 
   return (
     <>
-      <Print type="hfa" title="Height for Age (0-5 years)" ylabel="Height (in cm)" xlabel="Age (in days)" patient={patient} doctor={doctor} formatted={formatted} referenceData={data} data-superjson />
+      <Print type="hfa5To19" title="Height for Age (5-19 years)" ylabel="Height (in cm)" xlabel="Age (in months)" patient={patient} doctor={doctor}  data={data} yUnit={'cm'} xUnit={'months'} mesure={'age'} />
     </>
   );
 };

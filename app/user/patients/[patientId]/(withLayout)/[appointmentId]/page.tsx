@@ -1,9 +1,7 @@
 import React from 'react'
 import prisma from '@/utils/prisma'
 import AppointmentPageComponent from '@/components/appointmentPageComponent'
-// import {createServerClient} from '@/utils/supabase-server'
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createClient } from '@/utils/supabase/server'
 import { Appointment, File } from '@prisma/client'
 
 interface AppointmentwithFiles extends Appointment{
@@ -22,24 +20,18 @@ async function getAppointment(appointmentId){
   })
   return appointment
 }
-// export const dynamic = 'force-dynamic';
-// export const revalidate = 0;
 
-const AppointmentPage = async ({params: { patientId, appointmentId}}) => {
-  // const supabase = createServerClient()
-  const cookieStore = cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  )
-  
+
+const AppointmentPage = async props => {
+  const params = await props.params;
+
+  const {
+    patientId,
+    appointmentId
+  } = params;
+
+  const supabase = await createClient()
+
   const {
     data: { session },
   } = await supabase.auth.getSession()

@@ -25,15 +25,22 @@
     "strictNullChecks": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
-    }
+      "@/*": [
+        "./*"
+      ]
+    },
+    "target": "ES2017"
   },
   "include": [
     "next-env.d.ts",
     ".next/types/**/*.ts",
     "**/*.ts",
-    "**/*.tsx"
-, "components/printAppointment.tsx", "components/editDoctor.tsx", "components/print.tsx", "app/provider.js"  ],
+    "**/*.tsx",
+    "components/printAppointment.tsx",
+    "components/editDoctor.tsx",
+    "components/print.tsx",
+    "app/provider.js"
+  ],
   "exclude": [
     "node_modules"
   ]

@@ -9,7 +9,14 @@ async function getReport(reportId){
   })
   return report
 }
-const EditReportPage = async ({params:{patientId, reportId}}) => {
+const EditReportPage = async props => {
+  const params = await props.params;
+
+  const {
+    patientId,
+    reportId
+  } = params;
+
   const report = await getReport(reportId)
   return ( 
     <>

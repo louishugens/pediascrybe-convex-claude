@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import * as yup from "yup";
 import { yupResolver } from '@hookform/resolvers/yup';
 import PulseLoader from "react-spinners/PulseLoader"
-import supabase from '@/utils/supabase';
+import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import posthog from 'posthog-js';
 
@@ -14,7 +14,7 @@ import posthog from 'posthog-js';
 
 
 export default function Signup() {
-
+  const supabase = createClient()
   const override= {
     display: "block",
     margin: "auto",

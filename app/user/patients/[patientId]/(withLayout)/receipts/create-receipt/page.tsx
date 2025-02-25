@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react';
+import { useMemo, use } from 'react';
 
 import { useForm, useFieldArray } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
@@ -40,7 +40,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { XCircleIcon } from '@heroicons/react/24/outline';
 
 
-const CreateReceiptPage = ({params:{patientId}}) => {
+const CreateReceiptPage = props => {
+  const params = use(props.params);
+
+  const {
+    patientId
+  } = params;
 
   const options = useMemo(() => countryList().getData(), [])
 
@@ -60,7 +65,7 @@ const CreateReceiptPage = ({params:{patientId}}) => {
   })
 
 
-  
+
   let [color, setColor] = useState("#ffffff")
   let [loading, setLoading] = useState(false)
 

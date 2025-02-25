@@ -1,7 +1,6 @@
 import Print from "@/components/printReceipt";
 import prisma from "@/utils/prisma";
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createClient } from '@/utils/supabase/server'
 import { headers } from "next/headers";
 
 async function getPatient(patientId: string) {
@@ -32,26 +31,21 @@ async function getReceipt(id:string) {
   return receipt
 }
 
-const ReceiptPage = async ({params:{patientId, receiptId}}) => {
-  // const supabase = createServerClient()
-  const cookieStore = cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  )
-  
+const ReceiptPage = async props => {
+  const params = await props.params;
+
+  const {
+    patientId,
+    receiptId
+  } = params;
+
+  const supabase = await createClient()
+
   const {
     data: { session },
   } = await supabase.auth.getSession()
 
-  const headersList = headers()
+  const headersList = await headers()
   const locale = headersList.get('accept-language')
   const lang = locale?.split(',')[0]
 

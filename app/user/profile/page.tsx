@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import prisma from '@/utils/prisma';
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createClient } from '@/utils/supabase/server'
 import { cookies } from "next/headers";
 import {
   Accordion,
@@ -33,20 +33,8 @@ async function getDoctor(doctorId){
 export const dynamic = 'force-dynamic';
 
 const ProfilePage = async () => {
-  // const supabase = createServerClient()
-  const cookieStore = cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  )
-  
+  const supabase = await createClient()
+
   const {
     data: { session },
   } = await supabase.auth.getSession()
@@ -89,7 +77,7 @@ const ProfilePage = async () => {
                       <p className="text-sm font-semibold text-left">{vaccine.name}</p>
                     </div>
                   </PopoverTrigger>
-                  <PopoverContent>
+                  <PopoverContent className="w-auto p-0" align="start" side="top">
                     <div className="pl-4 py-2">
                       <p className="text-sm font-semibold">Doses:</p>
                       {vaccine.doses.map((dose) => (

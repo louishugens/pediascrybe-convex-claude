@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import  prisma  from '@/utils/prisma'
 
 export async function verifySession() {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data, error } = await supabase.auth.getUser()
   if (error) {
     return null

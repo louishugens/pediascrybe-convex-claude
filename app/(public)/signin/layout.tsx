@@ -1,26 +1,16 @@
 import { redirect } from "next/navigation"
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { cookies } from "next/headers";
+import { createClient } from '@/utils/supabase/server'
 
-const SigninLayout = async ({children}) => {
-  // const supabase = createServerClient()
-
-  const cookieStore = cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  )
+export default async function SignInLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const supabase = await createClient()
 
   const {
     data: { session },
-  } = await supabase.auth.getSession()
+  } = await (await supabase).auth.getSession()
 
   if (session) {
     redirect('/user')
@@ -31,6 +21,4 @@ const SigninLayout = async ({children}) => {
       {children}
     </div>
   )
-}
-
-export default SigninLayout 
+} 

@@ -3,7 +3,7 @@
 // import { ToastContainer, toast } from 'react-toastify';
 // import 'react-toastify/dist/ReactToastify.css';
 
-import { useChat } from "ai/react";
+import { useChat } from "@ai-sdk/react";
 import { useRef, useState, useEffect, ReactElement } from "react";
 import type { FormEvent } from "react";
 import type { AgentStep } from "langchain/schema";
@@ -16,7 +16,7 @@ import BeatLoader from "react-spinners/BeatLoader";
 
 export function ChatWindow(props: {
   endpoint: string,
-  emptyStateComponent: ReactElement,
+  emptyStateComponent: ReactElement<any>,
   placeholder?: string,
   titleText?: string,
   emoji?: string;

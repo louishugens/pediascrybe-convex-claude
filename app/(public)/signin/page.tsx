@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import * as yup from "yup";
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useRouter } from 'next/navigation';
-import supabase from '@/utils/supabase';
+import { createClient } from '@/utils/supabase/client';
 import Header from '../../header';
 import { useState } from "react";
 import BeatLoader  from 'react-spinners/BeatLoader';import {
@@ -30,7 +30,7 @@ const FormSchema = z.object({
 });
 
 export default function Home() {
-
+  const supabase = createClient()
   let [loading, setLoading] = useState(false);
   let [color, setColor] = useState("#ffffff");
   const [errorMsg, setErrorMsg] = useState(null)

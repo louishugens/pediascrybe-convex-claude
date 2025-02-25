@@ -1,10 +1,7 @@
 
 import EditPatient from "@/components/editPatient";
 import prisma from "@/utils/prisma";
-// import {createServerClient} from '@/utils/supabase-server'
-// import supabase from '@/utils/supabase-ssr'
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createClient } from '@/utils/supabase/server'
 
 async function getPatient(patientId){
   const patient = await prisma.patient.findUnique({
@@ -15,24 +12,16 @@ async function getPatient(patientId){
   return patient
 }
 
-// export const dynamic = 'force-dynamic';
 
-const EditPatientPage = async ({params: { patientId}}) => {
-  // const supabase = createServerClient()
-  const cookieStore = cookies()
+const EditPatientPage = async props => {
+  const params = await props.params;
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  )
-  
+  const {
+    patientId
+  } = params;
+
+  const supabase = await createClient()
+
   const {
     data: { session },
   } = await supabase.auth.getSession()

@@ -1,6 +1,12 @@
 import { ChatWindow } from "@/components/chatWindow"
 
-export default function Page({params: { patientId }}) {
+export default async function Page(props) {
+  const params = await props.params;
+
+  const {
+    patientId
+  } = params;
+
   return (
     <div className="flex flex-col h-full py-8">
       <ChatWindow 

@@ -6,10 +6,11 @@ import Link from 'next/link'
 import { Dose, Vaccin, VaccinationRecord } from '@prisma/client'
 import { redirect } from 'next/navigation'
 
-export default async function Page({ params }: { params: { patientId: string, recordId: string } }) {
+export default async function Page(props: { params: Promise<{ patientId: string, recordId: string }> }) {
+  const params = await props.params;
 
   const vaccinationRecord: VaccinationRecord & { vaccin: Vaccin, dose: Dose } | null = await getVaccinationRecord(params.recordId)
-  
+
   if (!vaccinationRecord) {
     redirect('/user/patients/' + params.patientId + '/vaccines')
   }

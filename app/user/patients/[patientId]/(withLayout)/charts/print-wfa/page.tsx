@@ -1,7 +1,7 @@
 import Print from "@/components/printCharts";
 import prisma from "@/utils/prisma";
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { cookies } from "next/headers";
+import { createClient } from '@/utils/supabase/server'
+import { Patient, charts } from "@prisma/client";
 import { differenceInDays } from 'date-fns'
 
 async function getAppointment(appointmentId) {
@@ -29,6 +29,17 @@ async function getPatient(patientId) {
   return patient
 }
 
+
+async function getReferenceData(sex: Patient["sex"]){
+
+  const referenceData = await prisma.charts.findUnique({
+    where:{
+      id: (sex === 'female') ? 'gwfa' : 'bwfa'
+    }
+  })
+  return referenceData
+}
+
 async function getDoctor(doctorId) {
   const doctor = await prisma.doctor.findUnique({
     where:{
@@ -40,21 +51,15 @@ async function getDoctor(doctorId) {
 
 export const dynamic = 'force-dynamic';
 
-const PrintPage = async ({params: {patientId}}) => {
-  // const supabase = createServerClient()
-  const cookieStore = cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  )
-  
+const PrintPage = async props => {
+  const params = await props.params;
+
+  const {
+    patientId
+  } = params;
+
+  const supabase = await createClient()
+
   const {
     data: { session },
   } = await supabase.auth.getSession()
@@ -65,21 +70,62 @@ const PrintPage = async ({params: {patientId}}) => {
   const patient = await getPatient(patientId)
   const doctor = await getDoctor(doctorId)
   const appointments = patient?.appointments
+  const referenceData = await getReferenceData(patient?.sex ?? null);
 
 
-  let formatted: { category: number; value: number; }[] = [];
+  let formatted: { age: number; value: number; }[] = []
 
   appointments?.map(appointment =>{
     if(appointment.weight){
-      let app = {category: differenceInDays(appointment.startDate, patient?.birthdate ?? new Date()), value: appointment.weight}
-      const formatted: { category: number; value: number; }[] = [];
-
-    }  
+      let app = {age: differenceInDays(appointment.startDate, patient?.birthdate ?? new Date()), value: appointment.weight}
+      formatted.push(app)
+    }
   })
+
+  // console.log(formatted)
+
+  const formatReferenceData = (data: charts, formatted: { age: number; value: number; }[]) => {
+    const format: { 
+      age: number; 
+      '3rd': number; 
+      '15th': number; 
+      '50th': number; 
+      '85th': number; 
+      '97th': number; 
+      [key: string]: number 
+    }[] = [];
+
+    const maxLength = Math.max(
+      (data.p03 as number[])?.length || 0,
+      (data.p15 as number[])?.length || 0,
+      (data.p50 as number[])?.length || 0,
+      (data.p85 as number[])?.length || 0,
+      (data.p97 as number[])?.length || 0
+    );
+
+    for (let index = 0; index < maxLength; index++) {
+      const patientDataForDay = formatted.find(item => item.age === index);
+
+
+      format.push({ 
+        age: index, 
+        '3rd': data.p03?.[index] ?? null, 
+        '15th': data.p15?.[index] ?? null, 
+        '50th': data.p50?.[index] ?? null, 
+        '85th': data.p85?.[index] ?? null, 
+        '97th': data.p97?.[index] ?? null,
+        [patient?.firstname ?? 'patient']: patientDataForDay?.value ?? null
+      });
+    }
+
+    return format;
+  };
+
+  const data = referenceData ? formatReferenceData(referenceData, formatted) : [];
 
   return (
     <>
-      <Print type="wfa" title="Weight for Age" ylabel="Weight (in kg)" xlabel="Age (in days)" patient={patient} doctor={doctor} formatted={formatted} data-superjson />
+      <Print type="wfa" title="Weight for Age" ylabel="Weight (in kg)" xlabel="Age (in days)" patient={patient} doctor={doctor} data={data} yUnit="kg" xUnit="days" mesure="age" />
     </>
   );
 };

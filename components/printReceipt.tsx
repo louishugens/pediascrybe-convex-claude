@@ -25,7 +25,7 @@ const Print = ({doctor, patient, receipt, lang}: Props) => {
   const string = "Receipt"
   const componentRef = useRef(null);
   const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
+    contentRef: componentRef,
     documentTitle: `${string}_${patient.firstname}_${patient.lastname}_${format(receipt.createdAt, 'yyy-MM-dd')}`
   });
 
@@ -121,7 +121,7 @@ const Print = ({doctor, patient, receipt, lang}: Props) => {
         </div> */}
       </div>
       <div className="flex flex-row justify-between pb-2 mt-6">
-        <button onClick={handlePrint} className="shadow bg-blue-500 rounded-full py-2 px-4 text-white text-sm">Print this out!</button>
+        <button onClick={ () => handlePrint()} className="shadow bg-blue-500 rounded-full py-2 px-4 text-white text-sm">Print this out!</button>
         <Link href={`/user/patients/${patient.id}/receipts`} className="px-4 py-2 rounded-full bg-slate-200 text-blue-500 text-sm">
           Leave
         </Link>

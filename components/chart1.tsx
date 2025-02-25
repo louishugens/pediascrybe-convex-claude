@@ -1,5 +1,5 @@
 'use client'
-import { LineChart, Line, XAxis, YAxis, Legend, ResponsiveContainer, Tooltip } from "recharts";
+import { LineChart, Line, XAxis, YAxis, Legend, ResponsiveContainer, Tooltip, CartesianGrid } from "recharts";
 import Link from 'next/link'
 import { useMemo } from "react";
 
@@ -81,33 +81,73 @@ const formatReferenceData = (data: referenceData) => {
 
 
 function Chart({patient, type, title, ylabel, xlabel, formatted, name, referenceData}) {
-
   const data: typeof referenceData = useMemo(() => {
-      return referenceData
-    },
-    [referenceData]
-  )
+    return referenceData
+  }, [referenceData])
+  
 
   return (
     <div className="w-full shadow-md rounded-lg p-8 mb-8">
       <div className="flex flex-row justify-between w-full items-start">
-        <p className="text-slate-900 text-sm ">{title}</p>
+        <p className="text-slate-900 text-sm">{title}</p>
         <Link href={`/user/patients/${patient.id}/charts/print-${type}`} className="px-4 py-2 rounded-full bg-slate-200 text-blue-500 text-sm">
           Export
         </Link>
       </div>
-      <ResponsiveContainer height={550} >
-        <LineChart width={900} height={200}>
-          <XAxis dataKey="category" type="category" height={40} allowDuplicatedCategory={false} label={{value: xlabel, position: "insideBottom", offset: -2}} tick={{fontSize: 12}} />
-          <YAxis dataKey="value" label={{ value: ylabel, angle: -90, position: 'insideLeft'}} tick={{fontSize: 12}} />
+      <ResponsiveContainer height={550}>
+        <LineChart
+          margin={{
+            top: 5,
+            right: 30,
+            left: 20,
+            bottom: 5,
+          }}
+          data={[data, formatted]}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis 
+            dataKey="category" 
+            type="category" 
+            height={40} 
+            allowDuplicatedCategory={false} 
+            label={{value: xlabel, position: "insideBottom", offset: -2}} 
+            tick={{fontSize: 12}} 
+          />
+          <YAxis 
+            dataKey="value" 
+            label={{ value: ylabel, angle: -90, position: 'insideLeft'}} 
+            tick={{fontSize: 12}} 
+          />
           <Legend verticalAlign="top" align="right" height={12}/>
           <Tooltip />
-          <Line dot={false} dataKey="value" data={data[0].data} name={data[0].name} key={data[0].name} stroke="#ff50ff" strokeWidth={1} />
-          <Line dot={false} dataKey="value" data={data[1].data} name={data[1].name} key={data[1].name} stroke="#00537f" strokeWidth={1} />
-          <Line dot={false} dataKey="value" data={data[2].data} name={data[2].name} key={data[2].name} stroke="#da5f33" strokeWidth={1} />
-          <Line dot={false} dataKey="value" data={data[3].data} name={data[3].name} key={data[3].name} stroke="#005344" strokeWidth={1} />
-          <Line dot={false} dataKey="value" data={data[4].data} name={data[4].name} key={data[4].name} stroke="#0ff0cf" strokeWidth={1} />
-          <Line dot={false} dataKey="value" data={formatted} name={name} key={name} stroke="#0000ff" strokeWidth={2} />
+          {data.map((line, index) => (
+            <Line 
+              key={line.name}
+              type="monotone"
+              dot={false}
+              dataKey="value"
+              data={line.data}
+              name={line.name}
+              stroke={[
+                "#ff50ff",
+                "#00537f",
+                "#da5f33",
+                "#005344",
+                "#0ff0cf"
+              ][index]}
+              strokeWidth={1}
+            />
+          ))}
+          <Line 
+            type="monotone"
+            dot={false}
+            dataKey="value"
+            data={formatted}
+            name={name}
+            stroke="#0000ff"
+            strokeWidth={2}
+            activeDot={{ r: 8 }}
+          />
         </LineChart>
       </ResponsiveContainer>
     </div>

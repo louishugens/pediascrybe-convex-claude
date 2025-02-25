@@ -1,8 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { Message as VercelChatMessage, StreamingTextResponse } from "ai";
 import { AttributeInfo } from "langchain/schema/query_constructor";
-// import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from 'next/headers';
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
 import { SupabaseTranslator } from "langchain/retrievers/self_query/supabase";
 import { ChatOpenAI } from "langchain/chat_models/openai";
@@ -19,9 +17,7 @@ import {
 } from "langchain/schema/output_parser";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { OpenAI } from "langchain/llms/openai";
-// import supabase from "@/utils/supabase-rh";
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-// import { cookies } from 'next/headers';
+import { createClient } from '@/utils/supabase/server'
 
 export const runtime = "edge";
 
@@ -87,28 +83,11 @@ const llm = new OpenAI();
  *
  * https://js.langchain.com/docs/guides/expression_language/cookbook#conversational-retrieval-chain
  */
-export async function POST(req: Request, { params }: { params: { patientId: string } }) {
+export async function POST(req: Request, props: { params: Promise<{ patientId: string }> }) {
+  const params = await props.params;
 
-  // const supabase = createRouteHandlerClient({cookies});
-  const cookieStore = cookies()
+  const supabase = await createClient()
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          cookieStore.set({ name, value, ...options })
-        },
-        remove(name: string, options: CookieOptions) {
-          cookieStore.set({ name, value: '', ...options })
-        },
-      },
-    }
-  )
   const patientId = params.patientId!
   const documentContents = `The documents table contains the patient's profile data and the appointments data. 
   The pageContent column contains either profile or appointment data in stringified JSON format. So we need to parse pageContent to get more granular data.
@@ -123,18 +102,14 @@ export async function POST(req: Request, { params }: { params: { patientId: stri
     const currentMessageContent = messages[messages.length - 1].content;
 
     const model = new ChatOpenAI({
-      modelName: "gpt-3.5-turbo",
+      modelName: "gpt-4o-mini",
       // modelName: "gpt-4",
       // modelName: "gpt-4-1106-preview",
       temperature: 0.0,
     });
 
-    // const client = createClient(
-    //   process.env.SUPABASE_URL!,
-    //   process.env.SUPABASE_PRIVATE_KEY!,
-    // );
     const vectorStore = new SupabaseVectorStore(new OpenAIEmbeddings(), {
-      client: supabase,
+      client: await supabase,
       tableName: "documents",
       queryName: "match_documents",
     });

@@ -15,9 +15,15 @@ async function getReceipts(patientId:string) {
   })
   return receipts
 }
-const ReceiptsPage = async ({params:{patientId}}) => {
+const ReceiptsPage = async props => {
+  const params = await props.params;
+
+  const {
+    patientId
+  } = params;
+
   const receipts = await getReceipts(patientId)
-  const headersList = headers()
+  const headersList = await headers()
   const locale = headersList.get('accept-language')
   const lang = locale?.split(',')[0]
 

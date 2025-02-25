@@ -3,10 +3,8 @@
 import prisma from "@/utils/prisma"
 import Link from 'next/link'
 import AppointmentComponent from "@/components/appointment";
-// import {createServerClient} from '@/utils/supabase-server'
 
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createClient } from '@/utils/supabase/server'
 
 
 async function getAppointments(patientId){
@@ -23,24 +21,18 @@ async function getAppointments(patientId){
 
 }
 
-// export const dynamic = 'force-dynamic';
 
-async function Patient({params: {patientId }}) {
-  // const supabase = createServerClient()
-  const cookieStore = cookies()
+async function Patient(props) {
+  const params = await props.params;
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  )
-  
+  const {
+    patientId
+  } = params;
+
+
+  const supabase = await createClient()
+
+
   const {
     data: { session },
   } = await supabase.auth.getSession()

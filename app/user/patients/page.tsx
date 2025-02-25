@@ -1,12 +1,9 @@
-// import "server-only";
 import prisma from "@/utils/prisma"
 import Link from 'next/link'
 import PatientList from '@/components/patientList'
 import { BeatLoader } from "react-spinners";
 import { Suspense } from "react";
-// import {createServerClient} from '@/utils/supabase-server'
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { cookies } from "next/headers";
+import { createClient } from '@/utils/supabase/server'
 import Search from "@/components/search";
 
 
@@ -50,25 +47,15 @@ async function getPatients(doctorId, search){
 // export const dynamic = 'force-dynamic';
 
 
-export default async function Patients({searchParams}) {
+export default async function Patients(props) {
+  const searchParams = await props.searchParams;
 
   const { search = '' } = searchParams
   // const search = ''
 
-  // const supabase = createServerClient()
-  const cookieStore = cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  )
-  
+  const supabase = await createClient()
+
+
   const {
     data: { session },
   } = await supabase.auth.getSession()

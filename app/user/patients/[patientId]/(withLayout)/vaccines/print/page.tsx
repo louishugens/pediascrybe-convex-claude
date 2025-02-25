@@ -8,7 +8,13 @@ import { redirect } from "next/navigation";
 
 export const dynamic = 'force-dynamic';
 
-const PrintPage = async ({params: { patientId, appointmentId}}) => {
+const PrintPage = async props => {
+  const params = await props.params;
+
+  const {
+    patientId,
+    appointmentId
+  } = params;
 
 
   const patient: Patient | null = await getPatient(patientId)

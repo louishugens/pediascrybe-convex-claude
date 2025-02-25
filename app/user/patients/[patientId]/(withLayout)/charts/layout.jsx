@@ -1,6 +1,16 @@
 import ChartsNav from '@/components/chartsNav'
 
-const Layout = ({children, params: { patientId}}) => {
+const Layout = async props => {
+  const params = await props.params;
+
+  const {
+    patientId
+  } = params;
+
+  const {
+    children
+  } = props;
+
   return (
     <>
       <ChartsNav patientId={patientId}  />

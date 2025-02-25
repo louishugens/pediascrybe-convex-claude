@@ -1,5 +1,6 @@
+'use client'
 import { useEffect, useState } from 'react'
-import supabase from '../supabase';
+import { createClient } from '@/utils/supabase/client'
 
 const useDoctor = () => {
   const [doctor, setDoctor] = useState(null);
@@ -10,6 +11,7 @@ const useDoctor = () => {
   }, []);
 
   const getDoctor = async () =>{
+    const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (user) {

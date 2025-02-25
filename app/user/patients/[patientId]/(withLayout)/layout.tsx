@@ -3,45 +3,31 @@
 import prisma from "@/utils/prisma"
 import Link from "next/link";
 import { format } from "date-fns";
-// import {createServerClient} from '@/utils/supabase-server'
-
-import AddProfileDocument from "@/components/addProfileDocument";
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createClient } from '@/utils/supabase/server'
 
 async function getPatient(patientId){
   const patient = await prisma.patient.findUnique({
     where:{
       id:patientId
     },
-    // include: {
-    //   patients:{
-    //     orderBy:{
-    //       lastname: 'asc'
-    //     }
-    //   },
-    // },
   })
   return patient
 }
 
-// export const dynamic = 'force-dynamic';
 
-const Layout = async ({children, params: { patientId }}) => {
-  // const supabase = createServerClient()
-  const cookieStore = cookies()
+const Layout = async props => {
+  const params = await props.params;
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  )
+  const {
+    patientId
+  } = params;
+
+  const {
+    children
+  } = props;
+
+  const supabase = await createClient()
+
   const {
     data: { session },
   } = await supabase.auth.getSession()

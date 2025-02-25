@@ -1,9 +1,5 @@
 import OpenAI from 'openai'
-// import { NextResponse } from 'next/server';
-// import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-// import supabase from '@/utils/supabase-rh';
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { cookies } from 'next/headers';
+import { createClient } from '@/utils/supabase/server'
  
 
 export const runtime = 'edge'
@@ -13,60 +9,43 @@ const openai = new OpenAI({
 })
  
 export async function POST(req: Request) {
+  try {
+    const supabase = await createClient()
+    const { data: {session}, error } = await (await supabase).auth.getSession();
 
-  // const supabase = createRouteHandlerClient({cookies});
-  const cookieStore = cookies()
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          cookieStore.set({ name, value, ...options })
-        },
-        remove(name: string, options: CookieOptions) {
-          cookieStore.set({ name, value: '', ...options })
-        },
-      },
+    if (!session) {
+      return new Response(
+        JSON.stringify({
+          error: { statusCode: 500, message: 'Session is not defined' }
+        }),
+        { status: 500 }
+      );
     }
-  )
-  const { data: {session}, error } = await supabase.auth.getSession();
 
-  if (!session) {
-    return new Response(
-      JSON.stringify({
-        error: { statusCode: 500, message: 'Session is not defined' }
-      }),
-      { status: 500 }
-    );
-  }
+    const { messages } = await req.json()
 
-  const { messages } = await req.json()
+    console.log('messages :>> ', messages);
 
-  console.log('messages :>> ', messages);
+    
+    const response = await openai.chat.completions.create({
+      // model: 'gpt-3.5-turbo',
+      model: 'gpt-4o-mini',
+      // stream: true,
+      messages: messages
+    })
 
-  
-  const response = await openai.chat.completions.create({
-    // model: 'gpt-3.5-turbo',
-    model: 'gpt-4-1106-preview',
-    // stream: true,
-    messages: messages
-  })
+    console.log('response :>> ', response);
 
-  console.log('response :>> ', response);
+    if (!response) {
+      return new Response(JSON.stringify(response), {
+        status: 500
+      });
+    }
 
-  if (!response) {
-    return new Response(JSON.stringify(response), {
-      status: 500
+    return new Response(JSON.stringify(response.choices[0].message.content), {
+      status: 200
     });
+  } catch (error) {
+    // ... error handling
   }
-
-  return new Response(JSON.stringify(response.choices[0].message.content), {
-    status: 200
-  });
- 
 }

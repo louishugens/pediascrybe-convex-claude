@@ -1,12 +1,13 @@
 'use client'
 import { EnvelopeIcon, PhoneIcon } from '@heroicons/react/24/solid'
-import {useRef} from 'react'
-// import { useReactToPrint } from 'react-to-print'
+import { useRef } from 'react'
+import { useReactToPrint } from 'react-to-print'
 import { format } from 'date-fns'
-import { useReactToPrint } from 'react-to-print';
-import Link from 'next/link';
-import PrintHead from './printHeader';
-import { Appointment, Doctor, Patient } from '@prisma/client';
+import Link from 'next/link'
+import PrintHead from './printHeader'
+import { Appointment, Doctor, Patient } from '@prisma/client'
+import { Button } from './ui/button'
+import { PrinterIcon } from 'lucide-react'
 
 interface PrintProps {
   appointment: Appointment | null
@@ -15,14 +16,11 @@ interface PrintProps {
 }
 
 const Print = ({appointment, doctor, patient}: PrintProps) => {
-
-  const string = 'appointment'
-
-  const componentRef = useRef(null);
-  const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
-    documentTitle: `${string}_${patient?.firstname}_${patient?.lastname}_${appointment?.startDate ? format(appointment.startDate, 'yyy-MM-dd') : ''}`
-  });
+  const componentRef = useRef<HTMLDivElement>(null)
+  const handlePrint = useReactToPrint({ 
+    contentRef: componentRef,
+    documentTitle: `appointment_${patient?.firstname}_${patient?.lastname}_${appointment?.startDate ? format(appointment.startDate, 'yyy-MM-dd') : ''}`
+  })
 
   interface Medication{
     drug: string
@@ -131,7 +129,14 @@ ref={componentRef}>
 
     </div> 
     <div className="flex flex-row justify-between py-4">
-        <button onClick={handlePrint} className="shadow bg-blue-500 rounded-full py-2 px-4 text-white text-sm">Print this out!</button>
+        <Button
+          onClick={() => handlePrint()}
+          variant="outline"
+          className="print:hidden shadow bg-blue-500 rounded-full py-2 px-4 text-white text-sm"
+        >
+          <PrinterIcon className="mr-2 h-4 w-4" />
+          Print
+        </Button>
         <Link href={`/user/patients/${patient?.id}/${appointment?.id}`} className="px-4 py-2 rounded-full bg-slate-200 text-blue-500 text-sm">
           Leave
         </Link>

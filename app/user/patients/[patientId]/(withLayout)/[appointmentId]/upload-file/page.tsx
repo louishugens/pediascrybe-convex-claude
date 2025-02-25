@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react"
+import { useState, use } from "react";
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -25,7 +25,13 @@ import { el } from "date-fns/locale"
 import { revalidatePath } from "next/cache"
 import { refresh } from "@/app/actions"
 
-export default function UploadPage({params: {patientId, appointmentId}}) {
+export default function UploadPage(props) {
+  const params = use(props.params);
+
+  const {
+    patientId,
+    appointmentId
+  } = params;
 
   const router = useRouter()
   const [loading, setLoading] = useState(false)

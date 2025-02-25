@@ -1,10 +1,8 @@
 'use client'
-import { redirect } from 'next/navigation';
 import Link from 'next/link'
 import React from 'react'
-import supabase from '../utils/supabase';
+import { createClient } from '@/utils/supabase/client';
 import { useRouter, usePathname } from 'next/navigation';
-import useDoctor from '../utils/hooks/useDoctor';
 import { ArrowLeftOnRectangleIcon, ListBulletIcon, PencilIcon, UserGroupIcon, UserPlusIcon } from '@heroicons/react/24/outline';
 import { refresh } from '@/app/actions';
 
@@ -14,6 +12,7 @@ const Sidenav = () => {
   const pathname = usePathname();
 
   const handleLogout = async () =>{
+    const supabase = await createClient()
     const {error} = await supabase.auth.signOut()
     refresh(['/'])
     router.refresh()

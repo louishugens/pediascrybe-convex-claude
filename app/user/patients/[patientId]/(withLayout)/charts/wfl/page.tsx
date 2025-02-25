@@ -23,44 +23,37 @@ async function getReferenceData(sex: Patient["sex"]){
 
   const referenceData = await prisma.charts.findUnique({
     where:{
-      id: (sex === 'female') ? 'gwfa' : 'bwfa'
+      id: (sex === 'female') ? 'gwfh' : 'bwfh'
     }
   })
   return referenceData
 }
 
-const Charts = async props => {
-  const params = await props.params;
-
-  const {
-    patientId
-  } = params;
-
+const Charts = async ({params: {patientId}}) => {
   const patient = await getPatient(patientId)
   const appointments = patient?.appointments
   const referenceData = await getReferenceData(patient?.sex ?? null);
+  // console.log('referenceData :>> ', referenceData);
 
 
-  let formatted: { age: number; value: number; }[] = []
+  let formatted: { length: number; value: number; }[] = []
 
   appointments?.map(appointment =>{
-    if(appointment.weight){
-      let app = {age: differenceInDays(appointment.startDate, patient?.birthdate ?? new Date()), value: appointment.weight}
+    if(appointment.weight && appointment.height){
+      let app = {length: appointment.height, value: appointment.weight}
       formatted.push(app)
     }
   })
 
-  // console.log(formatted)
-
-  const formatReferenceData = (data: charts, formatted: { age: number; value: number; }[]) => {
+  const formatReferenceData = (data: charts, formatted: { length: number; value: number; }[]) => {
     const format: { 
-      age: number; 
-      '3rd': number; 
-      '15th': number; 
-      '50th': number; 
-      '85th': number; 
-      '97th': number; 
-      [key: string]: number 
+      length: number | undefined; 
+      '3rd': number | undefined; 
+      '15th': number | undefined; 
+      '50th': number | undefined; 
+      '85th': number | undefined; 
+      '97th': number | undefined; 
+      [key: string]: number | undefined
     }[] = [];
 
     const maxLength = Math.max(
@@ -71,17 +64,18 @@ const Charts = async props => {
       (data.p97 as number[])?.length || 0
     );
 
-    for (let index = 0; index < maxLength; index++) {
-      const patientDataForDay = formatted.find(item => item.age === index);
-
+    // Start at 45 cm and increment by 0.1 cm
+    for (let i = 0; i < maxLength; i++) {
+      const lengthValue = 45 + (i * 0.1);
+      const patientDataForDay = formatted.find(item => Math.abs(item.length - lengthValue) < 0.05);
 
       format.push({ 
-        age: index, 
-        '3rd': data.p03?.[index] ?? null, 
-        '15th': data.p15?.[index] ?? null, 
-        '50th': data.p50?.[index] ?? null, 
-        '85th': data.p85?.[index] ?? null, 
-        '97th': data.p97?.[index] ?? null,
+        length: lengthValue, 
+        '3rd': data.p03?.[i] ?? null, 
+        '15th': data.p15?.[i] ?? null, 
+        '50th': data.p50?.[i] ?? null, 
+        '85th': data.p85?.[i] ?? null, 
+        '97th': data.p97?.[i] ?? null,
         [patient?.firstname ?? 'patient']: patientDataForDay?.value ?? null
       });
     }
@@ -90,11 +84,9 @@ const Charts = async props => {
   };
 
   const data = referenceData ? formatReferenceData(referenceData, formatted) : [];
-
-
   return (
-    <Chart patient={patient} type="wfa" title="Weight for Age" ylabel={'Weight (kg)'} xlabel={'Age (days)'} name={patient?.firstname ?? 'patient'}  data={data} showTitle={true} mesure={'age'} xUnit={'days'} yUnit={'kg'}   />
-  );
+    <Chart patient={patient} type="wfl" title="Weight for Length" ylabel={'Weight (kg)'} xlabel={'Length (cm)'} name={patient?.firstname ?? 'patient'}  data={data} yUnit={'kg'} xUnit={'cm'} showTitle={true} mesure={'length'} />
+  )
 }
  
 export default Charts

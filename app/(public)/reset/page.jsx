@@ -5,13 +5,14 @@ import { useForm } from 'react-hook-form';
 import * as yup from "yup";
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useRouter } from 'next/navigation';
-import supabase from '@/utils/supabase';
+import { createClient } from '@/utils/supabase/client';
 import { useState, useEffect } from "react";
 import BeatLoader  from 'react-spinners/BeatLoader';
 
 
 
 export default function Home() {
+  const supabase = createClient()
 
   let [loading, setLoading] = useState(false);
   let [color, setColor] = useState("#ffffff");

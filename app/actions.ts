@@ -1,5 +1,5 @@
 'use server'
-import supabase from "@/utils/supabase-ssr"
+import { createClient } from "@/utils/supabase/server"
 import { Dose, Vaccin, VaccinationRecord } from "@prisma/client"
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
@@ -13,7 +13,8 @@ export async function refresh(paths: string[]) {
 }
 
 export async function verifySession() {
-  const {data: {user}} = await supabase.auth.getUser()
+  const supabase = createClient()
+  const {data: {user}} = await (await supabase).auth.getUser()
   if (!user) {
     redirect('/login')
   }

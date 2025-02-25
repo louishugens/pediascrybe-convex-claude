@@ -19,10 +19,17 @@ async function getAppointment(appointmentId){
 
 
 
-const EditAppointmentPage = async ({params: {patientId, appointmentId}}) => {
+const EditAppointmentPage = async props => {
+  const params = await props.params;
+
+  const {
+    patientId,
+    appointmentId
+  } = params;
+
   // const supabase = createServerClient()
 
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -34,7 +41,7 @@ const EditAppointmentPage = async ({params: {patientId, appointmentId}}) => {
       },
     }
   )
-  
+
   const {
     data: { session },
   } = await supabase.auth.getSession()
