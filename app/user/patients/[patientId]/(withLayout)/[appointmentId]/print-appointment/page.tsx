@@ -3,7 +3,7 @@ import prisma from "@/utils/prisma";
 import { createClient } from '@/utils/supabase/server'
 
 
-async function getAppointment(appointmentId) {
+async function getAppointment(appointmentId: string) {
   const appointment = await prisma.appointment.findUnique({
     where:{
       id:appointmentId
@@ -12,7 +12,7 @@ async function getAppointment(appointmentId) {
   return appointment
 }
 
-async function getPatient(patientId) {
+async function getPatient(patientId: string) {
   const patient = await prisma.patient.findUnique({
     where:{
       id:patientId
@@ -21,7 +21,7 @@ async function getPatient(patientId) {
   return patient
 }
 
-async function getDoctor(doctorId) {
+async function getDoctor(doctorId: string) {
   const doctor = await prisma.doctor.findUnique({
     where:{
       id:doctorId
@@ -32,7 +32,9 @@ async function getDoctor(doctorId) {
 
 export const dynamic = 'force-dynamic';
 
-const PrintPage = async props => {
+type Params = Promise<{ patientId: string, appointmentId: string }>
+
+const PrintPage = async (props: { params: Params }) => {
   const params = await props.params;
 
   const {
@@ -50,7 +52,7 @@ const PrintPage = async props => {
 
   let appointment = await getAppointment(appointmentId)
   const patient = await getPatient(patientId)
-  const doctor = await getDoctor(doctorId)
+  const doctor = await getDoctor(doctorId as string)
 
   return (
     <>

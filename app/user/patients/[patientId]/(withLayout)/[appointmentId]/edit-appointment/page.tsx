@@ -1,12 +1,9 @@
 
 import EditAppointment from "@/components/editAppointment";
 import prisma from "@/utils/prisma";
-// import {createServerClient} from '@/utils/supabase-server'
-// import supabase from '@/utils/supabase-ssr'
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createClient } from "@/utils/supabase/server";
 
-async function getAppointment(appointmentId){
+async function getAppointment(appointmentId: string){
   const appointment = await prisma.appointment.findUnique({
     where:{
       id:appointmentId
@@ -15,11 +12,9 @@ async function getAppointment(appointmentId){
   return appointment
 }
 
+type Params = Promise<{ patientId: string, appointmentId: string }>
 
-
-
-
-const EditAppointmentPage = async props => {
+const EditAppointmentPage = async (props: { params: Params }) => {
   const params = await props.params;
 
   const {
@@ -27,20 +22,7 @@ const EditAppointmentPage = async props => {
     appointmentId
   } = params;
 
-  // const supabase = createServerClient()
-
-  const cookieStore = await cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  )
+  const supabase = await createClient()
 
   const {
     data: { session },

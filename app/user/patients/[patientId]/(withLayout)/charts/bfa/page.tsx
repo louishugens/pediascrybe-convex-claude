@@ -39,12 +39,10 @@ async function getReferenceData5To19(sex: Patient["sex"]){
   return referenceData
 }
 
-const Charts = async props => {
-  const params = await props.params;
+type Params = Promise<{ patientId: string }>
 
-  const {
-    patientId
-  } = params;
+const BFAChart = async ({ params }: { params: Params }) => {
+  const { patientId } = await params;
 
   const patient = await getPatient(patientId)
   const appointments = patient?.appointments
@@ -142,130 +140,6 @@ const Charts = async props => {
     return format;
   };
 
-  // const formatReferenceData = (data: charts) => {
-
-  //   type formattedPercentile = {
-  //     category: number;
-  //     value: number;
-  //   }
-
-  //   type formattedData = { name: string; data: formattedPercentile[] }
-
-  //   const formatted: formattedData[] = []
-
-  //   if (Array.isArray(data.p03)) {
-  //     let percentile: formattedData = {name: `3rd`, data: []}
-  //     for(let day = 0; day < data.p03.length; day++){
-  //       if (data.p03[day]) {
-  //         percentile.data.push({category: day, value: data.p03[day] as number})
-  //       }
-  //     }
-  //     formatted.push(percentile)
-  //   }
-  //   if (Array.isArray(data.p15)) {
-  //     let percentile: formattedData = {name: `15th`, data: []}
-  //     for(let day = 0; day < data.p15.length; day++){
-  //       if (data.p15[day]) {
-  //         percentile.data.push({category: day, value: data.p15[day] as number})
-  //       }
-  //     }
-  //     formatted.push(percentile)
-  //   }
-  //   if (Array.isArray(data.p50)) {
-  //     let percentile: formattedData = {name: `50th`, data: []}
-  //     for(let day = 0; day < data.p50.length; day++){
-  //       if (data.p50[day]) {
-  //         percentile.data.push({category: day, value: data.p50[day] as number})
-  //       }
-  //     }
-  //     formatted.push(percentile)
-  //   }
-  //   if (Array.isArray(data.p85)) {
-  //     let percentile: formattedData = {name: `85th`, data: []}
-  //     for(let day = 0; day < data.p85.length; day++){
-  //       if (data.p85[day]) {
-  //         percentile.data.push({category: day, value: data.p85[day] as number})
-  //       }
-  //     }
-  //     formatted.push(percentile)
-  //   }
-  //   if (Array.isArray(data.p97)) {
-  //     let percentile: formattedData = {name: `97th`, data: []}
-  //     for(let day = 0; day < data.p97.length; day++){
-  //       if (data.p97[day]) {
-  //         percentile.data.push({category: day, value: data.p97[day] as number})
-  //       }
-  //     }
-  //     formatted.push(percentile)
-  //   }
-
-  //   return formatted
-
-  // }
-
-  // const formatReferenceData5To19 = (data: charts) => {
-
-  //   type formattedPercentile = {
-  //     category: number;
-  //     value: number;
-  //   }
-
-  //   type formattedData = { name: string; data: formattedPercentile[] }
-
-  //   const formatted: formattedData[] = []
-
-  //   if (Array.isArray(data.p03)) {
-  //     let percentile: formattedData = {name: `3rd`, data: []}
-  //     for(let day = 0; day < data.p03.length; day++){
-  //       if (data.p03[day]) {
-  //         percentile.data.push({category: day + 61, value: data.p03[day] as number})
-  //       }
-  //     }
-  //     formatted.push(percentile)
-  //   }
-  //   if (Array.isArray(data.p15)) {
-  //     let percentile: formattedData = {name: `15th`, data: []}
-  //     for(let day = 0; day < data.p15.length; day++){
-  //       if (data.p15[day]) {
-  //         percentile.data.push({category: day + 61, value: data.p15[day] as number})
-  //       }
-  //     }
-  //     formatted.push(percentile)
-  //   }
-  //   if (Array.isArray(data.p50)) {
-  //     let percentile: formattedData = {name: `50th`, data: []}
-  //     for(let day = 0; day < data.p50.length; day++){
-  //       if (data.p50[day]) {
-  //         percentile.data.push({category: day + 61, value: data.p50[day] as number})
-  //       }
-  //     }
-  //     formatted.push(percentile)
-  //   }
-  //   if (Array.isArray(data.p85)) {
-  //     let percentile: formattedData = {name: `85th`, data: []}
-  //     for(let day = 0; day < data.p85.length; day++){
-  //       if (data.p85[day]) {
-  //         percentile.data.push({category: day + 61, value: data.p85[day] as number})
-  //       }
-  //     }
-  //     formatted.push(percentile)
-  //   }
-  //   if (Array.isArray(data.p97)) {
-  //     let percentile: formattedData = {name: `97th`, data: []}
-  //     for(let day = 0; day < data.p97.length; day++){
-  //       if (data.p97[day]) {
-  //         percentile.data.push({category: day + 61, value: data.p97[day] as number})
-  //       }
-  //     }
-  //     formatted.push(percentile)
-  //   }
-
-  //   return formatted
-
-  // }
-
-
-
   const data = referenceData ? formatReferenceData(referenceData, formatted) : null;
   const data5To19 = referenceData5To19 ? formatReferenceData5To19(referenceData5To19, formatted5To19) : null;
 
@@ -278,4 +152,4 @@ const Charts = async props => {
   )
 }
  
-export default Charts
+export default BFAChart

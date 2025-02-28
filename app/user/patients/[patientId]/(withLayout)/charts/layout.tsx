@@ -1,15 +1,15 @@
 import ChartsNav from '@/components/chartsNav'
 
-const Layout = async props => {
-  const params = await props.params;
+type Params = Promise<{ patientId: string }>
 
-  const {
-    patientId
-  } = params;
-
-  const {
-    children
-  } = props;
+const Layout = async ({
+  children,
+  params,
+}: {
+  children: React.ReactNode
+  params: Params
+}) => {
+  const { patientId } = await params;
 
   return (
     <>
@@ -18,7 +18,6 @@ const Layout = async props => {
         {children}
       </div>
     </>
-    
   )
 }
 

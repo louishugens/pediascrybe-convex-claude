@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { Message as VercelChatMessage, StreamingTextResponse } from "ai";
+import { Message as VercelChatMessage, streamText } from "ai";
 import { AttributeInfo } from "langchain/schema/query_constructor";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
 import { SupabaseTranslator } from "langchain/retrievers/self_query/supabase";
@@ -18,7 +18,7 @@ import {
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { OpenAI } from "langchain/llms/openai";
 import { createClient } from '@/utils/supabase/server'
-
+import { openai } from "@ai-sdk/openai";
 export const runtime = "edge";
 
 type ConversationalRetrievalQAChainInput = {
@@ -174,7 +174,14 @@ export async function POST(req: Request, props: { params: Promise<{ patientId: s
       chat_history: previousMessages,
     });
 
-    return new StreamingTextResponse(stream);
+    const { textStream } = await streamText({
+      model: openai('gpt-4o-mini'),
+      messages: [
+        { role: 'user', content: currentMessageContent },
+        ...previousMessages,
+      ],
+    });
+    // return new StreamingTextResponse(textStream);
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

@@ -8,7 +8,9 @@ import { redirect } from "next/navigation";
 
 export const dynamic = 'force-dynamic';
 
-const PrintPage = async props => {
+type Params = Promise<{ patientId: string, appointmentId: string }>
+
+const PrintPage = async (props: { params: Params }) => {
   const params = await props.params;
 
   const {

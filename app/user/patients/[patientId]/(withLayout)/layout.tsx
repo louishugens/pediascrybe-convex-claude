@@ -14,17 +14,16 @@ async function getPatient(patientId){
   return patient
 }
 
+type Params = Promise<{ patientId: string }>
 
-const Layout = async props => {
-  const params = await props.params;
-
-  const {
-    patientId
-  } = params;
-
-  const {
-    children
-  } = props;
+const Layout = async ({
+  children,
+  params,
+}: {
+  children: React.ReactNode
+  params: Params
+}) => {
+  const { patientId } = await params;
 
   const supabase = await createClient()
 

@@ -25,7 +25,11 @@ import { el } from "date-fns/locale"
 import { revalidatePath } from "next/cache"
 import { refresh } from "@/app/actions"
 
-export default function UploadPage(props) {
+
+type Params = Promise<{ patientId: string, appointmentId: string }>
+
+export default function UploadPage(props: { params: Params }) {
+  
   const params = use(props.params);
 
   const {

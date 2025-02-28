@@ -15,7 +15,10 @@ async function getReceipts(patientId:string) {
   })
   return receipts
 }
-const ReceiptsPage = async props => {
+
+type Params = Promise<{ patientId: string }>
+
+const ReceiptsPage = async (props: { params: Params }) => {
   const params = await props.params;
 
   const {

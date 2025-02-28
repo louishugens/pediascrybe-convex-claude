@@ -1,7 +1,7 @@
 import EditReport from "@/components/editReport";
 import prisma from "@/utils/prisma";
 
-async function getReport(reportId){
+async function getReport(reportId: string){
   const report = await prisma.report.findUnique({
     where: {
       id: reportId
@@ -9,7 +9,10 @@ async function getReport(reportId){
   })
   return report
 }
-const EditReportPage = async props => {
+
+type Params = Promise<{ patientId: string, reportId: string }>
+
+const EditReportPage = async (props: { params: Params }) => {
   const params = await props.params;
 
   const {

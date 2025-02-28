@@ -14,7 +14,10 @@ async function getReports(patientId:string) {
   })
   return reports
 }
-const ReportsPage = async props => {
+
+type Params = Promise<{ patientId: string }>
+
+const ReportsPage = async (props: { params: Params }) => {
   const params = await props.params;
 
   const {

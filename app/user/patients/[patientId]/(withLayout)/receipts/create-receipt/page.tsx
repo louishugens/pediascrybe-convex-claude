@@ -40,7 +40,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { XCircleIcon } from '@heroicons/react/24/outline';
 
 
-const CreateReceiptPage = props => {
+type Params = Promise<{ patientId: string }>
+
+export default function CreateReceiptPage(props: { params: Params }) {
   const params = use(props.params);
 
   const {
@@ -290,5 +292,3 @@ const CreateReceiptPage = props => {
   </div>
    );
 }
- 
-export default CreateReceiptPage;

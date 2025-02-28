@@ -1,4 +1,3 @@
-
 import EditPatient from "@/components/editPatient";
 import prisma from "@/utils/prisma";
 import { createClient } from '@/utils/supabase/server'
@@ -12,13 +11,10 @@ async function getPatient(patientId){
   return patient
 }
 
+type Params = Promise<{ patientId: string }>
 
-const EditPatientPage = async props => {
-  const params = await props.params;
-
-  const {
-    patientId
-  } = params;
+const EditPatientPage = async ({ params }: { params: Params }) => {
+  const { patientId } = await params;
 
   const supabase = await createClient()
 

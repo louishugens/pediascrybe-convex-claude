@@ -6,7 +6,8 @@ import type { Metadata } from 'next'
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import {PHProvider, PostHogPageview} from './provider';
 import { Suspense } from 'react';
- 
+import { Providers } from './providers'
+
 export const metadata: Metadata = {
   title: 'Pediatric Care, Elevated by AI Integration | Pediascrybe',
   description: 'Tailored for dedicated pediatricians, Pediascrybe streamlines patient data management like never before. Harness the power of advanced AI integration to elevate your practice. Experience efficiency and precision like never before.',
@@ -35,14 +36,16 @@ export default async function RootLayout({children}) {
         <PostHogPageview />
       </Suspense> */}
       <Suspense >
-      <PHProvider>
-        <body className='min-h-screen bg-background font-sans antialiased' >  
-          <GA />  
-          <div className='flex-1'>{children}</div>
-          <AnalyticsWrapper />
-          <SpeedInsights />
-        </body>
-      </PHProvider>
+      <Providers>
+        <PHProvider>
+          <body className='min-h-screen bg-background font-sans antialiased' >  
+            <GA />  
+            <div className='flex-1'>{children}</div>
+            <AnalyticsWrapper />
+            <SpeedInsights />
+          </body>
+        </PHProvider>
+      </Providers>
       </Suspense>
     </html>
   )

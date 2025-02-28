@@ -29,7 +29,10 @@ async function getReferenceData(sex: Patient["sex"]){
   return referenceData
 }
 
-const Charts = async ({params: {patientId}}) => {
+type Params = Promise<{ patientId: string }>
+
+const WFLChart = async ({ params }: { params: Params }) => {
+  const { patientId } = await params;
   const patient = await getPatient(patientId)
   const appointments = patient?.appointments
   const referenceData = await getReferenceData(patient?.sex ?? null);
@@ -89,4 +92,4 @@ const Charts = async ({params: {patientId}}) => {
   )
 }
  
-export default Charts
+export default WFLChart

@@ -7,7 +7,7 @@ import { AgeDistributionChart } from "@/components/AgeDistributionChart"
 import { GenderDistributionChart } from "@/components/GenderDistributionChart"
 import { ImmunizationStatusChart } from "@/components/ImmunizationStatusChart"
 import { CommonConditionsChart } from "@/components/CommonConditionsChart"
-
+import { VaccinationRecord } from "@prisma/client"
 
 async function getPatients(doctorId: string): Promise<Patient[]> {
   const patients = await prisma.patient.findMany({

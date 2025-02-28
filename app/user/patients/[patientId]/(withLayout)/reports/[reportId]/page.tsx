@@ -30,7 +30,9 @@ async function getReport(id:string) {
   return report
 }
 
-const ReportPage = async props => {
+type Params = Promise<{ patientId: string, reportId: string }>
+
+const ReportPage = async (props: { params: Params }) => {
   const params = await props.params;
 
   const {

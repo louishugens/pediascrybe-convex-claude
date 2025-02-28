@@ -21,13 +21,10 @@ async function getAppointments(patientId){
 
 }
 
+type Params = Promise<{ patientId: string }>  
 
-async function Patient(props) {
-  const params = await props.params;
-
-  const {
-    patientId
-  } = params;
+async function Patient(props: { params: Params }) {
+  const { patientId } = await props.params;
 
 
   const supabase = await createClient()

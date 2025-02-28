@@ -1,6 +1,8 @@
 import { ChatWindow } from "@/components/chatWindow"
 
-export default async function Page(props) {
+type Params = Promise<{ patientId: string }>
+
+export default async function Page(props: { params: Params }) {
   const params = await props.params;
 
   const {

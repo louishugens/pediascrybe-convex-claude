@@ -21,8 +21,9 @@ async function getAppointment(appointmentId){
   return appointment
 }
 
+type Params = Promise<{ patientId: string, appointmentId: string }>
 
-const AppointmentPage = async props => {
+const AppointmentPage = async (props: { params: Params }) => {
   const params = await props.params;
 
   const {

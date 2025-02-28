@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import doctor from '@/public/doctor.png'
 
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 
 const HeroSection = () => {
 

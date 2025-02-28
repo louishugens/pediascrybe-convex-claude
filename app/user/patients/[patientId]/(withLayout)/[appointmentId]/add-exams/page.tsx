@@ -2,7 +2,7 @@
 import prisma from '@/utils/prisma';
 import AddExams from "@/components/addExams";
 
-async function getAppointment(appointmentId){
+async function getAppointment(appointmentId: string){
   const appointment = await prisma.appointment.findUnique({
     where:{
       id:appointmentId
@@ -11,7 +11,7 @@ async function getAppointment(appointmentId){
   return appointment
 }
 
-async function getPatient(patientId) {
+async function getPatient(patientId: string) {
   const patient = await prisma.patient.findUnique({
     where: {
       id: patientId,
@@ -24,9 +24,9 @@ async function getPatient(patientId) {
   return patient
 }
 
+type Params = Promise<{ patientId: string, appointmentId: string }>
 
-
-const AddExamsPage = async props => {
+const AddExamsPage = async (props: { params: Params }) => {
   const params = await props.params;
 
   const {
