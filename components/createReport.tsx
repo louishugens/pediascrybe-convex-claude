@@ -29,6 +29,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import EditDoctor from '@/components/editDoctor';
 import { Editor } from '@/components/editor';
+import { useCompletion } from '@ai-sdk/react';
 
 
 const CreateReport = ({patientId, patient, consultations}) => {
@@ -118,15 +119,49 @@ const CreateReport = ({patientId, patient, consultations}) => {
 
 
     setGenerating(true)
-    const res = await fetch('/api/ai/report', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({messages})
-    })
-    const content = await res.json()
-    console.log('content :>> ', content);
-    form.setValue('content', content.substring(7, content.length - 3).trim())
-    setGenerating(false)
+    try {
+      const response = await fetch('/api/ai/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({messages})
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to generate report')
+      }
+
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+      let content = ''
+
+      if (!reader) {
+        throw new Error('No reader available')
+      }
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const chunk = decoder.decode(value)
+        content += chunk
+
+        // Update form as we receive chunks
+        const cleanContent = content.replace(/<\/?body>/g, '').trim()
+        // Ensure the content is wrapped in a paragraph if it's plain text
+        const formattedContent = cleanContent.startsWith('<') ? cleanContent : `<p>${cleanContent}</p>`
+        
+        form.setValue('content', formattedContent, {
+          shouldValidate: true,
+          shouldDirty: true,
+          shouldTouch: true
+        })
+      }
+    } catch (error) {
+      console.error('Error generating report:', error)
+      toast.error('Failed to generate report')
+    } finally {
+      setGenerating(false)
+    }
   }
 
   const schema = z.object({

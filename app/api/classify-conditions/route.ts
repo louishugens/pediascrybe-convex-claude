@@ -32,8 +32,8 @@ export async function POST(req: Request) {
 
     const conditions = result.object.conditions;
 
-    // Cache the results for 1 week
-    await redis.set(cacheKey, JSON.stringify(conditions), { ex: 60 * 60 * 24 * 7 })
+    // Cache the results for 1 day
+    await redis.set(cacheKey, JSON.stringify(conditions), { ex: 60 * 60 * 24 })
 
     return NextResponse.json(conditions)
   } catch (error) {

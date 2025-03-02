@@ -21,8 +21,6 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import FileUpoad from "@/components/fileUpload"
-import { el } from "date-fns/locale"
-import { revalidatePath } from "next/cache"
 import { refresh } from "@/app/actions"
 
 

@@ -1,12 +1,7 @@
-import OpenAI from 'openai'
+import { openai } from '@ai-sdk/openai'
+import { streamText } from 'ai'
 import { createClient } from '@/utils/supabase/server'
  
-
-export const runtime = 'edge'
- 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!
-})
  
 export async function POST(req: Request) {
   try {
@@ -24,28 +19,30 @@ export async function POST(req: Request) {
 
     const { messages } = await req.json()
 
-    console.log('messages :>> ', messages);
+    // console.log('messages :>> ', messages);
 
     
-    const response = await openai.chat.completions.create({
-      // model: 'gpt-3.5-turbo',
-      model: 'gpt-4o-mini',
-      // stream: true,
-      messages: messages
+    const textStream = await streamText({
+      model: openai('gpt-4o-mini'),
+      messages
     })
 
-    console.log('response :>> ', response);
+    // console.log('response :>> ', response);
 
-    if (!response) {
-      return new Response(JSON.stringify(response), {
+    if (!textStream) {
+      return new Response(JSON.stringify(textStream), {
         status: 500
       });
     }
 
-    return new Response(JSON.stringify(response.choices[0].message.content), {
-      status: 200
-    });
+    // console.log('textStream :>> ', textStream);
+
+    return textStream.toTextStreamResponse()
   } catch (error) {
-    // ... error handling
+    console.error('Error in report generation:', error)
+    return new Response(
+      JSON.stringify({ error: 'Failed to generate report' }),
+      { status: 500 }
+    )
   }
 }

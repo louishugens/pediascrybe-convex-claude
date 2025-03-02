@@ -130,7 +130,7 @@ const EditReport = ({patientId, report}: Props) => {
             render={({ field }) => (
               <FormItem className='mt-8'>
                 <FormLabel>Content</FormLabel>
-                <FormControl>
+                <FormControl className='p-4 rounded-lg'>
                   {/* <Textarea placeholder="Medical history" {...field} /> */}
                   <Editor 
                     {...field}
