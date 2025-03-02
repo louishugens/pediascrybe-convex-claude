@@ -222,9 +222,9 @@ const extensions = [
 
 export const Editor = (props: EditorProps) => {
   const { onChange, value } = props;
-  const initialContent = `${value}` || '<p></p>'
+  const initialContent = value || '<p></p>'
 
-  console.log('value :>> ', value);
+  // console.log('value :>> ', value);
 
   return (
     <div className="bg-white rounded-md border border-input p-4">
