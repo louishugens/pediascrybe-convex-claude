@@ -142,7 +142,7 @@ const WFLChart = async ({ params }: { params: Params }) => {
   const data_0_2 = referenceData_0_2 ? formatReferenceData_0_2(referenceData_0_2, formatted_0_2) : [];
   return (
     <>
-    <Chart patient={patient} type="wfl" title="Weight for Length (0-2 years)" ylabel={'Weight (kg)'} xlabel={'Length (cm)'} name={patient?.firstname ?? 'patient'}  data={data_0_2} yUnit={'kg'} xUnit={'cm'} showTitle={true} mesure={'length'} />
+    <Chart patient={patient} type="wfl0To2" title="Weight for Length (0-2 years)" ylabel={'Weight (kg)'} xlabel={'Length (cm)'} name={patient?.firstname ?? 'patient'}  data={data_0_2} yUnit={'kg'} xUnit={'cm'} showTitle={true} mesure={'length'} />
     <Chart patient={patient} type="wfl" title="Weight for Length" ylabel={'Weight (kg)'} xlabel={'Length (cm)'} name={patient?.firstname ?? 'patient'}  data={data} yUnit={'kg'} xUnit={'cm'} showTitle={true} mesure={'length'} />
     </>
   )

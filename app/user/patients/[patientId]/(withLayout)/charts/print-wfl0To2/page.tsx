@@ -1,8 +1,8 @@
 import Print from "@/components/printCharts";
 import prisma from "@/utils/prisma";
 import { createClient } from '@/utils/supabase/server'
-import { differenceInDays } from 'date-fns'
-import { charts, Patient } from "@prisma/client";
+import { Patient, charts } from "@prisma/client";
+import { differenceInDays } from "date-fns";
 
 async function getAppointment(appointmentId) {
   const appointment = await prisma.appointment.findUnique({
@@ -21,7 +21,7 @@ async function getPatient(patientId) {
     include: {
       appointments:{
         orderBy:{
-          startDate: 'asc'
+          height: 'asc'
         }
       },
     },
@@ -42,7 +42,7 @@ async function getReferenceData(sex: Patient["sex"]){
 
   const referenceData = await prisma.charts.findUnique({
     where:{
-      id: (sex === 'female') ? 'ghfa_5_19' : 'bhfa_5_19'
+      id: (sex === 'female') ? 'gwfh_0_2' : 'bwfh_0_2'
     }
   })
   return referenceData
@@ -59,7 +59,6 @@ const PrintPage = async props => {
 
   const supabase = await createClient()
 
-
   const {
     data: { session },
   } = await supabase.auth.getSession()
@@ -72,28 +71,26 @@ const PrintPage = async props => {
   const appointments = patient?.appointments
   const referenceData = await getReferenceData(patient?.sex ?? null);
 
-
-  let formatted: { age: number; value: number; }[] = []
+  let formatted: { length: number; value: number; }[] = []
 
   appointments?.map(appointment =>{
-    if(appointment.height){
-      if(differenceInDays(appointment.startDate, patient?.birthdate ?? new Date()) / 30.4375 > 60){
-        let app = {age: Math.floor(differenceInDays(appointment.startDate, patient?.birthdate ?? new Date())/30.4375), value: appointment.height}
+    if(appointment.weight && appointment.height){
+      let app = {length: appointment.height, value: appointment.weight}
+      if(differenceInDays(appointment.startDate, patient?.birthdate ?? new Date()) < 365*2){
         formatted.push(app)
       }
     }
   })
 
-  const formatReferenceData = (data: charts, formatted: { age: number; value: number; }[]) => {
-
+  const formatReferenceData = (data: charts, formatted: { length: number; value: number; }[]) => {
     const format: { 
-      age: number; 
-      '3rd': number; 
-      '15th': number; 
-      '50th': number; 
-      '85th': number; 
-      '97th': number; 
-      [key: string]: number 
+      length: number | undefined; 
+      '3rd': number | undefined; 
+      '15th': number | undefined; 
+      '50th': number | undefined; 
+      '85th': number | undefined; 
+      '97th': number | undefined; 
+      [key: string]: number | undefined
     }[] = [];
 
     const maxLength = Math.max(
@@ -104,30 +101,32 @@ const PrintPage = async props => {
       (data.p97 as number[])?.length || 0
     );
 
-    for (let index = 0; index < maxLength; index++) {
-      const patientDataForDay = formatted.find(item => item.age === index);
-
+    // Start at 45 cm and increment by 0.1 cm
+    for (let i = 0; i < maxLength; i++) {
+      const lengthValue = 45 + (i * 0.5);
+      const patientDataForDay = formatted.find(item => Math.abs(item.length - lengthValue) < 0.05);
 
       format.push({ 
-        age: index, 
-        '3rd': data.p03?.[index] ?? null, 
-        '15th': data.p15?.[index] ?? null, 
-        '50th': data.p50?.[index] ?? null, 
-        '85th': data.p85?.[index] ?? null, 
-        '97th': data.p97?.[index] ?? null,
+        length: lengthValue, 
+        '3rd': data.p03?.[i] ?? null, 
+        '15th': data.p15?.[i] ?? null, 
+        '50th': data.p50?.[i] ?? null, 
+        '85th': data.p85?.[i] ?? null, 
+        '97th': data.p97?.[i] ?? null,
         [patient?.firstname ?? 'patient']: patientDataForDay?.value ?? null
       });
     }
 
     return format;
+  };
 
-  }
+  const data = referenceData ? formatReferenceData(referenceData, formatted) : [];
 
-  const data = referenceData ? formatReferenceData(referenceData, formatted) : null;
+
 
   return (
     <>
-      <Print type="hfa-5To19" title="Height for Age (5-19 years)" ylabel="Height (in cm)" xlabel="Age (in months)" patient={patient} doctor={doctor}  data={data} yUnit={'cm'} xUnit={'months'} mesure={'age'} />
+      <Print type="wfl-0To2" title="Weight for Length (0-2 years)" ylabel="Weight (in kg)" xlabel="Height (in cm)" patient={patient} doctor={doctor} data={data} yUnit="kg" xUnit="cm" mesure="length" />
     </>
   );
 };

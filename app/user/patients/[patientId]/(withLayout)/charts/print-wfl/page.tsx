@@ -2,7 +2,7 @@ import Print from "@/components/printCharts";
 import prisma from "@/utils/prisma";
 import { createClient } from '@/utils/supabase/server'
 import { Patient, charts } from "@prisma/client";
-
+import { differenceInDays } from "date-fns";
 async function getAppointment(appointmentId) {
   const appointment = await prisma.appointment.findUnique({
     where:{
@@ -75,7 +75,9 @@ const PrintPage = async props => {
   appointments?.map(appointment =>{
     if(appointment.weight && appointment.height){
       let app = {length: appointment.height, value: appointment.weight}
-      formatted.push(app)
+      if(differenceInDays(appointment.startDate, patient?.birthdate ?? new Date()) > 365*2){
+        formatted.push(app)
+      }
     }
   })
 
@@ -100,7 +102,7 @@ const PrintPage = async props => {
 
     // Start at 45 cm and increment by 0.1 cm
     for (let i = 0; i < maxLength; i++) {
-      const lengthValue = 45 + (i * 0.1);
+      const lengthValue = 65 + (i * 0.1);
       const patientDataForDay = formatted.find(item => Math.abs(item.length - lengthValue) < 0.05);
 
       format.push({ 
