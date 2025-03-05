@@ -1,7 +1,7 @@
 import { Montserrat } from 'next/font/google'
 import  '@/css/globals.css'
 import { AnalyticsWrapper } from '@/components/analytics';
-import GA from '@/components/googleAnalytics';
+// import GA from '@/components/googleAnalytics';
 import type { Metadata } from 'next'
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import {PHProvider, PostHogPageview} from './provider';
@@ -39,7 +39,7 @@ export default async function RootLayout({children}) {
       <Providers>
         <PHProvider>
           <body className='min-h-screen bg-background font-sans antialiased' >  
-            <GA />  
+            {/* <GA />   */}
             <div className='flex-1'>{children}</div>
             <AnalyticsWrapper />
             <SpeedInsights />

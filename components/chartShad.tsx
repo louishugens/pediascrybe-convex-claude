@@ -48,7 +48,7 @@ export function ChartShad({patient, type, title, ylabel, xlabel, name, data, yUn
       color: "hsl(var(--chart-2))",
     },
     "50th": {
-      label: "30th",
+      label: "50th",
       color: "hsl(var(--chart-3))",
     },
     "85th": {
