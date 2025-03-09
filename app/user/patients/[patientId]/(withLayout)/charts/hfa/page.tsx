@@ -90,7 +90,7 @@ const HFAChart = async ({ params }: { params: Params }) => {
 
 
       format.push({ 
-        age: index, 
+        age: index + 60, 
         '3rd': data.p03?.[index] ?? null, 
         '15th': data.p15?.[index] ?? null, 
         '50th': data.p50?.[index] ?? null, 
@@ -123,12 +123,12 @@ const HFAChart = async ({ params }: { params: Params }) => {
       (data.p97 as number[])?.length || 0
     );
 
-    for (let index = 60; index < maxLength; index++) {
+    for (let index = 0; index < maxLength; index++) {
       const patientDataForDay = formatted5To19.find(item => item.age === index);
 
 
       format.push({ 
-        age: index, 
+        age: index + 60, 
         '3rd': data.p03?.[index] ?? null, 
         '15th': data.p15?.[index] ?? null, 
         '50th': data.p50?.[index] ?? null, 

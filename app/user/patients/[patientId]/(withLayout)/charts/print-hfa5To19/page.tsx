@@ -109,7 +109,7 @@ const PrintPage = async props => {
 
 
       format.push({ 
-        age: index, 
+        age: index + 60, 
         '3rd': data.p03?.[index] ?? null, 
         '15th': data.p15?.[index] ?? null, 
         '50th': data.p50?.[index] ?? null, 
