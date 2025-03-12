@@ -66,6 +66,8 @@ const HFAChart = async ({ params }: { params: Params }) => {
     }
   })
 
+  // console.log(formatted5To19)
+
   const formatReferenceData = (data: charts, formatted: { age: number; value: number; }[]) => {
     const format: { 
       age: number; 
@@ -90,7 +92,7 @@ const HFAChart = async ({ params }: { params: Params }) => {
 
 
       format.push({ 
-        age: index + 60, 
+        age: index, 
         '3rd': data.p03?.[index] ?? null, 
         '15th': data.p15?.[index] ?? null, 
         '50th': data.p50?.[index] ?? null, 
@@ -105,6 +107,7 @@ const HFAChart = async ({ params }: { params: Params }) => {
 
 
   const formatReferenceData5To19 = (data: charts, formatted5To19: { age: number; value: number; }[]) => {
+    // const newNumber = formatted5To19.map(item => item.age + 60)
     const format: { 
       age: number; 
       '3rd': number; 
@@ -123,20 +126,22 @@ const HFAChart = async ({ params }: { params: Params }) => {
       (data.p97 as number[])?.length || 0
     );
 
-    for (let index = 0; index < maxLength; index++) {
+    for (let index = 60; index < maxLength + 60; index++) {
       const patientDataForDay = formatted5To19.find(item => item.age === index);
 
-
+      console.log(patientDataForDay)
       format.push({ 
-        age: index + 60, 
-        '3rd': data.p03?.[index] ?? null, 
-        '15th': data.p15?.[index] ?? null, 
-        '50th': data.p50?.[index] ?? null, 
-        '85th': data.p85?.[index] ?? null, 
-        '97th': data.p97?.[index] ?? null,
+        age: index, 
+        '3rd': data.p03?.[index - 60] ?? null, 
+        '15th': data.p15?.[index - 60] ?? null, 
+        '50th': data.p50?.[index - 60] ?? null, 
+        '85th': data.p85?.[index - 60] ?? null, 
+        '97th': data.p97?.[index - 60] ?? null,
         [patient?.firstname ?? 'patient']: patientDataForDay?.value ?? null
       });
     }
+
+    // console.log(format)
 
     return format;
   };
