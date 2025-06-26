@@ -10,7 +10,7 @@ export async function POST(req: Request) {
   const { messages } = await req.json()
 
   const response = await openai.chat.completions.create({
-    model: 'gpt-3.5-turbo',
+    model: 'gpt-4.1',
     // model: 'gpt-4',
     temperature: 0.0,
     // stream: true,
@@ -24,6 +24,8 @@ export async function POST(req: Request) {
       status: 500
     });
   }
+
+  console.log('response :>> ', response.choices[0].message);
 
   return new Response(JSON.stringify(response.choices[0].message.content), {
     status: 200

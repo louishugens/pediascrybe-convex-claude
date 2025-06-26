@@ -27,7 +27,7 @@ export default function PatientList({patients, doctorId}) {
                   View
                 </Link>
                 <Link href={`/user/patients/${patient.id}/add-appointment`} className="py-2 px-4 rounded-full bg-primary text-xs text-white font-medium " >
-                  Add Appointment
+                  Add Consultation
                 </Link>
               </div>
             </div>

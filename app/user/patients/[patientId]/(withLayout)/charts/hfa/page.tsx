@@ -129,7 +129,7 @@ const HFAChart = async ({ params }: { params: Params }) => {
     for (let index = 60; index < maxLength + 60; index++) {
       const patientDataForDay = formatted5To19.find(item => item.age === index);
 
-      console.log(patientDataForDay)
+      // console.log(patientDataForDay)
       format.push({ 
         age: index, 
         '3rd': data.p03?.[index - 60] ?? null, 

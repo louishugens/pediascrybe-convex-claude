@@ -30,7 +30,7 @@ const AddExams = ({patient, patientId, appointment}) => {
       const messages = [
         {
           role: "system",
-          content: "As ScrybeGPT, a helpfu medical assistant, your task is to propose to a pediatrician a list of lab exams for a patient, based on their symptoms and diagnostics. Follow these steps:\
+          content: "As ScrybeGPT, a helpful medical assistant, your task is to propose to a pediatrician a list of lab exams for a patient, based on their symptoms and diagnostics. Follow these steps:\
                     \
                     1. Identify the laguage used for the symptoms.\
                     2. Based on the age, symptoms, and diagnosis, determine an appropriate set of lab exams that should be conducted.\
