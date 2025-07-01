@@ -7,12 +7,12 @@ export async function POST(req: Request) {
 
     const supabase = await createClient()
 
-    const { data: {session}, error } = await (await supabase).auth.getSession();
+    const { data: {user}, error } = await (await supabase).auth.getUser();
 
-    if (!session) {
+    if (!user) {
       return new Response(
         JSON.stringify({
-          error: { statusCode: 500, message: 'Session is not defined' }
+          error: { statusCode: 500, message: 'User is not defined' }
         }),
         { status: 500 }
       );

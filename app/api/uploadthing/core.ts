@@ -11,12 +11,12 @@ const f = createUploadthing();
 async function getSessionId() {
   const supabase = await createClient()
 
-  const { data: {session}, error } = await (await supabase).auth.getSession();
+  const { data: {user}, error } = await (await supabase).auth.getUser();
 
-  if(!session){
+  if(!user){
     throw new Error("Unauthorized");
   }
-  const userId = session?.user?.id;
+  const userId = user?.id;
   console.log('userId :>> ', userId);
   return {userId: userId}
 }

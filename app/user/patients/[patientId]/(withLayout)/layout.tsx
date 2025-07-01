@@ -28,10 +28,10 @@ const Layout = async ({
   const supabase = await createClient()
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession()
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  const doctorId = session?.user?.id
+  const doctorId = user?.id
   const patient = await getPatient(patientId)
   return (
     <div className='flex flex-col w-full h-full'>

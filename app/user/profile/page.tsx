@@ -36,10 +36,10 @@ const ProfilePage = async () => {
   const supabase = await createClient()
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession()
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  const doctorId = session?.user?.id
+  const doctorId = user?.id
   const doctor = await getDoctor(doctorId)
 
   return (

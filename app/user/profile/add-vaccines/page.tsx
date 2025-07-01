@@ -8,10 +8,10 @@ export default async function AddVaccines() {
 
     
     const {
-      data: { session },
-    } = await supabase.auth.getSession()
+      data: { user },
+    } = await supabase.auth.getUser()
   
-    const doctorId = session?.user?.id
+    const doctorId = user?.id
     if(!doctorId){
       redirect('/login')
     }

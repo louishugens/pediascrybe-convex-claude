@@ -72,9 +72,9 @@ async function getDoctor(doctorId: string): Promise<Doctor> {
 export default async function Page() {
   const supabase = await createClient()
   const {
-    data: { session },
-  } = await supabase.auth.getSession()
-  const doctorId = session?.user?.id
+    data: { user },
+  } = await supabase.auth.getUser()
+  const doctorId = user?.id
   if (!doctorId) {
     throw new Error("Doctor ID not found");
   } 

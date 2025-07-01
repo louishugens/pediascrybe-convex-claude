@@ -44,14 +44,14 @@ const ReceiptPage = async (props: { params: Params }) => {
   const supabase = await createClient()
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession()
+    data: { user },
+  } = await supabase.auth.getUser()
 
   const headersList = await headers()
   const locale = headersList.get('accept-language')
   const lang = locale?.split(',')[0]
 
-  const doctorId = session?.user?.id
+  const doctorId = user?.id
   const doctor = await getDoctor(doctorId!)
   const receipt = await getReceipt(receiptId)
   const patient = await getPatient(patientId)

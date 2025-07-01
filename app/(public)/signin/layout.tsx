@@ -9,10 +9,11 @@ export default async function SignInLayout({
   const supabase = await createClient()
 
   const {
-    data: { session },
-  } = await (await supabase).auth.getSession()
+    data: { user },
+  } = await (await supabase).auth.getUser()
+  console.log(user)
 
-  if (session) {
+  if (user) {
     redirect('/user')
   }
   
