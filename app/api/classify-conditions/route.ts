@@ -25,9 +25,10 @@ export async function POST(req: Request) {
 
     // console.log('diagnoses', diagnoses)
     const result = await generateObject({
-      model: openai('gpt-4o-mini'),
+      model: openai('gpt-4.1-nano'),
+      // model: openai('gpt-4o-mini'), 
       schema: conditionsSchema,
-      prompt: `You are a pediatric diagnosis classifier. Analyze the provided medical findings and group them into common pediatric conditions. Return only a JSON array of objects with 'name' and 'count' properties, sorted by count in descending order. Limit to top 10 conditions. Here are the diagnoses: ${JSON.stringify(diagnoses)}`,
+      prompt: `You are a pediatric diagnosis classifier. Analyze the provided medical findings and group them into common pediatric conditions. Return only a JSON array of objects with 'name' and 'count' properties, sorted by count in descending order. Limit to top 10 conditions and order from most common to least common. Here are the diagnoses: ${JSON.stringify(diagnoses)}`,
     })  
 
     const conditions = result.object.conditions;
