@@ -1,4 +1,5 @@
 'use client'
+
 import { useState, useEffect, startTransition } from 'react'
 import { useForm, Control, useFieldArray, useWatch  } from 'react-hook-form';
 import * as Yup from 'yup'
@@ -9,6 +10,9 @@ import { XCircleIcon } from '@heroicons/react/24/outline';
 import { formatDistanceToNow } from "date-fns"
 import PulseLoader from "react-spinners/PulseLoader"
 import { refresh } from '@/app/actions';
+import { experimental_useObject as useObject } from '@ai-sdk/react';
+import { examsSchema } from '@/app/api/ai/exams/schema';
+import { z } from 'zod';
 
 const ExamsSchema =  Yup.object({
   exams: Yup.array().of(
@@ -24,74 +28,105 @@ const AddExams = ({patient, patientId, appointment}) => {
   const router = useRouter()
   const [exams, setExams] = useState(appointment.exams || [{exam: null}])
   const [thinking, setThinking] = useState(false)
+  const [hasFetched, setHasFetched] = useState(false)
+  const [noReturn, setNoReturn] = useState(false)
+
+  const { object, submit, isLoading, stop } = useObject({
+    api: '/api/ai/exams',
+    schema: z.array(examsSchema),
+  });
+
+  useEffect(() => {
+    if (object && Array.isArray(object) && object.length > 0) {
+      setNoReturn(false);
+      // Get current exam names for comparison
+      const currentExamNames = fields.map(f => f.exam?.trim().toLowerCase());
+      object.forEach(exam => {
+        const examName = exam.exam?.trim().toLowerCase();
+        if (examName && !currentExamNames.includes(examName)) {
+          prepend(exam); // Add new unique exams to the top
+        }
+      });
+      return;
+    }
+    if (
+      hasFetched &&
+      !isLoading &&
+      (object === null || (Array.isArray(object) && object.length === 0))
+    ) {
+      setNoReturn(true);
+    } else {
+      setNoReturn(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [object, hasFetched, isLoading]);
 
   const fetchExamsSuggestions = async () => {
-    setThinking(true)
-      const messages = [
-        {
-          role: "system",
-          content: "As ScrybeGPT, a helpful medical assistant, your task is to propose to a pediatrician a list of lab exams for a patient, based on their symptoms and diagnostics. Follow these steps:\
-                    \
-                    1. Identify the laguage used for the symptoms.\
-                    2. Based on the age, symptoms, and diagnosis, determine an appropriate set of lab exams that should be conducted.\
-                    3. Compile the recommended lab exams into a JSON array. The array should be in the format: [{exam: \"exam_name\"}, {exam: \"other_exam_name\"}].\
-                    4. If no lab exams are necessary, send an empty JSON array.\
-                    5. Ensure the JSON array is formatted correctly and contains only the required information.\
-                    6. Translate the values for each key in the JSON array into the language used for the symptoms.\
-                    \
-                  Respond with the output in the same language as the symptoms and diagnostics. Only send the JSON array as the response."
-        },
-        {
-          role: "user",
-          content: `The patient is ${formatDistanceToNow(new Date(patient.birthdate))}`
-        },
-        {
-          role: "user",
-          content: appointment.motif ? `The patient symptoms are ${appointment.motif}` : ''
-        },
-        {
-          role: "user",
-          content: appointment.finding ? `The pediatrician's diagnostic is ${appointment.finding}` : ''
-        },
-        {
-          role: "system",
-          content: "Send the JSON array of lab exams as the response. Use the idenfied language for each key in the JSON array."
-        }
-        
-
-        // {role: "system", content: "Generate a list of lab exams based on the patient's symptoms and diagnostics.\
-        // provide it in JSON array format as follow: [{exam: \"urines\"}, {exam: \"X-ray\"}] 'exam'. \
-        // send an empty array if no exams are suggested. Only send the JSON and nothing else"},
-        // {role: "user", content: `The patient is ${formatDistanceToNow(new Date(patient.birthdate))}`},
-        // {role: "user", content: appointment.motif ? `The patient symptoms are ${appointment.motif}` : ''},
-        // {role: "user", content: appointment.finding ? `The pediatrician's diagnostic is ${appointment.finding}` : ''},
-        // {role: "system", content: "Translate the exam values in the list in the language the symptoms and diagnostics are provided."},
-      ]
-
+    setHasFetched(true);
+      // const messages = [
+      //   {
+      //     role: "system",
+      //     content: "As ScrybeGPT, a helpful medical assistant, your task is to propose to a pediatrician a list of lab exams for a patient, based on their symptoms and diagnostics. Follow these steps:\
+      //               \
+      //               1. Identify the laguage used for the symptoms.\
+      //               2. Based on the age, symptoms, and diagnosis, determine an appropriate set of lab exams that should be conducted.\
+      //               3. Compile the recommended lab exams into a JSON array. The array should be in the format: [{exam: \"exam_name\"}, {exam: \"other_exam_name\"}].\
+      //               4. If no lab exams are necessary, send an empty JSON array.\
+      //               5. Ensure the JSON array is formatted correctly and contains only the required information.\
+      //               6. Translate the values for each key in the JSON array into the language used for the symptoms.\
+      //               \
+      //             Respond with the output in the same language as the symptoms and diagnostics. Only send the JSON array as the response."
+      //   },
+      //   {
+      //     role: "user",
+      //     content: `The patient is ${formatDistanceToNow(new Date(patient.birthdate))}`
+      //   },
+      //   {
+      //     role: "user",
+      //     content: appointment.motif ? `The patient symptoms are ${appointment.motif}` : ''
+      //   },
+      //   {
+      //     role: "user",
+      //     content: appointment.finding ? `The pediatrician's diagnostic is ${appointment.finding}` : ''
+      //   },
+      //   {
+      //     role: "system",
+      //     content: "Send the JSON array of lab exams as the response. Use the idenfied language for each key in the JSON array."
+      //   }
       
-      try {
-        const response = await fetch('/api/diagnostic', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({messages})
-        });
-        const data = await response.json();
-        console.log('data :>> ', data);
-        const myexams = JSON.parse(data)
-        console.log('myexams :>> ', myexams);
-        myexams.forEach(exam => {
-          prepend(exam)
-        }
-        )
-        setThinking(false)
-      } catch (error) {
-        console.error("Error fetching suggestions:", error);
-      }
+      // ]
+      const body = {patient: {age: formatDistanceToNow(new Date(patient.birthdate)), gender: patient.sex, allergies: patient.allergies, history: patient.history}, symptoms: appointment.motif, diagnosis: appointment.findings}
+      submit(body)
+
+
+      // object?.forEach(exam => {
+      //   prepend(exam)
+      // })
+      // setThinking(false)
+      
+      // try {
+      //   const response = await fetch('/api/diagnostic', {
+      //     method: 'POST',
+      //     headers: {
+      //       'Content-Type': 'application/json',
+      //     },
+      //     body: JSON.stringify({messages})
+      //   });
+      //   const data = await response.json();
+      //   console.log('data :>> ', data);
+      //   const myexams = JSON.parse(data)
+      //   console.log('myexams :>> ', myexams);
+      //   myexams.forEach(exam => {
+      //     prepend(exam)
+      //   }
+      //   )
+      //   setThinking(false)
+      // } catch (error) {
+      //   console.error("Error fetching suggestions:", error);
+      // }
   };
 
-  // useEffect(() => {
+
   //   const fetchExamsSuggestions = async () => {
   //     setThinking(true)
   //       const messages = [
@@ -187,11 +222,13 @@ const AddExams = ({patient, patientId, appointment}) => {
       <p>Add exams </p>
       <form className='mt-4' onSubmit={handleSubmit(onSubmit)}>
       {
-        thinking 
-        ?
-          <span className=' font-light text-primary'> ScrybeGPT thinking <PulseLoader color={"#21C55D"} size={5} aria-label="Loading Spinner" data-testid="loader"/></span> 
-        :
-        <span className=' font-light text-primary'>Generate with ScrybeGPT? <span className='px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs cursor-pointer'  onClick={fetchExamsSuggestions}>Yes</span></span>
+        noReturn ? (
+          <span className='font-light text-red-500'>No exam suggestions could be generated for this patient.</span>
+        ) : isLoading ? (
+          <span className=' font-light text-primary'> ScrybeGPT thinking <PulseLoader color={"#21C55D"} size={5} aria-label="Loading Spinner" data-testid="loader"/></span>
+        ) : (
+          <span className=' font-light text-primary'>Generate with ScrybeGPT? <span className='px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs cursor-pointer'  onClick={fetchExamsSuggestions}>Yes</span></span>
+        )
       }
       {fields.map((field, index) => {
         return (

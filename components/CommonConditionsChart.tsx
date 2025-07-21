@@ -64,6 +64,9 @@ export function CommonConditionsChart({ appointments }: CommonConditionsProps) {
     staleTime: 1000 * 60 * 60 * 24 * 7, // 1 week
   })
 
+  // Sort conditions by count descending
+  const sortedConditions = [...conditions].sort((a, b) => b.count - a.count)
+
   return (
     <Card className="glass card-hover">
       <CardHeader>
@@ -73,7 +76,7 @@ export function CommonConditionsChart({ appointments }: CommonConditionsProps) {
       <CardContent>
         <ChartContainer className="h-[300px] w-full" config={chartConfig}>
           <BarChart
-            data={conditions}
+            data={sortedConditions}
             layout="vertical"
             margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
           >

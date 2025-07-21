@@ -37,6 +37,10 @@ const AddPrescriptionsPage = async (props: { params: Params }) => {
   const appointment = await getAppointment(appointmentId)
   const patient = await getPatient(patientId)
 
+  if (!appointment || !patient) {
+    return <div>Appointment or patient not found.</div>
+  }
+
   return (
     <AddPrescriptions appointment={appointment} patient={patient} patientId={patientId} data-superjson />
   )
