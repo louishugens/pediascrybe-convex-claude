@@ -25,8 +25,11 @@ import { Toaster, toast } from 'sonner'
 import posthog from 'posthog-js';
 
 const FormSchema = z.object({
-  email: z.string({required_error: 'Email is required'}).email('Invalid email address'),
-  password: z.string({required_error:'Please enter your password'}).min(4, 'Password must be more that 4 character'),
+  email: z.email('Invalid email address'),
+  password: z.string({error: (issue) => issue.input === undefined ? 
+    "Please enter your password" :
+    "Not a string" 
+    }).min(4, 'Password must be more that 4 character'),
 });
 
 export default function Home() {

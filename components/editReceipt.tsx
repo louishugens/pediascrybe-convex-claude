@@ -55,13 +55,25 @@ const EditReceipt = ({patientId, receipt}: Props) => {
   const options = useMemo(() => countryList().getData(), [])
 
   const schema = z.object({
-    currency: z.string({ required_error: "Please select the currency" }),
-    date: z.date({required_error: "Please enter patient's birth date"}),
+    currency: z.string({ error: (issue) => issue.input === undefined ? 
+      "Please select the currency" :
+      "Not a string" 
+      }),
+    date: z.date({error: (issue) => issue.input === undefined ? 
+      "Please enter patient's birth date" :
+      "Not a date" 
+      }),
     services: z
     .array(
       z.object({
-        service: z.string({ required_error: "Please select the currency" }),
-        price: z.coerce.number({ required_error: "Please enter the cost for the service" }),
+        service: z.string({ error: (issue) => issue.input === undefined ? 
+          "Please select the currency" :
+          "Not a string" 
+          }),
+        price: z.coerce.number({ error: (issue) => issue.input === undefined ? 
+          "Please enter the cost for the service" :
+          "Not a number" 
+          }),
       })
     )
     .min(1, {

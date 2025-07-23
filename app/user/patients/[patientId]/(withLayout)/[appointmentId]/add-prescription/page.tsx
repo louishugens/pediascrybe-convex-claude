@@ -46,4 +46,5 @@ const AddPrescriptionsPage = async (props: { params: Params }) => {
   )
 }
 
+
 export default AddPrescriptionsPage

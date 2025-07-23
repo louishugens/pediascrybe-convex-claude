@@ -311,6 +311,7 @@ const AddPrescriptions = ({patient, patientId, appointment}: {patient: PatientTy
 
 
   return (
+    <div className="pb-4">
     <div className="w-full h-auto shadow-md rounded-lg p-4 bg-slate-50 mt-4 text-sm">
       <p className='font-bold'>Add medicines</p>
       <form className='mt-4' onSubmit={handleSubmit(onSubmit)}>
@@ -388,6 +389,7 @@ const AddPrescriptions = ({patient, patientId, appointment}: {patient: PatientTy
         </div>
       </form>
       
+    </div>
     </div>
   )
 }

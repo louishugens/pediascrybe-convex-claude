@@ -165,8 +165,14 @@ const CreateReport = ({patientId, patient, consultations}) => {
   }
 
   const schema = z.object({
-    reportType: z.string({ required_error: "Please select report type" }),
-    content:  z.string({ required_error: "Please enter report's content" }),
+    reportType: z.string({ error: (issue) => issue.input === undefined ? 
+      "Please select report type" :
+      "Not a string" 
+      }),
+    content:  z.string({ error: (issue) => issue.input === undefined ? 
+      "Please enter report's content" :
+      "Not a string" 
+      }),
   })
 
 

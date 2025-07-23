@@ -30,29 +30,29 @@ export async function POST(req: Request) {
 
     
     if (appointment) {
-      try {
-        const embeddings = new OpenAIEmbeddings();
-        const store = new SupabaseVectorStore(embeddings, {
-          client: await supabase,
-          tableName: "documents",
-        });
+      // try {
+      //   const embeddings = new OpenAIEmbeddings();
+      //   const store = new SupabaseVectorStore(embeddings, {
+      //     client: await supabase,
+      //     tableName: "documents",
+      //   });
 
-        const doc = new Document({ 
-          pageContent: JSON.stringify(appointment),
-          metadata: { patientId: appointment.patientId }
-        });
+      //   const doc = new Document({ 
+      //     pageContent: JSON.stringify(appointment),
+      //     metadata: { patientId: appointment.patientId }
+      //   });
 
-        const result = await store.addDocuments([doc]);
+      //   const result = await store.addDocuments([doc]);
 
-        // Only update vectorId if embedding succeeded
-        await prisma.appointment.update({
-          where: { id: appointment.id },
-          data: { vectorId: parseInt(result[0]) }
-        });
-      } catch (error) {
-        // Log the error but don't throw it
-        console.error('Failed to create embedding:', error);
-      }
+      //   // Only update vectorId if embedding succeeded
+      //   await prisma.appointment.update({
+      //     where: { id: appointment.id },
+      //     data: { vectorId: parseInt(result[0]) }
+      //   });
+      // } catch (error) {
+      //   // Log the error but don't throw it
+      //   console.error('Failed to create embedding:', error);
+      // }
 
       return new Response(JSON.stringify(appointment), {
         status: 200

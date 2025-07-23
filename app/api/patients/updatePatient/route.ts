@@ -36,30 +36,30 @@ export async function POST(req: Request) {
     if (patient) {
 
 
-      const embeddings = new OpenAIEmbeddings();
+      // const embeddings = new OpenAIEmbeddings();
 
-      const store = new SupabaseVectorStore(embeddings, {
-        client: supabase,
-        tableName: "documents",
-      });
+      // const store = new SupabaseVectorStore(embeddings, {
+      //   client: supabase,
+      //   tableName: "documents",
+      // });
 
-      if(patient.vectorId){
-        await store.delete({ids:[patient.vectorId.toString()]});
-      }
+      // if(patient.vectorId){
+      //   await store.delete({ids:[patient.vectorId.toString()]});
+      // }
       
-      const doc = new Document({ pageContent: JSON.stringify(patient),
-        metadata: { patientId: patient.id}});
+      // const doc = new Document({ pageContent: JSON.stringify(patient),
+      //   metadata: { patientId: patient.id}});
 
-      const result = await store.addDocuments([doc]);
+      // const result = await store.addDocuments([doc]);
 
-      await prisma.patient.update({
-        where:{
-          id: patient.id
-        },
-        data: {
-          vectorId: parseInt(result[0])
-        }
-      })
+      // await prisma.patient.update({
+      //   where:{
+      //     id: patient.id
+      //   },
+      //   data: {
+      //     vectorId: parseInt(result[0])
+      //   }
+      // })
 
       return new Response(JSON.stringify(patient), {
         status: 200

@@ -218,6 +218,7 @@ const AddExams = ({patient, patientId, appointment}) => {
 
 
   return (
+    <div className="pb-4">
     <div className="w-full h-auto shadow-md rounded-lg p-4 bg-slate-50 mt-4 text-sm">
       <p>Add exams </p>
       <form className='mt-4' onSubmit={handleSubmit(onSubmit)}>
@@ -265,6 +266,7 @@ const AddExams = ({patient, patientId, appointment}) => {
         </div>
       </form>
       
+    </div>
     </div>
   )
 }

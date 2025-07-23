@@ -39,8 +39,14 @@ export default function UploadPage(props: { params: Params }) {
   const [loading, setLoading] = useState(false)
 
   const schema = z.object({
-    url: z.string({ required_error: "Please upload a file" }),
-    name: z.string({ required_error: "Please enter a name for the file" }),
+    url: z.string({ error: (issue) => issue.input === undefined ? 
+      "Please upload a file" :
+      "Not a string" 
+      }),
+    name: z.string({ error: (issue) => issue.input === undefined ? 
+      "Please enter a name for the file" :
+      "Not a string" 
+      }),
   })
 
   const form = useForm<z.infer<typeof schema>>({

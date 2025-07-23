@@ -77,7 +77,7 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
       if (symptoms){
         setThinking(true)
       }
-    }, 1500)
+    }, 500)
     return () => clearTimeout(timeoutId);
 
   }, [symptoms, setValue]);
@@ -171,7 +171,7 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
 
 
   return (
-    <div className='pt-4'>
+    <div className='py-4'>
       <div className="flex flex-col w-full">
         <p className='text-1xl text-green-500 font-bold'>
           New Consultation

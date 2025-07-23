@@ -62,7 +62,7 @@ const AppointmentPageComponent = ({appointment, patientId}: AppointmentPageCompo
   const exams = appointment.exams as unknown as Exam[]
 
   return (
-    <div className='pt-4'>
+    <div className='py-4'>
     <div className="w-full h-auto shadow-md rounded-lg p-4 bg-slate-50 text-sm text-slate-900">
       <div className="flex flex-row justify-between">
         <p className='text-blue-500'>Consultation of <span className='font-bold '>{format(appointment.startDate, 'yyy-MM-dd hh:mm:ss')}</span></p>

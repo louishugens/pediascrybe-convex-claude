@@ -53,13 +53,22 @@ const EditPatient = ({patient, doctorId}) => {
   // }).required();
 
   const schema = z.object({
-    firstname: z.string({ required_error: "Please enter patient's first name" }),
-    lastname:  z.string({ required_error: "Please enter patient's last name" }),
+    firstname: z.string({ error: (issue) => issue.input === undefined ? 
+      "Please enter patient's first name" :
+      "Not a string" 
+      }),
+    lastname:  z.string({ error: (issue) => issue.input === undefined ? 
+      "Please enter patient's last name" :
+      "Not a string" 
+      }),
     email: z.string()
     .refine(value => value === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value), {
       message: 'Please enter a valid email or leave it empty.',
     }),
-    birthdate: z.date({required_error: "Please enter patient's birth date"}),
+    birthdate: z.date({error: (issue) => issue.input === undefined ? 
+      "Please enter patient's birth date" :
+      "Not a date" 
+      }),
     mothername: z.string().optional(),
     sex: z.string(),
     religion: z.string().optional(),

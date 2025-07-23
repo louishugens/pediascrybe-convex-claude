@@ -5,6 +5,7 @@ import { BeatLoader } from "react-spinners";
 import { Suspense } from "react";
 import { createClient } from '@/utils/supabase/server'
 import Search from "@/components/search";
+import LoadingSkeleton from "@/components/loadingSkeleton";
 
 
 async function getPatients(doctorId, search){
@@ -75,7 +76,7 @@ export default async function Patients(props) {
       <div className='flex w-full justify-center '>
         <Search />
       </div>
-      <Suspense fallback={<Loading />}>
+      <Suspense>
         <PatientList patients={patients} doctorId={doctorId} />
       </Suspense>
     </div>
@@ -83,9 +84,10 @@ export default async function Patients(props) {
 }
 
 function Loading() {
-  return <p>
-    Loading patients 
-    <BeatLoader color={"#000020"} />
-  </p>
+  return (
+    <div className="flex flex-col items-center justify-center h-full">
+      <LoadingSkeleton />
+    </div>
+  )
 }
 

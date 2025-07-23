@@ -13,9 +13,15 @@ import { Toaster, toast } from 'sonner'
 
 
 const FormSchema = z.object({
-  senderEmail: z.string({required_error: "Please add your email"}).email('Invalid email address'),
-  message: z.string({required_error: 'Please enter your message'}),
-  name: z.string({required_error: 'Please enter your name'}),
+  senderEmail: z.email('Invalid email address'),
+  message: z.string({ error: (issue) => issue.input === undefined ? 
+    "Please enter your message" :
+    "Not a string" 
+    }),
+  name: z.string({ error: (issue) => issue.input === undefined ? 
+    "Please enter your name" :
+    "Not a string" 
+    }),
 })
 
 

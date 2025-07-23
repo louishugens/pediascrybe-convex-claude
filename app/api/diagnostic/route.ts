@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     });
   }
 
-  console.log('response :>> ', response.choices[0].message);
+  // console.log('response :>> ', response.choices[0].message);
 
   return new Response(JSON.stringify(response.choices[0].message.content), {
     status: 200

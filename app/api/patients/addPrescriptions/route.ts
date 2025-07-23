@@ -34,30 +34,30 @@ export async function POST(req: Request) {
 
     if (appointment) {
 
-      const embeddings = new OpenAIEmbeddings();
+      // const embeddings = new OpenAIEmbeddings();
 
-      const store = new SupabaseVectorStore(embeddings, {
-        client: await supabase,
-        tableName: "documents",
-      });
+      // const store = new SupabaseVectorStore(embeddings, {
+      //   client: await supabase,
+      //   tableName: "documents",
+      // });
 
-      if(appointment.vectorId){
-        await store.delete({ids:[appointment.vectorId.toString()]});
-      }
+      // if(appointment.vectorId){
+      //   await store.delete({ids:[appointment.vectorId.toString()]});
+      // }
 
-      const doc = new Document({ pageContent: JSON.stringify(appointment),
-        metadata: { patientId: appointment.patientId}});
+      // const doc = new Document({ pageContent: JSON.stringify(appointment),
+      //   metadata: { patientId: appointment.patientId}});
 
-      const result = await store.addDocuments([doc]);
+      // const result = await store.addDocuments([doc]);
 
-      await prisma.appointment.update({
-        where:{
-          id: appointment.id
-        },
-        data: {
-          vectorId: parseInt(result[0])
-        }
-      })
+      // await prisma.appointment.update({
+      //   where:{
+      //     id: appointment.id
+      //   },
+      //   data: {
+      //     vectorId: parseInt(result[0])
+      //   }
+      // })
       
       // revalidatePath(`/user/patients/${appointment.patientId}/${appointment.id}`);
       // revalidatePath(`/user/patients/${appointment.patientId}/${appointment.id}/add-prescription`);

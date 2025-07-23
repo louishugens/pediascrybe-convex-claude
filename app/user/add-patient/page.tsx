@@ -42,12 +42,24 @@ import {
 const AddPatient = () => {
 
   const schema = z.object({
-    firstname: z.string({ required_error: "Please enter patient's first name" }),
-    lastname:  z.string({ required_error: "Please enter patient's last name" }),
+    firstname: z.string({ error: (issue) => issue.input === undefined ? 
+      "Please enter patient's first name" :
+      "Not a string" 
+      }),
+    lastname:  z.string({ error: (issue) => issue.input === undefined ? 
+      "Please enter patient's last name" :
+      "Not a string" 
+      }),
     email: z.string().optional(),
-    birthdate: z.date({required_error: "Please enter patient's birth date"}),
+    birthdate: z.date({error: (issue) => issue.input === undefined ? 
+      "Please enter patient's birth date" :
+      "Not a date" 
+      }),
     mothername: z.string().optional(),
-    sex: z.string({required_error: "Please enter patient's sex"}),
+      sex: z.string({error: (issue) => issue.input === undefined ? 
+      "Please enter patient's sex" :
+      "Not a string" 
+      }),
     religion: z.string().optional(),
     phone: z.string().optional(),
     allergies: z.string().optional(),

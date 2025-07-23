@@ -1,6 +1,7 @@
-import AddAppointment from '@/components/addAppointment'
+import AddAppointment from '@/components/add-appointment'
 import prisma from '@/utils/prisma'
 import { createClient } from '@/utils/supabase/server'
+import { redirect } from 'next/navigation'
 
 async function getPatient(patientId) {
   const patient = await prisma.patient.findUnique({
@@ -29,6 +30,10 @@ export default async function Appointment(props) {
   } = await supabase.auth.getUser()
 
   const doctorId = user?.id
+
+  if (!doctorId) {
+    redirect('/user/login')
+  }
 
   const patient = await getPatient(patientId)
 

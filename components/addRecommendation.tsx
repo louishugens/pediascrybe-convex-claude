@@ -41,7 +41,10 @@ import { refresh } from '@/app/actions';
 
 
 export const formSchema = z.object({
-  recommendation: z.string({ required_error: "Please enter your recommendations" }),
+  recommendation: z.string({ error: (issue) => issue.input === undefined ? 
+    "Please enter your recommendations" :
+    "Not a string" 
+    }),
 });
 
 
