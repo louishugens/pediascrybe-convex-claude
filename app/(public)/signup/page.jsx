@@ -107,7 +107,7 @@ export default function Signup() {
           </h2>
           <p className="text-slate-900 text-sm">
             Already have an account?{' '}
-            <Link href="/signin" className="text-primary font-semibold">
+            <Link href="/" className="text-primary font-semibold">
               Log in
             </Link>
           </p>

@@ -11,30 +11,9 @@ export function SiteHeader() {
     <header className="supports-backdrop-blur:bg-background/60 fixed top-0 z-50 w-full backdrop-blur">
       <div className="container px-8 md:px-16 flex h-14 items-center">
         <MainNav />
-        
         <div className="flex flex-1 items-center  space-x-2 justify-end">
           <MobileNav />
           <nav className="hidden md:flex gap-x-4 items-center text-sm">
-            {/* <Link
-              href="/features"
-              className={cn(
-                "transition-colors hover:text-foreground/80",
-                pathname === "/features" ? "text-foreground" : "text-foreground/60"
-              )}
-            >
-              Features
-            </Link> */}
-            <Link
-              href="/pricing"
-              className={cn(
-                "transition-colors hover:text-foreground/80",
-                pathname === "/pricing"
-                  ? "text-foreground"
-                  : "text-foreground/60"
-              )}
-            >
-              Pricing
-            </Link>
             <Link
               href="/contact"
               className={cn(
@@ -46,7 +25,7 @@ export function SiteHeader() {
             >
               Contact
             </Link>
-            <Link href="/signin" className="text-sm text-foreground border border-primary bg-muted px-4 py-1 rounded-full">
+            <Link href="/" className="text-sm text-foreground border border-primary bg-muted px-4 py-1 rounded-full">
               Login
             </Link>
             <Link href="/signup" className="text-sm text-foreground bg-primary px-4 py-1 rounded-full">

@@ -47,19 +47,13 @@ export function MobileNav() {
         <ScrollArea className="my-4 h-[calc(100vh-8rem)] pb-10 pl-6">
           <div className="flex flex-col space-y-3">
             <MobileLink
-              href={"/pricing"}
-              onOpenChange={setOpen}
-            >
-              Pricing
-            </MobileLink>
-            <MobileLink
               href={"/contact"}
               onOpenChange={setOpen}
             >
               Contact
             </MobileLink>
             <MobileLink
-              href={"/signin"}
+              href={"/"}
               onOpenChange={setOpen}
               className="text-sm text-primary w-fit border border-primary bg-muted px-4 py-1 rounded-full"
             >
