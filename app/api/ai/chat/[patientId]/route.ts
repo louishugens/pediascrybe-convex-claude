@@ -4,11 +4,9 @@ import { openai } from '@ai-sdk/openai';
 import {
   convertToModelMessages,
   streamText,
-  tool,
   UIMessage,
-  stepCountIs,
 } from 'ai';
-import { z } from 'zod';
+
 
 function omitPII<T extends Record<string, any>>(obj: T, keys: string[]): Partial<T> {
   const result = { ...obj };

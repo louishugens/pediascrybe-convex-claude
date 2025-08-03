@@ -8,13 +8,15 @@ import { z } from "zod"
 import BeatLoader from "react-spinners/BeatLoader"
 import PulseLoader from "react-spinners/PulseLoader"
 import { refresh } from "@/app/actions"
-import { generateDiagnosticPrompt } from "@/lib/prompts"
-
+import { useCompletion } from '@ai-sdk/react'
+import { Patient, Appointment } from "@/db/schema"  
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+
+
 
 const formSchema = z.object({
   height: z.coerce.number().min(0, "Height can't be less than 0").nullable().optional(),
@@ -40,18 +42,22 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>
 
 interface EditAppointmentProps {
-  appointment: any
+  appointment: Appointment
   patientId: string
-  patient: any
+  patient: Patient & { appointments: Appointment[] }
 }
 
 const EditAppointment = ({ appointment, patientId, patient }: EditAppointmentProps) => {
   const [loading, setLoading] = useState(false)
   const [generating, setGenerating] = useState(false)
-  const [suggestions, setSuggestions] = useState(null)
+  const [suggestions, setSuggestions] = useState<string | null>(null)
   const [thinking, setThinking] = useState(false)
 
   const router = useRouter()
+
+  const { complete, completion, isLoading } = useCompletion({
+    api: '/api/ai/diagnostic',
+  });
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -73,6 +79,16 @@ const EditAppointment = ({ appointment, patientId, patient }: EditAppointmentPro
   })
 
   const symptoms = form.watch("motif")
+  const height = form.watch("height")
+  const weight = form.watch("weight")
+  const head = form.watch("head")
+  const arm = form.watch("arm")
+  const sao2 = form.watch("sao2")
+  const temperature = form.watch("temperature")
+  const pulse = form.watch("pulse")
+  const respiratory = form.watch("respiratory")
+  const systolic = form.watch("systolic")
+  const diastolic = form.watch("diastolic")
 
   useEffect(() => {
     if (!symptoms) {
@@ -86,26 +102,28 @@ const EditAppointment = ({ appointment, patientId, patient }: EditAppointmentPro
     return () => clearTimeout(timeoutId)
   }, [symptoms])
 
-  const fetchDiagnosticSuggestions = async () => {
+  const fetchDiagnosticSuggestions = async (patient: Patient, appointment: Partial<Appointment>) => {
     if (symptoms) {
       setGenerating(true)
-      const messages = generateDiagnosticPrompt(symptoms, patient.birthdate)
-      try {
-        const response = await fetch("/api/diagnostic", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages }),
-        })
-        const data = await response.json()
-        setSuggestions(data)
-        form.setValue("findings", data)
-        setGenerating(false)
-      } catch (error) {
-        console.error("Error fetching suggestions:", error)
-        setGenerating(false)
-      }
+      
+      const { firstname, lastname, email, ...patientWithoutIdentity} = patient
+
+      const body = `The patient's information is ${JSON.stringify(patientWithoutIdentity)}. The consultation information is ${JSON.stringify(appointment)}.`
+      
+      await complete(body)
+      setGenerating(false)
     }
   }
+
+  // Update findings when completion is received
+  useEffect(() => {
+    if (completion) {
+      setSuggestions(completion);
+      form.setValue("findings", completion);
+    }
+  }, [completion, form]);
+
+  const {appointments, ...patientWithoutAppointments} = patient
 
   const onSubmit = async (values: FormValues) => {
     setLoading(true)
@@ -376,7 +394,7 @@ const EditAppointment = ({ appointment, patientId, patient }: EditAppointmentPro
                         <FormLabel>Diagnostic</FormLabel>
                         {thinking &&
                           symptoms &&
-                          (generating ? (
+                          (isLoading ? (
                             <span className="font-light text-green-600 flex items-center gap-2">
                               <span className="text-sm">ScrybeGPT thinking</span>
                               <PulseLoader color="#16a34a" size={5} aria-label="Loading Spinner" />
@@ -388,7 +406,19 @@ const EditAppointment = ({ appointment, patientId, patient }: EditAppointmentPro
                                 type="button"
                                 size="sm"
                                 className="ml-2 bg-green-600 hover:bg-green-700 py-1 px-3 text-xs h-auto"
-                                onClick={fetchDiagnosticSuggestions}
+                                onClick={() => fetchDiagnosticSuggestions(patientWithoutAppointments, {
+                                  motif: symptoms,
+                                  height: height || null,
+                                  weight: weight || null,
+                                  head: head || null,
+                                  arm: arm || null,
+                                  sao2: sao2 || null,
+                                  temperature: temperature || null,
+                                  pulse: pulse || null,
+                                  respiratory: respiratory || null,
+                                  systolic: systolic || null,
+                                  diastolic: diastolic || null,
+                                })}
                               >
                                 Yes
                               </Button>
@@ -399,7 +429,8 @@ const EditAppointment = ({ appointment, patientId, patient }: EditAppointmentPro
                         <Textarea
                           placeholder="What do you believe the patient is suffering from?"
                           className="min-h-[120px] resize-none"
-                          {...field}
+                          value={completion || field.value}
+                          onChange={field.onChange}
                         />
                       </FormControl>
                       <FormMessage />

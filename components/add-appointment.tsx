@@ -9,12 +9,13 @@ import BeatLoader from "react-spinners/BeatLoader"
 import PulseLoader from "react-spinners/PulseLoader"
 import { refresh } from "@/app/actions"
 import { generateDiagnosticPrompt } from "@/lib/prompts"
-
+import { useCompletion } from '@ai-sdk/react'
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Appointment, Patient } from "@/db/schema"
 
 const formSchema = z.object({
   height: z.coerce.number().min(0, "Height can't be less than 0").nullable().optional(),
@@ -50,7 +51,10 @@ const AddAppointment = ({ doctorId, patientId, patient }: AddAppointmentProps) =
   const [generating, setGenerating] = useState(false)
   const [suggestions, setSuggestions] = useState("")
   const [thinking, setThinking] = useState(false)
-
+  
+  const { complete, completion, isLoading } = useCompletion({
+    api: "/api/ai/diagnostic",
+  })
   const router = useRouter()
 
   const form = useForm<FormValues>({
@@ -73,6 +77,16 @@ const AddAppointment = ({ doctorId, patientId, patient }: AddAppointmentProps) =
   })
 
   const symptoms = form.watch("motif")
+  const height = form.watch("height")
+  const weight = form.watch("weight")
+  const head = form.watch("head")
+  const arm = form.watch("arm")
+  const sao2 = form.watch("sao2")
+  const temperature = form.watch("temperature")
+  const pulse = form.watch("pulse")
+  const respiratory = form.watch("respiratory")
+  const systolic = form.watch("systolic")
+  const diastolic = form.watch("diastolic")
 
   useEffect(() => {
     if (!symptoms) {
@@ -86,27 +100,27 @@ const AddAppointment = ({ doctorId, patientId, patient }: AddAppointmentProps) =
     return () => clearTimeout(timeoutId)
   }, [symptoms])
 
-  const fetchDiagnosticSuggestions = async () => {
+  const fetchDiagnosticSuggestions = async (patient: Patient, appointment: Partial<Appointment>) => {
     if (symptoms) {
       setGenerating(true)
-      const messages = generateDiagnosticPrompt(symptoms, patient.birthdate)
-      try {
-        const response = await fetch("/api/diagnostic", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages }),
-        })
-        const data = await response.json()
-        console.log("data :>> ", data)
-        setSuggestions(data)
-        form.setValue("findings", data)
-        setGenerating(false)
-      } catch (error) {
-        console.error("Error fetching suggestions:", error)
-        setGenerating(false)
-      }
+      
+      const { firstname, lastname, email, ...patientWithoutIdentity} = patient
+
+      const body = `The patient's information is ${JSON.stringify(patientWithoutIdentity)}. The consultation information is ${JSON.stringify(appointment)}.`
+      
+      await complete(body)
+      setGenerating(false)
     }
   }
+
+  useEffect(() => {
+    if (completion) {
+      setSuggestions(completion);
+      form.setValue("findings", completion);
+    }
+  }, [completion, form]);
+
+  const {appointments, ...patientWithoutAppointments} = patient
 
   const onSubmit = async (values: FormValues) => {
     setLoading(true)
@@ -388,7 +402,13 @@ const AddAppointment = ({ doctorId, patientId, patient }: AddAppointmentProps) =
                                 type="button"
                                 size="sm"
                                 className="ml-2 bg-green-600 hover:bg-green-700 py-1 px-3 text-xs h-auto"
-                                onClick={fetchDiagnosticSuggestions}
+                                onClick={() => fetchDiagnosticSuggestions(patientWithoutAppointments, {
+                                  motif: symptoms,
+                                  height: height,
+                                  weight: weight,
+                                  head: head,
+                                  arm: arm,
+                                })}
                               >
                                 Yes
                               </Button>

@@ -64,6 +64,9 @@ export const Appointment = pgTable('Appointment', {
 		.onUpdate('cascade')
 }));
 
+export type Appointment = typeof Appointment.$inferSelect
+export type AppointmentInsert = typeof Appointment.$inferInsert
+
 export const Doctor = pgTable('Doctor', {
 	cost: integer('cost'),
 	duration: integer('duration'),
@@ -86,6 +89,9 @@ export const Doctor = pgTable('Doctor', {
 	lastname: text('lastname').notNull()
 });
 
+export type Doctor = typeof Doctor.$inferSelect
+export type DoctorInsert = typeof Doctor.$inferInsert
+
 export const Img = pgTable('Img', {
 	url: text('url').notNull(),
 	public_id: text('public_id').notNull(),
@@ -100,6 +106,9 @@ export const Img = pgTable('Img', {
 		.onDelete('cascade')
 		.onUpdate('cascade')
 }));
+
+export type Img = typeof Img.$inferSelect
+export type ImgInsert = typeof Img.$inferInsert
 
 export const Patient = pgTable('Patient', {
 	firstname: text('firstname').notNull(),
@@ -132,6 +141,9 @@ export const Patient = pgTable('Patient', {
 		.onUpdate('cascade')
 }));
 
+export type Patient = typeof Patient.$inferSelect
+export type PatientInsert = typeof Patient.$inferInsert
+
 export const documents = pgTable('documents', {
 	id: bigint('id', { mode: 'bigint' }).notNull().primaryKey(),
 	content: text('content'),
@@ -154,6 +166,9 @@ export const File = pgTable('File', {
 		.onUpdate('cascade')
 }));
 
+export type File = typeof File.$inferSelect
+export type FileInsert = typeof File.$inferInsert
+
 export const Report = pgTable('Report', {
 	id: text('id').notNull().primaryKey().default(sql`cuid()`),
 	createdAt: timestamp('createdAt', { precision: 3 }).notNull().defaultNow(),
@@ -169,6 +184,9 @@ export const Report = pgTable('Report', {
 		.onDelete('cascade')
 		.onUpdate('cascade')
 }));
+
+export type Report = typeof Report.$inferSelect
+export type ReportInsert = typeof Report.$inferInsert
 
 export const Receipt = pgTable('Receipt', {
 	id: text('id').notNull().primaryKey().default(sql`cuid()`),
@@ -187,6 +205,9 @@ export const Receipt = pgTable('Receipt', {
 		.onDelete('cascade')
 		.onUpdate('cascade')
 }));
+
+export type Receipt = typeof Receipt.$inferSelect
+export type ReceiptInsert = typeof Receipt.$inferInsert
 
 export const Product = pgTable('Product', {
 	id: text('id').notNull().primaryKey(),
@@ -218,6 +239,9 @@ export const Price = pgTable('Price', {
 		.onDelete('cascade')
 		.onUpdate('cascade')
 }));
+
+export type Price = typeof Price.$inferSelect
+export type PriceInsert = typeof Price.$inferInsert
 
 export const Subscription = pgTable('Subscription', {
 	id: text('id').notNull().primaryKey(),
@@ -252,6 +276,9 @@ export const Subscription = pgTable('Subscription', {
 		.onUpdate('cascade')
 }));
 
+export type Subscription = typeof Subscription.$inferSelect
+export type SubscriptionInsert = typeof Subscription.$inferInsert
+
 export const charts = pgTable('charts', {
 	id: text('id').notNull().primaryKey(),
 	p03: jsonb('p03').notNull(),
@@ -261,6 +288,9 @@ export const charts = pgTable('charts', {
 	p97: jsonb('p97').notNull(),
 	height: jsonb('height')
 });
+
+export type Vaccin = typeof Vaccin.$inferSelect
+export type VaccinInsert = typeof Vaccin.$inferInsert
 
 export const Vaccin = pgTable('Vaccin', {
 	id: text('id').notNull().primaryKey().default(sql`cuid()`),
@@ -275,6 +305,9 @@ export const Vaccin = pgTable('Vaccin', {
 		.onDelete('cascade')
 		.onUpdate('cascade')
 }));
+
+export type VaccinationRecord = typeof VaccinationRecord.$inferSelect
+export type VaccinationRecordInsert = typeof VaccinationRecord.$inferInsert
 
 export const VaccinationRecord = pgTable('VaccinationRecord', {
 	id: text('id').notNull().primaryKey().default(sql`cuid()`),
@@ -315,6 +348,9 @@ export const VaccinationRecord = pgTable('VaccinationRecord', {
 		.on(VaccinationRecord.patientId, VaccinationRecord.vaccinId, VaccinationRecord.doseId)
 }));
 
+export type Dose = typeof Dose.$inferSelect
+export type DoseInsert = typeof Dose.$inferInsert
+
 export const Dose = pgTable('Dose', {
 	id: text('id').notNull().primaryKey().default(sql`cuid()`),
 	doseCount: integer('doseCount'),
@@ -331,10 +367,16 @@ export const Dose = pgTable('Dose', {
 		.onUpdate('cascade')
 }));
 
+export type VaccinReference = typeof VaccinReference.$inferSelect
+export type VaccinReferenceInsert = typeof VaccinReference.$inferInsert
+
 export const VaccinReference = pgTable('VaccinReference', {
 	id: text('id').notNull().primaryKey().default(sql`cuid()`),
 	name: text('name').notNull()
 });
+
+export type VaccinReferenceDose = typeof VaccinReferenceDose.$inferSelect
+export type VaccinReferenceDoseInsert = typeof VaccinReferenceDose.$inferInsert
 
 export const VaccinReferenceDose = pgTable('VaccinReferenceDose', {
 	id: text('id').notNull().primaryKey().default(sql`cuid()`),

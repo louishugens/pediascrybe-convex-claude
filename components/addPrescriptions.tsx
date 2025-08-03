@@ -62,81 +62,29 @@ const AddPrescriptions = ({patient, patientId, appointment}: {patient: PatientTy
 
   const fetchPrescriptionsSuggestions = async () => {
     setHasFetched(true);
-
-      // const messages = [
-      //   // {role: "system", content: "Generate a list of drug prescriptions based on the patient's symptoms and diagnostics.\
-      //   // provide it in JSON array format as in the following example : [{drug: \"Paracetamol\", count: 1, unit: \"flacon\", posology: \"1 pill twice a day\"}, ... ] \
-      //   // Note this is a sample message, you can change it as you wish based on the symptoms, age and diagnostics you received. \
-      //   // send an empty array if no drugs are suggested. Only send the JSON and nothing else. Use same language as the one used in the symptoms and diagnostics."},
-      //   // {role: "user", content: `The patient is ${formatDistanceToNow(new Date(patient.birthdate))}`},
-      //   // {role: "user", content: appointment.motif ? `The patient symptoms are ${appointment.motif}` : ''},
-      //   // {role: "user", content: appointment.finding ? `The pediatrician's diagnostic is ${appointment.finding}` : ''},
-      //   // {role: "system", content: "Translate the list in the language the symptoms and diagnostics are provided."},
-      //   {
-      //     role: "system",
-      //     content: "As ScrybeGPT, a helpful medical assidtant, your task is to propose to pediatrician a list of drug prescriptions \
-      //               for a patient, based on their symptoms and diagnostics. Follow these steps:\
-      //               \
-      //               1. Identify the language used for the symptoms.\
-      //               2. Based on the age, symptoms, and diagnosis, determine appropriate list medications.\
-      //               3. For each medication, decide the quantity (count), unit (e.g., flacon, bottle, vial), and posology (e.g., '1 pill twice a day').\
-      //               4. Compile the medications into a JSON array. Each entry should include the drug name, count, unit, and posology.\
-      //               5. If no medications are necessary, send an empty JSON array.\
-      //               6. Ensure the JSON array is formatted correctly. Here is an example [{drug: \"drug name\", count: 1, unit: \"flacon\", posology: \"1 pill twice a day\"}, ... ]\
-      //               7. Above list is just an example, you can change it as you wish based on the symptoms, age and diagnostics you received. \
-      //               8. Translate the values for each key in the JSON array into the language used for the symptoms.\
-      //   \
-      //             Provide the output in the same language as the symptoms and diagnostics. Only send the JSON array as the response."
-      //   },
-      //   {
-      //     role: "user",
-      //     content: `The patient is ${formatDistanceToNow(new Date(patient.birthdate))}`
-      //   },
-      //   {
-      //     role: "user",
-      //     content: appointment.motif ? `The patient symptoms are ${appointment.motif}` : ''
-      //   },
-      //   {
-      //     role: "user",
-      //     content: appointment.finding ? `The pediatrician's diagnostic is ${appointment.finding}` : ''
-      //   },
-      //   {
-      //     role: "system",
-      //     content: "Submit the list of drug prescriptions in JSON array format and use the identified language for each value in the objects."
-      //     // Here is an example \
-      //     // [{drug: \"drug name\", count: 1, unit: \"flacon\", posology: \"1 pill twice a day\"}, {drug: \"drug name 2\", count: 1, unit: \"bottle\", posology: \"2ml twice a day\"}, ... ] \
-      //     // Also make sure to translate the values for each key in the JSON array into the language used for the symptoms."
-      //   }
-        
-      // ]
-
-      const body = {patient:{age: formatDistanceToNow(new Date(patient.birthdate)), gender: patient.sex, allergies: patient.allergies, history: patient.history}, symptoms: appointment.motif, diagnosis: appointment.findings}
-      submit(body)
-
-      console.log('object :>> ', object);
-
-      
-      // try {
-      //   const response = await fetch('/api/diagnostic', {
-      //     method: 'POST',
-      //     headers: {
-      //       'Content-Type': 'application/json',
-      //     },
-      //     body: JSON.stringify({messages})
-      //   });
-      //   const data = await response.json();
-      //   console.log('data :>> ', data);
-      //   const myexams = JSON.parse(data)
-      //   console.log('myexams :>> ', myexams);
-      //   myexams.forEach(exam => {
-      //     prepend(exam)
-      //   }
-      //   )
-      //   setThinking(false)
-
-      // } catch (error) {
-      //   console.error("Error fetching suggestions:", error);
-      // }
+    const body = {
+      patient:{
+        age: formatDistanceToNow(new Date(patient.birthdate)), 
+        gender: patient.sex, 
+        allergies: patient.allergies, 
+        history: patient.history
+      }, 
+      appointment: {
+        motif: appointment.motif,
+        findings: appointment.findings,
+        height: appointment.height,
+        weight: appointment.weight,
+        headCircumference: appointment.head,
+        armCircumference: appointment.arm,
+        sao2: appointment.sao2,
+        temperature: appointment.temperature,
+        pulse: appointment.pulse,
+        respiratory: appointment.respiratory,
+        systolic: appointment.systolic,
+        diastolic: appointment.diastolic,
+      }
+    }
+    submit(body)
   };
 
   useEffect(() => {

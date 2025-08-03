@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, startTransition } from 'react'
-import { useForm, Control, useFieldArray, useWatch  } from 'react-hook-form';
+import { useState, useEffect } from 'react'
+import { useForm, useFieldArray  } from 'react-hook-form';
 import * as Yup from 'yup'
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useRouter } from 'next/navigation'
@@ -40,9 +40,9 @@ const AddExams = ({patient, patientId, appointment}) => {
     if (object && Array.isArray(object) && object.length > 0) {
       setNoReturn(false);
       // Get current exam names for comparison
-      const currentExamNames = fields.map(f => f.exam?.trim().toLowerCase());
+      const currentExamNames = fields.map(f => (f as { exam?: string }).exam?.trim().toLowerCase()).filter(Boolean);
       object.forEach(exam => {
-        const examName = exam.exam?.trim().toLowerCase();
+        const examName = exam?.exam?.trim().toLowerCase();
         if (examName && !currentExamNames.includes(examName)) {
           prepend(exam); // Add new unique exams to the top
         }
@@ -63,39 +63,29 @@ const AddExams = ({patient, patientId, appointment}) => {
 
   const fetchExamsSuggestions = async () => {
     setHasFetched(true);
-      // const messages = [
-      //   {
-      //     role: "system",
-      //     content: "As ScrybeGPT, a helpful medical assistant, your task is to propose to a pediatrician a list of lab exams for a patient, based on their symptoms and diagnostics. Follow these steps:\
-      //               \
-      //               1. Identify the laguage used for the symptoms.\
-      //               2. Based on the age, symptoms, and diagnosis, determine an appropriate set of lab exams that should be conducted.\
-      //               3. Compile the recommended lab exams into a JSON array. The array should be in the format: [{exam: \"exam_name\"}, {exam: \"other_exam_name\"}].\
-      //               4. If no lab exams are necessary, send an empty JSON array.\
-      //               5. Ensure the JSON array is formatted correctly and contains only the required information.\
-      //               6. Translate the values for each key in the JSON array into the language used for the symptoms.\
-      //               \
-      //             Respond with the output in the same language as the symptoms and diagnostics. Only send the JSON array as the response."
-      //   },
-      //   {
-      //     role: "user",
-      //     content: `The patient is ${formatDistanceToNow(new Date(patient.birthdate))}`
-      //   },
-      //   {
-      //     role: "user",
-      //     content: appointment.motif ? `The patient symptoms are ${appointment.motif}` : ''
-      //   },
-      //   {
-      //     role: "user",
-      //     content: appointment.finding ? `The pediatrician's diagnostic is ${appointment.finding}` : ''
-      //   },
-      //   {
-      //     role: "system",
-      //     content: "Send the JSON array of lab exams as the response. Use the idenfied language for each key in the JSON array."
-      //   }
-      
-      // ]
-      const body = {patient: {age: formatDistanceToNow(new Date(patient.birthdate)), gender: patient.sex, allergies: patient.allergies, history: patient.history}, symptoms: appointment.motif, diagnosis: appointment.findings}
+
+      const body = {
+        patient: {
+          age: formatDistanceToNow(new Date(patient.birthdate)), 
+          gender: patient.sex, 
+          allergies: patient.allergies, 
+          history: patient.history
+        }, 
+        appointment: {
+          motif: appointment.motif,
+          findings: appointment.findings,
+          height: appointment.height,
+          weight: appointment.weight,
+          headCircumference: appointment.head,
+          armCircumference: appointment.arm,
+          sao2: appointment.sao2,
+          temperature: appointment.temperature,
+          pulse: appointment.pulse,
+          respiratory: appointment.respiratory,
+          systolic: appointment.systolic,
+          diastolic: appointment.diastolic,
+        }
+      }
       submit(body)
 
 
@@ -196,7 +186,7 @@ const AddExams = ({patient, patientId, appointment}) => {
  
     try{
       const {exams } = values
-      console.log('exams :>> ', exams.length);
+      // console.log('exams :>> ', exams.length);
 
       const body = {exams, appointmentId: appointment.id}
       const myuser = await fetch('/api/patients/addExams', {
@@ -245,7 +235,7 @@ const AddExams = ({patient, patientId, appointment}) => {
           </section>
           )
         })}
-        <p className='px-4 pt-1 text-sm text-red-600'>{errors?.exams?.message}</p>
+        <p className='px-4 pt-1 text-sm text-red-600'>{errors?.exams?.message?.toString()}</p>
         <div className="flex flex-row justify-between">
           <button className='py-1 px-4 rounded-full bg-green-500 text-white text-sm  mt-4' type='button' onClick={() => append({exam: ''})}>
             Add

@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect } from "react";
 import BeatLoader  from 'react-spinners/BeatLoader';
 import { refresh } from '@/app/actions';
-import { generateDiagnosticPrompt } from '@/lib/prompts'
+import { useCompletion } from '@ai-sdk/react'
 import PulseLoader from 'react-spinners/PulseLoader';
 
 
@@ -60,9 +60,20 @@ const EditAppointment = ({appointment, patientId, patient}) => {
     resolver: yupResolver(schema)
   });
 
+  
   // const doctor = useDoctor()
   const router = useRouter()
   const symptoms = watch('motif')
+  const height = watch("height")
+  const weight = watch("weight")
+  const head = watch("head")
+  const arm = watch("arm")
+  const sao2 = watch("sao2")
+  const temperature = watch("temperature")
+  const pulse = watch("pulse")
+  const respiratory = watch("respiratory")
+  const systolic = watch("systolic")
+  const diastolic = watch("diastolic")
 
   useEffect(() => {
     if (!symptoms) {
@@ -77,22 +88,36 @@ const EditAppointment = ({appointment, patientId, patient}) => {
 
   }, [symptoms, setValue]);
 
+  const { complete, completion } = useCompletion({
+    api: '/api/ai/diagnostic',
+  });
+
   const fetchDiagnosticSuggestions = async () => {
     if (symptoms) {
-      setGenerating(true)
-      const messages = generateDiagnosticPrompt(symptoms, patient.birthdate)
+      setGenerating(true) 
+      const appointment = {
+        motif: symptoms,
+        height: height,
+        weight: weight,
+        head: head,
+        arm: arm,
+        sao2: sao2,
+        temperature: temperature,
+        pulse: pulse,
+        respiratory: respiratory,
+        systolic: systolic,
+        diastolic: diastolic,
+      }
+      const body = {patient, appointment}
+
       try {
-        const response = await fetch('/api/diagnostic', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({messages})
-        });
-        const data = await response.json();
+        console.log('appointment :>> ', appointment);
+        complete(body)
+        console.log('completion :>> ', completion);
+        // const data = await response.json();
         // console.log('data :>> ', data);
-        setSuggestions(data); 
-        setValue('findings', data); 
+        setSuggestions(completion); 
+        setValue('findings', completion); 
         setGenerating(false)
       } catch (error) {
         console.error("Error fetching suggestions:", error);
