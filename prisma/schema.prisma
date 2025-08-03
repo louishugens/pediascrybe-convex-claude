@@ -2,10 +2,10 @@ generator client {
   provider = "prisma-client-js"
 }
 
-generator drizzle {
-  provider = "drizzle-prisma-generator"
-  output   = "../db" // Where to put generated Drizle tables
-}
+// generator drizzle {
+//   provider = "drizzle-prisma-generator"
+//   output   = "../db" // Where to put generated Drizle tables
+// }
 
 datasource db {
   provider = "postgresql"

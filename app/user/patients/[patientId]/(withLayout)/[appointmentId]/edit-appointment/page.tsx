@@ -1,4 +1,5 @@
 import EditAppointment from "@/components/edit-appointment";
+import { AppointmentSelect, PatientSelect } from "@/db/schema";
 import prisma from "@/utils/prisma";
 import { createClient } from "@/utils/supabase/server";
 
@@ -42,8 +43,12 @@ const EditAppointmentPage = async (props: { params: Params }) => {
 
   const doctorId = user?.id
 
-  const appointment = await getAppointment(appointmentId)
-  const patient = await getPatient(patientId)
+  const appointment: AppointmentSelect | null = await getAppointment(appointmentId)
+  const patient: PatientSelect & { appointments: AppointmentSelect[] } | null = await getPatient(patientId)
+
+  if (!appointment || !patient) {
+    return <div>Appointment or patient not found</div>
+  }
 
   return (
     <EditAppointment appointment={appointment} patientId={patientId} patient={patient} data-superjson />

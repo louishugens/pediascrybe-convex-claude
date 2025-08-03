@@ -15,7 +15,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Appointment, Patient } from "@/db/schema"
+import { AppointmentSelect, PatientSelect } from "@/db/schema"
 
 const formSchema = z.object({
   height: z.coerce.number().min(0, "Height can't be less than 0").nullable().optional(),
@@ -100,7 +100,7 @@ const AddAppointment = ({ doctorId, patientId, patient }: AddAppointmentProps) =
     return () => clearTimeout(timeoutId)
   }, [symptoms])
 
-  const fetchDiagnosticSuggestions = async (patient: Patient, appointment: Partial<Appointment>) => {
+  const fetchDiagnosticSuggestions = async (patient: PatientSelect, appointment: Partial<AppointmentSelect>) => {
     if (symptoms) {
       setGenerating(true)
       

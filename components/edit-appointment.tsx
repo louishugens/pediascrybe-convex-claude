@@ -9,7 +9,7 @@ import BeatLoader from "react-spinners/BeatLoader"
 import PulseLoader from "react-spinners/PulseLoader"
 import { refresh } from "@/app/actions"
 import { useCompletion } from '@ai-sdk/react'
-import { Patient, Appointment } from "@/db/schema"  
+import { PatientSelect, AppointmentSelect } from "@/db/schema"  
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
@@ -42,9 +42,9 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>
 
 interface EditAppointmentProps {
-  appointment: Appointment
+  appointment: AppointmentSelect
   patientId: string
-  patient: Patient & { appointments: Appointment[] }
+  patient: PatientSelect & { appointments: AppointmentSelect[] }
 }
 
 const EditAppointment = ({ appointment, patientId, patient }: EditAppointmentProps) => {
@@ -102,7 +102,7 @@ const EditAppointment = ({ appointment, patientId, patient }: EditAppointmentPro
     return () => clearTimeout(timeoutId)
   }, [symptoms])
 
-  const fetchDiagnosticSuggestions = async (patient: Patient, appointment: Partial<Appointment>) => {
+  const fetchDiagnosticSuggestions = async (patient: PatientSelect, appointment: Partial<AppointmentSelect>) => {
     if (symptoms) {
       setGenerating(true)
       

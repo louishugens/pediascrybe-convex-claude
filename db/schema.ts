@@ -1,3 +1,4 @@
+
 import { relations, sql } from 'drizzle-orm'
 import { bigint, boolean, doublePrecision, foreignKey, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
 
@@ -47,24 +48,9 @@ export const Appointment = pgTable('Appointment', {
 	diastolic: doublePrecision('diastolic'),
 	vectorId: integer('vectorId'),
 	files: text('files').array().notNull()
-}, (Appointment) => ({
-	'Appointment_Doctor_fkey': foreignKey({
-		name: 'Appointment_Doctor_fkey',
-		columns: [Appointment.doctorId],
-		foreignColumns: [Doctor.id]
-	})
-		.onDelete('cascade')
-		.onUpdate('cascade'),
-	'Appointment_Patient_fkey': foreignKey({
-		name: 'Appointment_Patient_fkey',
-		columns: [Appointment.patientId],
-		foreignColumns: [Patient.id]
-	})
-		.onDelete('cascade')
-		.onUpdate('cascade')
-}));
+});
 
-export type Appointment = typeof Appointment.$inferSelect
+export type AppointmentSelect = typeof Appointment.$inferSelect
 export type AppointmentInsert = typeof Appointment.$inferInsert
 
 export const Doctor = pgTable('Doctor', {
@@ -97,15 +83,7 @@ export const Img = pgTable('Img', {
 	public_id: text('public_id').notNull(),
 	doctorId: text('doctorId').unique(),
 	id: text('id').notNull().primaryKey()
-}, (Img) => ({
-	'Img_Doctor_fkey': foreignKey({
-		name: 'Img_Doctor_fkey',
-		columns: [Img.doctorId],
-		foreignColumns: [Doctor.id]
-	})
-		.onDelete('cascade')
-		.onUpdate('cascade')
-}));
+});
 
 export type Img = typeof Img.$inferSelect
 export type ImgInsert = typeof Img.$inferInsert
@@ -131,17 +109,9 @@ export const Patient = pgTable('Patient', {
 	bloodtype: text('bloodtype'),
 	electrophoresis: text('electrophoresis'),
 	vectorId: integer('vectorId')
-}, (Patient) => ({
-	'Patient_Doctor_fkey': foreignKey({
-		name: 'Patient_Doctor_fkey',
-		columns: [Patient.doctorId],
-		foreignColumns: [Doctor.id]
-	})
-		.onDelete('cascade')
-		.onUpdate('cascade')
-}));
+});
 
-export type Patient = typeof Patient.$inferSelect
+export type PatientSelect = typeof Patient.$inferSelect
 export type PatientInsert = typeof Patient.$inferInsert
 
 export const documents = pgTable('documents', {
@@ -175,15 +145,7 @@ export const Report = pgTable('Report', {
 	reportType: ReportType('reportType').notNull(),
 	content: text('content').notNull(),
 	patientId: text('patientId')
-}, (Report) => ({
-	'Report_Patient_fkey': foreignKey({
-		name: 'Report_Patient_fkey',
-		columns: [Report.patientId],
-		foreignColumns: [Patient.id]
-	})
-		.onDelete('cascade')
-		.onUpdate('cascade')
-}));
+});
 
 export type Report = typeof Report.$inferSelect
 export type ReportInsert = typeof Report.$inferInsert
@@ -196,15 +158,7 @@ export const Receipt = pgTable('Receipt', {
 	date: timestamp('date', { precision: 3 }),
 	currency: text('currency'),
 	patientId: text('patientId')
-}, (Receipt) => ({
-	'Receipt_Patient_fkey': foreignKey({
-		name: 'Receipt_Patient_fkey',
-		columns: [Receipt.patientId],
-		foreignColumns: [Patient.id]
-	})
-		.onDelete('cascade')
-		.onUpdate('cascade')
-}));
+});
 
 export type Receipt = typeof Receipt.$inferSelect
 export type ReceiptInsert = typeof Receipt.$inferInsert
@@ -230,15 +184,7 @@ export const Price = pgTable('Price', {
 	trial_period_days: integer('trial_period_days'),
 	metadata: jsonb('metadata'),
 	productId: text('productId').notNull()
-}, (Price) => ({
-	'Price_product_fkey': foreignKey({
-		name: 'Price_product_fkey',
-		columns: [Price.productId],
-		foreignColumns: [Product.id]
-	})
-		.onDelete('cascade')
-		.onUpdate('cascade')
-}));
+});
 
 export type Price = typeof Price.$inferSelect
 export type PriceInsert = typeof Price.$inferInsert
@@ -259,22 +205,7 @@ export const Subscription = pgTable('Subscription', {
 	trial_end: timestamp('trial_end', { precision: 3 }).defaultNow(),
 	doctorId: text('doctorId'),
 	priceId: text('priceId').notNull()
-}, (Subscription) => ({
-	'Subscription_price_fkey': foreignKey({
-		name: 'Subscription_price_fkey',
-		columns: [Subscription.priceId],
-		foreignColumns: [Price.id]
-	})
-		.onDelete('cascade')
-		.onUpdate('cascade'),
-	'Subscription_doctor_fkey': foreignKey({
-		name: 'Subscription_doctor_fkey',
-		columns: [Subscription.doctorId],
-		foreignColumns: [Doctor.id]
-	})
-		.onDelete('cascade')
-		.onUpdate('cascade')
-}));
+});
 
 export type Subscription = typeof Subscription.$inferSelect
 export type SubscriptionInsert = typeof Subscription.$inferInsert
@@ -296,15 +227,7 @@ export const Vaccin = pgTable('Vaccin', {
 	id: text('id').notNull().primaryKey().default(sql`cuid()`),
 	name: text('name').notNull(),
 	doctorId: text('doctorId')
-}, (Vaccin) => ({
-	'Vaccin_doctor_fkey': foreignKey({
-		name: 'Vaccin_doctor_fkey',
-		columns: [Vaccin.doctorId],
-		foreignColumns: [Doctor.id]
-	})
-		.onDelete('cascade')
-		.onUpdate('cascade')
-}));
+});
 
 export type VaccinationRecord = typeof VaccinationRecord.$inferSelect
 export type VaccinationRecordInsert = typeof VaccinationRecord.$inferInsert
@@ -322,31 +245,7 @@ export const VaccinationRecord = pgTable('VaccinationRecord', {
 	route: text('route').notNull(),
 	site: text('site').notNull(),
 	doseId: text('doseId').notNull()
-}, (VaccinationRecord) => ({
-	'VaccinationRecord_patient_fkey': foreignKey({
-		name: 'VaccinationRecord_patient_fkey',
-		columns: [VaccinationRecord.patientId],
-		foreignColumns: [Patient.id]
-	})
-		.onDelete('cascade')
-		.onUpdate('cascade'),
-	'VaccinationRecord_vaccin_fkey': foreignKey({
-		name: 'VaccinationRecord_vaccin_fkey',
-		columns: [VaccinationRecord.vaccinId],
-		foreignColumns: [Vaccin.id]
-	})
-		.onDelete('cascade')
-		.onUpdate('cascade'),
-	'VaccinationRecord_dose_fkey': foreignKey({
-		name: 'VaccinationRecord_dose_fkey',
-		columns: [VaccinationRecord.doseId],
-		foreignColumns: [Dose.id]
-	})
-		.onDelete('cascade')
-		.onUpdate('cascade'),
-	'VaccinationRecord_patientId_vaccinId_doseId_unique_idx': uniqueIndex('VaccinationRecord_patientId_vaccinId_doseId_key')
-		.on(VaccinationRecord.patientId, VaccinationRecord.vaccinId, VaccinationRecord.doseId)
-}));
+});
 
 export type Dose = typeof Dose.$inferSelect
 export type DoseInsert = typeof Dose.$inferInsert
@@ -357,15 +256,7 @@ export const Dose = pgTable('Dose', {
 	maxAge: integer('maxAge'),
 	doseType: DoseType('doseType').notNull(),
 	vaccinId: text('vaccinId')
-}, (Dose) => ({
-	'Dose_Vaccin_fkey': foreignKey({
-		name: 'Dose_Vaccin_fkey',
-		columns: [Dose.vaccinId],
-		foreignColumns: [Vaccin.id]
-	})
-		.onDelete('cascade')
-		.onUpdate('cascade')
-}));
+});
 
 export type VaccinReference = typeof VaccinReference.$inferSelect
 export type VaccinReferenceInsert = typeof VaccinReference.$inferInsert
@@ -384,15 +275,11 @@ export const VaccinReferenceDose = pgTable('VaccinReferenceDose', {
 	maxAge: integer('maxAge'),
 	doseType: DoseType('doseType').notNull(),
 	vaccinReferenceId: text('vaccinReferenceId').notNull()
-}, (VaccinReferenceDose) => ({
-	'VaccinReferenceDose_vaccinReference_fkey': foreignKey({
-		name: 'VaccinReferenceDose_vaccinReference_fkey',
-		columns: [VaccinReferenceDose.vaccinReferenceId],
-		foreignColumns: [VaccinReference.id]
-	})
-		.onDelete('cascade')
-		.onUpdate('cascade')
-}));
+});
+
+
+//======================Relations======================//
+
 
 export const AppointmentRelations = relations(Appointment, ({ one, many }) => ({
 	Doctor: one(Doctor, {
