@@ -41,15 +41,15 @@ export async function updateSession(request: NextRequest) {
   ) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone()
-    url.pathname = '/signin'
+    url.pathname = '/'
     return NextResponse.redirect(url)
   }
 
   if (
     user &&
-    request.nextUrl.pathname.startsWith('/signin') 
+    request.nextUrl.pathname === '/'
   ) {
-    // no user, potentially respond by redirecting the user to the login page
+    // user is authenticated, redirect from home page to user dashboard
     const url = request.nextUrl.clone()
     url.pathname = '/user'
     return NextResponse.redirect(url)

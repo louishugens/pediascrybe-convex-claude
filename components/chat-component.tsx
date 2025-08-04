@@ -119,7 +119,8 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
                     }
                     return (
                       <p key={index} className="text-sm text-gray-500 italic">
-                        {part.type}
+                        {/* {part.type} */}
+                        ScrybeGPT
                       </p>
                     )
                   })}

@@ -23,15 +23,23 @@ export async function POST(req: Request, props: { params: Promise<{ patientId: s
   const params = await props.params;
   const patientId = params.patientId!
   const patient = await getPatientWithAppointments(patientId);
-  const patientWithoutPII = patient ? omitPII(patient, ['firstname', 'lastname', 'email']) : undefined;
+  const patientWithoutPII = patient ? omitPII(patient, ['firstname', 'lastname', 'email', 'mothername']) : undefined;
   const { messages }: { messages: UIMessage[] } = await req.json();
 
   const result = streamText({
-    model: openai('gpt-4.1-mini'),
+    model: openai('gpt-4.1'),
     system: `You are ScrybGPT, a medical assistant chatbot. You are helping a pediatrician\
       understand their patients' conditions. You are given a the patient's profile data and the appointments \
-      data, and the pediatrician will ask you question. Answer the questions based on the data provided as context.
-      Answer the questions in the language of the question. Your chat partner is a pediatrician and the patient's doctor.
+      data, and the pediatrician will ask you question. Answer the questions based on the data provided as context.\
+      Follow the following steps:
+      1. Understand the question and the patient's data.
+      2. If the question is about the patient's data, answer the question based on the data provided.
+      3. If the question is not about the patient's data, answer the question based on the general knowledge you have about the medical field.
+      4. If the question is about the patient's data, answer the question based on the data provided.
+      5. If the question is not about the patient's data, answer the question based on the general knowledge you have about the medical field.
+      6. If the question is about the patient's data, answer the question based on the data provided.
+      7. Answer the questions in the language of the question. Your interlocutor is a pediatrician and the patient's doctor.\
+      Always answer in the language of the question.
       Answer the question based only on the following patient data and appointments data:
       ${JSON.stringify(patientWithoutPII)}
       in addition the general knowledge you have about the medical field.`,

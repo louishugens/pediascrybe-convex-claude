@@ -453,3 +453,4 @@ export const VaccinReferenceDoseRelations = relations(VaccinReferenceDose, ({ on
 		references: [VaccinReference.id]
 	})
 }));
+
