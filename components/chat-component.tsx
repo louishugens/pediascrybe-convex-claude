@@ -43,7 +43,33 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    const scrollToBottom = () => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    }
+    
+    // Check if the latest message has charts
+    const latestMessage = messages[messages.length - 1]
+    const hasCharts = latestMessage?.parts.some(part => 
+      (part.type === "tool-displayGrowthChart" || part.type === "tool-selectGrowthChart") && 
+      (part as any).state === "output-available"
+    )
+    
+    if (hasCharts) {
+      // For chart messages, use longer delays
+      const timeouts = [
+        setTimeout(scrollToBottom, 100),   // Quick initial scroll
+        setTimeout(scrollToBottom, 500),   // Chart starts rendering
+        setTimeout(scrollToBottom, 1200),  // Chart likely rendered
+        setTimeout(scrollToBottom, 2000),  // Final scroll to ensure completion
+      ]
+      
+      return () => timeouts.forEach(clearTimeout)
+    } else {
+      // For regular messages, immediate scroll with short delay
+      scrollToBottom()
+      const timeoutId = setTimeout(scrollToBottom, 200)
+      return () => clearTimeout(timeoutId)
+    }
   }, [messages])
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
@@ -58,8 +84,26 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
   const messageContainerClasses = useMemo(() => ({
     user: "bg-green-600 text-white ml-12",
     assistant: "bg-gray-100 text-gray-900 mr-12",
-    assistantProse: "prose prose-sm max-w-none prose-headings:text-gray-900 prose-headings:font-semibold prose-p:text-gray-900 prose-p:leading-relaxed prose-strong:text-gray-900 prose-ul:text-gray-900 prose-ol:text-gray-900 prose-li:text-gray-900 prose-code:text-gray-900 prose-code:bg-gray-200 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-pre:bg-gray-200 prose-pre:text-gray-900",
-    tableStyles: "[&_table]:border-separate [&_table]:border-spacing-0 [&_table]:border [&_table]:border-gray-300 [&_table]:rounded-lg [&_table]:overflow-hidden [&_table]:w-full [&_table]:my-4 [&_th]:border-b [&_th]:border-r [&_th]:border-gray-300 [&_th]:bg-gray-50 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:font-semibold [&_th]:text-gray-900 [&_th:last-child]:border-r-0 [&_td]:border-b [&_td]:border-r [&_td]:border-gray-300 [&_td]:px-3 [&_td]:py-2 [&_td]:text-gray-900 [&_td:last-child]:border-r-0 [&_tr:last-child_td]:border-b-0"
+    assistantProse: `
+      prose prose-sm max-w-none text-gray-900
+      prose-headings:text-gray-900 prose-headings:font-bold prose-headings:mt-6 prose-headings:mb-3
+      prose-h1:text-xl prose-h1:font-bold prose-h1:border-b prose-h1:border-gray-200 prose-h1:pb-2
+      prose-h2:text-lg prose-h2:font-bold prose-h2:mt-5 prose-h2:mb-2
+      prose-h3:text-base prose-h3:font-semibold prose-h3:mt-4 prose-h3:mb-2
+      prose-h4:text-sm prose-h4:font-semibold prose-h4:mt-3 prose-h4:mb-1
+      prose-p:text-gray-900 prose-p:leading-relaxed prose-p:mb-3
+      prose-strong:text-gray-900 prose-strong:font-semibold
+      prose-em:text-gray-800 prose-em:italic
+      prose-ul:text-gray-900 prose-ul:my-3 prose-ul:pl-2
+      prose-ol:text-gray-900 prose-ol:my-3 prose-ol:pl-2 prose-ol:list-decimal
+      prose-li:text-gray-900 prose-li:mb-1 prose-li:leading-relaxed
+      prose-ul>li:list-disc prose-ul>li:ml-0
+      prose-ol>li:list-decimal prose-ol>li:ml-0
+      prose-code:text-gray-900 prose-code:bg-gray-200 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:font-mono
+      prose-pre:bg-gray-200 prose-pre:text-gray-900 prose-pre:p-3 prose-pre:rounded-lg prose-pre:overflow-x-auto
+      prose-blockquote:border-l-4 prose-blockquote:border-gray-300 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-700
+    `.replace(/\s+/g, ' ').trim(),
+    tableStyles: "[&_table]:border-separate [&_table]:border-spacing-0 [&_table]:border [&_table]:border-gray-300 [&_table]:rounded-md [&_table]:overflow-hidden [&_table]:w-full [&_table]:my-4 [&_th]:border-b [&_th]:border-r [&_th]:border-gray-300 [&_th]:bg-gray-50 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:font-semibold [&_th]:text-gray-900 [&_th:first-child]:pl-4 [&_th:last-child]:border-r-0 [&_td]:border-b [&_td]:border-r [&_td]:border-gray-300 [&_td]:px-3 [&_td]:py-2 [&_td]:text-gray-900 [&_td:first-child]:pl-4 [&_td:last-child]:border-r-0 [&_tr:last-child_td]:border-b-0"
   }), [])
 
   return (
@@ -126,11 +170,29 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
                         return (
                           <div
                             key={index}
-                            className={messageContainerClasses.assistantProse}
+                            className={`${messageContainerClasses.assistantProse} ${messageContainerClasses.tableStyles}`}
                           >
-                            <div className={messageContainerClasses.tableStyles}>
-                              <ReactMarkdown remarkPlugins={[remarkGfm]}>{part.text}</ReactMarkdown>
-                            </div>
+                            <ReactMarkdown 
+                              remarkPlugins={[remarkGfm]}
+                              components={{
+                                // Custom components for better rendering
+                                h1: ({ children }) => <h1 className="text-xl font-bold border-b border-gray-200 pb-2 mb-4 mt-6">{children}</h1>,
+                                h2: ({ children }) => <h2 className="text-lg font-bold mb-2 mt-5">{children}</h2>,
+                                h3: ({ children }) => <h3 className="text-base font-semibold mb-2 mt-4">{children}</h3>,
+                                h4: ({ children }) => <h4 className="text-sm font-semibold mb-1 mt-3">{children}</h4>,
+                                p: ({ children }) => <p className="mb-3 leading-relaxed">{children}</p>,
+                                ul: ({ children }) => <ul className="list-disc list-outside ml-2 my-3 space-y-1">{children}</ul>,
+                                ol: ({ children }) => <ol className="list-decimal list-outside ml-2 my-3 space-y-1">{children}</ol>,
+                                li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+                                strong: ({ children }) => <strong className="font-semibold text-gray-900">{children}</strong>,
+                                em: ({ children }) => <em className="italic text-gray-800">{children}</em>,
+                                code: ({ children }) => <code className="bg-gray-200 text-gray-900 px-1.5 py-0.5 rounded text-xs font-mono">{children}</code>,
+                                pre: ({ children }) => <pre className="bg-gray-200 text-gray-900 p-3 rounded-lg overflow-x-auto my-3 text-sm">{children}</pre>,
+                                blockquote: ({ children }) => <blockquote className="border-l-4 border-gray-300 pl-4 italic text-gray-700 my-3">{children}</blockquote>,
+                              }}
+                            >
+                              {part.text}
+                            </ReactMarkdown>
                           </div>
                         )
                       } else {
@@ -152,7 +214,7 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
                         const output = part.output as any;
                         if (output?.type === "chartSelector") {
                           return (
-                            <div key={index} className="my-4">
+                            <div key={index} className="mt-4 mb-3">
                               <ChartSelector data={output} onChartSelect={handleChartSelect} />
                             </div>
                           )
@@ -183,7 +245,7 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
                         const output = part.output as any;
                         if (output?.type === "growthChart") {
                           return (
-                            <div key={index} className="my-4">
+                            <div key={index} className="mt-4 mb-3">
                               <ChatGrowthChart data={output} />
                             </div>
                           )

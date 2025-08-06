@@ -312,7 +312,8 @@ export default function ChatGrowthChart({ data }: ChatGrowthChartProps) {
                         <span className="flex-1">{chartConfig[name as keyof typeof chartConfig]?.label ||
                           name}</span>
                         <div className="ml-4 flex items-baseline gap-0.5 font-mono font-medium tabular-nums text-foreground">
-                          {value}
+                          {data.unit === 'kg/m²' && typeof value === 'number' ? 
+                            (Math.round(value * 100) / 100).toFixed(2) : value}
                           <span className="font-normal text-muted-foreground ml-1">
                             {data.unit}
                           </span>
