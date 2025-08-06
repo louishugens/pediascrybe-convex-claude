@@ -18,7 +18,7 @@ export const getPatientWithAppointments = cache(async (patientId: string) => {
     where: eq(Patient.id, patientId),
     with: {
       appointments: {
-        limit: 5,
+        limit: 10,
         orderBy: desc(Appointment.startDate),
       }
     }

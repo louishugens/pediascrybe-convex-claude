@@ -13,7 +13,7 @@ export default async function Page(props: { params: Params }) {
   const patient = await getPatient(patientId)
 
   return (
-    <div className="flex flex-col h-full py-4">
+    <div className="flex flex-col h-full">
       <Chat patientId={patientId} firstname={patient?.firstname ?? ""} lastname={patient?.lastname ?? ""} />
     </div>
   )

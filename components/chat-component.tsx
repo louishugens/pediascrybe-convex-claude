@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useChat } from "@ai-sdk/react"
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useMemo, useCallback } from "react"
 import { Send, Bot, User, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,7 +12,10 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { DefaultChatTransport } from "ai"
 import ReactMarkdown from "react-markdown"
-import Link from "next/link";
+import remarkGfm from "remark-gfm"
+import Link from "next/link"
+import ChatGrowthChart from "./chat-growth-chart"
+import ChartSelector from "./chart-selector";
 
 interface ChatProps {
   patientId: string
@@ -31,6 +34,11 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
     }),
   })
 
+  // Handle chart selection from the chart selector - memoized to prevent recreation
+  const handleChartSelect = useCallback((chartType: string) => {
+    sendMessage({ text: `Show me the ${chartType} growth chart` })
+  }, [sendMessage])
+
   const isLoading = status === "submitted" || status === "streaming"
 
   // Auto-scroll to bottom when new messages arrive
@@ -38,13 +46,21 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim() || isLoading) return
 
     sendMessage({ text: input })
     setInput("")
-  }
+  }, [input, isLoading, sendMessage])
+
+  // Memoize complex className calculations
+  const messageContainerClasses = useMemo(() => ({
+    user: "bg-green-600 text-white ml-12",
+    assistant: "bg-gray-100 text-gray-900 mr-12",
+    assistantProse: "prose prose-sm max-w-none prose-headings:text-gray-900 prose-headings:font-semibold prose-p:text-gray-900 prose-p:leading-relaxed prose-strong:text-gray-900 prose-ul:text-gray-900 prose-ol:text-gray-900 prose-li:text-gray-900 prose-code:text-gray-900 prose-code:bg-gray-200 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-pre:bg-gray-200 prose-pre:text-gray-900",
+    tableStyles: "[&_table]:border-separate [&_table]:border-spacing-0 [&_table]:border [&_table]:border-gray-300 [&_table]:rounded-lg [&_table]:overflow-hidden [&_table]:w-full [&_table]:my-4 [&_th]:border-b [&_th]:border-r [&_th]:border-gray-300 [&_th]:bg-gray-50 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:font-semibold [&_th]:text-gray-900 [&_th:last-child]:border-r-0 [&_td]:border-b [&_td]:border-r [&_td]:border-gray-300 [&_td]:px-3 [&_td]:py-2 [&_td]:text-gray-900 [&_td:last-child]:border-r-0 [&_tr:last-child_td]:border-b-0"
+  }), [])
 
   return (
     <Card className="flex flex-col h-full w-full  mx-auto bg-white shadow-lg overflow-hidden">
@@ -93,8 +109,14 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
               )}
 
               <div
-                className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                  message.role === "user" ? "bg-green-600 text-white ml-12" : "bg-gray-100 text-gray-900 mr-12"
+                className={`${
+                  // Check if message has a growth chart or chart selector to make it wider
+                  message.parts.some(part => 
+                    (part.type === "tool-displayGrowthChart" || part.type === "tool-selectGrowthChart") && 
+                    (part as any).state === "output-available"
+                  ) ? "w-[95%]" : "max-w-[80%]"
+                } rounded-2xl px-4 py-3 ${
+                  message.role === "user" ? messageContainerClasses.user : messageContainerClasses.assistant
                 }`}
               >
                 <div className="space-y-2">
@@ -104,9 +126,11 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
                         return (
                           <div
                             key={index}
-                            className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-headings:font-semibold prose-p:text-gray-900 prose-p:leading-relaxed prose-strong:text-gray-900 prose-ul:text-gray-900 prose-ol:text-gray-900 prose-li:text-gray-900 prose-code:text-gray-900 prose-code:bg-gray-200 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-pre:bg-gray-200 prose-pre:text-gray-900"
+                            className={messageContainerClasses.assistantProse}
                           >
-                            <ReactMarkdown>{part.text}</ReactMarkdown>
+                            <div className={messageContainerClasses.tableStyles}>
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>{part.text}</ReactMarkdown>
+                            </div>
                           </div>
                         )
                       } else {
@@ -116,10 +140,70 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
                           </p>
                         )
                       }
+                    } else if (part.type === "tool-selectGrowthChart") {
+                      // Handle chart selector tool calls
+                      if (part.state === "input-streaming" || part.state === "input-available") {
+                        return (
+                          <div key={index} className="text-sm text-gray-600 italic">
+                            Analyzing available growth charts...
+                          </div>
+                        )
+                      } else if (part.state === "output-available") {
+                        const output = part.output as any;
+                        if (output?.type === "chartSelector") {
+                          return (
+                            <div key={index} className="my-4">
+                              <ChartSelector data={output} onChartSelect={handleChartSelect} />
+                            </div>
+                          )
+                        } else if (output?.error) {
+                          return (
+                            <div key={index} className="text-sm text-red-600 bg-red-50 p-2 rounded">
+                              Chart Selection Error: {output.error}
+                            </div>
+                          )
+                        }
+                      } else if (part.state === "output-error") {
+                        return (
+                          <div key={index} className="text-sm text-red-600 bg-red-50 p-2 rounded">
+                            Error analyzing charts: {part.errorText}
+                          </div>
+                        )
+                      }
+                    } else if (part.type === "tool-displayGrowthChart") {
+                      // Handle growth chart tool calls
+                      if (part.state === "input-streaming" || part.state === "input-available") {
+                        const input = part.input as { chartType?: string } | undefined;
+                        return (
+                          <div key={index} className="text-sm text-gray-600 italic">
+                            Generating {input?.chartType || 'growth'} chart...
+                          </div>
+                        )
+                      } else if (part.state === "output-available") {
+                        const output = part.output as any;
+                        if (output?.type === "growthChart") {
+                          return (
+                            <div key={index} className="my-4">
+                              <ChatGrowthChart data={output} />
+                            </div>
+                          )
+                        } else if (output?.error) {
+                          return (
+                            <div key={index} className="text-sm text-red-600 bg-red-50 p-2 rounded">
+                              Chart Error: {output.error}
+                            </div>
+                          )
+                        }
+                      } else if (part.state === "output-error") {
+                        return (
+                          <div key={index} className="text-sm text-red-600 bg-red-50 p-2 rounded">
+                            Error generating chart: {part.errorText}
+                          </div>
+                        )
+                      }
                     }
                     return (
                       <p key={index} className="text-sm text-gray-500 italic">
-                        {/* {part.type} */}
                         ScrybeGPT
                       </p>
                     )

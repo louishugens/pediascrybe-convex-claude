@@ -28,7 +28,7 @@ const Layout = async props => {
   return (
     <div className='flex relative h-screen w-screen overflow-hidden'>
       <Sidenav />
-      <div className="h-full w-full overflow-y-scroll px-8 py-4">
+      <div className="h-full w-full overflow-y-scroll px-4 py-4">
         {children}
         <Toaster richColors position="top-center" toastOptions={{ duration: 10000 }} closeButton={true} />
       </div>

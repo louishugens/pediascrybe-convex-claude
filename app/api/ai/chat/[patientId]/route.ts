@@ -5,7 +5,10 @@ import {
   convertToModelMessages,
   streamText,
   UIMessage,
+  tool
 } from 'ai';
+import { z } from 'zod/v4';
+import { differenceInDays } from 'date-fns';
 
 
 function omitPII<T extends Record<string, any>>(obj: T, keys: string[]): Partial<T> {
@@ -23,40 +26,286 @@ export async function POST(req: Request, props: { params: Promise<{ patientId: s
   const params = await props.params;
   const patientId = params.patientId!
   const patient = await getPatientWithAppointments(patientId);
+  const appointments = patient?.appointments;
+  const growthData = appointments?.map((appointment) => ({
+    date: appointment.startDate,
+    weight: appointment.weight,
+    height: appointment.height,
+    head: appointment.head,
+    arm: appointment.arm,
+  }));
   const patientWithoutPII = patient ? omitPII(patient, ['firstname', 'lastname', 'email', 'mothername']) : undefined;
   const { messages }: { messages: UIMessage[] } = await req.json();
 
   const result = streamText({
     model: openai('gpt-4.1'),
-    system: `You are ScrybGPT, a medical assistant chatbot. You are helping a pediatrician\
-      understand their patients' conditions. You are given a the patient's profile data and the appointments \
-      data, and the pediatrician will ask you question. Answer the questions based on the data provided as context.\
-      Follow the following steps:
-      1. Understand the question and the patient's data.
-      2. If the question is about the patient's data, answer the question based on the data provided.
-      3. If the question is not about the patient's data, answer the question based on the general knowledge you have about the medical field.
-      4. If the question is about the patient's data, answer the question based on the data provided.
-      5. If the question is not about the patient's data, answer the question based on the general knowledge you have about the medical field.
-      6. If the question is about the patient's data, answer the question based on the data provided.
-      7. Answer the questions in the language of the question. Your interlocutor is a pediatrician and the patient's doctor.\
-      Always answer in the language of the question.
+    system: `You are ScrybGPT, a medical assistant chatbot. You are helping a pediatrician understand their patients' conditions. You are given the patient's profile data and the appointments data, and the pediatrician will ask you questions.
+
+    CRITICAL LANGUAGE REQUIREMENT: 
+    - You MUST ALWAYS respond in the EXACT same language that the user's question is written in
+    - If the user asks in French, respond entirely in French
+    - If the user asks in English, respond entirely in English
+    - If the user asks in Spanish, respond entirely in Spanish
+    - This applies to ALL parts of your response including explanations, chart descriptions, and any other text
+    - The patient data context may be in different languages, but you must respond in the language of the current question
+    - NEVER mix languages in your response
+
+    Your primary role is to provide comprehensive medical assistance for pediatric care. Follow these guidelines:
+
+1. **Medical Analysis**: Analyze patient data thoroughly and provide clinical insights
+2. **General Knowledge**: Draw from pediatric medical knowledge for questions beyond patient data
+3. **Clinical Context**: Consider symptoms, vital signs, medical history, and development patterns
+4. **Diagnostic Support**: Help with differential diagnosis and clinical decision-making
+5. **Treatment Guidance**: Provide evidence-based treatment recommendations when appropriate
+6. **Language Consistency**: Always respond in the same language as the user's question
+
+**Growth Charts (Secondary Capability)**:
+When growth-related questions arise:
+- For general growth questions: Provide text analysis first, then optionally suggest charts
+- For specific chart requests: Use the appropriate chart tools
+- Charts available: wfa, hfa, hfa5To19, bfa, bfa5To19, hcfa, wfl, wfl0To2
+      
       Answer the question based only on the following patient data and appointments data:
       ${JSON.stringify(patientWithoutPII)}
       in addition the general knowledge you have about the medical field.`,
     messages: convertToModelMessages(messages),
-    // stopWhen: stepCountIs(5),
-    // tools: {
-    //   addResource: tool({
-    //     description: `add a resource to your knowledge base.
-    //       If the user provides a random piece of knowledge unprompted, use this tool without asking for confirmation.`,
-    //     inputSchema: z.object({
-    //       content: z
-    //         .string()
-    //         .describe('the content or resource to add to the knowledge base'),
-    //     }),
-    //     execute: async ({ content }) => createResource({ content }),
-    //   }),
-    // },
+    tools: {
+
+      selectGrowthChart: tool({
+        description: 'Help the user select which growth chart to display based on available patient data and conversation context',
+        inputSchema: z.object({
+          context: z.string().describe('Current conversation context or user request'),
+          showOptions: z.boolean().default(false).describe('Whether to show chart options to user for selection')
+        }),
+        execute: async ({ context, showOptions }) => {
+          try {
+            // Analyze available patient data
+            const availableData = {
+              hasWeight: appointments?.some(apt => apt.weight != null) ?? false,
+              hasHeight: appointments?.some(apt => apt.height != null) ?? false,
+              hasHeadCircumference: appointments?.some(apt => apt.head != null) ?? false,
+              appointmentCount: appointments?.length ?? 0
+            };
+
+            // Calculate patient age in days
+            const ageInDays = patient?.birthdate 
+              ? differenceInDays(new Date(), patient.birthdate) 
+              : 0;
+            const ageInYears = Math.floor(ageInDays / 365.25);
+
+            // Determine available chart types based on data and age
+            const availableCharts: Array<{
+              type: string;
+              title: string;
+              description: string;
+              recommended: boolean;
+            }> = [];
+            
+            if (availableData.hasWeight) {
+              availableCharts.push({
+                type: 'wfa',
+                title: 'Weight for Age (0-5 years)',
+                description: `Track weight development over time (${appointments?.filter(apt => apt.weight).length} weight measurements available)`,
+                recommended: context.toLowerCase().includes('weight') || context.toLowerCase().includes('growth')
+              });
+            }
+
+            if (availableData.hasHeight) {
+              if (ageInYears <= 5) {
+                availableCharts.push({
+                  type: 'hfa',
+                  title: 'Height for Age (0-5 years)',
+                  description: `Track height development over time (${appointments?.filter(apt => apt.height).length} height measurements available)`,
+                  recommended: context.toLowerCase().includes('height') || context.toLowerCase().includes('tall')
+                });
+              }
+              if (ageInYears >= 2) {
+                availableCharts.push({
+                  type: 'hfa5To19',
+                  title: 'Height for Age (5-19 years)',
+                  description: `Track height development for older children (${appointments?.filter(apt => apt.height).length} height measurements available)`,
+                  recommended: context.toLowerCase().includes('height') && ageInYears > 5
+                });
+              }
+            }
+
+            if (availableData.hasWeight && availableData.hasHeight) {
+              if (ageInYears <= 5) {
+                availableCharts.push({
+                  type: 'bfa',
+                  title: 'BMI for Age (0-5 years)',
+                  description: `Track BMI development over time (${appointments?.filter(apt => apt.weight && apt.height).length} BMI calculations possible)`,
+                  recommended: context.toLowerCase().includes('bmi') || context.toLowerCase().includes('weight')
+                });
+              }
+              if (ageInYears >= 2) {
+                availableCharts.push({
+                  type: 'bfa5To19',
+                  title: 'BMI for Age (5-19 years)',
+                  description: `Track BMI development for older children (${appointments?.filter(apt => apt.weight && apt.height).length} BMI calculations possible)`,
+                  recommended: context.toLowerCase().includes('bmi') && ageInYears > 5
+                });
+              }
+
+              // Weight for Length charts
+              if (ageInYears <= 2) {
+                availableCharts.push({
+                  type: 'wfl0To2',
+                  title: 'Weight for Length (0-2 years)',
+                  description: `Compare weight to length for infants and toddlers`,
+                  recommended: context.toLowerCase().includes('length') && ageInYears <= 2
+                });
+              }
+              if (ageInYears >= 2 && ageInYears <= 5) {
+                availableCharts.push({
+                  type: 'wfl',
+                  title: 'Weight for Length (2-5 years)',
+                  description: `Compare weight to length for young children`,
+                  recommended: context.toLowerCase().includes('length') && ageInYears > 2
+                });
+              }
+            }
+
+            if (availableData.hasHeadCircumference && ageInYears <= 5) {
+              availableCharts.push({
+                type: 'hcfa',
+                title: 'Head Circumference for Age (0-5 years)',
+                description: `Track head growth over time (${appointments?.filter(apt => apt.head).length} head circumference measurements available)`,
+                recommended: context.toLowerCase().includes('head') || context.toLowerCase().includes('circumference')
+              });
+            }
+
+            // Get recommended charts
+            const recommendedCharts = availableCharts.filter(chart => chart.recommended);
+            
+            return {
+              type: 'chartSelector',
+              patientAge: ageInYears,
+              availableData,
+              availableCharts,
+              recommendedCharts,
+              showOptions,
+              context,
+              message: showOptions 
+                ? "Here are the available growth charts for this patient. Which would you like to see?"
+                : recommendedCharts.length > 0 
+                  ? `Based on your request, I recommend the ${recommendedCharts[0].title}.`
+                  : "Let me show you the available growth charts for this patient."
+            };
+          } catch (error) {
+            return {
+              error: `Failed to analyze available charts: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              type: 'chartSelector'
+            };
+          }
+        }
+      }),
+      displayGrowthChart: tool({
+        description: 'Display a growth chart for the patient with their measurements plotted against reference percentiles',
+        inputSchema: z.object({
+          chartType: z.enum(['wfa', 'hfa', 'hfa5To19', 'bfa', 'bfa5To19', 'hcfa', 'wfl', 'wfl0To2']).describe('Type of growth chart to display'),
+        }),
+        execute: async ({ chartType }) => {
+          try {
+            // Prepare patient data based on chart type
+            let patientData: any[] = [];
+            let yLabel = '';
+            let xLabel = '';
+            let unit = '';
+
+            if (chartType === 'wfa') {
+              patientData = appointments?.map(appointment => ({
+                age: differenceInDays(appointment.startDate, patient?.birthdate ?? new Date()),
+                value: appointment.weight
+              })).filter(item => item.value != null) ?? [];
+              yLabel = 'Weight';
+              xLabel = 'Age';
+              unit = 'kg';
+            } else if (chartType.startsWith('hfa')) {
+              patientData = appointments?.map(appointment => ({
+                age: chartType === 'hfa5To19' 
+                  ? Math.floor(differenceInDays(appointment.startDate, patient?.birthdate ?? new Date()) / 30.44) // months
+                  : differenceInDays(appointment.startDate, patient?.birthdate ?? new Date()), // days
+                value: appointment.height
+              })).filter(item => item.value != null) ?? [];
+              yLabel = 'Height';
+              xLabel = 'Age';
+              unit = 'cm';
+            } else if (chartType.startsWith('bfa')) {
+              patientData = appointments?.map(appointment => {
+                if (appointment.weight && appointment.height) {
+                  const heightInM = appointment.height / 100;
+                  const bmi = appointment.weight / (heightInM * heightInM);
+                  return {
+                    age: chartType === 'bfa5To19' 
+                      ? Math.floor(differenceInDays(appointment.startDate, patient?.birthdate ?? new Date()) / 30.44) // months
+                      : differenceInDays(appointment.startDate, patient?.birthdate ?? new Date()), // days
+                    value: bmi
+                  };
+                }
+                return null;
+              }).filter(item => item != null) ?? [];
+              yLabel = 'BMI';
+              xLabel = 'Age';
+              unit = 'kg/m²';
+            } else if (chartType === 'hcfa') {
+              patientData = appointments?.map(appointment => ({
+                age: differenceInDays(appointment.startDate, patient?.birthdate ?? new Date()),
+                value: appointment.head
+              })).filter(item => item.value != null) ?? [];
+              yLabel = 'Head Circumference';
+              xLabel = 'Age';
+              unit = 'cm';
+            } else if (chartType.startsWith('wfl')) {
+              patientData = appointments?.map(appointment => {
+                if (appointment.weight && appointment.height) {
+                  return {
+                    length: appointment.height,
+                    value: appointment.weight
+                  };
+                }
+                return null;
+              }).filter(item => item != null) ?? [];
+              yLabel = 'Weight';
+              xLabel = 'Length';
+              unit = 'kg';
+            }
+
+            // Get chart title
+            const titles = {
+              wfa: 'Weight for Age (0-5 years)',
+              hfa: 'Height for Age (0-5 years)',
+              hfa5To19: 'Height for Age (5-19 years)',
+              bfa: 'BMI for Age (0-5 years)',
+              bfa5To19: 'BMI for Age (5-19 years)',
+              hcfa: 'Head Circumference for Age (0-5 years)',
+              wfl: 'Weight for Length (2-5 years)',
+              wfl0To2: 'Weight for Length (0-2 years)'
+            };
+
+            return {
+              type: 'growthChart',
+              chartType,
+              patientSex: patient?.sex ?? null,
+              patientName: patient?.firstname ?? 'Patient',
+              patientBirthdate: patient?.birthdate,
+              growthData: patientData,
+              yLabel,
+              xLabel,
+              unit,
+              title: titles[chartType as keyof typeof titles] || chartType,
+              dataPoints: patientData.length
+            };
+          } catch (error) {
+            return {
+              error: `Failed to generate ${chartType} chart: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              chartType
+            };
+          }
+        }
+      })
+    }
+
   });
 
   return result.toUIMessageStreamResponse();

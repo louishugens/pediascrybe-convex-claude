@@ -104,7 +104,7 @@ const AddAppointment = ({ doctorId, patientId, patient }: AddAppointmentProps) =
     if (symptoms) {
       setGenerating(true)
       
-      const { firstname, lastname, email, ...patientWithoutIdentity} = patient
+      const { firstname, lastname, email, mothername, ...patientWithoutIdentity} = patient
 
       const body = `The patient's information is ${JSON.stringify(patientWithoutIdentity)}. The consultation information is ${JSON.stringify(appointment)}.`
       
