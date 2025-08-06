@@ -299,16 +299,15 @@ export default function ChatGrowthChart({ data }: ChatGrowthChartProps) {
                     labelKey={data.chartType}
                     nameKey={measureType}
                     formatter={(value, name, props) => (
-                      <>
-                      <div
-                        className="h-2.5 w-2.5 shrink-0 rounded-[2px] bg-[--color-bg] ml-1"
-                        style={
-                          {
-                            "--color-bg": `var(--color-${name})`,
-                          } as React.CSSProperties
-                        }
-                      />
                       <div className="flex min-w-[180px] items-center text-xs text-muted-foreground py-1">
+                        <div
+                          className="h-2.5 w-2.5 shrink-0 rounded-[2px] bg-[--color-bg] mr-2"
+                          style={
+                            {
+                              "--color-bg": `var(--color-${name})`,
+                            } as React.CSSProperties
+                          }
+                        />
                         <span className="flex-1">{chartConfig[name as keyof typeof chartConfig]?.label ||
                           name}</span>
                         <div className="ml-4 flex items-baseline gap-0.5 font-mono font-medium tabular-nums text-foreground">
@@ -319,7 +318,6 @@ export default function ChatGrowthChart({ data }: ChatGrowthChartProps) {
                           </span>
                         </div>
                       </div>
-                      </>
                     )}
                     labelFormatter={(label, payload) => {
                       if (payload && payload.length > 0) {
