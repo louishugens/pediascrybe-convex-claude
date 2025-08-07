@@ -408,6 +408,12 @@ const AddAppointment = ({ doctorId, patientId, patient }: AddAppointmentProps) =
                                   weight: weight,
                                   head: head,
                                   arm: arm,
+                                  sao2: sao2,
+                                  pulse: pulse,
+                                  respiratory: respiratory,
+                                  systolic: systolic,
+                                  diastolic: diastolic,
+                                  temperature: temperature,
                                 })}
                               >
                                 Yes

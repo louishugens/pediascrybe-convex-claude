@@ -83,7 +83,6 @@ export async function POST(req: Request, props: { params: Promise<{ patientId: s
       chunking: 'word'
     }),
     tools: {
-
       selectGrowthChart: tool({
         description: 'Help the user select which growth chart to display based on available patient data and conversation context',
         inputSchema: z.object({
