@@ -69,8 +69,11 @@ export async function POST(req: Request, props: { params: Promise<{ patientId: s
 
     **Growth Charts (Secondary Capability)**:
     When growth-related questions arise:
-    - For general growth questions: Provide text analysis first, then optionally suggest charts
-    - For specific chart requests: Use the appropriate chart tools
+    - Always provide brief text analysis first.
+    - Prefer using the chart selection tool unless the user explicitly asks for multiple charts.
+    - For generic/ambiguous requests (e.g., "show a growth chart", "growth", "percentiles"), or a single chart is implied but not named, CALL selectGrowthChart with showOptions=true to present choices.
+    - If the user explicitly names multiple charts or asks to compare (e.g., "show WFA and HFA", "compare BMI and height", "several charts"), CALL displayGrowthChart for each requested chart directly without showing the selector.
+    - If the user explicitly names a single specific chart (e.g., "show WFA"), you may call displayGrowthChart directly.
     - Charts available: wfa, hfa, hfa5To19, bfa, bfa5To19, hcfa, wfl, wfl0To2
     - NEVER promise to show a chart without actually calling the appropriate tool
       
@@ -84,10 +87,10 @@ export async function POST(req: Request, props: { params: Promise<{ patientId: s
     }),
     tools: {
       selectGrowthChart: tool({
-        description: 'Help the user select which growth chart to display based on available patient data and conversation context',
+        description: 'Default path for growth visualization: analyze context and present a chart selection UI with recommended options based on patient data and the question',
         inputSchema: z.object({
           context: z.string().describe('Current conversation context or user request'),
-          showOptions: z.boolean().default(false).describe('Whether to show chart options to user for selection')
+          showOptions: z.boolean().default(true).describe('Whether to show chart options to user for selection')
         }),
         execute: async ({ context, showOptions }) => {
           try {
