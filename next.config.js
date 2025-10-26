@@ -2,7 +2,6 @@
 const nextConfig = {
   experimental: {
     browserDebugInfoInTerminal: true,
-    devtoolSegmentExplorer: true,
   },
   images: {
     remotePatterns: [

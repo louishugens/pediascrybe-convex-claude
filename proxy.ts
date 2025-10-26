@@ -17,7 +17,7 @@ function needsAuthCheck(path: string) {
   return authCheckPaths.some(prefix => path.startsWith(prefix)) || path === '/'
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // Skip middleware if path doesn't need auth check
   if (!needsAuthCheck(request.nextUrl.pathname)) {
     return NextResponse.next()

@@ -56,21 +56,21 @@
     "dotenv": "^17.0.1",
     "drizzle-orm": "^0.44.2",
     "eslint": "8.27.0",
-    "eslint-config-next": "15.1.7",
+    "eslint-config-next": "16.0.0",
     "harden-react-markdown": "^1.0.2",
     "langchain": "^0.0.139",
     "lucide-react": "^0.537.0",
     "motion": "^12.4.7",
-    "next": "^15.4.2",
+    "next": "16.0.0",
     "next-themes": "^0.4.4",
     "openai": "^4.2.0",
     "peggy": "^3.0.2",
     "postcss": "^8.4.18",
     "postgres": "^3.4.7",
     "posthog-js": "^1.95.1",
-    "react": "19.0.0",
+    "react": "19.2.0",
     "react-day-picker": "8.10.1",
-    "react-dom": "19.0.0",
+    "react-dom": "19.2.0",
     "react-hook-form": "^7.54.2",
     "react-hot-toast": "^2.4.1",
     "react-intersection-observer": "^9.5.2",
@@ -97,14 +97,14 @@
   },
   "devDependencies": {
     "@types/node": "20.2.3",
-    "@types/react": "19.0.10",
+    "@types/react": "19.2.2",
     "drizzle-kit": "^0.31.4",
     "drizzle-prisma-generator": "^0.1.7",
     "prisma": "^5.20.0",
     "sass": "^1.85.1",
-    "typescript": "5.0.4"
+    "typescript": "^5.9.3"
   },
   "overrides": {
-    "@types/react": "19.0.10"
+    "@types/react": "19.2.2"
   }
 }

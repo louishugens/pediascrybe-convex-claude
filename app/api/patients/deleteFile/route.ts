@@ -36,7 +36,7 @@ export async function POST(req: Request) {
 
     if (deletedFile) {
 
-      revalidateTag("file")
+      revalidateTag("file", "max")
       return new Response("Delete sucessfull", {
         status: 200
       });

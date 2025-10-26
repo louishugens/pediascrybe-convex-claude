@@ -16,7 +16,7 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "plugins": [
       {
         "name": "next"
@@ -39,7 +39,8 @@
     "components/printAppointment.tsx",
     "components/editDoctor.tsx",
     "components/print.tsx",
-    "app/provider.js"
+    "app/provider.js",
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

@@ -29,7 +29,7 @@ export async function POST(req: Request) {
 
     if (deletedFile) {
 
-      revalidateTag("receipts")
+      revalidateTag("receipts", "max")
       return new NextResponse("Delete sucessfull", {
         status: 200
       });
