@@ -16,6 +16,12 @@ import remarkGfm from "remark-gfm"
 import Link from "next/link"
 import ChatGrowthChart from "./chat-growth-chart"
 import ChartSelector from "./chart-selector";
+import {
+  Reasoning,
+  ReasoningContent,
+  ReasoningTrigger,
+} from '@/components/ai-elements/reasoning';
+import { Response } from '@/components/ai-elements/response';
 
 interface ChatProps {
   patientId: string
@@ -194,6 +200,9 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
                               {part.text}
                             </ReactMarkdown>
                           </div>
+                          // <Response>
+                          //   {part.text}
+                          // </Response>
                         )
                       } else {
                         return (
@@ -263,10 +272,25 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
                           </div>
                         )
                       }
+                    } 
+                    else if (part.type === "reasoning") {
+                      console.log(part)
+                      return (
+                        null
+                        // <Reasoning
+                        //   key={`${message.id}-${index}`}
+                        //   className="w-full"
+                        //   isStreaming={status === 'streaming'}
+                        // >
+                        //   <ReasoningTrigger />
+                        //   <ReasoningContent>{part.text}</ReasoningContent>
+                        // </Reasoning>
+                      )
                     }
                     return (
                       <p key={index} className="text-sm text-gray-500 italic">
                         ScrybeGPT
+                        {/* {part.type} */}
                       </p>
                     )
                   })}

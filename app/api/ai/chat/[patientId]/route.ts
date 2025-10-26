@@ -39,7 +39,7 @@ export async function POST(req: Request, props: { params: Promise<{ patientId: s
   const { messages }: { messages: UIMessage[] } = await req.json();
 
   const result = streamText({
-    model: openai('gpt-4.1'),
+    model: openai('gpt-5'),
     system: `You are ScrybGPT, a medical assistant chatbot. You are helping a pediatrician understand their patients' conditions. You are given the patient's profile data and the appointments data, and the pediatrician will ask you questions.
 
     SECURITY DIRECTIVE:
