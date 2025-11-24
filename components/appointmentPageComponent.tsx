@@ -10,13 +10,12 @@ import Image from "next/image";
 import { X } from "lucide-react";
 import toast, {Toaster} from "react-hot-toast";
 import UploadedFile from "./uploadedFile";
-// import { Appointment } from "@prisma/client";
-import { Appointment, File } from "@prisma/client";
-// import { E } from "uploadthing/dist/types-5304bd74";
+import { AppointmentSelect, File, Service } from "@/db/schema";
 
 interface AppointmentPageComponentProps {
-  appointment: Appointment&{
+  appointment: AppointmentSelect & {
     uploadedFiles: File[]
+    service: Service | null
   }
   patientId: string
 }
@@ -58,6 +57,8 @@ const AppointmentPageComponent = ({appointment, patientId}: AppointmentPageCompo
     }
   }
 
+  console.log('appointment :>> ', appointment)
+
   const medications = appointment.medication as unknown as Medication[]
   const exams = appointment.exams as unknown as Exam[]
 
@@ -65,7 +66,9 @@ const AppointmentPageComponent = ({appointment, patientId}: AppointmentPageCompo
     <div className='py-4'>
     <div className="w-full h-auto shadow-md rounded-lg p-4 bg-slate-50 text-sm text-slate-900">
       <div className="flex flex-row justify-between">
-        <p className='text-blue-500'>Consultation of <span className='font-bold '>{format(appointment.startDate, 'yyy-MM-dd hh:mm:ss')}</span></p>
+        <div className="flex flex-col">
+          <p className='text-blue-500'>Consultation of <span className='font-bold '>{format(appointment.startDate, 'yyy-MM-dd hh:mm:ss')}</span></p>
+        </div>
         {
           loading
           ?
@@ -93,6 +96,12 @@ const AppointmentPageComponent = ({appointment, patientId}: AppointmentPageCompo
         }
       </div>
       <div className="grid gap-x-8 gap-y-4 grid-cols-3 mt-4 mb-4">
+        {appointment.service && (
+          <p className="font-semibold">Service Type: <span className='font-normal'>{appointment.service.name}</span></p>
+        )}
+        {appointment.cost && (
+          <p className="font-semibold">Cost: <span className='font-normal'>{Intl.NumberFormat('en-US', { style: 'currency', currency: appointment.service?.currency }).format(appointment.cost)}</span></p>
+        )}
         <p className="font-semibold">Height: <span className='font-normal'>{appointment.height} cm</span></p>
         <p className="font-semibold">Weight: <span className='font-normal'>{appointment.weight} kg</span></p>
         <p className="font-semibold">Head Circumference: <span className='font-normal'>{appointment.head} cm</span></p>

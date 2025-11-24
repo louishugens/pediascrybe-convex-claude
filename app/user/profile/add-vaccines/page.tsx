@@ -13,7 +13,7 @@ export default async function AddVaccines() {
   
     const doctorId = user?.id
     if(!doctorId){
-      redirect('/login')
+      redirect('/')
     }
 
     const referenceVaccines = await prisma.vaccinReference.findMany(

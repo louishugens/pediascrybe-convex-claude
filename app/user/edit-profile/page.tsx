@@ -11,7 +11,6 @@ async function getDoctor(doctorId){
   return doctor
 }
 
-export const dynamic = 'force-dynamic';
 
 const EditProfile = async () => {
   const supabase = await createClient()

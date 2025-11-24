@@ -1,8 +1,11 @@
-'use client'
 import { Home, Wrench, DollarSign, Mail, Phone, Facebook, Twitter, Linkedin, ScrollText } from 'lucide-react';
 import Link from 'next/link';
+import { headers } from 'next/headers';
 
-const Footer = () => {
+export default async function Footer() {
+
+  await headers();
+  
   return (
     <footer className="bg-white text-foreground py-8">
       <div className="container mx-auto px-8 md:px-16">
@@ -18,9 +21,9 @@ const Footer = () => {
             <h2 className="text-xl font-semibold mb-4">Quick Links</h2>
             <ul>
               <li className="mb-2 flex text-muted-foreground items-center"><Home size={18} className="mr-2" /> <Link href="/">Home</Link></li>
-              <li className="mb-2 flex text-muted-foreground items-center"><ScrollText size={18} className="mr-2" /> <Link href="/terms">Terms</Link></li>
-              <li className="mb-2 flex text-muted-foreground items-center"><DollarSign size={18} className="mr-2" /> <Link href="/pricing">Pricing</Link></li>
-              <li className="mb-2 flex text-muted-foreground items-center"><Mail size={18} className="mr-2" /> <Link href="/contact">Contact</Link></li>
+              <li className="mb-2 flex text-muted-foreground items-center"><ScrollText size={18} className="mr-2" /> <Link href={"/terms" as any}>Terms</Link></li>
+              <li className="mb-2 flex text-muted-foreground items-center"><DollarSign size={18} className="mr-2" /> <Link href={"/pricing" as any}>Pricing</Link></li>
+              <li className="mb-2 flex text-muted-foreground items-center"><Mail size={18} className="mr-2" /> <Link href={"/contact" as any}>Contact</Link></li>
             </ul>
           </div>
 
@@ -58,6 +61,4 @@ const Footer = () => {
       </div>
     </footer>
   );
-};
-
-export default Footer;
+}

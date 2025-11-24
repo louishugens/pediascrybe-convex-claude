@@ -38,7 +38,7 @@ export function MobileNav() {
       </SheetTrigger>
       <SheetContent side="right" className="pr-0">
         <MobileLink
-          href="/"
+          href={"/" as any}
           className="flex items-center"
           onOpenChange={setOpen}
         >
@@ -47,20 +47,20 @@ export function MobileNav() {
         <ScrollArea className="my-4 h-[calc(100vh-8rem)] pb-10 pl-6">
           <div className="flex flex-col space-y-3">
             <MobileLink
-              href={"/contact"}
+              href={"/contact" as any}
               onOpenChange={setOpen}
             >
               Contact
             </MobileLink>
             <MobileLink
-              href={"/"}
+              href={"/" as any}
               onOpenChange={setOpen}
               className="text-sm text-primary w-fit border border-primary bg-muted px-4 py-1 rounded-full"
             >
               Signin
             </MobileLink>
             <MobileLink
-              href={"/signup"}
+              href={"/signup" as any}
               onOpenChange={setOpen}
               className="text-sm text-muted w-fit bg-primary px-4 py-1 rounded-full"
             >
@@ -73,7 +73,7 @@ export function MobileNav() {
   )
 }
 
-interface MobileLinkProps extends LinkProps {
+interface MobileLinkProps extends LinkProps<string> {
   onOpenChange?: (open: boolean) => void
   children: React.ReactNode
   className?: string
@@ -91,7 +91,7 @@ function MobileLink({
     <Link
       href={href}
       onClick={() => {
-        router.push(href.toString())
+        router.push(href.toString() as any)
         onOpenChange?.(false)
       }}
       className={cn(className)}

@@ -49,7 +49,7 @@ async function getDoctor(doctorId) {
   return doctor
 }
 
-export const dynamic = 'force-dynamic';
+
 
 const PrintPage = async props => {
   const params = await props.params;

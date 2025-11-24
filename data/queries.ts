@@ -3,20 +3,21 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import  prisma  from '@/utils/prisma'
+import { cache } from 'react'
 
-export async function verifySession() {
+export const verifySession = cache(async () => {
   const supabase = await createClient()
   const { data, error } = await supabase.auth.getUser()
   if (error) {
     return null
   }
   return data.user
-}
+})
 
-export async function getDoctor() {
+export const getDoctor = cache(async () => {
   const user = await verifySession()
   if (!user) {
-    redirect('/login')
+    redirect('/')
   }
 
   const doctor = await prisma.doctor.findUnique({
@@ -25,26 +26,30 @@ export async function getDoctor() {
     },
   })
   return doctor
-}
+})
 
+export const getDoctorById = cache(async (doctorId: string) => {
+  const doctor = await prisma.doctor.findUnique({
+    where: {
+      id: doctorId,
+    },
+  })
+  return doctor
+})
 
-export async function getPatient(patientId: string) {
-  const user = await verifySession()
-  if (!user) {
-    redirect('/login')
-  }
+export const getPatient = cache(async (patientId: string) => {
   const patient = await prisma.patient.findUnique({
     where: {
       id: patientId,
     },
   })
   return patient
-}
+})
 
 export async function getPatientVaccineRecords(patientId: string) {
   const user = await verifySession()
   if (!user) {
-    redirect('/login')
+    redirect('/')
   }
   const vaccineRecords = await prisma.vaccinationRecord.findMany({
     where: {
@@ -63,7 +68,7 @@ export async function getPatientVaccineRecords(patientId: string) {
 export async function getDoctorTrackedVaccines() {
   const user = await verifySession()
   if (!user) {
-    redirect('/login')
+    redirect('/')
   }
   const doctor = await prisma.doctor.findUnique({
     where: {
@@ -83,7 +88,7 @@ export async function getDoctorTrackedVaccines() {
 export async function getVaccinationRecord(vaccinationRecordId: string) {
   const doctorId = await verifySession()
   if(!doctorId) {
-    redirect('/login')
+    redirect('/')
   }
   const vaccinationRecord = await prisma.vaccinationRecord.findUnique({
     where: { id: vaccinationRecordId },
@@ -94,3 +99,100 @@ export async function getVaccinationRecord(vaccinationRecordId: string) {
   })
   return vaccinationRecord
 }
+
+export const getPatients = cache(async (doctorId: string) => {
+  const patients = await prisma.patient.findMany({
+    where: {
+      doctorId: doctorId,
+    },
+  })
+  return patients
+})
+
+export const getRecentPatients = cache(async (doctorId: string) => {
+  const recentPatients = await prisma.patient.findMany({
+    where: {
+      doctorId: doctorId,
+      createdAt: {
+        gte: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30),
+      },
+    },
+  })
+  return recentPatients
+})
+
+export const getAppointments = cache(async (doctorId: string) => {
+  const appointments = await prisma.appointment.findMany({
+    where: {
+      doctorId: doctorId,
+    },
+  })
+  return appointments
+})
+
+export const getRecentAppointments = cache(async (doctorId: string) => {
+  const recentAppointments = await prisma.appointment.findMany({
+    where: {
+      doctorId: doctorId,
+      startDate: {
+        gte: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30),
+      },
+    },
+  })
+  return recentAppointments
+})
+
+export const getPatientsWithVaccinationRecords = cache(async (doctorId: string) => {
+  const patients = await prisma.patient.findMany({
+    where: {
+      doctorId: doctorId,
+    },
+    include: {
+      VaccinationRecords: true,
+    },
+  })
+  return patients
+})
+
+export const getPatientsWithSearch = cache(async (doctorId: string, search: string) => {
+  const patients = await prisma.patient.findMany({
+    where:{
+      doctorId:doctorId,
+      OR:[
+        {
+          firstname:{
+            contains: search,
+            mode: 'insensitive' 
+          }
+        },
+        {
+          lastname:{
+            contains: search,
+            mode: 'insensitive'
+          }
+        },
+        {
+          email:{
+            contains: search,
+            mode: 'insensitive'
+          }
+        },
+      ] 
+
+    },
+  })
+  return patients
+})
+
+
+export const getPatientAppointments = cache(async (patientId: string) => {
+  const appointments = await prisma.appointment.findMany({
+    where: {
+      patientId: patientId,
+    },
+    orderBy: {
+      startDate: 'desc',
+    },
+  })
+  return appointments
+})

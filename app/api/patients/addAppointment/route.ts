@@ -1,7 +1,5 @@
-import prisma from "@/utils/prisma";
-import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { Document } from "langchain/document";
+import { db } from "@/db";
+import { Appointment } from "@/db/schema";
 import { createClient } from '@/utils/supabase/server'
 
 export async function POST(req: Request) {
@@ -20,51 +18,54 @@ export async function POST(req: Request) {
       );
     }
 
-    const { height, weight, head, motif, findings, arm, sao2, temperature, pulse, respiratory, systolic, diastolic, otherRemarks, doctorId, patientId } = await req.json()
+    try {
+      const { height, weight, head, motif, findings, arm, sao2, temperature, pulse, respiratory, systolic, diastolic, otherRemarks, doctorId, patientId, serviceId, cost } = await req.json()
 
-    const appointment = await prisma.appointment.create({
-      data: {
-        height, weight, head, motif, findings, arm, sao2, temperature,  pulse, respiratory, systolic, diastolic, otherRemarks, doctorId, patientId
+      const appointmentData: any = {
+        height, weight, head, motif, findings, arm, sao2, temperature, pulse, respiratory, systolic, diastolic, otherRemarks, doctorId, patientId
       }
-    })
 
-    
-    if (appointment) {
-      // try {
-      //   const embeddings = new OpenAIEmbeddings();
-      //   const store = new SupabaseVectorStore(embeddings, {
-      //     client: await supabase,
-      //     tableName: "documents",
-      //   });
+      // Include serviceId if provided
+      if (serviceId) {
+        appointmentData.serviceId = serviceId
+      }
+      if (cost) {
+        appointmentData.cost = cost
+      }
 
-      //   const doc = new Document({ 
-      //     pageContent: JSON.stringify(appointment),
-      //     metadata: { patientId: appointment.patientId }
-      //   });
+      const [appointment] = await db.insert(Appointment).values(appointmentData).returning()
 
-      //   const result = await store.addDocuments([doc]);
-
-      //   // Only update vectorId if embedding succeeded
-      //   await prisma.appointment.update({
-      //     where: { id: appointment.id },
-      //     data: { vectorId: parseInt(result[0]) }
-      //   });
-      // } catch (error) {
-      //   // Log the error but don't throw it
-      //   console.error('Failed to create embedding:', error);
-      // }
+      if (!appointment) {
+        return new Response(
+          JSON.stringify({
+            error: { statusCode: 500, message: 'Failed to create appointment' }
+          }),
+          { 
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+      }
 
       return new Response(JSON.stringify(appointment), {
-        status: 200
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
       });
-    }else{
+    } catch (error: any) {
+      console.error('Error creating appointment:', error);
       return new Response(
         JSON.stringify({
-       error: { statusCode: 500, message: 'appointment is not update sucessfully adding exams' }
-       }),
-       { status: 500 }
-     );
-     
+          error: { 
+            statusCode: 500, 
+            message: error?.message || 'Failed to create appointment',
+            details: error?.meta || null
+          }
+        }),
+        { 
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
     }
 
   }

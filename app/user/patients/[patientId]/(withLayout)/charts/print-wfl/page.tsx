@@ -3,6 +3,9 @@ import prisma from "@/utils/prisma";
 import { createClient } from '@/utils/supabase/server'
 import { Patient, charts } from "@prisma/client";
 import { differenceInDays } from "date-fns";
+import { Suspense } from 'react';
+import { redirect } from "next/navigation";
+
 async function getAppointment(appointmentId) {
   const appointment = await prisma.appointment.findUnique({
     where:{
@@ -47,23 +50,22 @@ async function getReferenceData(sex: Patient["sex"]){
   return referenceData
 }
 
-export const dynamic = 'force-dynamic';
-
-const PrintPage = async props => {
-  const params = await props.params;
-
-  const {
-    patientId
-  } = params;
-
+async function PrintContent({ params }: { params: Promise<{ patientId: string }> }) {
+  const { patientId } = await params;
+  
+  // Access createClient inside Suspense boundary
   const supabase = await createClient()
 
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const doctorId = user?.id
+  if (!user) {
+    // During prerendering, user will be null. Return early to prevent errors.
+    redirect('/')
+  }
 
+  const doctorId = user.id
 
   const patient = await getPatient(patientId)
   const doctor = await getDoctor(doctorId)
@@ -121,12 +123,18 @@ const PrintPage = async props => {
 
   const data = referenceData ? formatReferenceData(referenceData, formatted) : [];
 
-
-
   return (
-    <>
-      <Print type="wfl" title="Weight for Lenght" ylabel="Weight (in kg)" xlabel="Height (in cm)" patient={patient} doctor={doctor} data={data} yUnit="kg" xUnit="cm" mesure="length" />
-    </>
+    <Print type="wfl" title="Weight for Lenght" ylabel="Weight (in kg)" xlabel="Height (in cm)" patient={patient} doctor={doctor} data={data} yUnit="kg" xUnit="cm" mesure="length" />
+  );
+}
+
+type Params = Promise<{ patientId: string }>
+
+const PrintPage = async (props: { params: Params }) => {
+  return (
+    <Suspense fallback={<div>Loading chart data...</div>}>
+      <PrintContent params={props.params} />
+    </Suspense>
   );
 };
 

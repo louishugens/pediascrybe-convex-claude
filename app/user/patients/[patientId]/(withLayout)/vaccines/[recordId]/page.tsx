@@ -12,7 +12,7 @@ export default async function Page(props: { params: Promise<{ patientId: string,
   const vaccinationRecord: VaccinationRecord & { vaccin: Vaccin, dose: Dose } | null = await getVaccinationRecord(params.recordId)
 
   if (!vaccinationRecord) {
-    redirect('/user/patients/' + params.patientId + '/vaccines')
+    redirect(('/user/patients/' + params.patientId + '/vaccines') as any)
   }
 
   return (

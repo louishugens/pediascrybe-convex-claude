@@ -1,0 +1,48 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1761535951313,
+      "tag": "0000_cool_toad_men",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1763013777850,
+      "tag": "0001_tranquil_shape",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1763014396628,
+      "tag": "0002_loving_queen_noir",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1763014648017,
+      "tag": "0003_same_vindicator",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1763015189604,
+      "tag": "0004_magenta_edwin_jarvis",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1763017241845,
+      "tag": "0005_wandering_longshot",
+      "breakpoints": true
+    }
+  ]
+}

@@ -4,9 +4,6 @@ import { AnalyticsWrapper } from '@/components/analytics';
 // import GA from '@/components/googleAnalytics';
 import type { Metadata } from 'next'
 import { SpeedInsights } from "@vercel/speed-insights/next"
-import {PHProvider, PostHogPageview} from './provider';
-import { Suspense } from 'react';
-import { Providers } from './providers'
 
 export const metadata: Metadata = {
   title: 'Pediatric Care, Elevated by AI Integration | Pediascrybe',
@@ -26,27 +23,17 @@ const montserrat = Montserrat({
   subsets: ['latin']
 })
 
-// export const dynamic = 'force-dynamic'
+
 export default async function RootLayout({children}) {
 
 
   return (
     <html lang="en" className={montserrat.className}>
-      {/* <Suspense>
-        <PostHogPageview />
-      </Suspense> */}
-      <Suspense >
-      <Providers>
-        <PHProvider>
-          <body className='min-h-screen bg-background font-sans antialiased' >  
-            {/* <GA />   */}
-            <div className='flex-1'>{children}</div>
-            <AnalyticsWrapper />
-            <SpeedInsights />
-          </body>
-        </PHProvider>
-      </Providers>
-      </Suspense>
+      <body className='min-h-screen bg-background font-sans antialiased' >  
+        <div className='flex-1'>{children}</div>
+        <AnalyticsWrapper />
+        <SpeedInsights />
+      </body>
     </html>
   )
 }

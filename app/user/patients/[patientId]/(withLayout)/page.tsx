@@ -1,42 +1,12 @@
-// import "server-only";
-'use server'
-import prisma from "@/utils/prisma"
 import Link from 'next/link'
-import AppointmentComponent from "@/components/appointment";
-
-import { createClient } from '@/utils/supabase/server'
-
-
-async function getAppointments(patientId){
-  const patient = await prisma.appointment.findMany({
-    where:{
-      patientId: patientId
-    },
-    orderBy:{
-      startDate: 'desc'
-    },
-  })
-  
-  return patient
-
-}
-
+import AppointmentList from '@/components/appointmentList'
+import { cacheTag } from 'next/cache'
 type Params = Promise<{ patientId: string }>  
 
-async function Patient(props: { params: Params }) {
-  const { patientId } = await props.params;
-
-
-  const supabase = await createClient()
-
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const doctorId = user?.id
-
-  const appointments = await getAppointments(patientId)
+async function Patient({params}: { params: Params }) {
+  "use cache"
+  const { patientId } = await params;
+  cacheTag(`appointments-${patientId}`)
 
   return (
     <>
@@ -64,8 +34,9 @@ async function Patient(props: { params: Params }) {
             </tr>
           </thead>
           <tbody className='w-full'>
-            {appointments.map(appointment => <AppointmentComponent appointment={appointment} doctorId={doctorId} patientId={patientId} data-superjson key={appointment.id} />
-            )}
+            <AppointmentList patientId={patientId} />
+            {/* {appointments.map(appointment => <AppointmentComponent appointment={appointment} doctorId={doctorId} patientId={patientId} data-superjson key={appointment.id} /> */}
+            {/* )} */}
           </tbody>
         </table>
       </div>

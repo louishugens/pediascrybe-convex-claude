@@ -2,6 +2,7 @@ import EditAppointment from "@/components/edit-appointment";
 import { AppointmentSelect, PatientSelect } from "@/db/schema";
 import prisma from "@/utils/prisma";
 import { createClient } from "@/utils/supabase/server";
+import { getServicesByDoctorId } from "@/db/queries";
 
 async function getAppointment(appointmentId: string){
   const appointment = await prisma.appointment.findUnique({
@@ -9,7 +10,7 @@ async function getAppointment(appointmentId: string){
       id:appointmentId
     },
   })
-  return appointment
+  return appointment ? { ...appointment, serviceId: (appointment as any).serviceId ?? null } : null
 }
 
 async function getPatient(patientId) {
@@ -22,7 +23,10 @@ async function getPatient(patientId) {
     },
   })
 
-  return patient
+  return patient ? {
+    ...patient,
+    appointments: patient.appointments.map(apt => ({ ...apt, serviceId: (apt as any).serviceId ?? null }))
+  } : null
 }
 
 type Params = Promise<{ patientId: string, appointmentId: string }>
@@ -43,15 +47,17 @@ const EditAppointmentPage = async (props: { params: Params }) => {
 
   const doctorId = user?.id
 
-  const appointment: AppointmentSelect | null = await getAppointment(appointmentId)
-  const patient: PatientSelect & { appointments: AppointmentSelect[] } | null = await getPatient(patientId)
+  const appointment = await getAppointment(appointmentId) as AppointmentSelect | null
+  const patient = await getPatient(patientId) as PatientSelect & { appointments: AppointmentSelect[] } | null
 
-  if (!appointment || !patient) {
+  if (!appointment || !patient || !doctorId) {
     return <div>Appointment or patient not found</div>
   }
 
+  const services = await getServicesByDoctorId(doctorId)
+
   return (
-    <EditAppointment appointment={appointment} patientId={patientId} patient={patient} data-superjson />
+    <EditAppointment appointment={appointment} patientId={patientId} patient={patient} services={services} data-superjson />
   )
 }
 

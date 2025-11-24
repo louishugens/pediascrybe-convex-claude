@@ -6,7 +6,7 @@ import {useRouter} from 'next/navigation'
 import {BeatLoader} from 'react-spinners'
 import { useState } from 'react'
 
-const AppointmentComponent = ({appointment, doctorId, patientId}) => {
+const AppointmentComponent = ({appointment, patientId}) => {
   const [loading, setLoading] = useState(false)
   let [color, setColor] = useState("#22C55E")
 

@@ -1,0 +1,1 @@
+ALTER TABLE "Appointment" ALTER COLUMN "files" SET DEFAULT ARRAY[]::text[];

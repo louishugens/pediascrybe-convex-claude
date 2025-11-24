@@ -1,6 +1,14 @@
 
 import { relations, sql } from 'drizzle-orm'
-import { bigint, boolean, doublePrecision, foreignKey, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
+import { bigint, boolean, doublePrecision, foreignKey, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, customType } from 'drizzle-orm/pg-core'
+import { createId } from '@paralleldrive/cuid2'
+
+// Custom type for pgvector extension
+const vector = customType<{ data: string }>({
+	dataType() {
+		return 'vector'
+	}
+})
 
 export const Sex = pgEnum('Sex', ['male', 'female'])
 
@@ -20,6 +28,8 @@ export const VaccineManufacturer = pgEnum('VaccineManufacturer', ['Pfizer', 'Mod
 
 export const DoseType = pgEnum('DoseType', ['regular', 'annual', 'booster', 'unique'])
 
+export const ServiceType = pgEnum('ServiceType', ['clinical', 'documentation']) 
+
 export const Appointment = pgTable('Appointment', {
 	startDate: timestamp('startDate', { precision: 3 }).notNull().defaultNow(),
 	endDate: timestamp('endDate', { precision: 3 }),
@@ -31,7 +41,7 @@ export const Appointment = pgTable('Appointment', {
 	recommendation: text('recommendation'),
 	otherRemarks: text('otherRemarks'),
 	doctorId: text('doctorId'),
-	id: text('id').notNull().primaryKey().default(sql`cuid()`),
+	id: text('id').notNull().primaryKey().$defaultFn(() => createId()),
 	patientId: text('patientId'),
 	status: Status('status').default("offline"),
 	head: doublePrecision('head'),
@@ -47,7 +57,8 @@ export const Appointment = pgTable('Appointment', {
 	systolic: doublePrecision('systolic'),
 	diastolic: doublePrecision('diastolic'),
 	vectorId: integer('vectorId'),
-	files: text('files').array().notNull()
+	files: text('files').array(),
+	serviceId: text('serviceId')
 });
 
 export type AppointmentSelect = typeof Appointment.$inferSelect
@@ -69,7 +80,7 @@ export const Doctor = pgTable('Doctor', {
 	createdAt: timestamp('createdAt', { precision: 3 }).notNull().defaultNow(),
 	updatedAt: timestamp('updatedAt', { precision: 3 }).notNull().defaultNow(),
 	availability: jsonb('availability'),
-	id: text('id').notNull().primaryKey().default(sql`cuid()`),
+	id: text('id').notNull().primaryKey().$defaultFn(() => createId()),
 	email: text('email').notNull(),
 	firstname: text('firstname').notNull(),
 	lastname: text('lastname').notNull()
@@ -77,6 +88,20 @@ export const Doctor = pgTable('Doctor', {
 
 export type Doctor = typeof Doctor.$inferSelect
 export type DoctorInsert = typeof Doctor.$inferInsert
+
+export const Service = pgTable('Service', {
+	id: text('id').notNull().primaryKey().$defaultFn(() => createId()),
+	name: text('name').notNull(),
+	price: doublePrecision('price').notNull(),
+	currency: text('currency').notNull().default('USD'),
+	doctorId: text('doctorId').notNull(),
+	createdAt: timestamp('createdAt', { precision: 3 }).notNull().defaultNow(),
+	updatedAt: timestamp('updatedAt', { precision: 3 }).notNull().defaultNow(),
+	type: ServiceType('type').notNull().default('clinical')
+});
+
+export type Service = typeof Service.$inferSelect
+export type ServiceInsert = typeof Service.$inferInsert
 
 export const Img = pgTable('Img', {
 	url: text('url').notNull(),
@@ -98,7 +123,7 @@ export const Patient = pgTable('Patient', {
 	religion: text('religion'),
 	createdAt: timestamp('createdAt', { precision: 3 }).notNull().defaultNow(),
 	updatedAt: timestamp('updatedAt', { precision: 3 }).notNull().defaultNow(),
-	id: text('id').notNull().primaryKey().default(sql`cuid()`),
+	id: text('id').notNull().primaryKey().$defaultFn(() => createId()),
 	doctorId: text('doctorId'),
 	birthdate: timestamp('birthdate', { precision: 3 }).notNull(),
 	mothername: text('mothername'),
@@ -117,11 +142,12 @@ export type PatientInsert = typeof Patient.$inferInsert
 export const documents = pgTable('documents', {
 	id: bigint('id', { mode: 'bigint' }).notNull().primaryKey(),
 	content: text('content'),
-	metadata: jsonb('metadata')
+	metadata: jsonb('metadata'),
+	embedding: vector('embedding')
 });
 
 export const File = pgTable('File', {
-	id: text('id').notNull().primaryKey().default(sql`cuid()`),
+	id: text('id').notNull().primaryKey().$defaultFn(() => createId()),
 	url: text('url').notNull().unique(),
 	name: text('name').notNull(),
 	fileType: FileType('fileType').notNull(),
@@ -140,7 +166,7 @@ export type File = typeof File.$inferSelect
 export type FileInsert = typeof File.$inferInsert
 
 export const Report = pgTable('Report', {
-	id: text('id').notNull().primaryKey().default(sql`cuid()`),
+	id: text('id').notNull().primaryKey().$defaultFn(() => createId()),
 	createdAt: timestamp('createdAt', { precision: 3 }).notNull().defaultNow(),
 	reportType: ReportType('reportType').notNull(),
 	content: text('content').notNull(),
@@ -151,7 +177,7 @@ export type Report = typeof Report.$inferSelect
 export type ReportInsert = typeof Report.$inferInsert
 
 export const Receipt = pgTable('Receipt', {
-	id: text('id').notNull().primaryKey().default(sql`cuid()`),
+	id: text('id').notNull().primaryKey().$defaultFn(() => createId()),
 	createdAt: timestamp('createdAt', { precision: 3 }).notNull().defaultNow(),
 	services: jsonb('services'),
 	cost: doublePrecision('cost'),
@@ -224,7 +250,7 @@ export type Vaccin = typeof Vaccin.$inferSelect
 export type VaccinInsert = typeof Vaccin.$inferInsert
 
 export const Vaccin = pgTable('Vaccin', {
-	id: text('id').notNull().primaryKey().default(sql`cuid()`),
+	id: text('id').notNull().primaryKey().$defaultFn(() => createId()),
 	name: text('name').notNull(),
 	doctorId: text('doctorId')
 });
@@ -233,7 +259,7 @@ export type VaccinationRecord = typeof VaccinationRecord.$inferSelect
 export type VaccinationRecordInsert = typeof VaccinationRecord.$inferInsert
 
 export const VaccinationRecord = pgTable('VaccinationRecord', {
-	id: text('id').notNull().primaryKey().default(sql`cuid()`),
+	id: text('id').notNull().primaryKey().$defaultFn(() => createId()),
 	date: timestamp('date', { precision: 3 }).notNull(),
 	notes: text('notes'),
 	patientId: text('patientId').notNull(),
@@ -251,7 +277,7 @@ export type Dose = typeof Dose.$inferSelect
 export type DoseInsert = typeof Dose.$inferInsert
 
 export const Dose = pgTable('Dose', {
-	id: text('id').notNull().primaryKey().default(sql`cuid()`),
+	id: text('id').notNull().primaryKey().$defaultFn(() => createId()),
 	doseCount: integer('doseCount'),
 	maxAge: integer('maxAge'),
 	doseType: DoseType('doseType').notNull(),
@@ -262,7 +288,7 @@ export type VaccinReference = typeof VaccinReference.$inferSelect
 export type VaccinReferenceInsert = typeof VaccinReference.$inferInsert
 
 export const VaccinReference = pgTable('VaccinReference', {
-	id: text('id').notNull().primaryKey().default(sql`cuid()`),
+	id: text('id').notNull().primaryKey().$defaultFn(() => createId()),
 	name: text('name').notNull()
 });
 
@@ -270,7 +296,7 @@ export type VaccinReferenceDose = typeof VaccinReferenceDose.$inferSelect
 export type VaccinReferenceDoseInsert = typeof VaccinReferenceDose.$inferInsert
 
 export const VaccinReferenceDose = pgTable('VaccinReferenceDose', {
-	id: text('id').notNull().primaryKey().default(sql`cuid()`),
+	id: text('id').notNull().primaryKey().$defaultFn(() => createId()),
 	doseCount: integer('doseCount'),
 	maxAge: integer('maxAge'),
 	doseType: DoseType('doseType').notNull(),
@@ -292,6 +318,11 @@ export const AppointmentRelations = relations(Appointment, ({ one, many }) => ({
 		fields: [Appointment.patientId],
 		references: [Patient.id]
 	}),
+	service: one(Service, {
+		relationName: 'AppointmentToService',
+		fields: [Appointment.serviceId],
+		references: [Service.id]
+	}),
 	uploadedFiles: many(File, {
 		relationName: 'AppointmentToFile'
 	})
@@ -312,6 +343,20 @@ export const DoctorRelations = relations(Doctor, ({ many }) => ({
 	}),
 	trackedVaccines: many(Vaccin, {
 		relationName: 'DoctorToVaccin'
+	}),
+	services: many(Service, {
+		relationName: 'DoctorToService'
+	})
+}));
+
+export const ServiceRelations = relations(Service, ({ one, many }) => ({
+	doctor: one(Doctor, {
+		relationName: 'DoctorToService',
+		fields: [Service.doctorId],
+		references: [Doctor.id]
+	}),
+	appointments: many(Appointment, {
+		relationName: 'AppointmentToService'
 	})
 }));
 

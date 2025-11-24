@@ -5,6 +5,9 @@ import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import prisma from "@/utils/prisma"
 import { Prisma } from '@prisma/client'
+import { db } from "@/db"
+import { Service, ServiceInsert } from "@/db/schema"
+import { eq, and } from "drizzle-orm"
 
 export async function refresh(paths: string[]) {
   for (const path of paths) {
@@ -16,7 +19,7 @@ export async function verifySession() {
   const supabase = createClient()
   const {data: {user}} = await (await supabase).auth.getUser()
   if (!user) {
-    redirect('/login')
+    redirect('/')
   }
   return user.id
 }
@@ -202,7 +205,7 @@ export async function deleteVaccine(vaccineId: string) {
 export async function addVaccinationRecord(vaccinationRecord: Omit<VaccinationRecord, 'id'>) {
   const doctorId = await verifySession()
   if(!doctorId) {
-    redirect('/login')
+    redirect('/')
   }
   
   try {
@@ -252,5 +255,63 @@ export async function updateVaccinationRecord(vaccinationRecord: VaccinationReco
   } catch (error) {
     console.error('Error updating vaccination record:', error)
     return { success: false, error: 'An unexpected error occurred while updating the vaccination record.' }
+  }
+}
+
+export async function addService(data: { name: string; price: number; currency: string; type: 'clinical' | 'documentation' }) {
+  const doctorId = await verifySession()
+  
+  try {
+    const newService = await db.insert(Service).values({
+      name: data.name,
+      price: data.price,
+      currency: data.currency,
+      doctorId: doctorId,
+      type: data.type,
+    }).returning()
+    
+    revalidatePath('/user/profile')
+    return { success: true, data: newService[0] }
+  } catch (error) {
+    console.error('Error adding service:', error)
+    return {
+      success: false,
+      error: "An unexpected error occurred while adding the service."
+    }
+  }
+}
+
+export async function updateService(data: { id: string; name: string; price: number; currency: string; type: 'clinical' | 'documentation' }) {
+  // const doctorId = await verifySession()
+  try {
+    const updatedService = await db.update(Service).set({
+      name: data.name,
+      price: data.price,
+      currency: data.currency,
+      type: data.type,
+    }).where(eq(Service.id, data.id)).returning()
+    revalidatePath('/user/profile')
+    return { success: true, data: updatedService[0] }
+  } catch (error) { 
+    console.error('Error updating service:', error)
+    return { success: false, error: 'An unexpected error occurred while updating the service.' }
+  }
+}
+
+export async function deleteService(serviceId: string) {
+  const doctorId = await verifySession()
+  
+  try {
+    await db.delete(Service)
+      .where(and(eq(Service.id, serviceId), eq(Service.doctorId, doctorId)))
+
+    revalidatePath('/user/profile')
+    return { success: true }
+  } catch (error) {
+    console.error('Error deleting service:', error)
+    return {
+      success: false,
+      error: "An unexpected error occurred while deleting the service."
+    }
   }
 }   

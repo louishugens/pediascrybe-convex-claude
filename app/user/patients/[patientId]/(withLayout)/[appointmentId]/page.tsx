@@ -1,21 +1,22 @@
 import React from 'react'
-import prisma from '@/utils/prisma'
 import AppointmentPageComponent from '@/components/appointmentPageComponent'
 import { createClient } from '@/utils/supabase/server'
-import { Appointment, File } from '@prisma/client'
+import { db } from '@/db'
+import { File, Service, AppointmentSelect, Appointment } from '@/db/schema'
+import { eq } from 'drizzle-orm'
 
-interface AppointmentwithFiles extends Appointment{
+interface AppointmentwithFiles extends AppointmentSelect{
   uploadedFiles: File[]
+  service: Service | null
 }
 
 async function getAppointment(appointmentId){
   
-  const appointment = await prisma.appointment.findUnique({
-    where:{
-      id:appointmentId
-    },
-    include:{
-      uploadedFiles:true
+  const appointment = await db.query.Appointment.findFirst({
+    where:eq(Appointment.id, appointmentId),
+    with:{
+      uploadedFiles:true,
+      service:true,
     }
   })
   return appointment

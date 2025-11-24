@@ -1,11 +1,24 @@
 import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
+import { verifySession } from "@/data/queries"
+import { getPatientsWithSearch } from "@/data/queries"
+import { cacheTag } from "next/cache"
 
-
-export default function PatientList({patients, doctorId}) {
-
-
+export default async function PatientList({searchParams}) {
+  const user = await verifySession()
   return(
+    <PatientListContent searchParams={searchParams} doctorId={user.id} />
+  )
+  
+}
+
+async function PatientListContent({searchParams, doctorId}) {
+  "use cache"
+  cacheTag('patients')
+  const params = await searchParams
+  const searchQuery = params?.search || ''
+  const patients = await getPatientsWithSearch(doctorId, searchQuery)
+  return (
     <>
       {
         patients.length === 0 && (
@@ -33,9 +46,8 @@ export default function PatientList({patients, doctorId}) {
             </div>
           ))
         }
-
       </div>
     </>
   )
-  
+
 }

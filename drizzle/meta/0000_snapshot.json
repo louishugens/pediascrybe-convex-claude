@@ -1,0 +1,1426 @@
+{
+  "id": "84e404c0-df5e-42cf-b8a8-14ae18a330a5",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.Appointment": {
+      "name": "Appointment",
+      "schema": "",
+      "columns": {
+        "startDate": {
+          "name": "startDate",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "endDate": {
+          "name": "endDate",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cost": {
+          "name": "cost",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "currency": {
+          "name": "currency",
+          "type": "Currency",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "serviceId": {
+          "name": "serviceId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motif": {
+          "name": "motif",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "transactionDate": {
+          "name": "transactionDate",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "transactionId": {
+          "name": "transactionId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "findings": {
+          "name": "findings",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recommendation": {
+          "name": "recommendation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "otherRemarks": {
+          "name": "otherRemarks",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "doctorId": {
+          "name": "doctorId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "cuid()"
+        },
+        "patientId": {
+          "name": "patientId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "Status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'offline'"
+        },
+        "head": {
+          "name": "head",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "height": {
+          "name": "height",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "weight": {
+          "name": "weight",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "exams": {
+          "name": "exams",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "medication": {
+          "name": "medication",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "arm": {
+          "name": "arm",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sao2": {
+          "name": "sao2",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "temperature": {
+          "name": "temperature",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pulse": {
+          "name": "pulse",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "respiratory": {
+          "name": "respiratory",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "systolic": {
+          "name": "systolic",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "diastolic": {
+          "name": "diastolic",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vectorId": {
+          "name": "vectorId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "files": {
+          "name": "files",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Doctor": {
+      "name": "Doctor",
+      "schema": "",
+      "columns": {
+        "cost": {
+          "name": "cost",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "duration": {
+          "name": "duration",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "phone": {
+          "name": "phone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "address": {
+          "name": "address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "experience": {
+          "name": "experience",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "isActive": {
+          "name": "isActive",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "isCompleted": {
+          "name": "isCompleted",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "isDoctor": {
+          "name": "isDoctor",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "isMedPro": {
+          "name": "isMedPro",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "spec": {
+          "name": "spec",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "summary": {
+          "name": "summary",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "availability": {
+          "name": "availability",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "cuid()"
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "firstname": {
+          "name": "firstname",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lastname": {
+          "name": "lastname",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Dose": {
+      "name": "Dose",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "cuid()"
+        },
+        "doseCount": {
+          "name": "doseCount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "maxAge": {
+          "name": "maxAge",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "doseType": {
+          "name": "doseType",
+          "type": "DoseType",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vaccinId": {
+          "name": "vaccinId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.File": {
+      "name": "File",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "cuid()"
+        },
+        "url": {
+          "name": "url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fileType": {
+          "name": "fileType",
+          "type": "FileType",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "appointmentId": {
+          "name": "appointmentId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "File_appointment_fkey": {
+          "name": "File_appointment_fkey",
+          "tableFrom": "File",
+          "tableTo": "Appointment",
+          "columnsFrom": [
+            "appointmentId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "File_url_unique": {
+          "name": "File_url_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "url"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Img": {
+      "name": "Img",
+      "schema": "",
+      "columns": {
+        "url": {
+          "name": "url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "public_id": {
+          "name": "public_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "doctorId": {
+          "name": "doctorId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "Img_doctorId_unique": {
+          "name": "Img_doctorId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "doctorId"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Patient": {
+      "name": "Patient",
+      "schema": "",
+      "columns": {
+        "firstname": {
+          "name": "firstname",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lastname": {
+          "name": "lastname",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "isCompleted": {
+          "name": "isCompleted",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "phone": {
+          "name": "phone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "profession": {
+          "name": "profession",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "religion": {
+          "name": "religion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "cuid()"
+        },
+        "doctorId": {
+          "name": "doctorId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "birthdate": {
+          "name": "birthdate",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mothername": {
+          "name": "mothername",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sex": {
+          "name": "sex",
+          "type": "Sex",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "children": {
+          "name": "children",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "allergies": {
+          "name": "allergies",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "history": {
+          "name": "history",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bloodtype": {
+          "name": "bloodtype",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "electrophoresis": {
+          "name": "electrophoresis",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vectorId": {
+          "name": "vectorId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Price": {
+      "name": "Price",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "active": {
+          "name": "active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "unit_amount": {
+          "name": "unit_amount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pricing_type": {
+          "name": "pricing_type",
+          "type": "Pricing_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "interval": {
+          "name": "interval",
+          "type": "Pricing_plan_interval",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "interval_count": {
+          "name": "interval_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trial_period_days": {
+          "name": "trial_period_days",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "productId": {
+          "name": "productId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Product": {
+      "name": "Product",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "active": {
+          "name": "active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "image": {
+          "name": "image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Receipt": {
+      "name": "Receipt",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "cuid()"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "services": {
+          "name": "services",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cost": {
+          "name": "cost",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date": {
+          "name": "date",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "patientId": {
+          "name": "patientId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Report": {
+      "name": "Report",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "cuid()"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "reportType": {
+          "name": "reportType",
+          "type": "ReportType",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "patientId": {
+          "name": "patientId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Service": {
+      "name": "Service",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "cuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "price": {
+          "name": "price",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currency": {
+          "name": "currency",
+          "type": "Currency",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'HTG'"
+        },
+        "doctorId": {
+          "name": "doctorId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "isDefault": {
+          "name": "isDefault",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Subscription": {
+      "name": "Subscription",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "Subscription_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cancel_at_period_end": {
+          "name": "cancel_at_period_end",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created": {
+          "name": "created",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "current_period_start": {
+          "name": "current_period_start",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "current_period_end": {
+          "name": "current_period_end",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "ended_at": {
+          "name": "ended_at",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "cancel_at": {
+          "name": "cancel_at",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "canceled_at": {
+          "name": "canceled_at",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "trial_start": {
+          "name": "trial_start",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "trial_end": {
+          "name": "trial_end",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "doctorId": {
+          "name": "doctorId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "priceId": {
+          "name": "priceId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Vaccin": {
+      "name": "Vaccin",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "cuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "doctorId": {
+          "name": "doctorId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.VaccinReference": {
+      "name": "VaccinReference",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "cuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.VaccinReferenceDose": {
+      "name": "VaccinReferenceDose",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "cuid()"
+        },
+        "doseCount": {
+          "name": "doseCount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "maxAge": {
+          "name": "maxAge",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "doseType": {
+          "name": "doseType",
+          "type": "DoseType",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vaccinReferenceId": {
+          "name": "vaccinReferenceId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.VaccinationRecord": {
+      "name": "VaccinationRecord",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "cuid()"
+        },
+        "date": {
+          "name": "date",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "patientId": {
+          "name": "patientId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vaccinId": {
+          "name": "vaccinId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "manufacturer": {
+          "name": "manufacturer",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lotNumber": {
+          "name": "lotNumber",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expiration": {
+          "name": "expiration",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dosage": {
+          "name": "dosage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "route": {
+          "name": "route",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "site": {
+          "name": "site",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "doseId": {
+          "name": "doseId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.charts": {
+      "name": "charts",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "p03": {
+          "name": "p03",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "p15": {
+          "name": "p15",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "p50": {
+          "name": "p50",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "p85": {
+          "name": "p85",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "p97": {
+          "name": "p97",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "height": {
+          "name": "height",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.documents": {
+      "name": "documents",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.Currency": {
+      "name": "Currency",
+      "schema": "public",
+      "values": [
+        "HTG",
+        "USD"
+      ]
+    },
+    "public.DoseType": {
+      "name": "DoseType",
+      "schema": "public",
+      "values": [
+        "regular",
+        "annual",
+        "booster",
+        "unique"
+      ]
+    },
+    "public.FileType": {
+      "name": "FileType",
+      "schema": "public",
+      "values": [
+        "IMAGE",
+        "PDF",
+        "VIDEO"
+      ]
+    },
+    "public.Pricing_plan_interval": {
+      "name": "Pricing_plan_interval",
+      "schema": "public",
+      "values": [
+        "day",
+        "week",
+        "month",
+        "year"
+      ]
+    },
+    "public.Pricing_type": {
+      "name": "Pricing_type",
+      "schema": "public",
+      "values": [
+        "one_time",
+        "recurring"
+      ]
+    },
+    "public.ReportType": {
+      "name": "ReportType",
+      "schema": "public",
+      "values": [
+        "Report",
+        "Certificate",
+        "ReferenceNote"
+      ]
+    },
+    "public.Sex": {
+      "name": "Sex",
+      "schema": "public",
+      "values": [
+        "male",
+        "female"
+      ]
+    },
+    "public.Status": {
+      "name": "Status",
+      "schema": "public",
+      "values": [
+        "pending",
+        "paid",
+        "offline"
+      ]
+    },
+    "public.Subscription_status": {
+      "name": "Subscription_status",
+      "schema": "public",
+      "values": [
+        "trialing",
+        "active",
+        "canceled",
+        "incomplete",
+        "incomplete_expired",
+        "past_due",
+        "unpaid",
+        "paused"
+      ]
+    },
+    "public.VaccineManufacturer": {
+      "name": "VaccineManufacturer",
+      "schema": "public",
+      "values": [
+        "Pfizer",
+        "Moderna",
+        "JohnsonAndJohnson",
+        "AstraZeneca",
+        "Sanofi",
+        "GlaxoSmithKline",
+        "Merck",
+        "Novavax",
+        "Sinovac",
+        "Sinopharm",
+        "BharatBiotech",
+        "SerumInstituteOfIndia"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

@@ -1,7 +1,6 @@
-import prisma from "@/utils/prisma";
-import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { Document } from "langchain/document";
+import { db } from "@/db";
+import { Appointment } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import { createClient } from '@/utils/supabase/server'
 
 export async function POST(req: Request) {
@@ -22,57 +21,51 @@ export async function POST(req: Request) {
       );
     }
 
-    const {height, weight, head, motif, findings, otherRemarks, arm, sao2, temperature, pulse, respiratory, systolic, diastolic, appointmentId}  = await req.json()
+    try {
+      const {height, weight, head, motif, findings, otherRemarks, arm, sao2, temperature, pulse, respiratory, systolic, diastolic, appointmentId, serviceId}  = await req.json()
 
-    const appointment = await prisma.appointment.update({
-      where:{
-        id: appointmentId
-      },
-      data: {
-        height, weight, head, motif, findings, otherRemarks, arm, sao2, temperature, pulse, respiratory, systolic, diastolic
+      const updateData: any = {
+        height, weight, head, motif, findings, otherRemarks, arm, sao2, temperature, pulse, respiratory, systolic, diastolic, serviceId
       }
-    })
 
-    
 
-    if (appointment) {
 
-      // const embeddings = new OpenAIEmbeddings();
+      const [appointment] = await db.update(Appointment)
+        .set(updateData)
+        .where(eq(Appointment.id, appointmentId))
+        .returning()
 
-      // const store = new SupabaseVectorStore(embeddings, {
-      //   client: supabase,
-      //   tableName: "documents",
-      // });
-
-      // if(appointment.vectorId){
-      //   await store.delete({ids:[appointment.vectorId.toString()]});
-      // }
-
-      // const doc = new Document({ pageContent: JSON.stringify(appointment),
-      //   metadata: { patientId: appointment.patientId}});
-
-      // const result = await store.addDocuments([doc]);
-
-      // await prisma.appointment.update({
-      //   where:{
-      //     id: appointment.id
-      //   },
-      //   data: {
-      //     vectorId: parseInt(result[0])
-      //   }
-      // })
-
+      if (!appointment) {
+        return new Response(
+          JSON.stringify({
+            error: { statusCode: 404, message: 'Appointment not found' }
+          }),
+          { 
+            status: 404,
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+      }
 
       return new Response(JSON.stringify(appointment), {
-        status: 200
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
       });
-    }else{
+    } catch (error: any) {
+      console.error('Error updating appointment:', error);
       return new Response(
         JSON.stringify({
-       error: { statusCode: 500, message: 'article is not created' }
-       }),
-       { status: 500 }
-     );
+          error: { 
+            statusCode: 500, 
+            message: error?.message || 'Failed to update appointment',
+            details: error?.meta || null
+          }
+        }),
+        { 
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
     }
 
   }

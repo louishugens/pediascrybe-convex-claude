@@ -15,6 +15,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Service } from "@/db/schema"
 
 
 
@@ -37,6 +39,7 @@ const formSchema = z.object({
   motif: z.string().optional(),
   findings: z.string().optional(),
   otherRemarks: z.string().optional(),
+  serviceId: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -45,9 +48,10 @@ interface EditAppointmentProps {
   appointment: AppointmentSelect
   patientId: string
   patient: PatientSelect & { appointments: AppointmentSelect[] }
+  services: Service[]
 }
 
-const EditAppointment = ({ appointment, patientId, patient }: EditAppointmentProps) => {
+const EditAppointment = ({ appointment, patientId, patient, services }: EditAppointmentProps) => {
   const [loading, setLoading] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [suggestions, setSuggestions] = useState<string | null>(null)
@@ -75,6 +79,7 @@ const EditAppointment = ({ appointment, patientId, patient }: EditAppointmentPro
       respiratory: appointment.respiratory || undefined,
       systolic: appointment.systolic || undefined,
       diastolic: appointment.diastolic || undefined,
+      serviceId: appointment.serviceId || undefined,
     },
   })
 
@@ -162,6 +167,32 @@ const EditAppointment = ({ appointment, patientId, patient }: EditAppointmentPro
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* Service Selection */}
+              <FormField
+                control={form.control}
+                name="serviceId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Service Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a service" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {services.map((service) => (
+                          <SelectItem key={service.id} value={service.id}>
+                            {service.name} - {service.price} {service.currency}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               {/* Vital Signs Grid */}
               <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                 <FormField

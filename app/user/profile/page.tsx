@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import prisma from '@/utils/prisma';
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from "next/headers";
 import {
@@ -9,28 +8,34 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from '@/components/ui/button';
-import { Info, X } from 'lucide-react';
+import { Info, Pencil, X } from 'lucide-react';
 import { DeleteVaccinComponent } from '@/components/deleteVaccinComponent';
+import { DeleteServiceComponent } from '@/components/deleteServiceComponent';
+import { AddServiceForm } from '@/components/addServiceForm';
 import { numberToOrdinal } from '@/lib/utils';
-async function getDoctor(doctorId){
-  const doctor = await prisma.doctor.findUnique({
-    where:{
-      id:doctorId
-    },
-    include:{
+import { db } from "@/db"
+import { Doctor } from "@/db/schema"
+import { eq } from "drizzle-orm"
+import { redirect } from 'next/navigation';
+import { EditServiceForm } from '@/components/editServiceForm';
+
+async function getDoctor(doctorId: string){
+  const doctor = await db.query.Doctor.findFirst({
+    where: eq(Doctor.id, doctorId),
+    with: {
       trackedVaccines: {
-        include:{
+        with: {
           doses: true,
         }
-      }
+      },
+      services: true
     },
   })
   return doctor
 }
 
-export const dynamic = 'force-dynamic';
 
 const ProfilePage = async () => {
   const supabase = await createClient()
@@ -40,6 +45,9 @@ const ProfilePage = async () => {
   } = await supabase.auth.getUser()
 
   const doctorId = user?.id
+  if (!doctorId) {
+    redirect('/')
+  }
   const doctor = await getDoctor(doctorId)
 
   return (
@@ -93,6 +101,46 @@ const ProfilePage = async () => {
               </CardContent>
             </Card>
           ))}
+        </div>
+      </div>
+      <div className="w-full h-auto shadow-md rounded-lg p-4 bg-slate-50 mt-4">
+        <div className="flex flex-row items-center justify-between mb-4">
+          <p className="text-sm font-semibold">Services</p>
+          <AddServiceForm className="text-sm font-semibold text-white bg-blue-500 rounded-full px-4 py-2" />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {doctor?.services && doctor.services.length > 0 ? (
+            doctor.services.map((service) => (
+              <Card key={service.id} className="rounded-md">
+                <CardContent className="p-4 relative">
+                  <DeleteServiceComponent serviceId={service.id} />
+                  <div className="h-auto px-4 py-2 space-y-2 bg-white rounded-md">
+                    <p className="text-sm font-semibold">{service.name}</p>
+                    <p className="text-xs text-slate-600 italic">{service.type}</p>
+                    <p className="text-sm text-slate-600">
+                      {service.price.toFixed(2)} {service.currency}
+                    </p>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  {/* <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="w-full text-sm"
+                    onClick={() => {
+                      setSelectedService(service)
+                    }}
+                  >
+                  <Pencil size={16} /> 
+                  Edit
+                </Button> */}
+                <EditServiceForm service={service} />
+              </CardFooter>
+            </Card>
+            ))
+          ) : (
+            <p className="text-sm text-slate-500 col-span-full">No services added yet.</p>
+          )}
         </div>
       </div>
     </div>

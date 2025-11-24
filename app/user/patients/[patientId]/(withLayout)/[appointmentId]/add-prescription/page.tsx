@@ -1,27 +1,15 @@
-
-import prisma from '@/utils/prisma';
+import { db } from '@/db';
 import AddPrescriptions from '@/components/addPrescriptions';
+import {  getPatient } from '@/db/queries';
+import { eq } from 'drizzle-orm';
+import { Appointment } from '@/db/schema';
+
 
 async function getAppointment(appointmentId: string){
-  const appointment = await prisma.appointment.findUnique({
-    where:{
-      id:appointmentId
-    },
+  const appointment = await db.query.Appointment.findFirst({
+    where: eq(Appointment.id, appointmentId),
   })
   return appointment
-}
-
-async function getPatient(patientId: string) {
-  const patient = await prisma.patient.findUnique({
-    where: {
-      id: patientId,
-    },
-    include: {
-      appointments: true,
-    },
-  })
-
-  return patient
 }
 
 type Params = Promise<{ patientId: string, appointmentId: string }>

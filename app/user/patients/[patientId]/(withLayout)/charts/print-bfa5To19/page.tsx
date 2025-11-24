@@ -38,7 +38,7 @@ async function getDoctor(doctorId) {
   return doctor
 }
 
-export const dynamic = 'force-dynamic';
+
 
 async function getReferenceData5To19(sex: Patient["sex"]){
 

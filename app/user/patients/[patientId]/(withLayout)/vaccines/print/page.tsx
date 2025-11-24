@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 
 
 
-export const dynamic = 'force-dynamic';
+
 
 type Params = Promise<{ patientId: string, appointmentId: string }>
 
@@ -27,7 +27,7 @@ const PrintPage = async (props: { params: Params }) => {
     redirect('/user/patients')
   }
   if (!doctor) {
-    redirect('/login')
+    redirect('/')
   }
   return (
     <>

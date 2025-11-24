@@ -1,8 +1,8 @@
 import { SiteHeader } from '@/components/siteHeader';
 import Footer from '@/components/Footer';
 import type { Metadata } from 'next'
-import { redirect } from "next/navigation"
-import { createClient } from '@/utils/supabase/server'
+import { Suspense } from 'react'
+import { AuthCheck } from '@/components/auth-check'
  
 export const metadata: Metadata = {
   title: 'Pediatric Care, Elevated by AI Integration | Pediascrybe',
@@ -14,22 +14,17 @@ export const metadata: Metadata = {
 
 }
 
-export default async function RootLayout({children}) {
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await (await supabase).auth.getUser()
-
-  if (user) {
-    redirect('/')
-  }
-
+export default function RootLayout({children}) {
   return (
     <div className='relative flex min-h-screen flex-col'>
+      <Suspense fallback={null}>
+        <AuthCheck />
+      </Suspense>
       <SiteHeader />
       <div className='flex-1'>{children}</div>
-      <Footer />
+      <Suspense fallback={null}>
+        <Footer />
+      </Suspense>
     </div>
   )
 }

@@ -49,7 +49,7 @@ async function getReferenceData(sex: Patient["sex"]){
   return referenceData
 }
 
-export const dynamic = 'force-dynamic';
+
 
 const PrintPage = async props => {
   const params = await props.params;

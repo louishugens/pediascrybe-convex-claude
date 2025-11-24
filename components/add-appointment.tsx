@@ -15,7 +15,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { AppointmentSelect, PatientSelect } from "@/db/schema"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { AppointmentSelect, PatientSelect, Service } from "@/db/schema"
 
 const formSchema = z.object({
   height: z.coerce.number().min(0, "Height can't be less than 0").nullable().optional(),
@@ -36,6 +37,8 @@ const formSchema = z.object({
   motif: z.string().optional(),
   findings: z.string().optional(),
   otherRemarks: z.string().optional(),
+  cost: z.coerce.number().min(0, "Cost can't be less than 0").nullable().optional(),
+  serviceId: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -44,9 +47,10 @@ interface AddAppointmentProps {
   doctorId: string
   patientId: string
   patient: any
+  services: Service[]
 }
 
-const AddAppointment = ({ doctorId, patientId, patient }: AddAppointmentProps) => {
+const AddAppointment = ({ doctorId, patientId, patient, services }: AddAppointmentProps) => {
   const [loading, setLoading] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [suggestions, setSuggestions] = useState("")
@@ -73,6 +77,7 @@ const AddAppointment = ({ doctorId, patientId, patient }: AddAppointmentProps) =
       diastolic: undefined,
       temperature: undefined,
       otherRemarks: "",
+      cost: undefined,
     },
   })
 
@@ -131,6 +136,8 @@ const AddAppointment = ({ doctorId, patientId, patient }: AddAppointmentProps) =
         doctorId,
       }
 
+      console.log('body :>> ', body)
+
       const response = await fetch("/api/patients/addAppointment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -149,15 +156,66 @@ const AddAppointment = ({ doctorId, patientId, patient }: AddAppointmentProps) =
     }
   }
 
+  const service = form.watch("serviceId")
+
   return (
     <div className="py-4">
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl text-green-600 font-bold">New Consultation</CardTitle>
+          <CardTitle className="text-xl text-green-600 font-bold">New Appointment</CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* Service Selection */}
+              <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="serviceId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Service Type</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a service" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {services.map((service) => (
+                            <SelectItem key={service.id} value={service.id}>
+                              {service.name} - {service.price} {service.currency}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="cost"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Service Price</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="Service price"
+                          {...field}
+                          value={field.value || services.find((s) => s.id === service)?.price || ""}
+
+                          // disabled={!!field.value}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               {/* Vital Signs Grid */}
               <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                 <FormField

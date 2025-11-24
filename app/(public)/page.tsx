@@ -85,7 +85,7 @@ export default function Home() {
           <h2 className='text-3xl text-slate-900 font-bold'>Log <span className='text-primary'>In</span></h2>
           <p className='text-slate-900 text-sm'>
             Don&apos;t have an account yet? 
-            <Link href="/signup" className='text-primary font-semibold'> Sign up</Link>
+            <Link href={"/signup" as any} className='text-primary font-semibold'> Sign up</Link>
           </p>
           {/* <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="w-full md:w-1/2 space-y-6">
@@ -162,7 +162,7 @@ export default function Home() {
                 :
                   "Log in"}
             </button>
-            <p className='text-sm mt-4 mx-auto text-slate-900'>You forgot your password? <Link href='/reset' className="text-primary font-medium" >Reset it here!</Link></p>
+            <p className='text-sm mt-4 mx-auto text-slate-900'>You forgot your password? <Link href={'/reset' as any} className="text-primary font-medium" >Reset it here!</Link></p>
             {errorMsg && <p className='text-sm mt-4 mx-auto font-medium text-red-500'>{errorMsg}</p>}
           </form>
           

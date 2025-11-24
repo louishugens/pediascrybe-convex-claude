@@ -1,15 +1,6 @@
 "use client"
 
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
-import { TrendingUp } from "lucide-react"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import {
   ChartConfig,
   ChartContainer,
@@ -60,12 +51,12 @@ export function AgeDistributionChart({ patients }: AgeDistributionProps) {
   } satisfies ChartConfig
 
   return (
-    <Card className="glass card-hover">
-      <CardHeader>
-        <CardTitle className="text-sm font-bold">Age Distribution</CardTitle>
-        <CardDescription>Distribution of patients by age groups</CardDescription>
-      </CardHeader>
-      <CardContent>
+    // <Card className="glass card-hover">
+    //   <CardHeader>
+    //     <CardTitle className="text-sm font-bold">Age Distribution</CardTitle>
+    //     <CardDescription>Distribution of patients by age groups</CardDescription>
+    //   </CardHeader>
+    //   <CardContent>
         <ChartContainer config={chartConfig}>
           <BarChart data={chartData}>
             <CartesianGrid vertical={false} />
@@ -81,11 +72,11 @@ export function AgeDistributionChart({ patients }: AgeDistributionProps) {
             />
             <Bar dataKey="count" fill="hsl(142.1 76.2% 26.3%)" radius={8} /> 
           </BarChart> 
-        </ChartContainer>
-      </CardContent>
-      <CardFooter>
-        <p className="text-xs text-muted-foreground italic">Age distribution among all the patients</p>
-      </CardFooter>
-    </Card>
+         </ChartContainer>
+      // </CardContent>
+      // <CardFooter>
+      //   <p className="text-xs text-muted-foreground italic">Age distribution among all the patients</p>
+      // </CardFooter>
+    // </Card> 
   )
 } 

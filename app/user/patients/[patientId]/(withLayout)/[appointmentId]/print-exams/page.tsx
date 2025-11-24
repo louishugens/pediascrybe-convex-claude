@@ -30,7 +30,6 @@ async function getDoctor(doctorId: string) {
   return doctor
 }
 
-export const dynamic = 'force-dynamic';
 
 type Params = Promise<{ patientId: string, appointmentId: string }>
 
