@@ -1,6 +1,7 @@
 import Print from "@/components/printReport";
 import prisma from "@/utils/prisma";
 import { createClient } from '@/utils/supabase/server'
+import { Suspense } from "react";
 
 async function getPatient(patientId: string) {
   const patient = await prisma.patient.findUnique({
@@ -33,12 +34,25 @@ async function getReport(id:string) {
 type Params = Promise<{ patientId: string, reportId: string }>
 
 const ReportPage = async (props: { params: Params }) => {
-  const params = await props.params;
+
+  return ( 
+    <>
+      <Suspense fallback={<div>Loading...</div>}>
+        <ReportContainer params={props.params} />
+      </Suspense>
+    </>
+   );
+}
+ 
+export default ReportPage;
+
+async function ReportContainer({ params }: { params: Params }) {
+
 
   const {
     patientId,
     reportId
-  } = params;
+  } = await params;
 
   const supabase = await createClient()
 
@@ -52,11 +66,7 @@ const ReportPage = async (props: { params: Params }) => {
   const report = await getReport(reportId)
   const patient = await getPatient(patientId)
 
-  return ( 
-    <>
-      <Print doctor={doctor!} patient={patient!} report={report!} />
-    </>
-   );
+  return (
+    <Print doctor={doctor!} patient={patient!} report={report!} />
+  )
 }
- 
-export default ReportPage;

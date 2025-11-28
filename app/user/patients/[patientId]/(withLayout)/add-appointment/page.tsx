@@ -3,6 +3,9 @@ import prisma from '@/utils/prisma'
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import { getServicesByDoctorId } from '@/db/queries'
+import { Suspense, ViewTransition } from 'react'
+  
+import { AddAppointmentSkeleton } from '@/components/skeletons/add-appointment-skeleton'
 
 async function getPatient(patientId) {
   const patient = await prisma.patient.findUnique({
@@ -17,12 +20,22 @@ async function getPatient(patientId) {
   return patient
 }
 
-export default async function Appointment(props) {
-  const params = await props.params;
+type Params = Promise<{ patientId: string }>
 
-  const {
-    patientId
-  } = params;
+export default async function Appointment(props: { params: Params }) {
+
+
+  return (
+    <ViewTransition>
+      <Suspense fallback={<AddAppointmentSkeleton />}>
+        <AddAppointmentContainer params={props.params} />
+      </Suspense>
+    </ViewTransition>
+  )
+}
+
+async function AddAppointmentContainer({ params }: { params: Params }) {
+
 
   const supabase = await createClient()
 
@@ -36,8 +49,12 @@ export default async function Appointment(props) {
     redirect('/')
   }
 
+  const { patientId } = await params;
+
   const patient = await getPatient(patientId)
   const services = await getServicesByDoctorId(doctorId)
+
+
 
   return (
     <AddAppointment doctorId={doctorId} patientId={patientId} patient={patient} services={services} />

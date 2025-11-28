@@ -28,7 +28,7 @@ export function SiteHeader() {
             <Link href="/" className="text-sm text-foreground border border-primary bg-muted px-4 py-1 rounded-full">
               Login
             </Link>
-            <Link href={"/signup" as any} className="text-sm text-foreground bg-primary px-4 py-1 rounded-full">
+            <Link href={"/signup" as any} className="text-sm text-white bg-primary px-4 py-1 rounded-full">
               Sign Up
             </Link>
             {/* <ModeToggle /> */}

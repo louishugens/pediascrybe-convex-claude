@@ -2,6 +2,7 @@
 import prisma from '@/utils/prisma';
 import AddPrescriptions from '@/components/addPrescriptions';
 import AddRecommendation from '@/components/addRecommendation';
+import { Suspense } from 'react';
 
 
 async function getAppointment(appointmentId: string){
@@ -29,20 +30,34 @@ async function getPatient(patientId: string) {
 type Params = Promise<{ patientId: string, appointmentId: string }>
 
 const AddRecommendationPage = async (props: { params: Params }) => {
-  const params = await props.params;
+  // const params = await props.params;
 
-  const {
-    patientId,
-    appointmentId
-  } = params;
+  // const {
+  //   patientId,
+  //   appointmentId
+  // } = params;
+
+  // const appointment = await getAppointment(appointmentId)
+  // const patient = await getPatient(patientId)
+
+  return (
+    // <AddPrescriptions appointment={appointment} patient={patient} patientId={patientId} data-superjson />
+    <Suspense fallback={<div>Loading...</div>}>
+      <AddRecommendationContainer params={props.params} />
+    </Suspense>
+  );
+}
+
+export default AddRecommendationPage
+
+async function AddRecommendationContainer({ params }: { params: Params }) {
+  'use cache'
+  const { patientId, appointmentId } = await params;
 
   const appointment = await getAppointment(appointmentId)
   const patient = await getPatient(patientId)
 
   return (
-    // <AddPrescriptions appointment={appointment} patient={patient} patientId={patientId} data-superjson />
-    (<AddRecommendation appointment={appointment} patient={patient} patientId={patientId} data-superjson />)
+    <AddRecommendation appointment={appointment} patient={patient} patientId={patientId} data-superjson />
   );
-}
-
-export default AddRecommendationPage
+} 

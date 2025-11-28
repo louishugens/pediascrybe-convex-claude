@@ -1,6 +1,7 @@
 import ReportList from "@/components/reportList";
 import Link from "next/link";
 import prisma from "@/utils/prisma";
+import { Suspense } from "react";
 
 async function getReports(patientId:string) {
 
@@ -18,14 +19,22 @@ async function getReports(patientId:string) {
 type Params = Promise<{ patientId: string }>
 
 const ReportsPage = async (props: { params: Params }) => {
-  const params = await props.params;
 
-  const {
-    patientId
-  } = params;
+  return (  
+    <Suspense fallback={<div>Loading...</div>}>
+      <ReportsContainer params={props.params} />
+    </Suspense>
+  );
+}
+ 
+export default ReportsPage;
+
+async function ReportsContainer({ params }: { params: Params }) {
+  'use cache'
+  const { patientId } = await params;
 
   const reports = await getReports(patientId)
-  return (  
+  return (
     <div className='h-full mb-8 mt-4'>
       <div className='flex flex-row w-full h-auto gap-4'>
         <Link href={`/user/patients/${patientId}`} className="mt-4 text-sm text-blue-500 bg-slate-100 rounded-full px-4 py-2 self-start">Leave</Link>
@@ -38,7 +47,5 @@ const ReportsPage = async (props: { params: Params }) => {
       </div>
       <ReportList reports={reports} patientId={patientId} />
     </div>
-  );
+  )
 }
- 
-export default ReportsPage;

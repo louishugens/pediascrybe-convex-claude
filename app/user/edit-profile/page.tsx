@@ -1,34 +1,39 @@
 import EditDoctor from "@/components/editDoctor"
-import prisma from "@/utils/prisma"
 import { createClient } from '@/utils/supabase/server'
-
-async function getDoctor(doctorId){
-  const doctor = await prisma.doctor.findUnique({
-    where:{
-      id:doctorId
-    },
-  })
-  return doctor
-}
-
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { getDoctorById } from "@/data/queries";
 
 const EditProfile = async () => {
+
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <EditProfileContainer />
+    </Suspense>
+  )
+}
+
+export default EditProfile
+
+async function EditProfileContainer() {
   const supabase = await createClient()
 
-  
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   const doctorId = user?.id
 
-  const doctor = await getDoctor(doctorId)
+  if (!doctorId) {
+    redirect('/')
+  }
 
+  const doctor = await getDoctorById(doctorId)
+
+  if (!doctor) {
+    redirect('/')
+  }
   return (
-    <div>
-      <EditDoctor doctor={doctor} />
-    </div>
+    <EditDoctor doctor={doctor} />
   )
 }
-
-export default EditProfile

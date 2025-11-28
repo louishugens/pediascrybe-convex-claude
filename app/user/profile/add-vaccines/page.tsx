@@ -1,40 +1,54 @@
-import prisma from '@/utils/prisma'
+import {db} from '@/db'
+import { Doctor, Vaccin, VaccinReference } from '@/db/schema'
 import UpdateDoctorVaccines from '@/components/updateDoctorVaccines'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
+import { Suspense } from 'react'
+import { eq } from 'drizzle-orm'
 
 export default async function AddVaccines() {
+
+    
+  return (
+    <div className='h-screen mb-8 pb-4 overflow-y-auto '>
+      <Suspense fallback={<div>Loading...</div>}>
+        <AddVaccinesContainer />
+      </Suspense>
+    </div>
+  )
+}
+
+async function AddVaccinesContainer() {
+
   const supabase = await createClient()
 
     
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-  
-    const doctorId = user?.id
-    if(!doctorId){
-      redirect('/')
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const doctorId = user?.id
+  if(!doctorId){
+    redirect('/')
+  }
+
+  const referenceVaccines = await db.query.VaccinReference.findMany(
+    {
+      with: {
+        doses: true
+      }
     }
+  )
 
-    const referenceVaccines = await prisma.vaccinReference.findMany(
-      {
-        include:{
-          doses: true
-        }
+  const doctorVaccines = await db.query.Vaccin.findMany(
+    {
+      where: eq(Vaccin.doctorId, doctorId),
+      with: {
+        doses: true
       }
-    )
+    }
+  )
 
-    const doctorVaccines = await prisma.vaccin.findMany(
-      {
-        where:{
-          doctorId: doctorId
-        },
-        include:{
-          doses: true
-        }
-      }
-    )
-    
   return (
     <div className='h-screen mb-8 pb-4 overflow-y-auto '>
       <UpdateDoctorVaccines doctorVaccines={doctorVaccines} referenceVaccines={referenceVaccines} doctorId={doctorId} />

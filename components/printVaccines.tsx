@@ -5,7 +5,7 @@ import { format } from 'date-fns'
 import { useReactToPrint } from 'react-to-print';
 import Link from 'next/link';
 import PrintHead from '@/components/printHeaderVax';
-import { Doctor, Patient, VaccinationRecord, Vaccin, Dose } from '@prisma/client';
+import { Doctor, PatientSelect, VaccinationRecord, Vaccin, Dose } from '@/db/schema';
 import { VaccineRecordsPrint } from '@/components/vaccineRecordsPrint';
 
 type VaccineRecord = VaccinationRecord & {
@@ -15,7 +15,7 @@ type VaccineRecord = VaccinationRecord & {
 
 interface Props {
   doctor: Doctor,
-  patient: Patient,
+  patient: PatientSelect,
   vaccines: VaccineRecord[]
 }
 

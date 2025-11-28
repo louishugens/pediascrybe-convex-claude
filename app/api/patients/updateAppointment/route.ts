@@ -22,10 +22,10 @@ export async function POST(req: Request) {
     }
 
     try {
-      const {height, weight, head, motif, findings, otherRemarks, arm, sao2, temperature, pulse, respiratory, systolic, diastolic, appointmentId, serviceId}  = await req.json()
+      const {height, weight, head, motif, findings, otherRemarks, arm, sao2, temperature, pulse, respiratory, systolic, diastolic, appointmentId, serviceId, cost}  = await req.json()
 
       const updateData: any = {
-        height, weight, head, motif, findings, otherRemarks, arm, sao2, temperature, pulse, respiratory, systolic, diastolic, serviceId
+        height, weight, head, motif, findings, otherRemarks, arm, sao2, temperature, pulse, respiratory, systolic, diastolic, serviceId, cost
       }
 
 

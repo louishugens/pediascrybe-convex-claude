@@ -1,10 +1,23 @@
 import Link from 'next/link'
 import AppointmentList from '@/components/appointmentList'
 import { cacheTag } from 'next/cache'
+import { Suspense } from 'react'
+
 type Params = Promise<{ patientId: string }>  
 
 async function Patient({params}: { params: Params }) {
-  "use cache"
+
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PatientContainer params={params} />
+    </Suspense>
+  )
+}
+
+export default Patient
+
+async function PatientContainer({ params }: { params: Params }) {
+  'use cache'
   const { patientId } = await params;
   cacheTag(`appointments-${patientId}`)
 
@@ -43,5 +56,3 @@ async function Patient({params}: { params: Params }) {
     </>
   )
 }
-
-export default Patient

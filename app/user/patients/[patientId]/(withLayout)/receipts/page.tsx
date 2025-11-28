@@ -2,6 +2,8 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import prisma from "@/utils/prisma";
 import ReceiptList from "@/components/receiptList";
+import { cacheTag } from "next/cache";
+import { Suspense } from "react";
 
 async function getReceipts(patientId:string) {
 
@@ -19,11 +21,32 @@ async function getReceipts(patientId:string) {
 type Params = Promise<{ patientId: string }>
 
 const ReceiptsPage = async (props: { params: Params }) => {
-  const params = await props.params;
+  // const params = await props.params;
+
+  // const {
+  //   patientId
+  // } = params;
+
+  // const receipts = await getReceipts(patientId)
+  // const headersList = await headers()
+  // const locale = headersList.get('accept-language')
+  // const lang = locale?.split(',')[0]
+
+  return (  
+    <Suspense fallback={<div>Loading...</div>}>
+      <ReceiptsContainer params={props.params} />
+    </Suspense>
+  );
+}
+ 
+export default ReceiptsPage;
+
+async function ReceiptsContainer({ params }: { params: Params }) {
+
 
   const {
     patientId
-  } = params;
+  } = await params;
 
   const receipts = await getReceipts(patientId)
   const headersList = await headers()
@@ -45,5 +68,4 @@ const ReceiptsPage = async (props: { params: Params }) => {
     </div>
   );
 }
- 
-export default ReceiptsPage;
+

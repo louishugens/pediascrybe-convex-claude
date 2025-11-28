@@ -3,7 +3,11 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import  prisma  from '@/utils/prisma'
+import { Appointment, AppointmentSelect, Doctor, Patient, VaccinationRecord, Vaccin, Dose } from '@/db/schema'
+import { db } from '@/db'
 import { cache } from 'react'
+import { and, desc, gte, like, or } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 
 export const verifySession = cache(async () => {
   const supabase = await createClient()
@@ -20,28 +24,22 @@ export const getDoctor = cache(async () => {
     redirect('/')
   }
 
-  const doctor = await prisma.doctor.findUnique({
-    where: {
-      id: user.id,
-    },
+  const doctor = await db.query.Doctor.findFirst({
+    where: eq(Doctor.id, user.id),
   })
   return doctor
 })
 
 export const getDoctorById = cache(async (doctorId: string) => {
-  const doctor = await prisma.doctor.findUnique({
-    where: {
-      id: doctorId,
-    },
+  const doctor = await db.query.Doctor.findFirst({
+    where: eq(Doctor.id, doctorId),
   })
   return doctor
 })
 
 export const getPatient = cache(async (patientId: string) => {
-  const patient = await prisma.patient.findUnique({
-    where: {
-      id: patientId,
-    },
+  const patient = await db.query.Patient.findFirst({
+    where: eq(Patient.id, patientId),
   })
   return patient
 })
@@ -51,14 +49,13 @@ export async function getPatientVaccineRecords(patientId: string) {
   if (!user) {
     redirect('/')
   }
-  const vaccineRecords = await prisma.vaccinationRecord.findMany({
-    where: {
-      patientId,
-    },
-    include: {
+  const vaccineRecords = await db.query.VaccinationRecord.findMany({
+    where: eq(VaccinationRecord.patientId, patientId),
+    with: {
       vaccin: true,
-      dose: true
+      dose: true,
     },
+    orderBy: desc(VaccinationRecord.date),
   })
   return vaccineRecords
 }
@@ -70,13 +67,11 @@ export async function getDoctorTrackedVaccines() {
   if (!user) {
     redirect('/')
   }
-  const doctor = await prisma.doctor.findUnique({
-    where: {
-      id: user.id,
-    },
-    include: {
+  const doctor = await db.query.Doctor.findFirst({
+    where: eq(Doctor.id, user.id),
+    with: {
       trackedVaccines: {
-        include: {
+        with: {
           doses: true,
         },
       },
@@ -90,109 +85,72 @@ export async function getVaccinationRecord(vaccinationRecordId: string) {
   if(!doctorId) {
     redirect('/')
   }
-  const vaccinationRecord = await prisma.vaccinationRecord.findUnique({
-    where: { id: vaccinationRecordId },
-    include: {
+  const vaccinationRecord = await db.query.VaccinationRecord.findFirst({
+    where: eq(VaccinationRecord.id, vaccinationRecordId),
+    with: {
       vaccin: true,
-      dose: true
+      dose: true,
     },
   })
   return vaccinationRecord
 }
 
 export const getPatients = cache(async (doctorId: string) => {
-  const patients = await prisma.patient.findMany({
-    where: {
-      doctorId: doctorId,
-    },
+  const patients = await db.query.Patient.findMany({
+    where: eq(Patient.doctorId, doctorId),
+    orderBy: desc(Patient.createdAt),
   })
   return patients
 })
 
 export const getRecentPatients = cache(async (doctorId: string) => {
-  const recentPatients = await prisma.patient.findMany({
-    where: {
-      doctorId: doctorId,
-      createdAt: {
-        gte: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30),
-      },
-    },
+  const recentPatients = await db.query.Patient.findMany({
+    where: and(eq(Patient.doctorId, doctorId), gte(Patient.createdAt, new Date(Date.now() - 1000 * 60 * 60 * 24 * 30))),
+    orderBy: desc(Patient.createdAt),
   })
   return recentPatients
 })
 
 export const getAppointments = cache(async (doctorId: string) => {
-  const appointments = await prisma.appointment.findMany({
-    where: {
-      doctorId: doctorId,
-    },
+  const appointments = await db.query.Appointment.findMany({
+    where: eq(Appointment.doctorId, doctorId),
+    orderBy: desc(Appointment.startDate),
   })
   return appointments
 })
 
-export const getRecentAppointments = cache(async (doctorId: string) => {
-  const recentAppointments = await prisma.appointment.findMany({
-    where: {
-      doctorId: doctorId,
-      startDate: {
-        gte: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30),
-      },
-    },
+export const getRecentAppointments = cache(async (doctorId: string) => {  
+  const recentAppointments = await db.query.Appointment.findMany({
+    where: and(eq(Appointment.doctorId, doctorId), gte(Appointment.startDate, new Date(Date.now() - 1000 * 60 * 60 * 24 * 30))),  
+    orderBy: desc(Appointment.startDate),
   })
   return recentAppointments
 })
 
 export const getPatientsWithVaccinationRecords = cache(async (doctorId: string) => {
-  const patients = await prisma.patient.findMany({
-    where: {
-      doctorId: doctorId,
-    },
-    include: {
+  const patients = await db.query.Patient.findMany({
+    where: eq(Patient.doctorId, doctorId),
+    with: {
       VaccinationRecords: true,
     },
+    orderBy: desc(Patient.createdAt),
   })
   return patients
 })
 
 export const getPatientsWithSearch = cache(async (doctorId: string, search: string) => {
-  const patients = await prisma.patient.findMany({
-    where:{
-      doctorId:doctorId,
-      OR:[
-        {
-          firstname:{
-            contains: search,
-            mode: 'insensitive' 
-          }
-        },
-        {
-          lastname:{
-            contains: search,
-            mode: 'insensitive'
-          }
-        },
-        {
-          email:{
-            contains: search,
-            mode: 'insensitive'
-          }
-        },
-      ] 
-
-    },
+  const patients = await db.query.Patient.findMany({
+    where: and(eq(Patient.doctorId, doctorId), or(like(Patient.firstname, `%${search}%`), like(Patient.lastname, `%${search}%`), like(Patient.email, `%${search}%`))),
+    orderBy: desc(Patient.createdAt),
   })
   return patients
 })
 
 
 export const getPatientAppointments = cache(async (patientId: string) => {
-  const appointments = await prisma.appointment.findMany({
-    where: {
-      patientId: patientId,
-    },
-    orderBy: {
-      startDate: 'desc',
-    },
+  const appointments = await db.query.Appointment.findMany({
+    where: eq(Appointment.patientId, patientId),
+    orderBy: desc(Appointment.startDate),
   })
   return appointments
 })

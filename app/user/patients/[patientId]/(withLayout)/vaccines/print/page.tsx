@@ -1,8 +1,9 @@
 import Print from "@/components/printVaccines";
-import prisma from "@/utils/prisma";
+
 import { getDoctor, getPatient, getPatientVaccineRecords } from "@/data/queries";
-import { Patient, Doctor } from "@prisma/client";
+import { Patient, Doctor } from "@/db/schema";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 
 
@@ -11,27 +12,29 @@ import { redirect } from "next/navigation";
 type Params = Promise<{ patientId: string, appointmentId: string }>
 
 const PrintPage = async (props: { params: Params }) => {
-  const params = await props.params;
+  // const params = await props.params;
 
-  const {
-    patientId,
-    appointmentId
-  } = params;
+  // const {
+  //   patientId,
+  //   appointmentId
+  // } = params;
 
 
-  const patient: Patient | null = await getPatient(patientId)
-  const doctor: Doctor | null = await getDoctor()
-  const vaccineRecords = await getPatientVaccineRecords(patientId)
+  // const patient: Patient | null = await getPatient(patientId)
+  // const doctor: Doctor | null = await getDoctor()
+  // const vaccineRecords = await getPatientVaccineRecords(patientId)
 
-  if (!patient) {
-    redirect('/user/patients')
-  }
-  if (!doctor) {
-    redirect('/')
-  }
+  // if (!patient) {
+  //   redirect('/user/patients')
+  // }
+  // if (!doctor) {
+  //   redirect('/')
+  // }
   return (
     <>
-      <Print patient={patient} doctor={doctor} vaccines={vaccineRecords} data-superjson />
+      <Suspense fallback={<div>Loading...</div>}>
+        <PrintContainer params={props.params} />
+      </Suspense>
     </>
   );
 };
@@ -39,3 +42,18 @@ const PrintPage = async (props: { params: Params }) => {
 export default PrintPage;
 
 
+
+async function PrintContainer(props: { params: Promise<{ patientId: string, appointmentId: string }> }) {
+  const params = await props.params;
+  const patient = await getPatient(params.patientId)
+  const doctor = await getDoctor()
+  const vaccineRecords = await getPatientVaccineRecords(params.patientId)
+  if (!patient) {
+    redirect('/user/patients')
+  }
+  if (!doctor) {
+    redirect('/')
+  }
+
+  return <Print patient={patient} doctor={doctor} vaccines={vaccineRecords} data-superjson />
+}

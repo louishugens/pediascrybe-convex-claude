@@ -149,7 +149,7 @@ export default function Home() {
               <input placeholder='your password' className='placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4' type='password' {...register('password')}/>
               <p className='px-4 pt-1 text-sm text-red-600'>{errors.password?.message}</p>
             </label>
-            <button className='py-2 px-4 rounded-full bg-primary text-lg font-semibold w-1/2 center mt-4 mx-auto' type='submit'>
+            <button className='py-2 px-4 rounded-full bg-primary text-lg text-white font-semibold w-1/2 center mt-4 mx-auto' type='submit'>
               {
                 loading
                 ?

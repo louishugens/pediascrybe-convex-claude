@@ -3,6 +3,9 @@ import { AppointmentSelect, PatientSelect } from "@/db/schema";
 import prisma from "@/utils/prisma";
 import { createClient } from "@/utils/supabase/server";
 import { getServicesByDoctorId } from "@/db/queries";
+import { Suspense, ViewTransition } from "react";
+import { AddAppointmentSkeleton } from "@/components/skeletons/add-appointment-skeleton";
+
 
 async function getAppointment(appointmentId: string){
   const appointment = await prisma.appointment.findUnique({
@@ -13,7 +16,7 @@ async function getAppointment(appointmentId: string){
   return appointment ? { ...appointment, serviceId: (appointment as any).serviceId ?? null } : null
 }
 
-async function getPatient(patientId) {
+async function getPatient(patientId: string) {
   const patient = await prisma.patient.findUnique({
     where: {
       id: patientId,
@@ -32,12 +35,19 @@ async function getPatient(patientId) {
 type Params = Promise<{ patientId: string, appointmentId: string }>
 
 const EditAppointmentPage = async (props: { params: Params }) => {
-  const params = await props.params;
 
-  const {
-    patientId,
-    appointmentId
-  } = params;
+  return (
+    <ViewTransition>
+      <Suspense fallback={<AddAppointmentSkeleton />}>
+        <EditAppointmentContainer params={props.params} />
+      </Suspense>
+    </ViewTransition>
+  )
+}
+
+export default EditAppointmentPage
+
+async function EditAppointmentContainer({ params }: { params: Params }) {
 
   const supabase = await createClient()
 
@@ -46,9 +56,11 @@ const EditAppointmentPage = async (props: { params: Params }) => {
   } = await supabase.auth.getUser()
 
   const doctorId = user?.id
+  const { patientId, appointmentId } = await params;
 
-  const appointment = await getAppointment(appointmentId) as AppointmentSelect | null
-  const patient = await getPatient(patientId) as PatientSelect & { appointments: AppointmentSelect[] } | null
+  const appointment = await getAppointment(appointmentId)
+  const patient = await getPatient(patientId)
+ 
 
   if (!appointment || !patient || !doctorId) {
     return <div>Appointment or patient not found</div>
@@ -58,9 +70,7 @@ const EditAppointmentPage = async (props: { params: Params }) => {
 
   return (
     <EditAppointment appointment={appointment} patientId={patientId} patient={patient} services={services} data-superjson />
-  )
+  );
 }
-
-export default EditAppointmentPage
 
 

@@ -17,6 +17,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AppointmentSelect, PatientSelect, Service } from "@/db/schema"
+import { ArrowLeft } from "lucide-react"
+import Link from "next/link"
 
 const formSchema = z.object({
   height: z.coerce.number().min(0, "Height can't be less than 0").nullable().optional(),
@@ -55,7 +57,7 @@ const AddAppointment = ({ doctorId, patientId, patient, services }: AddAppointme
   const [generating, setGenerating] = useState(false)
   const [suggestions, setSuggestions] = useState("")
   const [thinking, setThinking] = useState(false)
-  
+
   const { complete, completion, isLoading } = useCompletion({
     api: "/api/ai/diagnostic",
   })
@@ -92,6 +94,8 @@ const AddAppointment = ({ doctorId, patientId, patient, services }: AddAppointme
   const respiratory = form.watch("respiratory")
   const systolic = form.watch("systolic")
   const diastolic = form.watch("diastolic")
+  const serviceId = form.watch("serviceId")
+  const cost = form.watch("cost")
 
   useEffect(() => {
     if (!symptoms) {
@@ -108,11 +112,11 @@ const AddAppointment = ({ doctorId, patientId, patient, services }: AddAppointme
   const fetchDiagnosticSuggestions = async (patient: PatientSelect, appointment: Partial<AppointmentSelect>) => {
     if (symptoms) {
       setGenerating(true)
-      
-      const { firstname, lastname, email, mothername, ...patientWithoutIdentity} = patient
+
+      const { firstname, lastname, email, mothername, ...patientWithoutIdentity } = patient
 
       const body = `The patient's information is ${JSON.stringify(patientWithoutIdentity)}. The consultation information is ${JSON.stringify(appointment)}.`
-      
+
       await complete(body)
       setGenerating(false)
     }
@@ -125,7 +129,7 @@ const AddAppointment = ({ doctorId, patientId, patient, services }: AddAppointme
     }
   }, [completion, form]);
 
-  const {appointments, ...patientWithoutAppointments} = patient
+  const { appointments, ...patientWithoutAppointments } = patient
 
   const onSubmit = async (values: FormValues) => {
     setLoading(true)
@@ -162,7 +166,14 @@ const AddAppointment = ({ doctorId, patientId, patient, services }: AddAppointme
     <div className="py-4">
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl text-green-600 font-bold">New Appointment</CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-xl text-green-600 font-bold">New Appointment</CardTitle>
+            <Button variant="outline" size="icon" asChild>
+              <Link href={`/user/patients/${patientId}`}>
+                <ArrowLeft className="h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -175,7 +186,16 @@ const AddAppointment = ({ doctorId, patientId, patient, services }: AddAppointme
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Service Type</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          const selectedService = services.find((s) => s.id === value);
+                          if (selectedService) {
+                            form.setValue("cost", selectedService.price);
+                          }
+                        }}
+                        value={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a service" />
@@ -205,9 +225,7 @@ const AddAppointment = ({ doctorId, patientId, patient, services }: AddAppointme
                           step="0.01"
                           placeholder="Service price"
                           {...field}
-                          value={field.value || services.find((s) => s.id === service)?.price || ""}
-
-                          // disabled={!!field.value}
+                          value={field.value ?? ""}
                         />
                       </FormControl>
                       <FormMessage />

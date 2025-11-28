@@ -9,7 +9,7 @@ import BeatLoader from "react-spinners/BeatLoader"
 import PulseLoader from "react-spinners/PulseLoader"
 import { refresh } from "@/app/actions"
 import { useCompletion } from '@ai-sdk/react'
-import { PatientSelect, AppointmentSelect } from "@/db/schema"  
+import { PatientSelect, AppointmentSelect } from "@/db/schema"
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
@@ -17,6 +17,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Service } from "@/db/schema"
+import { ArrowLeft } from "lucide-react"
+import Link from "next/link"
+
 
 
 
@@ -40,6 +43,7 @@ const formSchema = z.object({
   findings: z.string().optional(),
   otherRemarks: z.string().optional(),
   serviceId: z.string().optional(),
+  cost: z.coerce.number().min(0, "Cost can't be less than 0").nullable().optional(),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -80,6 +84,7 @@ const EditAppointment = ({ appointment, patientId, patient, services }: EditAppo
       systolic: appointment.systolic || undefined,
       diastolic: appointment.diastolic || undefined,
       serviceId: appointment.serviceId || undefined,
+      cost: appointment.cost || undefined,
     },
   })
 
@@ -94,6 +99,8 @@ const EditAppointment = ({ appointment, patientId, patient, services }: EditAppo
   const respiratory = form.watch("respiratory")
   const systolic = form.watch("systolic")
   const diastolic = form.watch("diastolic")
+  const serviceId = form.watch("serviceId")
+  const cost = form.watch("cost")
 
   useEffect(() => {
     if (!symptoms) {
@@ -110,11 +117,11 @@ const EditAppointment = ({ appointment, patientId, patient, services }: EditAppo
   const fetchDiagnosticSuggestions = async (patient: PatientSelect, appointment: Partial<AppointmentSelect>) => {
     if (symptoms) {
       setGenerating(true)
-      
-      const { firstname, lastname, email, mothername, ...patientWithoutIdentity} = patient
+
+      const { firstname, lastname, email, mothername, ...patientWithoutIdentity } = patient
 
       const body = `The patient's information is ${JSON.stringify(patientWithoutIdentity)}. The consultation information is ${JSON.stringify(appointment)}.`
-      
+
       await complete(body)
       setGenerating(false)
     }
@@ -128,7 +135,7 @@ const EditAppointment = ({ appointment, patientId, patient, services }: EditAppo
     }
   }, [completion, form]);
 
-  const {appointments, ...patientWithoutAppointments} = patient
+  const { appointments, ...patientWithoutAppointments } = patient
 
   const onSubmit = async (values: FormValues) => {
     setLoading(true)
@@ -162,36 +169,74 @@ const EditAppointment = ({ appointment, patientId, patient, services }: EditAppo
     <div className="py-4">
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl text-green-600 font-bold">Update Appointment</CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-xl text-green-600 font-bold">Update Appointment</CardTitle>
+            <Button variant="outline" size="icon" asChild>
+              <Link href={`/user/patients/${patientId}`}>
+                <ArrowLeft className="h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Service Selection */}
-              <FormField
-                control={form.control}
-                name="serviceId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Service Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="serviceId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Service Type</FormLabel>
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          const selectedService = services.find((s) => s.id === value);
+                          if (selectedService) {
+                            form.setValue("cost", selectedService.price);
+                          }
+                        }}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a service" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {services.map((service) => (
+                            <SelectItem key={service.id} value={service.id}>
+                              {service.name} - {service.price} {service.currency}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="cost"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Service Price</FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a service" />
-                        </SelectTrigger>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="Service price"
+                          {...field}
+                          value={field.value ?? ""}
+                        />
                       </FormControl>
-                      <SelectContent>
-                        {services.map((service) => (
-                          <SelectItem key={service.id} value={service.id}>
-                            {service.name} - {service.price} {service.currency}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               {/* Vital Signs Grid */}
               <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">

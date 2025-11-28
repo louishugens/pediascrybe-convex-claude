@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache"
 import prisma from "@/utils/prisma"
 import { Prisma } from '@prisma/client'
 import { db } from "@/db"
-import { Service, ServiceInsert } from "@/db/schema"
+import { Appointment, Patient, Service, ServiceInsert } from "@/db/schema"
 import { eq, and } from "drizzle-orm"
 
 export async function refresh(paths: string[]) {
@@ -315,3 +315,52 @@ export async function deleteService(serviceId: string) {
     }
   }
 }   
+
+export async function deletePatient(patientId: string) {
+  const doctorId = await verifySession()
+  try {
+
+    const patient = await db.query.Patient.findFirst({
+      where: eq(Patient.id, patientId),
+      with: {
+        appointments: true,
+        reports: true,
+        receipts: true,
+        VaccinationRecords: true,
+      }
+    })
+    if (patient && patient.appointments.length > 0) {
+      return { success: false, error: 'Patient has appointments. Please delete the appointments first.' }
+    }
+    if (patient && patient.reports.length > 0) {
+      return { success: false, error: 'Patient has reports. Please delete the reports first.' }
+    }
+    if (patient && patient.receipts.length > 0) {
+      return { success: false, error: 'Patient has receipts. Please delete the receipts first.' }
+    }
+    if (patient && patient.VaccinationRecords.length > 0) {
+      return { success: false, error: 'Patient has vaccination records. Please delete the vaccination records first.' }
+    }
+    if (patient) {
+      await db.delete(Patient).where(and(eq(Patient.id, patientId), eq(Patient.doctorId, doctorId)))
+      revalidatePath('/user/patients')
+      return { success: true, message: 'Patient deleted successfully.' }
+    }
+    return { success: false, error: 'Patient not found.' }
+  } catch (error) {
+    console.error('Error deleting patient:', error)
+    return { success: false, error: 'An unexpected error occurred while deleting the patient.' }
+  }
+}
+
+export async function deleteAppointment(appointmentId: string, patientId: string) {
+  const doctorId = await verifySession()
+  try {
+    await db.delete(Appointment).where(and(eq(Appointment.id, appointmentId), eq(Appointment.doctorId, doctorId)))
+    revalidatePath(`/user/patients/${patientId}`)
+    return { success: true }
+  } catch (error) {
+    console.error('Error deleting appointment:', error)
+    return { success: false, error: 'An unexpected error occurred while deleting the appointment.' }
+  }
+}
