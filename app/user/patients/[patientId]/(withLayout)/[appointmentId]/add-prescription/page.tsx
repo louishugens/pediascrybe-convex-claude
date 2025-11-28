@@ -1,12 +1,13 @@
 import { db } from '@/db';
 import AddPrescriptions from '@/components/addPrescriptions';
-import {  getPatient } from '@/db/queries';
+import { getPatient } from '@/db/queries';
 import { eq } from 'drizzle-orm';
 import { Appointment } from '@/db/schema';
-import { Suspense } from 'react';
+import { Suspense, ViewTransition } from 'react';
+import GenericFormSkeleton from '@/components/skeletons/generic-form-skeleton';
 
 
-async function getAppointment(appointmentId: string){
+async function getAppointment(appointmentId: string) {
   const appointment = await db.query.Appointment.findFirst({
     where: eq(Appointment.id, appointmentId),
   })
@@ -18,9 +19,11 @@ type Params = Promise<{ patientId: string, appointmentId: string }>
 const AddPrescriptionsPage = async (props: { params: Params }) => {
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <AddPrescriptionsContainer params={props.params} />
-    </Suspense>
+    <ViewTransition>
+      <Suspense fallback={<GenericFormSkeleton />}>
+        <AddPrescriptionsContainer params={props.params} />
+      </Suspense>
+    </ViewTransition>
   )
 }
 
@@ -29,7 +32,7 @@ export default AddPrescriptionsPage
 
 async function AddPrescriptionsContainer({ params }: { params: Params }) {
   'use cache'
-  
+
   const { patientId, appointmentId } = await params;
 
   const appointment = await getAppointment(appointmentId)

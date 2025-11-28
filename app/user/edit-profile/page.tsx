@@ -1,15 +1,18 @@
 import EditDoctor from "@/components/editDoctor"
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, ViewTransition } from "react";
+import GenericFormSkeleton from "@/components/skeletons/generic-form-skeleton";
 import { getDoctorById } from "@/data/queries";
 
 const EditProfile = async () => {
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <EditProfileContainer />
-    </Suspense>
+    <ViewTransition>
+      <Suspense fallback={<GenericFormSkeleton />}>
+        <EditProfileContainer />
+      </Suspense>
+    </ViewTransition>
   )
 }
 

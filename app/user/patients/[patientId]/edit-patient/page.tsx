@@ -1,7 +1,8 @@
 import EditPatient from "@/components/editPatient";
 import prisma from "@/utils/prisma";
 import { createClient } from '@/utils/supabase/server'
-import { Suspense } from "react";
+import { Suspense, ViewTransition } from "react";
+import GenericFormSkeleton from "@/components/skeletons/generic-form-skeleton";
 
 async function getPatient(patientId) {
   const patient = await prisma.patient.findUnique({
@@ -18,9 +19,11 @@ const EditPatientPage = async ({ params }: { params: Params }) => {
 
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <EditPatientContainer params={params} />
-    </Suspense>
+    <ViewTransition>
+      <Suspense fallback={<GenericFormSkeleton />}>
+        <EditPatientContainer params={params} />
+      </Suspense>
+    </ViewTransition>
   )
 }
 

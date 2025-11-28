@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
+import TransactionsPageSkeleton from '@/components/skeletons/transactions-page-skeleton'
 import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -87,7 +88,7 @@ export default function TransactionsPage() {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<TransactionsPageSkeleton />}>
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Daily Transactions</h1>
           <Popover>

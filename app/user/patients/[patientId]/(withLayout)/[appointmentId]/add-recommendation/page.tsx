@@ -2,13 +2,14 @@
 import prisma from '@/utils/prisma';
 import AddPrescriptions from '@/components/addPrescriptions';
 import AddRecommendation from '@/components/addRecommendation';
-import { Suspense } from 'react';
+import { Suspense, ViewTransition } from 'react';
+import GenericFormSkeleton from '@/components/skeletons/generic-form-skeleton';
 
 
-async function getAppointment(appointmentId: string){
+async function getAppointment(appointmentId: string) {
   const appointment = await prisma.appointment.findUnique({
-    where:{
-      id:appointmentId
+    where: {
+      id: appointmentId
     },
   })
   return appointment
@@ -41,10 +42,11 @@ const AddRecommendationPage = async (props: { params: Params }) => {
   // const patient = await getPatient(patientId)
 
   return (
-    // <AddPrescriptions appointment={appointment} patient={patient} patientId={patientId} data-superjson />
-    <Suspense fallback={<div>Loading...</div>}>
-      <AddRecommendationContainer params={props.params} />
-    </Suspense>
+    <ViewTransition>
+      <Suspense fallback={<GenericFormSkeleton />}>
+        <AddRecommendationContainer params={props.params} />
+      </Suspense>
+    </ViewTransition>
   );
 }
 

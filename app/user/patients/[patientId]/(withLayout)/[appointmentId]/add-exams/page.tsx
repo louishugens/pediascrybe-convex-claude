@@ -1,12 +1,13 @@
 
 import prisma from '@/utils/prisma';
 import AddExams from "@/components/addExams";
-import { Suspense } from 'react';
+import { Suspense, ViewTransition } from 'react';
+import GenericFormSkeleton from '@/components/skeletons/generic-form-skeleton';
 
-async function getAppointment(appointmentId: string){
+async function getAppointment(appointmentId: string) {
   const appointment = await prisma.appointment.findUnique({
-    where:{
-      id:appointmentId
+    where: {
+      id: appointmentId
     },
   })
   return appointment
@@ -39,9 +40,11 @@ const AddExamsPage = async (props: { params: Params }) => {
   // const patient = await getPatient(patientId)
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <AddExamsContainer params={props.params} />
-    </Suspense>
+    <ViewTransition>
+      <Suspense fallback={<GenericFormSkeleton />}>
+        <AddExamsContainer params={props.params} />
+      </Suspense>
+    </ViewTransition>
   )
 }
 
