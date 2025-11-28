@@ -25,20 +25,11 @@ const EditReceiptPage = async (props: { params: Params }) => {
 
 
   return (
-    <>
-      <div className='h-full mb-8 mt-4'>
-        <div className='flex flex-row w-full h-auto gap-4 justify-end px-4'>
-          <Link href={`/user/patients/${params.patientId}/receipts`} className='text-black bg-white p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors'>
-            <ArrowUturnLeftIcon className='w-4 h-4' />
-          </Link>
-        </div>
-        <ViewTransition>
-          <Suspense fallback={<ReceiptFormSkeleton />}>
-            <EditReceiptContainer params={props.params} />
-          </Suspense>
-        </ViewTransition>
-      </div>
-    </>
+    <ViewTransition>
+      <Suspense fallback={<ReceiptFormSkeleton />}>
+        <EditReceiptContainer params={props.params} />
+      </Suspense>
+    </ViewTransition>
   );
 }
 
@@ -50,6 +41,13 @@ async function EditReceiptContainer({ params }: { params: Params }) {
 
   const receipt = await getReceipt(receiptId)
   return (
-    <EditReceipt patientId={patientId} receipt={receipt!} />
+    <div className='h-full mb-8 mt-4'>
+      <div className='flex flex-row w-full h-auto gap-4 justify-end px-4'>
+        <Link href={`/user/patients/${patientId}/receipts`} className='text-black bg-white p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors'>
+          <ArrowUturnLeftIcon className='w-4 h-4' />
+        </Link>
+      </div>
+      <EditReceipt patientId={patientId} receipt={receipt!} />
+    </div>
   )
 }
