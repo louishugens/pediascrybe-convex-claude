@@ -1,13 +1,14 @@
 import Print from "@/components/print";
 import prisma from "@/utils/prisma";
 import { createClient } from '@/utils/supabase/server'
-import { Suspense } from "react";
+import { Suspense, ViewTransition } from "react";
+import PrintExamSkeleton from "@/components/skeletons/print-exam-skeleton";
 
 
 async function getAppointment(appointmentId) {
   const appointment = await prisma.appointment.findUnique({
-    where:{
-      id:appointmentId
+    where: {
+      id: appointmentId
     },
   })
   return appointment
@@ -15,8 +16,8 @@ async function getAppointment(appointmentId) {
 
 async function getPatient(patientId: string) {
   const patient = await prisma.patient.findUnique({
-    where:{
-      id:patientId
+    where: {
+      id: patientId
     },
   })
   return patient
@@ -24,8 +25,8 @@ async function getPatient(patientId: string) {
 
 async function getDoctor(doctorId: string) {
   const doctor = await prisma.doctor.findUnique({
-    where:{
-      id:doctorId
+    where: {
+      id: doctorId
     },
   })
   return doctor
@@ -56,9 +57,11 @@ const PrintPage = async (props: { params: Params }) => {
 
   return (
     <>
-      <Suspense fallback={<div>Loading...</div>}>
-        <PrintContainer params={props.params} />
-      </Suspense>
+      <ViewTransition>
+        <Suspense fallback={<PrintExamSkeleton />}>
+          <PrintContainer params={props.params} />
+        </Suspense>
+      </ViewTransition>
     </>
   );
 };

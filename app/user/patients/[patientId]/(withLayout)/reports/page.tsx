@@ -1,15 +1,16 @@
 import ReportList from "@/components/reportList";
+import ReportsSkeleton from "@/components/skeletons/reports-skeleton";
 import Link from "next/link";
 import prisma from "@/utils/prisma";
-import { Suspense } from "react";
+import { Suspense, ViewTransition } from "react";
 
-async function getReports(patientId:string) {
+async function getReports(patientId: string) {
 
   const reports = prisma.report.findMany({
-    where:{
+    where: {
       patientId: patientId
     },
-    orderBy:{
+    orderBy: {
       createdAt: 'desc'
     }
   })
@@ -20,13 +21,15 @@ type Params = Promise<{ patientId: string }>
 
 const ReportsPage = async (props: { params: Params }) => {
 
-  return (  
-    <Suspense fallback={<div>Loading...</div>}>
-      <ReportsContainer params={props.params} />
-    </Suspense>
+  return (
+    <ViewTransition>
+      <Suspense fallback={<ReportsSkeleton />}>
+        <ReportsContainer params={props.params} />
+      </Suspense>
+    </ViewTransition>
   );
 }
- 
+
 export default ReportsPage;
 
 async function ReportsContainer({ params }: { params: Params }) {
@@ -41,9 +44,9 @@ async function ReportsContainer({ params }: { params: Params }) {
       </div>
       <div className="flex flex-row w-full justify-between mt-4">
         <p className=' font-bold text-white'><span className=' text-primary'>Reports and Certificates list</span></p>
-        <Link 
-        className='self-end px-4 py-2 bg-blue-500 text-white rounded-full text-sm' 
-        href={`/user/patients/${patientId}/reports/create-report`}>Create Report</Link>
+        <Link
+          className='self-end px-4 py-2 bg-blue-500 text-white rounded-full text-sm'
+          href={`/user/patients/${patientId}/reports/create-report`}>Create Report</Link>
       </div>
       <ReportList reports={reports} patientId={patientId} />
     </div>

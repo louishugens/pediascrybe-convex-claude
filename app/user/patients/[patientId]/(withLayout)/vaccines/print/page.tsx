@@ -3,7 +3,8 @@ import Print from "@/components/printVaccines";
 import { getDoctor, getPatient, getPatientVaccineRecords } from "@/data/queries";
 import { Patient, Doctor } from "@/db/schema";
 import { redirect } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, ViewTransition } from "react";
+import PrintVaccinesSkeleton from "@/components/skeletons/print-vaccines-skeleton";
 
 
 
@@ -32,9 +33,11 @@ const PrintPage = async (props: { params: Params }) => {
   // }
   return (
     <>
-      <Suspense fallback={<div>Loading...</div>}>
-        <PrintContainer params={props.params} />
-      </Suspense>
+      <ViewTransition>
+        <Suspense fallback={<PrintVaccinesSkeleton />}>
+          <PrintContainer params={props.params} />
+        </Suspense>
+      </ViewTransition>
     </>
   );
 };

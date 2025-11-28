@@ -1,18 +1,23 @@
 import Link from 'next/link'
 import AppointmentList from '@/components/appointmentList'
 import { cacheTag } from 'next/cache'
-import { Suspense } from 'react'
+import { Suspense, ViewTransition } from 'react'
 
-type Params = Promise<{ patientId: string }>  
+import PatientPageSkeleton from '@/components/skeletons/patient-page-skeleton'
 
-async function Patient({params}: { params: Params }) {
+type Params = Promise<{ patientId: string }>
+
+async function Patient({ params }: { params: Params }) {
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <PatientContainer params={params} />
-    </Suspense>
+    <ViewTransition>
+      <Suspense fallback={<PatientPageSkeleton />}>
+        <PatientContainer params={params} />
+      </Suspense>
+    </ViewTransition>
   )
 }
+
 
 export default Patient
 
@@ -32,9 +37,9 @@ async function PatientContainer({ params }: { params: Params }) {
         </div>
         <div className="flex flex-row w-full justify-between pt-4">
           <p className=' font-bold text-white'><span className=' text-primary'>Consultation list</span></p>
-          <Link 
-          className='self-end px-4 py-2 bg-blue-500 text-slate-100 rounded-full text-sm shadow' 
-          href={`/user/patients/${patientId}/add-appointment`}>Add Consultation</Link>
+          <Link
+            className='self-end px-4 py-2 bg-blue-500 text-slate-100 rounded-full text-sm shadow'
+            href={`/user/patients/${patientId}/add-appointment`}>Add Consultation</Link>
         </div>
         <table className="table-auto color-0 rounded-lg relative text-sm w-full mt-4 border-separate border-spacing-y-1.5">
           <thead className="rounded-t-lg  bg-blue-50">

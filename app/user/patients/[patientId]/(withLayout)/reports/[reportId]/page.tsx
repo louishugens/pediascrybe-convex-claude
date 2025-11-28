@@ -1,30 +1,31 @@
 import Print from "@/components/printReport";
+import ReportViewSkeleton from "@/components/skeletons/report-view-skeleton";
 import prisma from "@/utils/prisma";
 import { createClient } from '@/utils/supabase/server'
-import { Suspense } from "react";
+import { Suspense, ViewTransition } from "react";
 
 async function getPatient(patientId: string) {
   const patient = await prisma.patient.findUnique({
-    where:{
-      id:patientId
+    where: {
+      id: patientId
     },
   })
   return patient
 }
 
-async function getDoctor(doctorId:string) {
+async function getDoctor(doctorId: string) {
   const doctor = await prisma.doctor.findUnique({
-    where:{
-      id:doctorId
+    where: {
+      id: doctorId
     },
   })
   return doctor
 }
 
-async function getReport(id:string) {
+async function getReport(id: string) {
 
   const report = prisma.report.findUnique({
-    where:{
+    where: {
       id: id
     }
   })
@@ -35,15 +36,17 @@ type Params = Promise<{ patientId: string, reportId: string }>
 
 const ReportPage = async (props: { params: Params }) => {
 
-  return ( 
+  return (
     <>
-      <Suspense fallback={<div>Loading...</div>}>
-        <ReportContainer params={props.params} />
-      </Suspense>
+      <ViewTransition>
+        <Suspense fallback={<ReportViewSkeleton />}>
+          <ReportContainer params={props.params} />
+        </Suspense>
+      </ViewTransition>
     </>
-   );
+  );
 }
- 
+
 export default ReportPage;
 
 async function ReportContainer({ params }: { params: Params }) {

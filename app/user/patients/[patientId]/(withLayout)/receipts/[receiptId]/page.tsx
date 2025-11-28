@@ -1,31 +1,32 @@
 import Print from "@/components/printReceipt";
+import ReceiptViewSkeleton from "@/components/skeletons/receipt-view-skeleton";
 import prisma from "@/utils/prisma";
 import { createClient } from '@/utils/supabase/server'
 import { headers } from "next/headers";
-import { Suspense } from "react";
+import { Suspense, ViewTransition } from "react";
 
 async function getPatient(patientId: string) {
   const patient = await prisma.patient.findUnique({
-    where:{
-      id:patientId
+    where: {
+      id: patientId
     },
   })
   return patient
 }
 
-async function getDoctor(doctorId:string) {
+async function getDoctor(doctorId: string) {
   const doctor = await prisma.doctor.findUnique({
-    where:{
-      id:doctorId
+    where: {
+      id: doctorId
     },
   })
   return doctor
 }
 
-async function getReceipt(id:string) {
+async function getReceipt(id: string) {
 
   const receipt = prisma.receipt.findUnique({
-    where:{
+    where: {
       id: id
     }
   })
@@ -58,21 +59,23 @@ const ReceiptPage = async (props: { params: Params }) => {
   // const patient = await getPatient(patientId)
 
 
-  return ( 
+  return (
     <>
-      <Suspense fallback={<div>Loading...</div>}>
-        <ReceiptContainer params={props.params} />
-      </Suspense>
+      <ViewTransition>
+        <Suspense fallback={<ReceiptViewSkeleton />}>
+          <ReceiptContainer params={props.params} />
+        </Suspense>
+      </ViewTransition>
     </>
-   );
+  );
 }
- 
+
 export default ReceiptPage;
 
 
 async function ReceiptContainer({ params }: { params: Params }) {
 
-  
+
   const { patientId, receiptId } = await params;
 
   const supabase = await createClient()
