@@ -10,13 +10,6 @@ import { redirect } from 'next/navigation'
 import { Suspense, ViewTransition } from 'react'
 
 export default async function Page(props: { params: Promise<{ patientId: string, recordId: string }> }) {
-  const params = await props.params;
-
-  // const vaccinationRecord: VaccinationRecord & { vaccin: Vaccin, dose: Dose } | undefined = await getVaccinationRecord(params.recordId)
-
-  // if (!vaccinationRecord) {
-  //   redirect(('/user/patients/' + params.patientId + '/vaccines') as any)
-  // }
 
   return (
     <div className='h-full mb-8 mt-4'>

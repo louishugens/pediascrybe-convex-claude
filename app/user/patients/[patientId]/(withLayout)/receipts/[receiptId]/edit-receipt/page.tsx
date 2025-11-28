@@ -17,12 +17,6 @@ async function getReceipt(receiptId: string) {
 type Params = Promise<{ patientId: string, receiptId: string }>
 
 const EditReceiptPage = async (props: { params: Params }) => {
-  const params = await props.params;
-  // const {
-  //   patientId,
-  //   receiptId
-  // } = params;
-
 
   return (
     <ViewTransition>
