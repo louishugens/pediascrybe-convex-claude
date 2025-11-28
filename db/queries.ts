@@ -168,7 +168,7 @@ export const getDailyTransactions = cache(async (doctorId: string, date: Date) =
           date: apt.startDate,
           patientName: `${apt.Patient!.firstname} ${apt.Patient!.lastname}`,
           serviceName: apt.service.name,
-          price: apt.service.price,
+          price: apt.cost || 0,
           currency: apt.service.currency
         }
       } else {
