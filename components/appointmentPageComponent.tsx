@@ -100,7 +100,7 @@ const AppointmentPageComponent = ({appointment, patientId}: AppointmentPageCompo
           <p className="font-semibold">Service Type: <span className='font-normal'>{appointment.service.name}</span></p>
         )}
         {appointment.cost && (
-          <p className="font-semibold">Cost: <span className='font-normal'>{Intl.NumberFormat('en-US', { style: 'currency', currency: appointment.service?.currency }).format(appointment.cost)}</span></p>
+          <p className="font-semibold">Cost: <span className='font-normal'>{Intl.NumberFormat('en-US', { style: 'currency', currency: appointment.service?.currency || 'HTG' }).format(appointment.cost)}</span></p>
         )}
         <p className="font-semibold">Height: <span className='font-normal'>{appointment.height} cm</span></p>
         <p className="font-semibold">Weight: <span className='font-normal'>{appointment.weight} kg</span></p>
@@ -205,7 +205,6 @@ const AppointmentPageComponent = ({appointment, patientId}: AppointmentPageCompo
         </div>
       </div>
     </div>
-    <Toaster />
   </div>
   )
 }
