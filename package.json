@@ -63,7 +63,7 @@
     "langchain": "^0.0.139",
     "lucide-react": "^0.537.0",
     "motion": "^12.4.7",
-    "next": "^16.0.1",
+    "next": "^16.0.7",
     "next-themes": "^0.4.4",
     "openai": "^4.2.0",
     "peggy": "^3.0.2",

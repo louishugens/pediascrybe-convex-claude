@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   experimental: {
     browserDebugInfoInTerminal: true,
-    clientSegmentCache: true,
+    // clientSegmentCache: true, // this is a new experimental feature that is not yet supported by Next.js
   },
   reactCompiler: true,
   typedRoutes: true,
