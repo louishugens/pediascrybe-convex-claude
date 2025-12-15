@@ -53,24 +53,15 @@ const EditPatient = ({patient, doctorId}) => {
   // }).required();
 
   const schema = z.object({
-    firstname: z.string({ error: (issue) => issue.input === undefined ? 
-      "Please enter patient's first name" :
-      "Not a string" 
-      }),
-    lastname:  z.string({ error: (issue) => issue.input === undefined ? 
-      "Please enter patient's last name" :
-      "Not a string" 
-      }),
-    email: z.string()
-    .refine(value => value === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value), {
-      message: 'Please enter a valid email or leave it empty.',
-    }),
-    birthdate: z.date({error: (issue) => issue.input === undefined ? 
-      "Please enter patient's birth date" :
-      "Not a date" 
-      }),
+    firstname: z.string().min(1, { message: "Please enter patient's first name" }),
+    lastname: z.string().min(1, { message: "Please enter patient's last name" }),
+    email: z.union([
+      z.email({ message: 'Please enter a valid email address.' }),
+      z.literal('')
+    ]).optional(),
+    birthdate: z.date({ message: "Please enter patient's birth date" }),
     mothername: z.string().optional(),
-    sex: z.string(),
+    sex: z.string().min(1, { message: "Please select patient's sex" }),
     religion: z.string().optional(),
     phone: z.string().optional(),
     allergies: z.string().optional(),
@@ -99,7 +90,9 @@ const EditPatient = ({patient, doctorId}) => {
       bloodtype: patient.bloodtype || "",
       electrophoresis: patient.electrophoresis || "",
     },
-    resolver: zodResolver(schema)
+    resolver: zodResolver(schema),
+    mode: 'onBlur',
+    reValidateMode: 'onBlur'
   });
 
   console.log(patient)
@@ -125,8 +118,11 @@ const EditPatient = ({patient, doctorId}) => {
     }
     catch(err){
       console.log(err)
+      setLoading(false)
     }
-    // router.push(`/user/patients/${patient.id}`)
+    finally {
+      setLoading(false)
+    }
   }
 
 
@@ -197,7 +193,11 @@ const EditPatient = ({patient, doctorId}) => {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="jdoe@gmail.com" {...field} />
+                      <Input 
+                        placeholder="jdoe@gmail.com" 
+                        {...field} 
+                        value={field.value || ""}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
