@@ -21,7 +21,7 @@ export default function AddProfileDocument({patient}) {
       console.log('mypatient :>> ', mypatient);
 
       router.refresh()
-      router.push(`/user/patients/${patient.id}/`)
+      router.push(`/user/patients/${patient._id}/`)
 
     }
     catch(err){

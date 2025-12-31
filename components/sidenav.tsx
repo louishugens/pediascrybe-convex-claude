@@ -1,22 +1,18 @@
 'use client'
 import Link from 'next/link'
 import React from 'react'
-import { createClient } from '@/utils/supabase/client';
 import { useRouter, usePathname } from 'next/navigation';
 import { ArrowLeftOnRectangleIcon, ListBulletIcon, PencilIcon, UserGroupIcon, UserPlusIcon } from '@heroicons/react/24/outline';
-import { refresh } from '@/app/actions';
+import { authClient } from '@/lib/auth-client';
 
 const Sidenav = () => {
 
   const router = useRouter()
   const pathname = usePathname();
 
-  const handleLogout = async () =>{
-    const supabase = await createClient()
-    const {error} = await supabase.auth.signOut()
-    refresh(['/'])
-    router.refresh()
-    !error && router.push('/')
+  const handleLogout = async () => {
+    await authClient.signOut()
+    router.push('/')
   }
 
 

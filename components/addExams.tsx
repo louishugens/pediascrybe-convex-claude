@@ -188,7 +188,7 @@ const AddExams = ({patient, patientId, appointment}) => {
       const {exams } = values
       // console.log('exams :>> ', exams.length);
 
-      const body = {exams, appointmentId: appointment.id}
+      const body = {exams, appointmentId: appointment._id}
       const myuser = await fetch('/api/patients/addExams', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -196,9 +196,9 @@ const AddExams = ({patient, patientId, appointment}) => {
       })
       const newuser = await myuser.json()
 
-      refresh([`/user/patients/${patientId}/${appointment.id}`, `/user/patients/${appointment.patientId}/${appointment.id}/add-exams`])
+      refresh([`/user/patients/${patientId}/${appointment._id}`, `/user/patients/${appointment.patientId}/${appointment._id}/add-exams`])
 
-      router.push(`/user/patients/${patientId}/${appointment.id}`)
+      router.push(`/user/patients/${patientId}/${appointment._id}`)
 
     }
     catch(err){

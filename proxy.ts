@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { updateSession } from '@/utils/supabase/middleware'
+
 
 // Define paths that need authentication
 const protectedPaths = ['/user', '/api']
@@ -23,7 +23,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
-  return updateSession(request)
+
 }
 
 export const config = {

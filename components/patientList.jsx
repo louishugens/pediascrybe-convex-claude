@@ -1,53 +1,57 @@
+"use client"
+
 import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
-import { verifySession } from "@/data/queries"
-import { getPatientsWithSearch } from "@/data/queries"
-import { cacheTag } from "next/cache"
+import { usePreloadedAuthQuery } from "@convex-dev/better-auth/nextjs/client"
+import { api } from "@/convex/_generated/api"
 
-export default async function PatientList({searchParams}) {
-  const user = await verifySession()
-  return(
-    <PatientListContent searchParams={searchParams} doctorId={user.id} />
-  )
+// Client component that receives preloaded data
+export function PatientListClient({ preloadedPatients }) {
+  const patients = usePreloadedAuthQuery(preloadedPatients)
   
-}
-
-async function PatientListContent({searchParams, doctorId}) {
-  "use cache"
-  cacheTag('patients')
-  const params = await searchParams
-  const searchQuery = params?.search || ''
-  const patients = await getPatientsWithSearch(doctorId, searchQuery)
   return (
     <>
-      {
-        patients.length === 0 && (
-          <div className="flex flex-col items-start justify-center mt-4">
-            <p className="text-sm text-slate-500 italic">No patients found</p>
-          </div>
-        )
-      }
+      {patients.length === 0 && (
+        <div className="flex flex-col items-start justify-center mt-4">
+          <p className="text-sm text-slate-500 italic">No patients found</p>
+        </div>
+      )}
       <div className="grid gap-4 grid-cols-3 mt-4 pb-4">
-        {
-          patients.map((patient) => (
-            <div className="basis-1/3 h-auto  rounded-lg p-4 border border-slate-300 hover:border-green-400 hover:shadow-md" key={patient.id}>
-              <p className="text-base  font-semibold text-slate-900">{patient.firstname} {patient.lastname}</p>
-              <p className="text-sm font-light text-slate-900 mt-2 mb-4"><span className="font-medium"> 
-                {formatDistanceToNow(new Date(patient.birthdate))}</span> old
-              </p>
-              <div className="flex flex-row justify-between mt-6">
-                <Link href={`/user/patients/${patient.id}`} className="py-2 px-4 rounded-full bg-muted text-primary text-xs font-medium" >
-                  View
-                </Link>
-                <Link href={`/user/patients/${patient.id}/add-appointment`} className="py-2 px-4 rounded-full bg-primary text-xs text-white font-medium " >
-                  Add Consultation
-                </Link>
-              </div>
+        {patients.map((patient) => (
+          <div 
+            className="basis-1/3 h-auto rounded-lg p-4 border border-slate-300 hover:border-green-400 hover:shadow-md" 
+            key={patient._id}
+          >
+            <p className="text-base font-semibold text-slate-900">
+              {patient.firstname} {patient.lastname}
+            </p>
+            <p className="text-sm font-light text-slate-900 mt-2 mb-4">
+              <span className="font-medium">
+                {formatDistanceToNow(new Date(patient.birthdate))}
+              </span> old
+            </p>
+            <div className="flex flex-row justify-between mt-6">
+              <Link 
+                href={`/user/patients/${patient._id}`} 
+                className="py-2 px-4 rounded-full bg-muted text-primary text-xs font-medium"
+              >
+                View
+              </Link>
+              <Link 
+                href={`/user/patients/${patient._id}/add-appointment`} 
+                className="py-2 px-4 rounded-full bg-primary text-xs text-white font-medium"
+              >
+                Add Consultation
+              </Link>
             </div>
-          ))
-        }
+          </div>
+        ))}
       </div>
     </>
   )
+}
 
+// Keep this for backwards compatibility during migration
+export default function PatientList({ preloadedPatients }) {
+  return <PatientListClient preloadedPatients={preloadedPatients} />
 }

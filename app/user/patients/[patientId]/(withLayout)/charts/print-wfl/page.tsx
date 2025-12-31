@@ -1,143 +1,93 @@
 import Print from "@/components/printCharts";
-import prisma from "@/utils/prisma";
-import { createClient } from '@/utils/supabase/server'
-import { Patient, charts } from "@prisma/client";
-import { differenceInDays } from "date-fns";
-import { Suspense } from 'react';
-import { redirect } from "next/navigation";
+import { getCurrentDoctor } from "@/lib/convex-data";
+import { fetchAuthQuery } from "@/lib/auth-server";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 
-async function getAppointment(appointmentId) {
-  const appointment = await prisma.appointment.findUnique({
-    where:{
-      id:appointmentId
-    },
-  })
-  return appointment
-}
+type Params = Promise<{ patientId: string }>
 
-async function getPatient(patientId) {
-  const patient = await prisma.patient.findUnique({
-    where:{
-      id:patientId
-    },
-    include: {
-      appointments:{
-        orderBy:{
-          height: 'asc'
-        }
-      },
-    },
-  })
-  return patient
-}
+const PrintPage = async (props: { params: Params }) => {
+  const { patientId } = await props.params;
+  const doctor = await getCurrentDoctor();
 
-async function getDoctor(doctorId) {
-  const doctor = await prisma.doctor.findUnique({
-    where:{
-      id:doctorId
-    },
-  })
-  return doctor
-}
-
-async function getReferenceData(sex: Patient["sex"]){
-
-  const referenceData = await prisma.charts.findUnique({
-    where:{
-      id: (sex === 'female') ? 'gwfh' : 'bwfh'
-    }
-  })
-  return referenceData
-}
-
-async function PrintContent({ params }: { params: Promise<{ patientId: string }> }) {
-  const { patientId } = await params;
-  
-  // Access createClient inside Suspense boundary
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    // During prerendering, user will be null. Return early to prevent errors.
-    redirect('/')
+  if (!doctor) {
+    return <div>Doctor not found</div>;
   }
 
-  const doctorId = user.id
+  const patient = await fetchAuthQuery(api.patients.getPatientWithAppointments, {
+    patientId: patientId as Id<"patients">
+  });
 
-  const patient = await getPatient(patientId)
-  const doctor = await getDoctor(doctorId)
-  const appointments = patient?.appointments
-  const referenceData = await getReferenceData(patient?.sex ?? null);
+  if (!patient) {
+    return <div>Patient not found</div>;
+  }
 
-  let formatted: { length: number; value: number; }[] = []
+  const appointments = patient.appointments;
+  const referenceData = await fetchAuthQuery(api.charts.getChartReference, {
+    chartId: patient.sex === 'female' ? 'gwfl' : 'bwfl'
+  });
 
-  appointments?.map(appointment =>{
-    if(appointment.weight && appointment.height){
-      let app = {length: appointment.height, value: appointment.weight}
-      if(differenceInDays(appointment.startDate, patient?.birthdate ?? new Date()) > 365*2){
-        formatted.push(app)
+  let formatted: { age: number; value: number }[] = [];
+
+  appointments?.map((appointment: any) => {
+    if (appointment.weight && appointment.height) {
+      if (appointment.height >= 65 && appointment.height <= 120) {
+        let app = { 
+          age: Math.round(appointment.height * 10) / 10, 
+          value: appointment.weight 
+        };
+        formatted.push(app);
       }
     }
-  })
+  });
 
-  const formatReferenceData = (data: charts, formatted: { length: number; value: number; }[]) => {
-    const format: { 
-      length: number | undefined; 
-      '3rd': number | undefined; 
-      '15th': number | undefined; 
-      '50th': number | undefined; 
-      '85th': number | undefined; 
-      '97th': number | undefined; 
-      [key: string]: number | undefined
-    }[] = [];
+  const formatReferenceData = (data: any, formatted: { age: number; value: number }[]) => {
+    const format: any[] = [];
 
     const maxLength = Math.max(
-      (data.p03 as number[])?.length || 0,
-      (data.p15 as number[])?.length || 0,
-      (data.p50 as number[])?.length || 0,
-      (data.p85 as number[])?.length || 0,
-      (data.p97 as number[])?.length || 0
+      (data?.p03 as number[])?.length || 0,
+      (data?.p15 as number[])?.length || 0,
+      (data?.p50 as number[])?.length || 0,
+      (data?.p85 as number[])?.length || 0,
+      (data?.p97 as number[])?.length || 0
     );
 
-    // Start at 45 cm and increment by 0.1 cm
-    for (let i = 0; i < maxLength; i++) {
-      const lengthValue = 65 + (i * 0.1);
-      const patientDataForDay = formatted.find(item => Math.abs(item.length - lengthValue) < 0.05);
+    for (let index = 0; index < maxLength; index++) {
+      const height = 65 + index * 0.5;
+      const patientDataForHeight = formatted.find(item => Math.abs(item.age - height) < 0.5);
 
-      format.push({ 
-        length: lengthValue, 
-        '3rd': data.p03?.[i] ?? null, 
-        '15th': data.p15?.[i] ?? null, 
-        '50th': data.p50?.[i] ?? null, 
-        '85th': data.p85?.[i] ?? null, 
-        '97th': data.p97?.[i] ?? null,
-        [patient?.firstname ?? 'patient']: patientDataForDay?.value ?? null
+      format.push({
+        age: height,
+        '3rd': data?.p03?.[index] ?? null,
+        '15th': data?.p15?.[index] ?? null,
+        '50th': data?.p50?.[index] ?? null,
+        '85th': data?.p85?.[index] ?? null,
+        '97th': data?.p97?.[index] ?? null,
+        [patient.firstname ?? 'patient']: patientDataForHeight?.value ?? null
       });
     }
 
     return format;
   };
 
-  const data = referenceData ? formatReferenceData(referenceData, formatted) : [];
+  const data = referenceData ? formatReferenceData(referenceData, formatted) : null;
 
   return (
-    <Print type="wfl" title="Weight for Lenght" ylabel="Weight (in kg)" xlabel="Height (in cm)" patient={patient} doctor={doctor} data={data} yUnit="kg" xUnit="cm" mesure="length" />
-  );
-}
-
-type Params = Promise<{ patientId: string }>
-
-const PrintPage = async (props: { params: Params }) => {
-  return (
-    <Suspense fallback={<div>Loading chart data...</div>}>
-      <PrintContent params={props.params} />
-    </Suspense>
+    <>
+      <Print 
+        type="wfl" 
+        title="Weight for Length (65-120 cm)" 
+        ylabel="Weight (in kg)" 
+        xlabel="Length (in cm)" 
+        patient={patient} 
+        doctor={doctor} 
+        data={data} 
+        yUnit={'kg'} 
+        xUnit={'cm'} 
+        mesure={'length'} 
+      />
+    </>
   );
 };
 
 export default PrintPage;
-
-

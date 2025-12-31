@@ -1,36 +1,15 @@
 import Print from "@/components/printVaccines";
-
-import { getDoctor, getPatient, getPatientVaccineRecords } from "@/data/queries";
-import { Patient, Doctor } from "@/db/schema";
 import { redirect } from "next/navigation";
 import { Suspense, ViewTransition } from "react";
 import PrintVaccinesSkeleton from "@/components/skeletons/print-vaccines-skeleton";
-
-
-
-
+import { fetchAuthQuery } from "@/lib/auth-server";
+import { api } from "@/convex/_generated/api";
+import { getCurrentDoctor } from "@/lib/convex-data";
+import { Id } from "@/convex/_generated/dataModel";
 
 type Params = Promise<{ patientId: string, appointmentId: string }>
 
 const PrintPage = async (props: { params: Params }) => {
-  // const params = await props.params;
-
-  // const {
-  //   patientId,
-  //   appointmentId
-  // } = params;
-
-
-  // const patient: Patient | null = await getPatient(patientId)
-  // const doctor: Doctor | null = await getDoctor()
-  // const vaccineRecords = await getPatientVaccineRecords(patientId)
-
-  // if (!patient) {
-  //   redirect('/user/patients')
-  // }
-  // if (!doctor) {
-  //   redirect('/')
-  // }
   return (
     <>
       <ViewTransition>
@@ -44,19 +23,25 @@ const PrintPage = async (props: { params: Params }) => {
 
 export default PrintPage;
 
-
-
 async function PrintContainer(props: { params: Promise<{ patientId: string, appointmentId: string }> }) {
   const params = await props.params;
-  const patient = await getPatient(params.patientId)
-  const doctor = await getDoctor()
-  const vaccineRecords = await getPatientVaccineRecords(params.patientId)
-  if (!patient) {
-    redirect('/user/patients')
-  }
+  const doctor = await getCurrentDoctor();
+  
   if (!doctor) {
-    redirect('/')
+    redirect('/');
   }
+
+  const patient = await fetchAuthQuery(api.patients.getPatient, { 
+    patientId: params.patientId as Id<"patients"> 
+  });
+  
+  if (!patient) {
+    redirect('/user/patients');
+  }
+
+  const vaccineRecords = await fetchAuthQuery(api.vaccines.getPatientVaccineRecords, { 
+    patientId: params.patientId as Id<"patients"> 
+  });
 
   return <Print patient={patient} doctor={doctor} vaccines={vaccineRecords} data-superjson />
 }

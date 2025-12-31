@@ -1,11 +1,10 @@
-import { getPatient } from '@/data/queries';
 import Link from 'next/link';
 import { formatDistanceToNow, format } from 'date-fns';
 import { cacheTag } from 'next/cache';
 import DeletePatientButton from './deletePatientButton';
-
-
-
+import { fetchAuthQuery } from '@/lib/auth-server';
+import { api } from '@/convex/_generated/api';
+import { Id } from '@/convex/_generated/dataModel';
 
 export default async function DemographicData({ params }: { params: Promise<{ patientId: string }> }) {
   "use cache"
@@ -13,7 +12,10 @@ export default async function DemographicData({ params }: { params: Promise<{ pa
   const { patientId } = await params;
   cacheTag(`patient-profile-${patientId}`)
 
-  const patient = await getPatient(patientId);
+  const patient = await fetchAuthQuery(api.patients.getPatient, { 
+    patientId: patientId as Id<"patients"> 
+  });
+  
   return (
     <div className="w-full h-auto shadow-md rounded-lg p-4 bg-slate-50 ">
       <div className="flex flex-row w-full justify-between">
@@ -31,7 +33,7 @@ export default async function DemographicData({ params }: { params: Promise<{ pa
           >
             Edit Patient
           </Link>
-          <DeletePatientButton patientId={patientId} />
+          <DeletePatientButton patientId={patientId as Id<"patients">} />
         </div>
       </div>
       <div className="grid grid-cols-3 gap-4 mt-4">

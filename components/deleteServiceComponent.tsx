@@ -10,8 +10,9 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip"
 import { toast } from 'sonner'
+import { Id } from '@/convex/_generated/dataModel'
 
-export function DeleteServiceComponent({ serviceId }: { serviceId: string }) {
+export function DeleteServiceComponent({ serviceId }: { serviceId: Id<"services"> }) {
   const [isDeleting, setIsDeleting] = useState(false)
 
   async function handleDelete() {

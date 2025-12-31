@@ -1,9 +1,25 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { VaccinationRecord, Dose, Vaccin } from "@prisma/client"
 import { numberToOrdinal } from "@/lib/utils";
-type VaccineRecordWithDetails = VaccinationRecord & {
-  vaccin: Vaccin;
-  dose: Dose;
+
+interface VaccineRecordWithDetails {
+  _id: string;
+  date: number;
+  notes?: string | null;
+  manufacturer: string;
+  lotNumber: string;
+  expiration: number;
+  dosage: string;
+  route: string;
+  site: string;
+  vaccin: {
+    _id: string;
+    name: string;
+  } | null;
+  dose: {
+    _id: string;
+    doseCount?: number | null;
+    doseType: string;
+  } | null;
 }
 
 interface VaccineRecordsPrintProps {
@@ -14,8 +30,6 @@ export function VaccineRecordsPrint({ records }: VaccineRecordsPrintProps) {
   if (records.length === 0) {
     return null
   }
-
-
 
   return (
     <Table className="text-[10px]">
@@ -35,15 +49,15 @@ export function VaccineRecordsPrint({ records }: VaccineRecordsPrintProps) {
       </TableHeader>
       <TableBody>
         {records.map((record) => (
-          <TableRow key={record.id}>
-            <TableCell>{record.vaccin.name}</TableCell>
+          <TableRow key={record._id}>
+            <TableCell>{record.vaccin?.name || 'N/A'}</TableCell>
             <TableCell>{record.manufacturer}</TableCell>
             <TableCell>{record.lotNumber}</TableCell>
-            <TableCell>{record.date.toLocaleDateString()}</TableCell>
-            <TableCell>{record.expiration.toLocaleDateString()}</TableCell>
+            <TableCell>{new Date(record.date).toLocaleDateString()}</TableCell>
+            <TableCell>{new Date(record.expiration).toLocaleDateString()}</TableCell>
             <TableCell>{record.dosage}</TableCell>
-            <TableCell>{record.dose.doseType.charAt(0).toUpperCase() + record.dose.doseType.slice(1)}</TableCell>
-            <TableCell>{record.dose.doseCount ? numberToOrdinal(record.dose.doseCount) : ''}</TableCell>
+            <TableCell>{record.dose?.doseType ? record.dose.doseType.charAt(0).toUpperCase() + record.dose.doseType.slice(1) : 'N/A'}</TableCell>
+            <TableCell>{record.dose?.doseCount ? numberToOrdinal(record.dose.doseCount) : ''}</TableCell>
             <TableCell>{record.route}</TableCell>
             <TableCell>{record.site}</TableCell>
           </TableRow>

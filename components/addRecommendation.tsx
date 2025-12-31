@@ -123,7 +123,7 @@ const AddRecommendation = ({patient, patientId, appointment}) => {
     try{
       const {recommendation } = values
 
-      const body = {recommendation, appointmentId: appointment.id}
+      const body = {recommendation, appointmentId: appointment._id}
       const myuser = await fetch('/api/patients/addRecommendation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -132,10 +132,10 @@ const AddRecommendation = ({patient, patientId, appointment}) => {
       const newuser = await myuser.json()
 
   
-      refresh([`/user/patients/${appointment.patientId}/${appointment.id}`, `/user/patients/${appointment.patientId}/${appointment.id}/add-recommendation`])
+      refresh([`/user/patients/${appointment.patientId}/${appointment._id}`, `/user/patients/${appointment.patientId}/${appointment._id}/add-recommendation`])
 
       
-      router.push(`/user/patients/${patientId}/${appointment.id}`)
+      router.push(`/user/patients/${patientId}/${appointment._id}`)
 
     }
     catch(err){

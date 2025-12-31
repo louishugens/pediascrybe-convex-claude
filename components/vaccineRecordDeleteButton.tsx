@@ -5,8 +5,9 @@ import { deleteVaccinationRecord } from "@/app/actions";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { Id } from "@/convex/_generated/dataModel";
 
-export default function VaccineRecordDeleteButton({ recordId, patientId }: { recordId: string, patientId: string }) {
+export default function VaccineRecordDeleteButton({ recordId, patientId }: { recordId: Id<"vaccinationRecords">, patientId: Id<"patients"> }) {
   const [isDeleting, setIsDeleting] = useState(false)
   const router = useRouter()
 

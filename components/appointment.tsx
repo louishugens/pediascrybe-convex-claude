@@ -10,15 +10,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from './ui/button'
 import { toast } from 'sonner'
 import { deleteAppointment } from '@/app/actions'
-import { AppointmentSelect } from '@/db/schema'
+import { Id } from '@/convex/_generated/dataModel'
 
+interface Appointment {
+  _id: Id<"appointments">;
+  startDate: number;
+  height?: number | null;
+  weight?: number | null;
+  head?: number | null;
+}
 
-const AppointmentComponent = ({appointment, patientId}: {appointment: AppointmentSelect, patientId: string}) => {
+const AppointmentComponent = ({appointment, patientId}: {appointment: Appointment, patientId: string}) => {
   const [loading, setLoading] = useState(false)
   let [color, setColor] = useState("#22C55E")
 
   return (
-    <tr key={appointment.id} className="border-b text-sm font-light w-full bg-slate-50 shadow pt-12 rounded-full border-none border-spacing-x-2">
+    <tr key={appointment._id} className="border-b text-sm font-light w-full bg-slate-50 shadow pt-12 rounded-full border-none border-spacing-x-2">
       <td className="px-4 py-2 rounded-l-full mt-2">{format(appointment.startDate, 'yyy-MM-dd hh:mm:ss')}</td>
       <td className="px-4 py-2">{appointment.height} cm</td>
       <td className="px-4 py-2">{appointment.weight} kg</td>
@@ -35,13 +42,13 @@ const AppointmentComponent = ({appointment, patientId}: {appointment: Appointmen
           />
           :
           <div className="flex flex-row justify-start">
-            <Link href={`/user/patients/${patientId}/${appointment.id}`} className="mr-2">
+            <Link href={`/user/patients/${patientId}/${appointment._id}`} className="mr-2">
               <EyeIcon className="h-4 w-4" />
             </Link>
-            <Link href={`/user/patients/${patientId}/${appointment.id}/edit-appointment`} className="mr-2">
+            <Link href={`/user/patients/${patientId}/${appointment._id}/edit-appointment`} className="mr-2">
               <PencilIcon className="h-4 w-4" />
             </Link>
-            <DeleteAppointmentDialog appointmentId={appointment.id} patientId={patientId} />
+            <DeleteAppointmentDialog appointmentId={appointment._id} patientId={patientId as Id<"patients">} />
           </div>
         }
       </td>
@@ -52,7 +59,7 @@ const AppointmentComponent = ({appointment, patientId}: {appointment: Appointmen
 export default AppointmentComponent
 
 
-function DeleteAppointmentDialog({ appointmentId, patientId }: { appointmentId: string, patientId: string }) {
+function DeleteAppointmentDialog({ appointmentId, patientId }: { appointmentId: Id<"appointments">, patientId: Id<"patients"> }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
@@ -86,8 +93,6 @@ function DeleteAppointmentDialog({ appointmentId, patientId }: { appointmentId: 
             if (res.success) {
               toast.success('Appointment deleted successfully')
               setOpen(false)
-              // router.refresh()
-              // router.push(`/user/patients/${patientId}`)
             } else {
               toast.error(res.error)
               setLoading(false)

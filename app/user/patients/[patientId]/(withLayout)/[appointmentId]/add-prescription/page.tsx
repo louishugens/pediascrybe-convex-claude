@@ -1,23 +1,13 @@
-import { db } from '@/db';
 import AddPrescriptions from '@/components/addPrescriptions';
-import { getPatient } from '@/db/queries';
-import { eq } from 'drizzle-orm';
-import { Appointment } from '@/db/schema';
 import { Suspense, ViewTransition } from 'react';
 import GenericFormSkeleton from '@/components/skeletons/generic-form-skeleton';
-
-
-async function getAppointment(appointmentId: string) {
-  const appointment = await db.query.Appointment.findFirst({
-    where: eq(Appointment.id, appointmentId),
-  })
-  return appointment
-}
+import { fetchAuthQuery } from '@/lib/auth-server';
+import { api } from '@/convex/_generated/api';
+import { Id } from '@/convex/_generated/dataModel';
 
 type Params = Promise<{ patientId: string, appointmentId: string }>
 
 const AddPrescriptionsPage = async (props: { params: Params }) => {
-
   return (
     <ViewTransition>
       <Suspense fallback={<GenericFormSkeleton />}>
@@ -27,7 +17,6 @@ const AddPrescriptionsPage = async (props: { params: Params }) => {
   )
 }
 
-
 export default AddPrescriptionsPage
 
 async function AddPrescriptionsContainer({ params }: { params: Params }) {
@@ -35,8 +24,13 @@ async function AddPrescriptionsContainer({ params }: { params: Params }) {
 
   const { patientId, appointmentId } = await params;
 
-  const appointment = await getAppointment(appointmentId)
-  const patient = await getPatient(patientId)
+  const appointment = await fetchAuthQuery(api.appointments.getAppointment, { 
+    appointmentId: appointmentId as Id<"appointments"> 
+  });
+  const patient = await fetchAuthQuery(api.patients.getPatient, { 
+    patientId: patientId as Id<"patients"> 
+  });
+  
   if (!appointment || !patient) {
     return <div>Appointment or patient not found.</div>
   }

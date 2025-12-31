@@ -4,43 +4,19 @@ import Doctor from '@/components/doctor'
 import { useForm } from 'react-hook-form';
 import * as yup from "yup";
 import { yupResolver } from '@hookform/resolvers/yup';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/utils/supabase/client';
-import { useState, useEffect } from "react";
-import BeatLoader  from 'react-spinners/BeatLoader';
+import { useState } from "react";
+import BeatLoader from 'react-spinners/BeatLoader';
+import { authClient } from '@/lib/auth-client';
+import { toast, Toaster } from 'sonner';
 
-
-
-export default function Home() {
-  const supabase = createClient()
-
-  let [loading, setLoading] = useState(false);
-  let [color, setColor] = useState("#ffffff");
-  const [reset, setReset] = useState(false)
-
-  const router = useRouter()
+export default function ResetPage() {
+  const [loading, setLoading] = useState(false);
+  const [color] = useState("#ffffff");
+  const [emailSent, setEmailSent] = useState(false)
 
   const schema = yup.object({
     email: yup.string().email('Invalid email').required('Please enter your email'),
-    // password: yup.string().required('Please enter your password'),
   }).required();
-
-  useEffect(() => {
-    supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event == "PASSWORD_RECOVERY") {
-        // setReset
-        
-        const newPassword = prompt("What would you like your new password to be?");
-        const { data, error } = await supabase.auth
-          .updateUser({ password: newPassword })
- 
-        if (data) alert("Password updated successfully!")
-        console.log('data :>> ', data);
-        if (error) alert("There was an error updating your password.")
-        console.log('error :>> ', error);
-      }
-    })
-  }, [])
 
   const {
     register,
@@ -49,32 +25,27 @@ export default function Home() {
   } = useForm({
     resolver: yupResolver(schema)
   });
-  const onSubmit = data => handleReset(data);
-  const base_url = process.env.NEXT_PUBLIC_BASEURL
-
-  console.log('base_url :>> ', base_url);
-
-  const handleReset = async values =>{
-    setLoading(true)
-    const { data, error } = await supabase.auth.resetPasswordForEmail(values.email, {
-      redirectTo: `${base_url}/reset/password`,
-    })
   
-    if(data){
-      setReset(true)
-      setLoading(false)
-    }
-  }
+  const onSubmit = data => handleReset(data);
 
-  // const authenticateUser = async values => {
-  //   setLoading(true)
-  //   const { data:{user}, error } = await supabase.auth.signInWithPassword({
-  //     email: values.email,
-  //     password: values.password,
-  //   })
-  //   user && router.push(`/user_only/${user.id}/dashboard`)
-  //   error && console.log('error', error)
-  // }
+  const handleReset = async (values) => {
+    setLoading(true)
+    
+    const { error } = await authClient.forgetPassword({
+      email: values.email,
+      redirectTo: `${window.location.origin}/reset/password`,
+    })
+
+    if (error) {
+      toast.error(error.message || 'Failed to send reset email')
+      setLoading(false)
+      return
+    }
+
+    setEmailSent(true)
+    setLoading(false)
+    toast.success('Reset email sent! Please check your inbox.')
+  }
 
   return (
     <div className="pt-12 pb-2 px-8 md:px-16">
@@ -85,42 +56,48 @@ export default function Home() {
           <form className='flex flex-col mt-16 text-sm' onSubmit={handleSubmit(onSubmit)}>
             <p className='mb-8'>To reset your password please confirm your email first</p>
             {
-              reset
+              emailSent
               ?
-                <p>Email sent, please check</p>
+                <div className="text-center">
+                  <p className="text-green-600 font-medium">Email sent! Please check your inbox.</p>
+                  <p className="text-sm text-gray-600 mt-2">Click the link in the email to reset your password.</p>
+                </div>
               :
                 <label className="flex flex-col mb-4 h-16">
                   <span className='font-medium'>Email</span>
-                  <input placeholder='johndoe@example.com' className='placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4' type='email' {...register('email')}/>
+                  <input 
+                    placeholder='johndoe@example.com' 
+                    className='placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4' 
+                    type='email' 
+                    {...register('email')}
+                  />
                   <p className='px-4 pt-1 text-sm text-red-600'>{errors.email?.message}</p>
                 </label>
             }
-            {/* <label className="flex flex-col mb-4">
-              <span className='font-medium'>Password</span>
-              <input placeholder='your password' className='placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4' type='password' {...register('password')}/>
-              <p className='px-4 pt-1 text-sm text-red-600'>{errors.password?.message}</p>
-            </label> */}
-            <button className='py-2 px-4 rounded-full bg-primary text-lg font-semibold w-1/2 center mt-4 mx-auto' type='submit'>
-              {
-                loading
-                ?
-                <BeatLoader
-                  color={color}
-                  size={10}
-                  aria-label="Loading Spinner"
-                  data-testid="loader"
-                />
-                :
-                  "Submit"}
-            </button>
-            <p className='text-sm mt-4 mx-auto text-slate-900'>You remember your password? <Link href={'#'} className="text-primary font-medium" >Log in here!</Link></p>
+            {!emailSent && (
+              <button className='py-2 px-4 rounded-full bg-primary text-lg font-semibold w-1/2 center mt-4 mx-auto' type='submit'>
+                {
+                  loading
+                  ?
+                  <BeatLoader
+                    color={color}
+                    size={10}
+                    aria-label="Loading Spinner"
+                    data-testid="loader"
+                  />
+                  :
+                    "Submit"
+                }
+              </button>
+            )}
+            <p className='text-sm mt-4 mx-auto text-slate-900'>You remember your password? <Link href='/' className="text-primary font-medium">Log in here!</Link></p>
           </form>
-          
         </div>
         <div className="basis-1/2">
           <Doctor />
         </div>
       </div>
+      <Toaster position="top-center" richColors={true} />
     </div>
   )
 }

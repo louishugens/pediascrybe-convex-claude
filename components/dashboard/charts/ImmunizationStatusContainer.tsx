@@ -1,13 +1,13 @@
-import { verifySession } from '@/data/queries'
 import { ImmunizationStatusChart } from '@/components/dashboard/charts/ImmunizationStatusChart'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
 import { Suspense } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
-import { getPatientsWithVaccinationRecords } from '@/data/queries'
 import { ViewTransition } from 'react'
+import { getCurrentDoctor } from '@/lib/convex-data'
+import { fetchAuthQuery } from '@/lib/auth-server'
+import { api } from '@/convex/_generated/api'
 
 export default async function ImmunizationStatusContainer() {
-
   return (
     <ViewTransition>
       <Suspense fallback={<ImmunizationStatusSkeleton />}>
@@ -18,11 +18,13 @@ export default async function ImmunizationStatusContainer() {
 }
 
 async function ImmunizationStatusContent() {
-  const user = await verifySession()
-  if (!user) {
+  const doctor = await getCurrentDoctor()
+  if (!doctor) {
     return null
   }
-  const patients = await getPatientsWithVaccinationRecords(user.id)
+  const patients = await fetchAuthQuery(api.patients.getPatientsWithVaccinationRecords, { 
+    doctorId: doctor._id 
+  })
 
   return (
     <Card className="glass card-hover">
@@ -63,4 +65,3 @@ function ImmunizationStatusSkeleton() {
     </Card>
   )
 }
-

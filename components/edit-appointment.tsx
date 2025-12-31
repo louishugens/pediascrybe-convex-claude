@@ -9,16 +9,22 @@ import BeatLoader from "react-spinners/BeatLoader"
 import PulseLoader from "react-spinners/PulseLoader"
 import { refresh } from "@/app/actions"
 import { useCompletion } from '@ai-sdk/react'
-import { PatientSelect, AppointmentSelect } from "@/db/schema"
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Service } from "@/db/schema"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { Id } from "@/convex/_generated/dataModel"
+
+interface Service {
+  _id: Id<"services">;
+  name: string;
+  price: number;
+  currency: string;
+}
 
 
 
@@ -49,9 +55,9 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>
 
 interface EditAppointmentProps {
-  appointment: AppointmentSelect
+  appointment: any
   patientId: string
-  patient: PatientSelect & { appointments: AppointmentSelect[] }
+  patient: any
   services: Service[]
 }
 
@@ -68,7 +74,7 @@ const EditAppointment = ({ appointment, patientId, patient, services }: EditAppo
   });
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as any,
     defaultValues: {
       height: appointment.height || undefined,
       weight: appointment.weight || undefined,
@@ -114,7 +120,7 @@ const EditAppointment = ({ appointment, patientId, patient, services }: EditAppo
     return () => clearTimeout(timeoutId)
   }, [symptoms])
 
-  const fetchDiagnosticSuggestions = async (patient: PatientSelect, appointment: Partial<AppointmentSelect>) => {
+  const fetchDiagnosticSuggestions = async (patient: any, appointment: any) => {
     if (symptoms) {
       setGenerating(true)
 
@@ -142,7 +148,7 @@ const EditAppointment = ({ appointment, patientId, patient, services }: EditAppo
     try {
       const body = {
         ...values,
-        appointmentId: appointment.id,
+        appointmentId: appointment._id,
       }
 
       await fetch("/api/patients/updateAppointment", {
@@ -153,11 +159,11 @@ const EditAppointment = ({ appointment, patientId, patient, services }: EditAppo
 
       refresh([
         `/user/patients/${appointment.patientId}/`,
-        `/user/patients/${appointment.patientId}/${appointment.id}`,
-        `/user/patients/${appointment.patientId}/${appointment.id}/edit-appointment`,
+        `/user/patients/${appointment.patientId}/${appointment._id}`,
+        `/user/patients/${appointment.patientId}/${appointment._id}/edit-appointment`,
       ])
 
-      router.push(`/user/patients/${patientId}/${appointment.id}`)
+      router.push(`/user/patients/${patientId}/${appointment._id}`)
     } catch (err) {
       console.log(err)
     } finally {
@@ -192,7 +198,7 @@ const EditAppointment = ({ appointment, patientId, patient, services }: EditAppo
                       <Select
                         onValueChange={(value) => {
                           field.onChange(value);
-                          const selectedService = services.find((s) => s.id === value);
+                          const selectedService = services.find((s) => s._id === value);
                           if (selectedService) {
                             form.setValue("cost", selectedService.price);
                           }
@@ -206,7 +212,7 @@ const EditAppointment = ({ appointment, patientId, patient, services }: EditAppo
                         </FormControl>
                         <SelectContent>
                           {services.map((service) => (
-                            <SelectItem key={service.id} value={service.id}>
+                            <SelectItem key={service._id} value={service._id}>
                               {service.name} - {service.price} {service.currency}
                             </SelectItem>
                           ))}

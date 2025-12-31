@@ -1,5 +1,5 @@
-import { verifySession } from '@/data/queries'
-import { getTodayPatients } from '@/db/queries'
+import { fetchAuthQuery } from '@/lib/auth-server'
+import { api } from '@/convex/_generated/api'
 import { Card, CardContent, CardTitle, CardHeader, CardFooter } from '@/components/ui/card'
 import { Users } from 'lucide-react'
 import { Suspense } from 'react'
@@ -30,11 +30,11 @@ export default async function TodayPatientsStat() {
 }
 
 async function TodayPatientsStatContent() {
-  const user = await verifySession()
-  if (!user) {
+  const doctor = await fetchAuthQuery(api.doctors.getCurrent)
+  if (!doctor) {
     return null
   }
-  const count = await getTodayPatients(user.id)
+  const count = await fetchAuthQuery(api.appointments.getTodayPatientCount, { doctorId: doctor._id })
   return count
 }
 

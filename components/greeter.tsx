@@ -1,5 +1,6 @@
-import { verifySession, getDoctorById} from '@/data/queries';
-import {Suspense} from 'react';
+import { fetchAuthQuery } from '@/lib/auth-server';
+import { api } from '@/convex/_generated/api';
+import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ViewTransition } from 'react';
 
@@ -19,12 +20,7 @@ export default async function Greeter() {
 }
 
 async function GreeterContent() {
-  const user = await verifySession();
-  if (!user) {
-    return null;
-  }
-
-  const doctor = await getDoctorById(user.id);
+  const doctor = await fetchAuthQuery(api.doctors.getCurrent);
   
   if (!doctor) {
     return null;

@@ -45,56 +45,30 @@ export default function CreateReceiptForm({ patientId }: { patientId: string }) 
   const options = useMemo(() => countryList().getData(), [])
 
   const schema = z.object({
-    currency: z.string({
-      error: (issue) => issue.input === undefined ?
-        "Please select the currency" :
-        "Not a string"
-    }),
-    date: z.date({
-      error: (issue) => issue.input === undefined ?
-        "Please enter patient's birth date" :
-        "Not a date"
-    }),
+    currency: z.string().min(1, "Please select the currency"),
+    date: z.date({ message: "Please select a date" }),
     services: z
       .array(
         z.object({
-          service: z.string({
-            error: (issue) => issue.input === undefined ?
-              "Please select the currency" :
-              "Not a string"
-          }),
-          price: z.coerce.number({
-            error: (issue) => issue.input === undefined ?
-              "Please enter the cost for the service" :
-              "Not a number"
-          }),
+          service: z.string().min(1, "Please enter the service name"),
+          price: z.number().min(0, "Please enter a valid price"),
         })
       )
-      .min(1, {
-        message: "Please add at least one service",
-      }),
+      .min(1, "Please add at least one service"),
   })
 
-
+  type FormValues = z.infer<typeof schema>
 
   let [color, setColor] = useState("#ffffff")
   let [loading, setLoading] = useState(false)
 
-
-
-  type FormValues = z.infer<typeof schema>
-
   const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as any,
   })
-
-  type Doctor = {
-    id: string
-  }
 
   console.log('serviceerror :>> ', form.formState.errors.services?.message);
 
-  const doctor: Doctor | null = useDoctor()
+  const doctor = useDoctor()
   const router = useRouter()
 
 

@@ -6,14 +6,15 @@ import { toast } from 'sonner'
 import { Button } from '../ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger, DialogClose } from '../ui/dialog'
 import { useRouter } from 'next/navigation'
+import { Id } from '@/convex/_generated/dataModel'
 
-export default function DeletePatientButton({ patientId }: { patientId: string }) {
+export default function DeletePatientButton({ patientId }: { patientId: Id<"patients"> }) {
   return (
     <DeletePatientDialog patientId={patientId} />
   )
 }
 
-function DeletePatientDialog({ patientId }: { patientId: string }) {
+function DeletePatientDialog({ patientId }: { patientId: Id<"patients"> }) {
   const router = useRouter()
   const [isDeleting, setIsDeleting] = useState(false)
   const [open, setOpen] = useState(false)
@@ -45,13 +46,13 @@ function DeletePatientDialog({ patientId }: { patientId: string }) {
             setIsDeleting(true)
             const res = await deletePatient(patientId)
 
-            if (res.success) {
+            if (res?.success) {
               setOpen(false)
-              toast.success(res.message)
+              toast.success('Patient deleted successfully')
               router.refresh()
               router.push('/user/patients')
             } else {
-              toast.error(res.error)
+              toast.error(res?.error || 'Failed to delete patient')
               setIsDeleting(false)
             }
           }} disabled={isDeleting}>

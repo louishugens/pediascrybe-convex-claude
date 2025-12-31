@@ -1,13 +1,13 @@
-import { verifySession, getRecentPatients } from '@/data/queries'
 import { Card, CardContent, CardTitle, CardHeader, CardFooter } from '@/components/ui/card'
 import { Users } from 'lucide-react'
 import { Suspense } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ViewTransition } from 'react'
-
+import { getCurrentDoctor } from '@/lib/convex-data'
+import { fetchAuthQuery } from '@/lib/auth-server'
+import { api } from '@/convex/_generated/api'
 
 export default async function RecentPatientStat() {
-
   return (
     <Card className="glass card-hover">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -31,11 +31,12 @@ export default async function RecentPatientStat() {
 }
 
 async function RecentPatientStatContent() {
-  const user = await verifySession()
-  if (!user) {
+  const doctor = await getCurrentDoctor()
+  if (!doctor) {
     return null
   }
-  const patients = await getRecentPatients(user.id)
-  return patients.length
+  const patients = await fetchAuthQuery(api.patients.getRecentPatients, { 
+    doctorId: doctor._id 
+  })
+  return patients?.length ?? 0
 }
-

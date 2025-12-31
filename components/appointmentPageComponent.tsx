@@ -10,13 +10,48 @@ import Image from "next/image";
 import { X } from "lucide-react";
 import toast, {Toaster} from "react-hot-toast";
 import UploadedFile from "./uploadedFile";
-import { AppointmentSelect, File, Service } from "@/db/schema";
+import { Id } from "@/convex/_generated/dataModel";
+
+interface UploadedFile {
+  _id: Id<"files">;
+  url: string;
+  name: string;
+  fileType: "IMAGE" | "PDF" | "VIDEO";
+}
+
+interface Service {
+  _id: Id<"services">;
+  name: string;
+  price: number;
+  currency: string;
+}
+
+interface Appointment {
+  _id: Id<"appointments">;
+  startDate: number;
+  cost?: number | null;
+  motif?: string | null;
+  findings?: string | null;
+  otherRemarks?: string | null;
+  recommendation?: string | null;
+  height?: number | null;
+  weight?: number | null;
+  head?: number | null;
+  arm?: number | null;
+  sao2?: number | null;
+  temperature?: number | null;
+  pulse?: number | null;
+  respiratory?: number | null;
+  systolic?: number | null;
+  diastolic?: number | null;
+  medication?: any;
+  exams?: any;
+  files: UploadedFile[];
+  service: Service | null;
+}
 
 interface AppointmentPageComponentProps {
-  appointment: AppointmentSelect & {
-    uploadedFiles: File[]
-    service: Service | null
-  }
+  appointment: Appointment
   patientId: string
 }
 
@@ -41,7 +76,7 @@ const AppointmentPageComponent = ({appointment, patientId}: AppointmentPageCompo
     if(window.confirm('Are you sure you want to delete appointment?')){
       try{
         setLoading(true)
-        const body = {appointmentId: appointment.id}
+        const body = {appointmentId: appointment._id}
         await fetch('/api/patients/deleteAppointment', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -83,10 +118,10 @@ const AppointmentPageComponent = ({appointment, patientId}: AppointmentPageCompo
             <Link href={`/user/patients/${patientId}/`} className="mr-2">
               <ArrowUturnLeftIcon className="h-4 w-4" />
             </Link>
-            <Link href={`/user/patients/${patientId}/${appointment.id}/edit-appointment`} className="mr-2">
+            <Link href={`/user/patients/${patientId}/${appointment._id}/edit-appointment`} className="mr-2">
               <PencilIcon className="h-4 w-4" />
             </Link>
-            <Link href={`/user/patients/${patientId}/${appointment.id}/print-appointment`} className="mr-2">
+            <Link href={`/user/patients/${patientId}/${appointment._id}/print-appointment`} className="mr-2">
               <PrinterIcon className="h-4 w-4" />
             </Link>
             <button onClick={handleDelete}>
@@ -145,10 +180,10 @@ const AppointmentPageComponent = ({appointment, patientId}: AppointmentPageCompo
             </div>
           ))}</div>
           <div className="mt-1 flex flex-row justify-between">
-          <Link href={`/user/patients/${patientId}/${appointment.id}/add-prescription`} className='self-end mt-2 shadow bg-slate-200 rounded-full py-1 px-4 text-blue-500'>
+          <Link href={`/user/patients/${patientId}/${appointment._id}/add-prescription`} className='self-end mt-2 shadow bg-slate-200 rounded-full py-1 px-4 text-blue-500'>
               Add or edit
             </Link>
-            <Link href={`/user/patients/${patientId}/${appointment.id}/print-prescription`} className='self-end mt-2 shadow bg-blue-500 rounded-full py-1 px-4 text-white'>
+            <Link href={`/user/patients/${patientId}/${appointment._id}/print-prescription`} className='self-end mt-2 shadow bg-blue-500 rounded-full py-1 px-4 text-white'>
               Print
             </Link>
           </div>
@@ -162,10 +197,10 @@ const AppointmentPageComponent = ({appointment, patientId}: AppointmentPageCompo
             {/* <Link href={`/user/patients/${patientId}/${appointmentId}/add-exams`} className='self-end mt-2 shadow bg-blue-500 rounded-full py-2 px-4 text-white '>
               Add
             </Link> */}
-            <Link href={`/user/patients/${patientId}/${appointment.id}/add-exams`} className='self-end mt-2 shadow text-blue-500 rounded-full py-1 px-4 bg-slate-200'>
+            <Link href={`/user/patients/${patientId}/${appointment._id}/add-exams`} className='self-end mt-2 shadow text-blue-500 rounded-full py-1 px-4 bg-slate-200'>
               Add or edit
             </Link>
-            <Link href={`/user/patients/${patientId}/${appointment.id}/print-exams`} className='self-end mt-2 shadow text-slate-200 rounded-full py-1 px-4 bg-blue-500'>
+            <Link href={`/user/patients/${patientId}/${appointment._id}/print-exams`} className='self-end mt-2 shadow text-slate-200 rounded-full py-1 px-4 bg-blue-500'>
               Print
             </Link>
           </div>
@@ -174,7 +209,7 @@ const AppointmentPageComponent = ({appointment, patientId}: AppointmentPageCompo
           <p className="font-semibold mb-2">Recommendations</p>
           <p className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.recommendation}</p>
           <div className="mt-1 flex flex-row justify-between">
-            <Link href={`/user/patients/${patientId}/${appointment.id}/add-recommendation`} className='self-end mt-2 shadow text-blue-500 rounded-full py-1 px-4 bg-slate-200'>
+            <Link href={`/user/patients/${patientId}/${appointment._id}/add-recommendation`} className='self-end mt-2 shadow text-blue-500 rounded-full py-1 px-4 bg-slate-200'>
               Add or edit
             </Link>
           </div>
@@ -184,16 +219,16 @@ const AppointmentPageComponent = ({appointment, patientId}: AppointmentPageCompo
         <div className="flex flex-row items-center justify-between">
           <p className="font-semibold">Uploaded files</p>
           {
-            appointment.uploadedFiles?.length < 3 &&
-            <Link href={`/user/patients/${patientId}/${appointment.id}/upload-file`} className='self-end mt-2 shadow bg-slate-200 rounded-full py-1 px-4 text-blue-500'>
+            appointment.files?.length < 3 &&
+            <Link href={`/user/patients/${patientId}/${appointment._id}/upload-file`} className='self-end mt-2 shadow bg-slate-200 rounded-full py-1 px-4 text-blue-500'>
             Upload file
           </Link>}
         </div>
         <div className="flex flex-row w-full h-auto items-end gap-4 mt-2">
           {
-            appointment.uploadedFiles?.length > 0 
+            appointment.files?.length > 0 
             ?
-              appointment.uploadedFiles?.map((file, index) => <UploadedFile key={index} file={file}/>
+              appointment.files?.map((file, index) => <UploadedFile key={index} file={file}/>
 
               )
             :

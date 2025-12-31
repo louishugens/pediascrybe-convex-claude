@@ -1,38 +1,15 @@
 import { headers } from "next/headers";
 import Link from "next/link";
-import prisma from "@/utils/prisma";
 import ReceiptList from "@/components/receiptList";
 import ReceiptsSkeleton from "@/components/skeletons/receipts-skeleton";
-import { cacheTag } from "next/cache";
 import { Suspense, ViewTransition } from "react";
-
-async function getReceipts(patientId: string) {
-
-  const receipts = prisma.receipt.findMany({
-    where: {
-      patientId: patientId
-    },
-    orderBy: {
-      createdAt: 'desc'
-    }
-  })
-  return receipts
-}
+import { fetchAuthQuery } from "@/lib/auth-server";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 
 type Params = Promise<{ patientId: string }>
 
 const ReceiptsPage = async (props: { params: Params }) => {
-  // const params = await props.params;
-
-  // const {
-  //   patientId
-  // } = params;
-
-  // const receipts = await getReceipts(patientId)
-  // const headersList = await headers()
-  // const locale = headersList.get('accept-language')
-  // const lang = locale?.split(',')[0]
-
   return (
     <ViewTransition>
       <Suspense fallback={<ReceiptsSkeleton />}>
@@ -45,13 +22,11 @@ const ReceiptsPage = async (props: { params: Params }) => {
 export default ReceiptsPage;
 
 async function ReceiptsContainer({ params }: { params: Params }) {
+  const { patientId } = await params;
 
-
-  const {
-    patientId
-  } = await params;
-
-  const receipts = await getReceipts(patientId)
+  const receipts = await fetchAuthQuery(api.receipts.listByPatient, { 
+    patientId: patientId as Id<"patients"> 
+  });
   const headersList = await headers()
   const locale = headersList.get('accept-language')
   const lang = locale?.split(',')[0]
@@ -71,4 +46,3 @@ async function ReceiptsContainer({ params }: { params: Params }) {
     </div>
   );
 }
-

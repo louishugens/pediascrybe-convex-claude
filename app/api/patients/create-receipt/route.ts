@@ -1,44 +1,47 @@
-import prisma from "@/utils/prisma";
+import { fetchAuthMutation, isAuthenticated } from "@/lib/auth-server";
+import { api } from "@/convex/_generated/api";
 import { NextResponse } from "next/server";
-import { createClient } from '@/utils/supabase/server'
 
 export async function POST(req: Request) {
-  if(req.method == 'POST') {
-
-    const supabase = await createClient()
+  try {
+    const authenticated = await isAuthenticated();
     
-    const { data: {user}, error } = await (await supabase).auth.getUser();
-
-    if (!user) {
+    if (!authenticated) {
       return new Response(
         JSON.stringify({
-          error: { statusCode: 500, message: 'User is not defined' }
+          error: { statusCode: 401, message: 'Not authenticated' }
+        }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { services, date, currency, patientId, cost } = await req.json();
+
+    const receipt = await fetchAuthMutation(api.receipts.createReceipt, {
+      patientId,
+      services: services || undefined,
+      date: date ? new Date(date).getTime() : undefined,
+      currency: currency || undefined,
+      cost: cost || undefined,
+    });
+
+    if (receipt) {
+      return NextResponse.json(receipt);
+    } else {
+      return new NextResponse(
+        JSON.stringify({
+          error: { statusCode: 500, message: 'Receipt was not successfully created' }
         }),
         { status: 500 }
       );
     }
-
-    const {services, date, currency, patientId}= await req.json()
-
-    const report = await prisma.receipt.create({
-      data: {
-        services, date, currency, patientId
-      }
-    })
-
-
-    if (report) {
-
-      return NextResponse.json(report);
-    }else{
-      return new NextResponse(
-        JSON.stringify({
-       error: { statusCode: 500, message: 'report is not successfully created' }
-       }),
-       { status: 500 }
-     );
-    }
-
+  } catch (error: any) {
+    console.error('Error creating receipt:', error);
+    return new NextResponse(
+      JSON.stringify({
+        error: { statusCode: 500, message: error?.message || 'An error occurred' }
+      }),
+      { status: 500 }
+    );
   }
-
 }

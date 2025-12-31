@@ -71,7 +71,7 @@ export function ChartShad({patient, type, title, ylabel, xlabel, name, data, yUn
         {showTitle &&
           <CardHeader className="flex flex-row justify-between items-center">
             <CardTitle className="text-base font-normal">{title} graph for <span className="font-bold">{patient.firstname} {patient.lastname}</span></CardTitle>
-          <Link href={`/user/patients/${patient.id}/charts/print-${type}`} className="px-4 py-2 rounded-full bg-slate-200 text-blue-500 text-sm w-fit flex flex-row items-center gap-2">
+          <Link href={`/user/patients/${patient._id}/charts/print-${type}`} className="px-4 py-2 rounded-full bg-slate-200 text-blue-500 text-sm w-fit flex flex-row items-center gap-2">
             <Printer className="h-4 w-4" />
             Print
           </Link>
@@ -114,7 +114,7 @@ export function ChartShad({patient, type, title, ylabel, xlabel, name, data, yUn
                 label={{ value: ylabel, angle: -90, position: 'insideLeft', fontSize: 12, fontWeight: "bold"}} 
                 tick={{fontSize: 12}} 
               />
-              <ChartLegend content={<ChartLegendContent />} verticalAlign="top" align="center" height={12} />
+              <ChartLegend verticalAlign="top" align="center" height={12} />
               <ChartTooltip 
                 cursor={true}
                 content={

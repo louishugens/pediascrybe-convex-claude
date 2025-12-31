@@ -26,8 +26,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Editor } from '@/components/editor';
-import { Report } from '@prisma/client';
 import { refresh } from '@/app/actions';
+import { Id } from '@/convex/_generated/dataModel';
+
+interface Report {
+  _id: Id<"reports">;
+  reportType: string;
+  content?: string | null;
+}
 
 interface Props {
   report: Report,
@@ -50,26 +56,21 @@ const EditReport = ({patientId, report}: Props) => {
   
   let [color, setColor] = useState("#ffffff")
   let [loading, setLoading] = useState(false)
-  const [id, setId] = useState(report.id)
+  const [id, setId] = useState(report._id)
 
 
 
   type FormValues = z.infer<typeof schema>
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as any,
     defaultValues:{
       reportType: report.reportType,
-      content: report.content
+      content: report.content ?? undefined
     }
   })
 
-  type Doctor = {
-    id: string
-  }
-
-
-  const doctor: Doctor | null = useDoctor()
+  const doctor = useDoctor()
   const router = useRouter()
 
 
@@ -87,7 +88,7 @@ const EditReport = ({patientId, report}: Props) => {
       const report = await res.json()
 
       refresh([`/user/patients/${patientId}/reports/${id}`, `/user/patients/${patientId}/reports/${id}/edit-report`, `/user/patients/${patientId}/reports/`])
-      router.push(`/user/patients/${patientId}/reports/${report.id}`)
+      router.push(`/user/patients/${patientId}/reports/${report._id}`)
 
     }
     catch(err){

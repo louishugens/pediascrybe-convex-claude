@@ -1,60 +1,44 @@
 import Chart from "@/components/chartShad"
-import prisma from "@/utils/prisma"
 import { differenceInDays } from 'date-fns'
-import { charts, Patient, Appointment } from '@prisma/client';
+import { fetchAuthQuery } from '@/lib/auth-server'
+import { api } from '@/convex/_generated/api'
+import { Id } from '@/convex/_generated/dataModel'
 
-async function getPatient(patientId){
-  const patient = await prisma.patient.findUnique({
-    where:{
-      id: patientId
-    },
-    include: {
-      appointments:{
-        orderBy:{
-          startDate: 'asc'
-        }
-      },
-    },
-  })
-  return patient
+interface ChartData {
+  p03?: number[];
+  p15?: number[];
+  p50?: number[];
+  p85?: number[];
+  p97?: number[];
 }
 
-async function getReferenceData(sex: Patient["sex"]){
-
-  const referenceData = await prisma.charts.findUnique({
-    where:{
-      id: (sex === 'female') ? 'gwfh' : 'bwfh'
-    }
-  })
-  return referenceData
-}
-
-async function getReferenceData_0_2(sex: Patient["sex"]){
-  const referenceData = await prisma.charts.findUnique({
-    where:{
-      id: (sex === 'female') ? 'gwfh_0_2' : 'bwfh_0_2'
-    }
-  })
-  return referenceData
-} 
 type Params = Promise<{ patientId: string }>
 
 const WFLChart = async ({ params }: { params: Params }) => {
   const { patientId } = await params;
-  const patient = await getPatient(patientId)
-  const appointments = patient?.appointments
-  const referenceData = await getReferenceData(patient?.sex ?? null);
-  const referenceData_0_2 = await getReferenceData_0_2(patient?.sex ?? null);
-  // console.log('referenceData :>> ', referenceData);
-
+  
+  const patientData = await fetchAuthQuery(api.charts.getPatientChartData, { 
+    patientId: patientId as Id<"patients">,
+    chartType: "wfl"
+  });
+  
+  if (!patientData) {
+    return <div>Patient not found</div>;
+  }
+  
+  const { patient, appointments } = patientData;
+  const referenceData = await fetchAuthQuery(api.charts.getReferenceData, { 
+    chartType: "wfl",
+    sex: patient?.sex ?? null
+  });
 
   let formatted: { length: number; value: number; }[] = []
   let formatted_0_2: { length: number; value: number; }[] = []
 
-  appointments?.map(appointment =>{
+  appointments?.map(appointment => {
     if(appointment.weight && appointment.height){
       let app = {length: appointment.height, value: appointment.weight}
-      if(differenceInDays(appointment.startDate, patient?.birthdate ?? new Date()) < 365*2){
+      if(differenceInDays(appointment.startDate, patient?.birthdate ?? new Date().getTime()) < 365*2){
         formatted_0_2.push(app)
       }else{
         formatted.push(app)
@@ -62,15 +46,15 @@ const WFLChart = async ({ params }: { params: Params }) => {
     }
   })
 
-  const formatReferenceData = (data: charts, formatted: { length: number; value: number; }[]) => {
+  const formatReferenceData = (data: ChartData, formatted: { length: number; value: number; }[]) => {
     const format: { 
       length: number | undefined; 
-      '3rd': number | undefined; 
-      '15th': number | undefined; 
-      '50th': number | undefined; 
-      '85th': number | undefined; 
-      '97th': number | undefined; 
-      [key: string]: number | undefined
+      '3rd': number | null; 
+      '15th': number | null; 
+      '50th': number | null; 
+      '85th': number | null; 
+      '97th': number | null; 
+      [key: string]: number | null | undefined
     }[] = [];
 
     const maxLength = Math.max(
@@ -100,15 +84,15 @@ const WFLChart = async ({ params }: { params: Params }) => {
     return format;
   };
 
-  const formatReferenceData_0_2 = (data: charts, formatted: { length: number; value: number; }[]) => {
+  const formatReferenceData_0_2 = (data: ChartData, formatted: { length: number; value: number; }[]) => {
     const format: { 
       length: number | undefined; 
-      '3rd': number | undefined; 
-      '15th': number | undefined; 
-      '50th': number | undefined; 
-      '85th': number | undefined; 
-      '97th': number | undefined; 
-      [key: string]: number | undefined
+      '3rd': number | null; 
+      '15th': number | null; 
+      '50th': number | null; 
+      '85th': number | null; 
+      '97th': number | null; 
+      [key: string]: number | null | undefined
     }[] = []; 
 
     const maxLength = Math.max(
@@ -137,13 +121,13 @@ const WFLChart = async ({ params }: { params: Params }) => {
     return format;
   };
 
-
-  const data = referenceData ? formatReferenceData(referenceData, formatted) : [];
-  const data_0_2 = referenceData_0_2 ? formatReferenceData_0_2(referenceData_0_2, formatted_0_2) : [];
+  const data = referenceData ? formatReferenceData(referenceData as ChartData, formatted) : [];
+  const data_0_2 = referenceData ? formatReferenceData_0_2(referenceData as ChartData, formatted_0_2) : [];
+  
   return (
     <>
-    <Chart patient={patient} type="wfl0To2" title="Weight for Length (0-2 years)" ylabel={'Weight (kg)'} xlabel={'Length (cm)'} name={patient?.firstname ?? 'patient'}  data={data_0_2} yUnit={'kg'} xUnit={'cm'} showTitle={true} mesure={'length'} />
-    <Chart patient={patient} type="wfl" title="Weight for Length (2-5 years)" ylabel={'Weight (kg)'} xlabel={'Length (cm)'} name={patient?.firstname ?? 'patient'}  data={data} yUnit={'kg'} xUnit={'cm'} showTitle={true} mesure={'length'} />
+      <Chart patient={patient} type="wfl0To2" title="Weight for Length (0-2 years)" ylabel={'Weight (kg)'} xlabel={'Length (cm)'} name={patient?.firstname ?? 'patient'} data={data_0_2} yUnit={'kg'} xUnit={'cm'} showTitle={true} mesure={'length'} />
+      <Chart patient={patient} type="wfl" title="Weight for Length (2-5 years)" ylabel={'Weight (kg)'} xlabel={'Length (cm)'} name={patient?.firstname ?? 'patient'} data={data} yUnit={'kg'} xUnit={'cm'} showTitle={true} mesure={'length'} />
     </>
   )
 }

@@ -27,8 +27,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Receipt } from '@prisma/client';
 import { XCircleIcon } from '@heroicons/react/24/outline';
+import { Id } from '@/convex/_generated/dataModel';
+
+interface Receipt {
+  _id: Id<"receipts">;
+  currency?: string | null;
+  services?: any;
+  date?: number | null;
+  cost?: number | null;
+}
 import countryList from 'react-select-country-list'
 import countryToCurrency from 'country-to-currency'
 import { CalendarIcon } from 'lucide-react';
@@ -85,7 +93,7 @@ const EditReceipt = ({patientId, receipt}: Props) => {
   
   let [color, setColor] = useState("#ffffff")
   let [loading, setLoading] = useState(false)
-  const [id, setId] = useState(receipt.id)
+  const [id, setId] = useState(receipt._id)
 
   const services = receipt.services as unknown as Service[]
 
@@ -94,7 +102,7 @@ const EditReceipt = ({patientId, receipt}: Props) => {
   type FormValues = z.infer<typeof schema>
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as any,
     defaultValues:{
       currency: receipt.currency!,
       date: receipt.date ? new Date(receipt.date) : undefined,
@@ -102,12 +110,7 @@ const EditReceipt = ({patientId, receipt}: Props) => {
     }
   })
 
-  type Doctor = {
-    id: string
-  }
-
-
-  const doctor: Doctor | null = useDoctor()
+  const doctor = useDoctor()
   const router = useRouter()
 
 
@@ -126,7 +129,7 @@ const EditReceipt = ({patientId, receipt}: Props) => {
       const receipt = await res.json()
 
       refresh([`/user/patients/${patientId}/receipts/${id}`, `/user/patients/${patientId}/receipts/${id}/edit-receipt`, `/user/patients/${patientId}/receipts/`])
-      router.push(`/user/patients/${patientId}/receipts/${receipt.id}`)
+      router.push(`/user/patients/${patientId}/receipts/${receipt._id}`)
 
     }
     catch(err){

@@ -105,15 +105,15 @@ const EditPatient = ({patient, doctorId}) => {
  
     try{
       const {firstname, lastname, email, birthdate, mothername, sex, religion, phone, allergies, history, bloodtype, electrophoresis} = values
-      const body = {firstname, lastname, email, birthdate, mothername, sex, religion, phone, id: patient.id, allergies, history, bloodtype, electrophoresis}
+      const body = {firstname, lastname, email, birthdate, mothername, sex, religion, phone, patientId: patient._id, allergies, history, bloodtype, electrophoresis}
       await fetch('/api/patients/updatePatient', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       })
       // router.refresh()
-      refresh([`/user/patients/${patient.id}`, `/user/patients/${patient.id}/edit-patient`])
-      router.push(`/user/patients/${patient.id}`, {scroll: true})
+      refresh([`/user/patients/${patient._id}`, `/user/patients/${patient._id}/edit-patient`])
+      router.push(`/user/patients/${patient._id}`, {scroll: true})
 
     }
     catch(err){

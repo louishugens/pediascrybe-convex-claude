@@ -1,56 +1,51 @@
-import prisma from "@/utils/prisma";
+import { fetchAuthMutation, isAuthenticated } from "@/lib/auth-server";
+import { api } from "@/convex/_generated/api";
 import { revalidatePath } from "next/cache";
-import { createClient } from '@/utils/supabase/server'
 
 export async function POST(req: Request) {
-  if(req.method == 'POST') {
-
-    const supabase = await createClient()
-
+  try {
+    const authenticated = await isAuthenticated();
     
-    const { data: {user}, error } = await (await supabase).auth.getUser();
-
-    if (!user) {
+    if (!authenticated) {
       return new Response(
         JSON.stringify({
-          error: { statusCode: 500, message: 'User is not defined' }
+          error: { statusCode: 401, message: 'Not authenticated' }
         }),
-        { status: 500 }
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    const { url, name, fileType, appointmentId, patientId } = await req.json()
+    const { url, name, fileType, appointmentId, patientId } = await req.json();
 
-    const file = await prisma.file.create({
-      data: {
-        url,
-        name,
-        fileType,
-        appointmentId
-      }
-    })
-
-    
+    const file = await fetchAuthMutation(api.files.createFile, {
+      appointmentId,
+      url,
+      name,
+      fileType,
+    });
 
     if (file) {
-
-      console.log('path :>> ', `/user/patients/${patientId}/${appointmentId}`);
-      revalidatePath(`/user/patients/${patientId}/${appointmentId}`)
+      revalidatePath(`/user/patients/${patientId}/${appointmentId}`);
       
       return new Response(JSON.stringify(file), {
-        status: 200
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
       });
-    }else{
+    } else {
       return new Response(
         JSON.stringify({
-       error: { statusCode: 500, message: 'file is not saved' }
-       }),
-       { status: 500 }
-     );
+          error: { statusCode: 500, message: 'File was not saved' }
+        }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
     }
-
-
-
+  } catch (error: any) {
+    console.error('Error saving file:', error);
+    return new Response(
+      JSON.stringify({
+        error: { statusCode: 500, message: error?.message || 'An error occurred' }
+      }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
-
 }

@@ -1,12 +1,13 @@
-import { getPatients, verifySession } from '@/data/queries'
 import { GenderDistributionChart } from '@/components/GenderDistributionChart'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
 import { Suspense } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ViewTransition } from 'react'
+import { getCurrentDoctor } from '@/lib/convex-data'
+import { fetchAuthQuery } from '@/lib/auth-server'
+import { api } from '@/convex/_generated/api'
 
 export default async function GenderDistributionContainer() {
-
   return (
     <ViewTransition>
       <Suspense fallback={<GenderDistributionSkeleton />}>
@@ -17,11 +18,11 @@ export default async function GenderDistributionContainer() {
 }
 
 async function GenderDistributionContent() {
-  const user = await verifySession()
-  if (!user) {
+  const doctor = await getCurrentDoctor()
+  if (!doctor) {
     return null
   }
-  const patients = await getPatients(user.id)
+  const patients = await fetchAuthQuery(api.patients.getPatients, { doctorId: doctor._id })
   return (
     <Card className="glass card-hover">
       <CardHeader>
@@ -61,4 +62,3 @@ function GenderDistributionSkeleton() {
     </Card>
   )
 }
-

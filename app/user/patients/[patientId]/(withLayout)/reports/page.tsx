@@ -1,26 +1,14 @@
 import ReportList from "@/components/reportList";
 import ReportsSkeleton from "@/components/skeletons/reports-skeleton";
 import Link from "next/link";
-import prisma from "@/utils/prisma";
 import { Suspense, ViewTransition } from "react";
-
-async function getReports(patientId: string) {
-
-  const reports = prisma.report.findMany({
-    where: {
-      patientId: patientId
-    },
-    orderBy: {
-      createdAt: 'desc'
-    }
-  })
-  return reports
-}
+import { fetchAuthQuery } from "@/lib/auth-server";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 
 type Params = Promise<{ patientId: string }>
 
 const ReportsPage = async (props: { params: Params }) => {
-
   return (
     <ViewTransition>
       <Suspense fallback={<ReportsSkeleton />}>
@@ -36,7 +24,10 @@ async function ReportsContainer({ params }: { params: Params }) {
   'use cache'
   const { patientId } = await params;
 
-  const reports = await getReports(patientId)
+  const reports = await fetchAuthQuery(api.reports.listByPatient, { 
+    patientId: patientId as Id<"patients"> 
+  });
+  
   return (
     <div className='h-full mb-8 mt-4'>
       <div className='flex flex-row w-full h-auto gap-4'>

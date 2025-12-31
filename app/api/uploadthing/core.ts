@@ -1,32 +1,22 @@
-// 'use server'
 import { createUploadthing, type FileRouter } from "uploadthing/next";
-// import { createRouteHandlerClient, createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
-import { createClient } from '@/utils/supabase/server'
+import { isAuthenticated } from '@/lib/auth-server';
 
- 
 const f = createUploadthing();
 
-
 async function getSessionId() {
-  const supabase = await createClient()
+  const authenticated = await isAuthenticated();
 
-  const { data: {user}, error } = await (await supabase).auth.getUser();
-
-  if(!user){
+  if (!authenticated) {
     throw new Error("Unauthorized");
   }
-  const userId = user?.id;
-  console.log('userId :>> ', userId);
-  return {userId: userId}
+
+  // For uploadthing, we just need to verify the user is authenticated
+  // The actual user ID will be handled by the mutation when saving the file
+  return { userId: "authenticated" };
 }
- 
- 
+
 // FileRouter for your app, can contain multiple FileRoutes
 export const ourFileRouter = {
-
-  // const userId = await getSessionId();
-
   appointmentFile: f({
     image: { maxFileSize: "4MB", maxFileCount: 1 },
     pdf: { maxFileSize: "4MB", maxFileCount: 1 }, 
@@ -36,10 +26,8 @@ export const ourFileRouter = {
   .onUploadComplete(async ({ metadata, file }) => {
     // This code RUNS ON YOUR SERVER after upload
     console.log("Upload complete for userId:", metadata.userId);
-
     console.log("file url", file.url);
   }),
-
 } satisfies FileRouter;
  
 export type OurFileRouter = typeof ourFileRouter;

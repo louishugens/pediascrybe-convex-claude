@@ -1,47 +1,37 @@
-import prisma from "@/utils/prisma";
+import { fetchAuthMutation, isAuthenticated } from "@/lib/auth-server";
+import { api } from "@/convex/_generated/api";
 import { NextResponse } from "next/server";
-import { createClient } from '@/utils/supabase/server'
 
 export async function POST(req: Request) {
-  if(req.method == 'POST') {
-
-    const supabase = await createClient()
-
-    const { data: {user}, error } = await (await supabase).auth.getUser();
-
-    if (!user) {
+  try {
+    const authenticated = await isAuthenticated();
+    
+    if (!authenticated) {
       return new Response(
         JSON.stringify({
-          error: { statusCode: 500, message: 'User is not defined' }
+          error: { statusCode: 401, message: 'Not authenticated' }
         }),
-        { status: 500 }
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    const {reportType, content, patientId, id}= await req.json()
+    const { reportType, content, patientId, id } = await req.json();
 
-    const report = await prisma.report.update({
-      where:{
-        id: id
-      },
-      data: {
-        reportType, content, patientId, createdAt: new Date()
-      }
-    })
+    await fetchAuthMutation(api.reports.updateReport, {
+      reportId: id,
+      reportType: reportType || undefined,
+      content: content || undefined,
+    });
 
-
-    if (report) {
-
-      return NextResponse.json(report);
-    }else{
-      return new NextResponse(
-        JSON.stringify({
-       error: { statusCode: 500, message: 'report is not successfully created' }
-       }),
-       { status: 500 }
-     );
-    }
-
+    // Return the report ID (update returns null, but we already have the ID from the request)
+    return NextResponse.json({ _id: id });
+  } catch (error: any) {
+    console.error('Error updating report:', error);
+    return new NextResponse(
+      JSON.stringify({
+        error: { statusCode: 500, message: error?.message || 'An error occurred' }
+      }),
+      { status: 500 }
+    );
   }
-
 }

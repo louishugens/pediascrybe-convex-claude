@@ -1,18 +1,11 @@
 import EditReport from "@/components/editReport";
 import ReportFormSkeleton from "@/components/skeletons/report-form-skeleton";
-import prisma from "@/utils/prisma";
 import { Suspense, ViewTransition } from "react";
 import Link from "next/link";
 import { ArrowUturnLeftIcon } from "@heroicons/react/24/outline";
-
-async function getReport(reportId: string) {
-  const report = await prisma.report.findUnique({
-    where: {
-      id: reportId
-    }
-  })
-  return report
-}
+import { fetchAuthQuery } from "@/lib/auth-server";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 
 type Params = Promise<{ patientId: string, reportId: string }>
 
@@ -32,7 +25,14 @@ async function EditReportContainer({ params }: { params: Params }) {
   'use cache'
   const { patientId, reportId } = await params;
 
-  const report = await getReport(reportId)
+  const report = await fetchAuthQuery(api.reports.getReport, { 
+    reportId: reportId as Id<"reports"> 
+  });
+  
+  if (!report) {
+    return <div>Report not found</div>;
+  }
+  
   return (
     <div className='h-full mb-8 mt-4'>
       <div className='flex flex-row w-full h-auto gap-4 justify-end px-4'>
@@ -40,7 +40,7 @@ async function EditReportContainer({ params }: { params: Params }) {
           <ArrowUturnLeftIcon className='w-4 h-4' />
         </Link>
       </div>
-      <EditReport patientId={patientId} report={report!} />
+      <EditReport patientId={patientId} report={report} />
     </div>
   )
 }

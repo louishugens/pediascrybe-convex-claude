@@ -1,10 +1,11 @@
-import { verifySession } from '@/data/queries'
-import { getDailyRevenueData } from '@/db/queries'
 import { DailyRevenueChart } from './DailyRevenueChart'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Suspense } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ViewTransition } from 'react'
+import { getCurrentDoctor } from '@/lib/convex-data'
+import { fetchAuthQuery } from '@/lib/auth-server'
+import { api } from '@/convex/_generated/api'
 
 export default async function DailyRevenueContainer() {
   return (
@@ -17,11 +18,13 @@ export default async function DailyRevenueContainer() {
 }
 
 async function DailyRevenueContent() {
-  const user = await verifySession()
-  if (!user) {
+  const doctor = await getCurrentDoctor()
+  if (!doctor) {
     return null
   }
-  const data = await getDailyRevenueData(user.id, false) // Get all time data, filtering happens client-side
+  const data = await fetchAuthQuery(api.appointments.getDailyRevenueData, { 
+    doctorId: doctor._id 
+  })
   return <DailyRevenueChart data={data} />
 }
 
@@ -38,4 +41,3 @@ function DailyRevenueSkeleton() {
     </Card>
   )
 }
-

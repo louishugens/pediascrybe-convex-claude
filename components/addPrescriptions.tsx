@@ -13,12 +13,11 @@ import  * as z from "zod"
 import { refresh } from '@/app/actions';
 import { experimental_useObject as useObject } from '@ai-sdk/react';
 import { prescriptionsSchema } from '@/app/api/ai/prescriptions/schema';
-import { Patient, Appointment } from '@/db/schema';
-import type { InferModel } from 'drizzle-orm';
 
+import { Doc } from '@/convex/_generated/dataModel';
 
-type PatientType = InferModel<typeof Patient>;
-type AppointmentType = InferModel<typeof Appointment>;
+type PatientType = Doc<"patients">;
+type AppointmentType = Doc<"appointments">;
 
 
 export const formSchema = z.object({
@@ -208,8 +207,7 @@ const AddPrescriptions = ({patient, patientId, appointment}: {patient: PatientTy
     watch,
     control,
   } = useForm<FormValues>({
-    // resolver: yupResolver(PrescriptionsSchema),
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as any,
     defaultValues: {
       prescriptions: [
         ...(
@@ -236,7 +234,7 @@ const AddPrescriptions = ({patient, patientId, appointment}: {patient: PatientTy
     try{
       const {prescriptions } = values
 
-      const body = {medication: prescriptions, appointmentId: appointment.id}
+      const body = {medication: prescriptions, appointmentId: appointment._id}
       const myuser = await fetch('/api/patients/addPrescriptions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -245,9 +243,9 @@ const AddPrescriptions = ({patient, patientId, appointment}: {patient: PatientTy
       const newuser = await myuser.json()
 
 
-      refresh([`/user/patients/${patientId}/${appointment.id}`, `/user/patients/${patientId}/${appointment.id}/add-prescription`])
+      refresh([`/user/patients/${patientId}/${appointment._id}`, `/user/patients/${patientId}/${appointment._id}/add-prescription`])
 
-      router.push(`/user/patients/${patientId}/${appointment.id}`)
+      router.push(`/user/patients/${patientId}/${appointment._id}`)
 
     }
     catch(err){

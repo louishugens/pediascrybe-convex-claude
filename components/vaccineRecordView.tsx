@@ -1,5 +1,5 @@
 import React from 'react'
-import { VaccinationRecord, Vaccin, Dose } from '@prisma/client'
+import { Id } from '@/convex/_generated/dataModel'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog'
 import { EyeIcon } from 'lucide-react'
 import { Syringe, Calendar, Clipboard, User, Factory, Hash, Clock, Droplet, Route, MapPin, List, Eye } from 'lucide-react'
@@ -8,7 +8,29 @@ import { Button } from './ui/button'
 import { format } from 'date-fns'
 import { ScrollArea } from './ui/scroll-area'
 
-export default function VaccineRecordView({ vaccinationRecord }: { vaccinationRecord: VaccinationRecord & { vaccin: Vaccin, dose: Dose } }) {
+interface VaccineRecordWithDetails {
+  _id: Id<"vaccinationRecords">;
+  patientId: Id<"patients">;
+  date: number;
+  manufacturer: string;
+  lotNumber: string;
+  expiration: number;
+  dosage?: string;
+  route?: string;
+  site?: string;
+  notes?: string | null;
+  vaccin: {
+    _id: Id<"vaccins">;
+    name: string;
+  } | null;
+  dose: {
+    _id: Id<"doses">;
+    doseType: string;
+    doseCount?: number | null;
+  } | null;
+}
+
+export default function VaccineRecordView({ vaccinationRecord }: { vaccinationRecord: VaccineRecordWithDetails }) {
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -36,7 +58,7 @@ export default function VaccineRecordView({ vaccinationRecord }: { vaccinationRe
       </DialogContent> */}
       <DialogContent >
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">{vaccinationRecord.vaccin.name}</DialogTitle>
+          <DialogTitle className="text-2xl font-bold">{vaccinationRecord.vaccin?.name || 'Unknown Vaccine'}</DialogTitle>
         </DialogHeader>
         <ScrollArea className="max-h-[80vh] pr-4">
           <div className="space-y-6">
@@ -49,14 +71,14 @@ export default function VaccineRecordView({ vaccinationRecord }: { vaccinationRe
             </div> */}
 
             <div className="grid grid-cols-2 gap-4">
-              <InfoItem icon={Calendar} iconColor="text-green-500" label="Administered Date" value={vaccinationRecord.date} />
+              <InfoItem icon={Calendar} iconColor="text-green-500" label="Administered Date" value={new Date(vaccinationRecord.date)} />
               {/* <InfoItem icon={User} iconColor="text-blue-500" label="Patient" value={patientName} /> */}
               <InfoItem icon={Factory} iconColor="text-red-500" label="Manufacturer" value={vaccinationRecord.manufacturer} />
               <InfoItem icon={Hash} iconColor="text-black" label="Lot Number" value={vaccinationRecord.lotNumber} />
-              <InfoItem icon={Clock} iconColor="text-green-500" label="Expiration Date" value={vaccinationRecord.expiration} />
-              <InfoItem icon={Droplet} iconColor="text-blue-500" label="Dosage" value={vaccinationRecord.dosage} />
-              <InfoItem icon={Syringe} iconColor="text-red-500" label="Administration Route" value={`${vaccinationRecord.route}`} />
-              <InfoItem icon={MapPin} iconColor="text-black" label="Administration Site" value={vaccinationRecord.site} />
+              <InfoItem icon={Clock} iconColor="text-green-500" label="Expiration Date" value={new Date(vaccinationRecord.expiration)} />
+              <InfoItem icon={Droplet} iconColor="text-blue-500" label="Dosage" value={vaccinationRecord.dosage || 'N/A'} />
+              <InfoItem icon={Syringe} iconColor="text-red-500" label="Administration Route" value={vaccinationRecord.route || 'N/A'} />
+              <InfoItem icon={MapPin} iconColor="text-black" label="Administration Site" value={vaccinationRecord.site || 'N/A'} />
             </div>
 
             {vaccinationRecord.notes && (

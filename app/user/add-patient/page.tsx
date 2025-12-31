@@ -81,12 +81,7 @@ const AddPatient = () => {
     resolver: zodResolver(schema),
   })
 
-  type Doctor = {
-    id: string
-  }
-
-
-  const doctor: Doctor | null = useDoctor()
+  const doctor = useDoctor()
   const router = useRouter()
 
 
@@ -96,7 +91,7 @@ const AddPatient = () => {
     try{
       const {firstname, lastname, email, birthdate, mothername, sex, religion, phone, allergies, history, bloodtype, electrophoresis} = values
       console.log('bloodtype :>> ', bloodtype);
-      const body = {firstname, lastname, email, birthdate, mothername, sex, religion, phone, id: doctor!.id, allergies, history, bloodtype, electrophoresis}
+      const body = {firstname, lastname, email, birthdate, mothername, sex, religion, phone, id: doctor!._id, allergies, history, bloodtype, electrophoresis}
       await fetch('/api/patients/addPatient', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

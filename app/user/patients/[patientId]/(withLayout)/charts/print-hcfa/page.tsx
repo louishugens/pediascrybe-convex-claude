@@ -1,116 +1,69 @@
 import Print from "@/components/printCharts";
-import prisma from "@/utils/prisma";
-import { createClient } from '@/utils/supabase/server'
-import { charts, Patient } from "@prisma/client";
-import { differenceInDays } from 'date-fns'
+import { differenceInDays } from 'date-fns';
+import { getCurrentDoctor } from "@/lib/convex-data";
+import { fetchAuthQuery } from "@/lib/auth-server";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 
-async function getAppointment(appointmentId) {
-  const appointment = await prisma.appointment.findUnique({
-    where:{
-      id:appointmentId
-    },
-  })
-  return appointment
-}
+type Params = Promise<{ patientId: string }>
 
-async function getPatient(patientId) {
-  const patient = await prisma.patient.findUnique({
-    where:{
-      id:patientId
-    },
-    include: {
-      appointments:{
-        orderBy:{
-          startDate: 'asc'
-        }
-      },
-    },
-  })
-  return patient
-}
+const PrintPage = async (props: { params: Params }) => {
+  const { patientId } = await props.params;
+  const doctor = await getCurrentDoctor();
 
-async function getDoctor(doctorId) {
-  const doctor = await prisma.doctor.findUnique({
-    where:{
-      id:doctorId
-    },
-  })
-  return doctor
-}
-async function getReferenceData(sex: Patient["sex"]){
+  if (!doctor) {
+    return <div>Doctor not found</div>;
+  }
 
-  const referenceData = await prisma.charts.findUnique({
-    where:{
-      id: (sex === 'female') ? 'ghcfa' : 'bhcfa'
+  const patient = await fetchAuthQuery(api.patients.getPatientWithAppointments, {
+    patientId: patientId as Id<"patients">
+  });
+
+  if (!patient) {
+    return <div>Patient not found</div>;
+  }
+
+  const appointments = patient.appointments;
+  const referenceData = await fetchAuthQuery(api.charts.getChartReference, {
+    chartId: patient.sex === 'female' ? 'ghcfa' : 'bhcfa'
+  });
+
+  let formatted: { age: number; value: number }[] = [];
+
+  appointments?.map((appointment: any) => {
+    if (appointment.head) {
+      if (differenceInDays(appointment.startDate, patient.birthdate ?? new Date()) / 30.4375 < 60) {
+        let app = { 
+          age: differenceInDays(appointment.startDate, patient.birthdate ?? new Date()), 
+          value: appointment.head 
+        };
+        formatted.push(app);
+      }
     }
-  })
-  return referenceData
-}
+  });
 
-
-
-const PrintPage = async props => {
-  const params = await props.params;
-
-  const {
-    patientId
-  } = params;
-
-  const supabase = await createClient()
-
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const doctorId = user?.id
-
-
-  const patient = await getPatient(patientId)
-  const doctor = await getDoctor(doctorId)
-  const appointments = patient?.appointments
-  const referenceData = await getReferenceData(patient?.sex ?? null);
-  let formatted: { age: number; value: number; }[] = [];
-
-  appointments?.map(appointment =>{
-    if(appointment.head){
-      let app = {age: differenceInDays(appointment.startDate, patient?.birthdate ?? new Date()), value: appointment.head}
-
-      formatted.push(app);
-    }  
-  })
-
-  const formatReferenceData = (data: charts, formatted: { age: number; value: number; }[]) => {
-    const format: { 
-      age: number; 
-      '3rd': number; 
-      '15th': number; 
-      '50th': number; 
-      '85th': number; 
-      '97th': number; 
-      [key: string]: number 
-    }[] = [];
+  const formatReferenceData = (data: any, formatted: { age: number; value: number }[]) => {
+    const format: any[] = [];
 
     const maxLength = Math.max(
-      (data.p03 as number[])?.length || 0,
-      (data.p15 as number[])?.length || 0,
-      (data.p50 as number[])?.length || 0,
-      (data.p85 as number[])?.length || 0,
-      (data.p97 as number[])?.length || 0
+      (data?.p03 as number[])?.length || 0,
+      (data?.p15 as number[])?.length || 0,
+      (data?.p50 as number[])?.length || 0,
+      (data?.p85 as number[])?.length || 0,
+      (data?.p97 as number[])?.length || 0
     );
 
     for (let index = 0; index < maxLength; index++) {
       const patientDataForDay = formatted.find(item => item.age === index);
 
-
-      format.push({ 
-        age: index, 
-        '3rd': data.p03?.[index] ?? null, 
-        '15th': data.p15?.[index] ?? null, 
-        '50th': data.p50?.[index] ?? null, 
-        '85th': data.p85?.[index] ?? null, 
-        '97th': data.p97?.[index] ?? null,
-        [patient?.firstname ?? 'patient']: patientDataForDay?.value ?? null
+      format.push({
+        age: index,
+        '3rd': data?.p03?.[index] ?? null,
+        '15th': data?.p15?.[index] ?? null,
+        '50th': data?.p50?.[index] ?? null,
+        '85th': data?.p85?.[index] ?? null,
+        '97th': data?.p97?.[index] ?? null,
+        [patient.firstname ?? 'patient']: patientDataForDay?.value ?? null
       });
     }
 
@@ -119,10 +72,20 @@ const PrintPage = async props => {
 
   const data = referenceData ? formatReferenceData(referenceData, formatted) : null;
 
-
   return (
     <>
-      <Print type="hcfa" title="Head Circumference for Age" ylabel="HC (in cm)" xlabel="Age (in days)" patient={patient} doctor={doctor} data={data} yUnit={'cm'} xUnit={'days'} mesure={'age'} />
+      <Print 
+        type="hcfa" 
+        title="Head Circumference for Age (0-5 years)" 
+        ylabel="Head Circumference (in cm)" 
+        xlabel="Age (in days)" 
+        patient={patient} 
+        doctor={doctor} 
+        data={data} 
+        yUnit={'cm'} 
+        xUnit={'days'} 
+        mesure={'age'} 
+      />
     </>
   );
 };

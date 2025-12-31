@@ -1,5 +1,5 @@
 'use client'
-import { Dose, Vaccin, VaccinationRecord } from '@prisma/client'
+import { Doc } from '@/convex/_generated/dataModel'
 import { Form, FormField, FormItem, FormLabel, FormMessage, FormControl } from '@/components/ui/form'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -18,7 +18,7 @@ import { updateVaccinationRecord } from '@/app/actions'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
-export default function EditVaccinationRecordForm({ vaccinationRecord }: { vaccinationRecord: VaccinationRecord & { vaccin: Vaccin, dose: Dose } }) {
+export default function EditVaccinationRecordForm({ vaccinationRecord }: { vaccinationRecord: Doc<"vaccinationRecords"> & { vaccin: Doc<"vaccins"> | null, dose: Doc<"doses"> | null } }) {
 
   const router = useRouter()
 
@@ -33,21 +33,32 @@ export default function EditVaccinationRecordForm({ vaccinationRecord }: { vacci
     notes: z.string().optional(),
   })
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as any,
     defaultValues:{
-      date: vaccinationRecord.date,
+      date: new Date(vaccinationRecord.date),
       lotNumber: vaccinationRecord.lotNumber,
       manufacturer: vaccinationRecord.manufacturer,
       dosage: vaccinationRecord.dosage,
       route: vaccinationRecord.route,
       site: vaccinationRecord.site,
-      expiration: vaccinationRecord.expiration,
+      expiration: new Date(vaccinationRecord.expiration),
       notes: vaccinationRecord.notes || '',
     },
   })
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    const res = await updateVaccinationRecord({...data, id: vaccinationRecord.id, patientId: vaccinationRecord.patientId, vaccinId: vaccinationRecord.vaccinId, doseId: vaccinationRecord.doseId, notes: data.notes || null})
+    const res = await updateVaccinationRecord({
+      _id: vaccinationRecord._id,
+      patientId: vaccinationRecord.patientId,
+      date: data.date.getTime(),
+      notes: data.notes || undefined,
+      manufacturer: data.manufacturer,
+      lotNumber: data.lotNumber,
+      expiration: data.expiration.getTime(),
+      dosage: data.dosage,
+      route: data.route,
+      site: data.site,
+    })
     console.log('res', res)
     if (res?.success) {
       toast.success('Vaccination record updated successfully')
@@ -211,13 +222,15 @@ export default function EditVaccinationRecordForm({ vaccinationRecord }: { vacci
             )}
           />
 
-          <div className='flex flex-col gap-2'>
-            <p className='text-sm font-medium'>Dose Type </p>
-            <p className='text-sm'>{vaccinationRecord.dose.doseType.charAt(0).toUpperCase() + vaccinationRecord.dose.doseType.slice(1)}</p>
-          </div>
+          {vaccinationRecord.dose && (
+            <div className='flex flex-col gap-2'>
+              <p className='text-sm font-medium'>Dose Type </p>
+              <p className='text-sm'>{vaccinationRecord.dose.doseType.charAt(0).toUpperCase() + vaccinationRecord.dose.doseType.slice(1)}</p>
+            </div>
+          )}
 
           { 
-            vaccinationRecord.dose.doseCount && <div className='flex flex-col gap-2'>
+            vaccinationRecord.dose?.doseCount && <div className='flex flex-col gap-2'>
               <p className='text-sm font-medium'>Dose Count </p>
               <p className='text-sm'>{numberToOrdinal(vaccinationRecord.dose.doseCount)}</p>
             </div>

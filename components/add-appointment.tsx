@@ -16,8 +16,15 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { AppointmentSelect, PatientSelect, Service } from "@/db/schema"
 import { ArrowLeft } from "lucide-react"
+import { Id } from "@/convex/_generated/dataModel"
+
+interface Service {
+  _id: Id<"services">;
+  name: string;
+  price: number;
+  currency: string;
+}
 import Link from "next/link"
 
 const formSchema = z.object({
@@ -46,8 +53,8 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>
 
 interface AddAppointmentProps {
-  doctorId: string
-  patientId: string
+  doctorId: Id<"doctors">
+  patientId: Id<"patients">
   patient: any
   services: Service[]
 }
@@ -64,7 +71,7 @@ const AddAppointment = ({ doctorId, patientId, patient, services }: AddAppointme
   const router = useRouter()
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as any,
     defaultValues: {
       height: undefined,
       weight: undefined,
@@ -109,7 +116,7 @@ const AddAppointment = ({ doctorId, patientId, patient, services }: AddAppointme
     return () => clearTimeout(timeoutId)
   }, [symptoms])
 
-  const fetchDiagnosticSuggestions = async (patient: PatientSelect, appointment: Partial<AppointmentSelect>) => {
+  const fetchDiagnosticSuggestions = async (patient: any, appointment: any) => {
     if (symptoms) {
       setGenerating(true)
 
@@ -152,7 +159,7 @@ const AddAppointment = ({ doctorId, patientId, patient, services }: AddAppointme
       console.log("appointment :>> ", appointment)
 
       refresh([`/user/patients/${patientId}`])
-      router.push(`/user/patients/${patientId}/${appointment.id}`)
+      router.push(`/user/patients/${patientId}/${appointment._id}`)
     } catch (err) {
       console.log(err)
     } finally {
@@ -189,7 +196,7 @@ const AddAppointment = ({ doctorId, patientId, patient, services }: AddAppointme
                       <Select
                         onValueChange={(value) => {
                           field.onChange(value);
-                          const selectedService = services.find((s) => s.id === value);
+                          const selectedService = services.find((s) => s._id === value);
                           if (selectedService) {
                             form.setValue("cost", selectedService.price);
                           }
@@ -203,7 +210,7 @@ const AddAppointment = ({ doctorId, patientId, patient, services }: AddAppointme
                         </FormControl>
                         <SelectContent>
                           {services.map((service) => (
-                            <SelectItem key={service.id} value={service.id}>
+                            <SelectItem key={service._id} value={service._id}>
                               {service.name} - {service.price} {service.currency}
                             </SelectItem>
                           ))}

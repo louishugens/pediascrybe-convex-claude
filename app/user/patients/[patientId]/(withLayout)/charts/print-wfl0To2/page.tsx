@@ -1,136 +1,93 @@
 import Print from "@/components/printCharts";
-import prisma from "@/utils/prisma";
-import { createClient } from '@/utils/supabase/server'
-import { Patient, charts } from "@prisma/client";
-import { differenceInDays } from "date-fns";
+import { getCurrentDoctor } from "@/lib/convex-data";
+import { fetchAuthQuery } from "@/lib/auth-server";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 
-async function getAppointment(appointmentId) {
-  const appointment = await prisma.appointment.findUnique({
-    where:{
-      id:appointmentId
-    },
-  })
-  return appointment
-}
+type Params = Promise<{ patientId: string }>
 
-async function getPatient(patientId) {
-  const patient = await prisma.patient.findUnique({
-    where:{
-      id:patientId
-    },
-    include: {
-      appointments:{
-        orderBy:{
-          height: 'asc'
-        }
-      },
-    },
-  })
-  return patient
-}
+const PrintPage = async (props: { params: Params }) => {
+  const { patientId } = await props.params;
+  const doctor = await getCurrentDoctor();
 
-async function getDoctor(doctorId) {
-  const doctor = await prisma.doctor.findUnique({
-    where:{
-      id:doctorId
-    },
-  })
-  return doctor
-}
+  if (!doctor) {
+    return <div>Doctor not found</div>;
+  }
 
-async function getReferenceData(sex: Patient["sex"]){
+  const patient = await fetchAuthQuery(api.patients.getPatientWithAppointments, {
+    patientId: patientId as Id<"patients">
+  });
 
-  const referenceData = await prisma.charts.findUnique({
-    where:{
-      id: (sex === 'female') ? 'gwfh_0_2' : 'bwfh_0_2'
-    }
-  })
-  return referenceData
-}
+  if (!patient) {
+    return <div>Patient not found</div>;
+  }
 
+  const appointments = patient.appointments;
+  const referenceData = await fetchAuthQuery(api.charts.getChartReference, {
+    chartId: patient.sex === 'female' ? 'gwfl0To2' : 'bwfl0To2'
+  });
 
+  let formatted: { age: number; value: number }[] = [];
 
-const PrintPage = async props => {
-  const params = await props.params;
-
-  const {
-    patientId
-  } = params;
-
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const doctorId = user?.id
-
-
-  const patient = await getPatient(patientId)
-  const doctor = await getDoctor(doctorId)
-  const appointments = patient?.appointments
-  const referenceData = await getReferenceData(patient?.sex ?? null);
-
-  let formatted: { length: number; value: number; }[] = []
-
-  appointments?.map(appointment =>{
-    if(appointment.weight && appointment.height){
-      let app = {length: appointment.height, value: appointment.weight}
-      if(differenceInDays(appointment.startDate, patient?.birthdate ?? new Date()) < 365*2){
-        formatted.push(app)
+  appointments?.map((appointment: any) => {
+    if (appointment.weight && appointment.height) {
+      if (appointment.height >= 45 && appointment.height <= 110) {
+        let app = { 
+          age: Math.round(appointment.height * 10) / 10, 
+          value: appointment.weight 
+        };
+        formatted.push(app);
       }
     }
-  })
+  });
 
-  const formatReferenceData = (data: charts, formatted: { length: number; value: number; }[]) => {
-    const format: { 
-      length: number | undefined; 
-      '3rd': number | undefined; 
-      '15th': number | undefined; 
-      '50th': number | undefined; 
-      '85th': number | undefined; 
-      '97th': number | undefined; 
-      [key: string]: number | undefined
-    }[] = [];
+  const formatReferenceData = (data: any, formatted: { age: number; value: number }[]) => {
+    const format: any[] = [];
 
     const maxLength = Math.max(
-      (data.p03 as number[])?.length || 0,
-      (data.p15 as number[])?.length || 0,
-      (data.p50 as number[])?.length || 0,
-      (data.p85 as number[])?.length || 0,
-      (data.p97 as number[])?.length || 0
+      (data?.p03 as number[])?.length || 0,
+      (data?.p15 as number[])?.length || 0,
+      (data?.p50 as number[])?.length || 0,
+      (data?.p85 as number[])?.length || 0,
+      (data?.p97 as number[])?.length || 0
     );
 
-    // Start at 45 cm and increment by 0.1 cm
-    for (let i = 0; i < maxLength; i++) {
-      const lengthValue = 45 + (i * 0.5);
-      const patientDataForDay = formatted.find(item => Math.abs(item.length - lengthValue) < 0.05);
+    for (let index = 0; index < maxLength; index++) {
+      const height = 45 + index * 0.5;
+      const patientDataForHeight = formatted.find(item => Math.abs(item.age - height) < 0.5);
 
-      format.push({ 
-        length: lengthValue, 
-        '3rd': data.p03?.[i] ?? null, 
-        '15th': data.p15?.[i] ?? null, 
-        '50th': data.p50?.[i] ?? null, 
-        '85th': data.p85?.[i] ?? null, 
-        '97th': data.p97?.[i] ?? null,
-        [patient?.firstname ?? 'patient']: patientDataForDay?.value ?? null
+      format.push({
+        age: height,
+        '3rd': data?.p03?.[index] ?? null,
+        '15th': data?.p15?.[index] ?? null,
+        '50th': data?.p50?.[index] ?? null,
+        '85th': data?.p85?.[index] ?? null,
+        '97th': data?.p97?.[index] ?? null,
+        [patient.firstname ?? 'patient']: patientDataForHeight?.value ?? null
       });
     }
 
     return format;
   };
 
-  const data = referenceData ? formatReferenceData(referenceData, formatted) : [];
-
-
+  const data = referenceData ? formatReferenceData(referenceData, formatted) : null;
 
   return (
     <>
-      <Print type="wfl-0To2" title="Weight for Length (0-2 years)" ylabel="Weight (in kg)" xlabel="Height (in cm)" patient={patient} doctor={doctor} data={data} yUnit="kg" xUnit="cm" mesure="length" />
+      <Print 
+        type="wfl0To2" 
+        title="Weight for Length (0-2 years)" 
+        ylabel="Weight (in kg)" 
+        xlabel="Length (in cm)" 
+        patient={patient} 
+        doctor={doctor} 
+        data={data} 
+        yUnit={'kg'} 
+        xUnit={'cm'} 
+        mesure={'length'} 
+      />
     </>
   );
 };
 
 export default PrintPage;
-
-

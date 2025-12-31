@@ -1,41 +1,32 @@
 import { openai } from '@ai-sdk/openai'
 import { streamText } from 'ai'
-import { createClient } from '@/utils/supabase/server'
- 
- 
+import { isAuthenticated } from '@/lib/auth-server'
+
 export async function POST(req: Request) {
   try {
-    const supabase = await createClient()
-    const { data: {user}, error } = await (await supabase).auth.getUser();
+    const authenticated = await isAuthenticated();
 
-    if (!user) {
+    if (!authenticated) {
       return new Response(
         JSON.stringify({
-          error: { statusCode: 500, message: 'User is not defined' }
+          error: { statusCode: 401, message: 'Not authenticated' }
         }),
-        { status: 500 }
+        { status: 401 }
       );
     }
 
     const { messages } = await req.json()
 
-    // console.log('messages :>> ', messages);
-
-    
     const textStream = await streamText({
       model: openai('gpt-4o-mini'),
       messages
     })
-
-    // console.log('response :>> ', response);
 
     if (!textStream) {
       return new Response(JSON.stringify(textStream), {
         status: 500
       });
     }
-
-    // console.log('textStream :>> ', textStream);
 
     return textStream.toTextStreamResponse()
   } catch (error) {

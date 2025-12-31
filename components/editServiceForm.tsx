@@ -21,7 +21,15 @@ import {
   SelectValue,
 } from "./ui/select"
 import { toast } from 'sonner'
-import { Service } from '@/db/schema'
+import { Id } from '@/convex/_generated/dataModel'
+
+interface Service {
+  _id: Id<"services">;
+  name: string;
+  price: number;
+  currency: string;
+  type: 'clinical' | 'documentation';
+}
 
 interface EditServiceFormProps {  
   className?: string
@@ -43,7 +51,7 @@ export function EditServiceForm({ className, service }: EditServiceFormProps) {
     setIsSubmitting(true)
     
       const res = await updateService({
-        id: service.id,
+        id: service._id,
         name: formData.name,
         price: parseFloat(formData.price),
         currency: formData.currency,

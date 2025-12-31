@@ -1,54 +1,42 @@
-import prisma from "@/utils/prisma";
-import { revalidateTag } from "next/cache";
-import { utapi } from "uploadthing/server";
-import { createClient } from '@/utils/supabase/server'
- 
+import { fetchAuthMutation, isAuthenticated } from "@/lib/auth-server";
+import { api } from "@/convex/_generated/api";
+import { UTApi } from "uploadthing/server";
+
+const utapi = new UTApi();
+
 export async function POST(req: Request) {
-  if(req.method == 'POST') {
-
-    const supabase = await createClient()
-
-
-    const { data: {user}, error } = await (await supabase).auth.getUser();
-
-    if (!user) {
+  try {
+    const authenticated = await isAuthenticated();
+    
+    if (!authenticated) {
       return new Response(
         JSON.stringify({
-          error: { statusCode: 500, message: 'User is not defined' }
+          error: { statusCode: 401, message: 'Not authenticated' }
         }),
-        { status: 500 }
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    const { file } = await req.json()
+    const { file } = await req.json();
 
-     const deletedFile = await prisma.file.delete({
-      where:{
-        id: file.id
-      }
-    })
+    await fetchAuthMutation(api.files.deleteFile, {
+      fileId: file.id,
+    });
 
-    const utId = file.url.split("/").pop()
-
-    await utapi.deleteFiles(utId)
-
+    // Delete from uploadthing
+    const utId = file.url.split("/").pop();
+    await utapi.deleteFiles(utId);
     
-
-    if (deletedFile) {
-
-      revalidateTag("file", "max")
-      return new Response("Delete sucessfull", {
-        status: 200
-      });
-    }else{
-      return new Response(
-        JSON.stringify({
-       error: { statusCode: 500, message: 'file is not saved' }
-       }),
-       { status: 500 }
-     );
-    }
-
+    return new Response("Delete successful", {
+      status: 200
+    });
+  } catch (error: any) {
+    console.error('Error deleting file:', error);
+    return new Response(
+      JSON.stringify({
+        error: { statusCode: 500, message: error?.message || 'File was not deleted' }
+      }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
-
 }

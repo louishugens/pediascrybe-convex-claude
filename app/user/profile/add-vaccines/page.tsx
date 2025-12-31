@@ -1,15 +1,12 @@
-import { db } from '@/db'
-import { Doctor, Vaccin, VaccinReference } from '@/db/schema'
 import UpdateDoctorVaccines from '@/components/updateDoctorVaccines'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/utils/supabase/server'
 import { Suspense, ViewTransition } from 'react'
 import GenericFormSkeleton from '@/components/skeletons/generic-form-skeleton'
-import { eq } from 'drizzle-orm'
+import { getCurrentDoctor } from '@/lib/convex-data'
+import { fetchAuthQuery } from '@/lib/auth-server'
+import { api } from '@/convex/_generated/api'
 
 export default async function AddVaccines() {
-
-
   return (
     <div className='h-screen mb-8 pb-4 overflow-y-auto '>
       <ViewTransition>
@@ -22,39 +19,24 @@ export default async function AddVaccines() {
 }
 
 async function AddVaccinesContainer() {
-
-  const supabase = await createClient()
-
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const doctorId = user?.id
-  if (!doctorId) {
+  const doctor = await getCurrentDoctor()
+  
+  if (!doctor) {
     redirect('/')
   }
 
-  const referenceVaccines = await db.query.VaccinReference.findMany(
-    {
-      with: {
-        doses: true
-      }
-    }
-  )
-
-  const doctorVaccines = await db.query.Vaccin.findMany(
-    {
-      where: eq(Vaccin.doctorId, doctorId),
-      with: {
-        doses: true
-      }
-    }
-  )
+  const [referenceVaccines, doctorVaccines] = await Promise.all([
+    fetchAuthQuery(api.vaccines.getVaccineReferences, {}),
+    fetchAuthQuery(api.vaccines.getDoctorTrackedVaccines, { doctorId: doctor._id }),
+  ])
 
   return (
     <div className='h-screen mb-8 pb-4 overflow-y-auto '>
-      <UpdateDoctorVaccines doctorVaccines={doctorVaccines} referenceVaccines={referenceVaccines} doctorId={doctorId} />
+      <UpdateDoctorVaccines 
+        doctorVaccines={doctorVaccines} 
+        referenceVaccines={referenceVaccines} 
+        doctorId={doctor._id} 
+      />
     </div>
   )
 }

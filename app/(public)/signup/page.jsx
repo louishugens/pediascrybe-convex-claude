@@ -1,21 +1,18 @@
 'use client'
-import  {useState, CSSProperties} from 'react';
+import { useState } from 'react';
 import Doctor from '@/components/doctor';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import * as yup from "yup";
 import { yupResolver } from '@hookform/resolvers/yup';
 import PulseLoader from "react-spinners/PulseLoader"
-import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import posthog from 'posthog-js';
-
-
-
+import { authClient } from '@/lib/auth-client';
+import { toast, Toaster } from 'sonner';
 
 export default function Signup() {
-  const supabase = createClient()
-  const override= {
+  const override = {
     display: "block",
     margin: "auto",
     position: "absolute",
@@ -24,18 +21,16 @@ export default function Signup() {
     transform: "translate(-50%, -50%)",
   };
 
-  
-
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [color, setColor] = useState('#22C55E')
+  const [color] = useState('#22C55E')
 
   const schema = yup.object({
     firstname: yup.string().required('Please enter your first name'),
     lastname: yup.string().required('Please enter your last name'),
     email: yup.string().email('Invalid email').required('Please enter your email'),
-    password: yup.string().required('Please enter your password'),
-    terms: yup.boolean().required('Please confirm you read and accpept the terms').oneOf([true], "The terms and conditions must be accepted.")
+    password: yup.string().min(8, 'Password must be at least 8 characters').required('Please enter your password'),
+    terms: yup.boolean().required('Please confirm you read and accept the terms').oneOf([true], "The terms and conditions must be accepted.")
   }).required();
 
   const router = useRouter();
@@ -50,52 +45,42 @@ export default function Signup() {
 
   const onSubmit = (data) => createUser(data);
 
-
   const createUser = async (values) => {
     setLoading(true)
+    setError(null)
 
-    const {firstname, lastname, email, password} = values
-    const { data: user, error } = await supabase.auth.signUp({
+    const { firstname, lastname, email, password } = values
+    
+    const { data, error } = await authClient.signUp.email({
       email: email,
       password: password,
-      options: {
-        emailRedirectTo: `${process.env.BASE_URL}/signin`
-      }
+      name: `${firstname} ${lastname}`,
+      firstName: firstname,
+      lastName: lastname,
+      role: "doctor", // Default role for signup
     })
-    
 
-    if(user){
+    if (error) {
+      setError(error)
+      toast.error(error.message || 'Sign up failed')
+      setLoading(false)
+      return
+    }
 
-
-
-      const {error} = await supabase.from('Doctor')
-      .insert(
-        {id: user.user.id,  firstname, lastname, email }
-      )
-      if(error){
-        setError(error)
-        setLoading(false)
-        console.log('error :>> ', error);
-      }else{
-        // setLoading(false)
-        const res = await fetch('/api/send', {
+    if (data?.user) {
+      // Send welcome email
+      try {
+        await fetch('/api/send', {
           method: 'POST',
           body: JSON.stringify({ email, lastname }),
         })
-        const  emailres  = await res.json()
-        console.log('email :>> ', emailres);
-        posthog.capture('Signup success')
-        router.push('/signup/success')
-
+      } catch (e) {
+        console.log('Email send error:', e);
       }
-
+      
+      posthog.capture('Signup success')
+      router.push('/signup/success')
     }
-
-    if(error){
-      setError(error)
-    }
-
-    // setLoading(false)
   }
 
   return (
@@ -167,7 +152,7 @@ export default function Signup() {
                   type="password"
                   {...register('password')}
                 />
-                {errors?.email && <p className='px-4 pt-1 text-sm text-red-600'>{errors?.password?.message}</p>}
+                {errors?.password && <p className='px-4 pt-1 text-sm text-red-600'>{errors?.password?.message}</p>}
               </label>
               <div className="flex items-center mb-4">
                 <label className="inline-flex relative items-center cursor-pointer">
@@ -188,6 +173,7 @@ export default function Signup() {
                 </Link>
               </div>
               {errors?.terms && <p className='px-4 pt-1 text-xs text-red-600 mb-5'>{errors.terms?.message}</p>}
+              {error && <p className='px-4 pt-1 text-xs text-red-600 mb-5'>{error.message}</p>}
 
               <button className="py-2 px-4 rounded-full bg-primary text-muted text-lg font-semibold w-1/2 center mt-4 mx-auto" type='submit'>
                 Create Account
@@ -199,6 +185,10 @@ export default function Signup() {
           <Doctor className="mx-auto" />
         </div>
       </div>
+      <Toaster 
+        position="top-center" 
+        richColors={true}
+      />
     </div>
   );
 }

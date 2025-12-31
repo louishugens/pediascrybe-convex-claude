@@ -1,14 +1,21 @@
 'use client'
-import { Receipt } from "@prisma/client";
 import ReceiptItem from "./receiptItem";
+import { Id } from "@/convex/_generated/dataModel";
+
+interface Receipt {
+  _id: Id<"receipts">;
+  createdAt: number;
+  services?: any;
+  totalPrice?: number | null;
+}
 
 interface Props {
   receipts: Receipt[]
-  patientId: String
+  patientId: string
   lang: string
 }
-const ReportList = ({receipts, patientId, lang}: Props) => {
 
+const ReceiptList = ({receipts, patientId, lang}: Props) => {
   return ( 
     <table className="table-auto color-0 rounded-lg relative text-sm w-full mt-4 border-separate border-spacing-y-1.5">
     <thead className="rounded-t-lg  bg-blue-50">
@@ -20,9 +27,9 @@ const ReportList = ({receipts, patientId, lang}: Props) => {
       </tr>
     </thead>
     <tbody className='w-full'>
-      {receipts.map(receipt =>{
+      {receipts.map(receipt => {
         return(
-          <ReceiptItem patientId={patientId} receipt={receipt} key={receipt.id} lang={lang} />
+          <ReceiptItem patientId={patientId} receipt={receipt} key={receipt._id} lang={lang} />
         )}
       )}
     </tbody>
@@ -30,4 +37,4 @@ const ReportList = ({receipts, patientId, lang}: Props) => {
    );
 }
  
-export default ReportList;
+export default ReceiptList;

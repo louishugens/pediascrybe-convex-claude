@@ -1,6 +1,5 @@
 'use client'
 import { useState } from 'react'
-import { Vaccin, VaccinationRecord,  DoseType, Dose } from '@prisma/client'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -19,7 +18,20 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { numberToOrdinal } from '@/lib/utils'
 import BeatLoader from 'react-spinners/BeatLoader'
+import { Id } from '@/convex/_generated/dataModel'
 
+interface Dose {
+  _id: Id<"doses">;
+  doseType: string;
+  doseCount?: number | null;
+  maxAge?: number | null;
+}
+
+interface Vaccin {
+  _id: Id<"vaccins">;
+  name: string;
+  doses: Dose[];
+}
 
 const formSchema = z.object({
   vaccinId: z.string(),
@@ -38,22 +50,22 @@ const formSchema = z.object({
 // Infer the form values type from the schema
 type FormValues = z.infer<typeof formSchema>
 
-export default function AddVaccineForm({ vaccines, patientId }: { vaccines: (Vaccin & { doses: Dose[] })[], patientId: string }) {
-  const [selectedVaccine, setSelectedVaccine] = useState<(Vaccin & { doses: Dose[] }) | null>(null)
+export default function AddVaccineForm({ vaccines, patientId }: { vaccines: Vaccin[], patientId: string }) {
+  const [selectedVaccine, setSelectedVaccine] = useState<Vaccin | null>(null)
   const [selectedDose, setSelectedDose] = useState<Dose | null>(null)
   const router = useRouter()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      vaccinId: selectedVaccine?.id,
+      vaccinId: selectedVaccine?._id,
       lotNumber: '',
       patientId,
       date: new Date(),
       notes: null,
       expiration: new Date(),
       manufacturer: '',
-      doseId: selectedDose?.id,
+      doseId: selectedDose?._id,
       dosage: '',
       route: '',
       site: '',
@@ -61,7 +73,19 @@ export default function AddVaccineForm({ vaccines, patientId }: { vaccines: (Vac
   })
 
   async function onSubmit(values: FormValues) {
-    const res = await addVaccinationRecord(values)
+    const res = await addVaccinationRecord({
+      patientId: values.patientId as Id<"patients">,
+      vaccinId: values.vaccinId as Id<"vaccins">,
+      doseId: values.doseId as Id<"doses">,
+      date: values.date.getTime(),
+      notes: values.notes || undefined,
+      manufacturer: values.manufacturer,
+      lotNumber: values.lotNumber,
+      expiration: values.expiration.getTime(),
+      dosage: values.dosage,
+      route: values.route,
+      site: values.site,
+    })
     if (res.success) {
       router.push(`/user/patients/${patientId}/vaccines`)
     } else {
@@ -72,17 +96,16 @@ export default function AddVaccineForm({ vaccines, patientId }: { vaccines: (Vac
 
 
   function selectVaccine(vaccineId: string) {
-    const vaccine = vaccines.find(v => v.id === vaccineId) || null;
+    const vaccine = vaccines.find(v => v._id === vaccineId) || null;
     setSelectedVaccine(vaccine);
     setSelectedDose(null);
     form.setValue('vaccinId', vaccineId);
     
-    // Log the selected vaccine directly
     console.log('selectedVaccine', vaccine);
   }
 
   function selectDose(doseId: string) {
-    const dose = selectedVaccine?.doses.find(d => d.id === doseId) || null;
+    const dose = selectedVaccine?.doses.find(d => d._id === doseId) || null;
     setSelectedDose(dose);
     console.log('selectedDose', dose);
     form.setValue('doseId', doseId);
@@ -96,7 +119,7 @@ export default function AddVaccineForm({ vaccines, patientId }: { vaccines: (Vac
         </SelectTrigger>
         <SelectContent>
           {vaccines.map((vaccine) => (
-            <SelectItem key={vaccine.id} value={vaccine.id}>
+            <SelectItem key={vaccine._id} value={vaccine._id}>
               {vaccine.name}
             </SelectItem>
           ))}
@@ -111,7 +134,7 @@ export default function AddVaccineForm({ vaccines, patientId }: { vaccines: (Vac
             </SelectTrigger>
             <SelectContent>
               {selectedVaccine.doses.map((dose) => (
-                  <SelectItem key={dose.id} value={dose.id}>{`Dose Type: ${dose.doseType.charAt(0).toUpperCase() + dose.doseType.slice(1)} ${dose.doseCount ? `- Dose Count: ${numberToOrdinal(dose.doseCount)}` : ''} ${dose.maxAge !== null ? `- Max Age: ${dose.maxAge == 0 ? 'At birth' : `${dose.maxAge} months`}` : ''}`}</SelectItem>
+                  <SelectItem key={dose._id} value={dose._id}>{`Dose Type: ${dose.doseType.charAt(0).toUpperCase() + dose.doseType.slice(1)} ${dose.doseCount ? `- Dose Count: ${numberToOrdinal(dose.doseCount)}` : ''} ${dose.maxAge !== null ? `- Max Age: ${dose.maxAge == 0 ? 'At birth' : `${dose.maxAge} months`}` : ''}`}</SelectItem>
               ))}
             </SelectContent>
           </Select>

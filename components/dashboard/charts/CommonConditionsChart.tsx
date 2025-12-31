@@ -5,9 +5,9 @@ import { z } from 'zod'
 
 interface CommonConditionsProps {
   appointments: {
-    id: string;
-    startDate: Date;
-    findings: string | null;
+    _id: string;
+    startDate: number;
+    findings?: string | null;
   }[]
 }
 

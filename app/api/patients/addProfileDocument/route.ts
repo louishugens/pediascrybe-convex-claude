@@ -1,68 +1,48 @@
-import prisma from "@/utils/prisma";
-import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { Document } from "langchain/document";
-import { createClient } from '@/utils/supabase/server'      
+import { fetchAuthAction, isAuthenticated } from "@/lib/auth-server";
+import { api } from "@/convex/_generated/api";
 
 export async function POST(req: Request) {
-  if(req.method == 'POST') {
-
-    const supabase = await createClient()
-
-    const { data: {user}, error } = await (await supabase).auth.getUser();
-
-    if (!user) {
+  try {
+    const authenticated = await isAuthenticated();
+    
+    if (!authenticated) {
       return new Response(
         JSON.stringify({
-          error: { statusCode: 500, message: 'User is not defined' }
+          error: { statusCode: 401, message: 'Not authenticated' }
         }),
-        { status: 500 }
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    const {patient} = await req.json()
-
+    const { patient } = await req.json();
 
     if (patient) {
-
-      // const embeddings = new OpenAIEmbeddings();
-
-      // const store = new SupabaseVectorStore(embeddings, {
-      //   client: await supabase,
-      //   tableName: "documents",
+      // Index patient data for vector search (optional - can be enabled later)
+      // await fetchAuthAction(api.ai.indexPatientData, {
+      //   patientId: patient._id,
+      //   content: JSON.stringify(patient),
+      //   metadata: { patientId: patient._id },
       // });
 
-      // if(patient.vectorId){
-      //   await store.delete({ids:[patient.vectorId]});
-      // }
-
-      // const doc = new Document({ pageContent: JSON.stringify(patient),
-      //   metadata: { patientId: patient.id}});
-
-
-      // const result = await store.addDocuments([doc]);
-
-      // await prisma.patient.update({
-      //   where:{
-      //     id: patient.id
-      //   },
-      //   data: {
-      //     vectorId: parseInt(result[0])
-      //   }
-      // })
-
       return new Response(JSON.stringify(patient), {
-        status: 200
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
       });
-    }else{
+    } else {
       return new Response(
         JSON.stringify({
-       error: { statusCode: 500, message: 'appointment is not update sucessfully adding exams' }
-       }),
-       { status: 500 }
-     );
+          error: { statusCode: 500, message: 'Patient data not provided' }
+        }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
     }
-
+  } catch (error: any) {
+    console.error('Error adding profile document:', error);
+    return new Response(
+      JSON.stringify({
+        error: { statusCode: 500, message: error?.message || 'An error occurred' }
+      }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
-
 }

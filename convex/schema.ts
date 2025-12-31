@@ -1,0 +1,319 @@
+import { defineSchema, defineTable } from "convex/server";
+import { v } from "convex/values";
+
+// ==================== Domain Tables ====================
+
+// Doctors table - links to Better Auth user via authUserId
+const doctors = defineTable({
+  authUserId: v.string(), // Links to Better Auth user._id
+  email: v.string(),
+  firstname: v.string(),
+  lastname: v.string(),
+  phone: v.optional(v.string()),
+  address: v.optional(v.string()),
+  spec: v.optional(v.string()),
+  title: v.optional(v.string()),
+  summary: v.optional(v.string()),
+  experience: v.optional(v.number()),
+  cost: v.optional(v.number()),
+  duration: v.optional(v.number()),
+  isActive: v.boolean(),
+  isCompleted: v.boolean(),
+  isDoctor: v.boolean(),
+  isMedPro: v.boolean(),
+  availability: v.optional(v.any()),
+  createdAt: v.number(),
+  updatedAt: v.number(),
+})
+  .index("by_authUserId", ["authUserId"])
+  .index("by_email", ["email"]);
+
+// Patients table
+const patients = defineTable({
+  doctorId: v.id("doctors"),
+  firstname: v.string(),
+  lastname: v.string(),
+  email: v.optional(v.string()),
+  phone: v.optional(v.string()),
+  birthdate: v.number(), // Unix timestamp
+  sex: v.optional(v.union(v.literal("male"), v.literal("female"))),
+  mothername: v.optional(v.string()),
+  profession: v.optional(v.string()),
+  religion: v.optional(v.string()),
+  children: v.optional(v.number()),
+  allergies: v.optional(v.string()),
+  history: v.optional(v.string()),
+  bloodtype: v.optional(v.string()),
+  electrophoresis: v.optional(v.string()),
+  isCompleted: v.boolean(),
+  createdAt: v.number(),
+  updatedAt: v.number(),
+})
+  .index("by_doctorId", ["doctorId"])
+  .index("by_doctorId_name", ["doctorId", "firstname", "lastname"])
+  .searchIndex("search_patients", {
+    searchField: "firstname",
+    filterFields: ["doctorId"],
+  });
+
+// Services table
+const services = defineTable({
+  doctorId: v.id("doctors"),
+  name: v.string(),
+  price: v.number(),
+  currency: v.string(),
+  type: v.union(v.literal("clinical"), v.literal("documentation")),
+  createdAt: v.number(),
+  updatedAt: v.number(),
+})
+  .index("by_doctorId", ["doctorId"]);
+
+// Appointments table
+const appointments = defineTable({
+  doctorId: v.id("doctors"),
+  patientId: v.id("patients"),
+  serviceId: v.optional(v.id("services")),
+  startDate: v.number(), // Unix timestamp
+  endDate: v.optional(v.number()),
+  status: v.optional(v.union(v.literal("pending"), v.literal("paid"), v.literal("offline"))),
+  cost: v.optional(v.number()),
+  motif: v.optional(v.string()),
+  findings: v.optional(v.string()),
+  recommendation: v.optional(v.string()),
+  otherRemarks: v.optional(v.string()),
+  // Vitals
+  height: v.optional(v.number()),
+  weight: v.optional(v.number()),
+  head: v.optional(v.number()),
+  arm: v.optional(v.number()),
+  sao2: v.optional(v.number()),
+  temperature: v.optional(v.number()),
+  pulse: v.optional(v.number()),
+  respiratory: v.optional(v.number()),
+  systolic: v.optional(v.number()),
+  diastolic: v.optional(v.number()),
+  // Medical data
+  exams: v.optional(v.any()),
+  medication: v.optional(v.any()),
+  // Transaction
+  transactionId: v.optional(v.string()),
+  transactionDate: v.optional(v.number()),
+})
+  .index("by_doctorId", ["doctorId"])
+  .index("by_patientId", ["patientId"])
+  .index("by_doctorId_startDate", ["doctorId", "startDate"])
+  .index("by_patientId_startDate", ["patientId", "startDate"]);
+
+// Files table - attachments to appointments
+const files = defineTable({
+  appointmentId: v.id("appointments"),
+  url: v.string(),
+  name: v.string(),
+  fileType: v.union(v.literal("IMAGE"), v.literal("PDF"), v.literal("VIDEO")),
+})
+  .index("by_appointmentId", ["appointmentId"]);
+
+// Reports table
+const reports = defineTable({
+  patientId: v.id("patients"),
+  reportType: v.union(v.literal("Report"), v.literal("Certificate"), v.literal("ReferenceNote")),
+  content: v.string(),
+  createdAt: v.number(),
+})
+  .index("by_patientId", ["patientId"]);
+
+// Receipts table
+const receipts = defineTable({
+  patientId: v.id("patients"),
+  services: v.optional(v.any()), // JSON array of service items
+  cost: v.optional(v.number()),
+  currency: v.optional(v.string()),
+  date: v.optional(v.number()),
+  createdAt: v.number(),
+})
+  .index("by_patientId", ["patientId"]);
+
+// Doctor images
+const doctorImages = defineTable({
+  doctorId: v.id("doctors"),
+  url: v.string(),
+  publicId: v.string(),
+})
+  .index("by_doctorId", ["doctorId"]);
+
+// ==================== Vaccines ====================
+
+// Vaccines tracked by doctor
+const vaccins = defineTable({
+  doctorId: v.id("doctors"),
+  name: v.string(),
+})
+  .index("by_doctorId", ["doctorId"]);
+
+// Dose definitions for vaccines
+const doses = defineTable({
+  vaccinId: v.id("vaccins"),
+  doseType: v.union(v.literal("regular"), v.literal("annual"), v.literal("booster"), v.literal("unique")),
+  doseCount: v.optional(v.number()),
+  maxAge: v.optional(v.number()),
+})
+  .index("by_vaccinId", ["vaccinId"]);
+
+// Vaccination records for patients
+const vaccinationRecords = defineTable({
+  patientId: v.id("patients"),
+  vaccinId: v.id("vaccins"),
+  doseId: v.id("doses"),
+  date: v.number(),
+  notes: v.optional(v.string()),
+  manufacturer: v.string(),
+  lotNumber: v.string(),
+  expiration: v.number(),
+  dosage: v.string(),
+  route: v.string(),
+  site: v.string(),
+})
+  .index("by_patientId", ["patientId"])
+  .index("by_vaccinId", ["vaccinId"]);
+
+// Reference vaccines (global templates)
+const vaccinReferences = defineTable({
+  name: v.string(),
+});
+
+// Reference dose definitions
+const vaccinReferenceDoses = defineTable({
+  vaccinReferenceId: v.id("vaccinReferences"),
+  doseType: v.union(v.literal("regular"), v.literal("annual"), v.literal("booster"), v.literal("unique")),
+  doseCount: v.optional(v.number()),
+  maxAge: v.optional(v.number()),
+})
+  .index("by_vaccinReferenceId", ["vaccinReferenceId"]);
+
+// ==================== Charts (Growth Charts) ====================
+
+const charts = defineTable({
+  chartId: v.string(), // e.g., "wfa_boys_0_5", "hfa_girls_0_5"
+  p03: v.any(),
+  p15: v.any(),
+  p50: v.any(),
+  p85: v.any(),
+  p97: v.any(),
+  height: v.optional(v.any()),
+})
+  .index("by_chartId", ["chartId"]);
+
+// ==================== AI Documents (Vector Search) ====================
+
+const documents = defineTable({
+  content: v.string(),
+  metadata: v.optional(v.any()),
+  embedding: v.array(v.float64()),
+})
+  .vectorIndex("by_embedding", {
+    vectorField: "embedding",
+    dimensions: 1536, // OpenAI embeddings
+    filterFields: [],
+  });
+
+// ==================== Stripe (Deferred - keeping structure) ====================
+
+const products = defineTable({
+  stripeId: v.string(),
+  active: v.optional(v.boolean()),
+  name: v.optional(v.string()),
+  description: v.optional(v.string()),
+  image: v.optional(v.string()),
+  metadata: v.optional(v.any()),
+})
+  .index("by_stripeId", ["stripeId"]);
+
+const prices = defineTable({
+  stripeId: v.string(),
+  productId: v.id("products"),
+  active: v.optional(v.boolean()),
+  description: v.optional(v.string()),
+  unitAmount: v.optional(v.number()),
+  currency: v.optional(v.string()),
+  pricingType: v.optional(v.union(v.literal("one_time"), v.literal("recurring"))),
+  interval: v.optional(v.union(v.literal("day"), v.literal("week"), v.literal("month"), v.literal("year"))),
+  intervalCount: v.optional(v.number()),
+  trialPeriodDays: v.optional(v.number()),
+  metadata: v.optional(v.any()),
+})
+  .index("by_stripeId", ["stripeId"])
+  .index("by_productId", ["productId"]);
+
+const subscriptions = defineTable({
+  stripeId: v.string(),
+  doctorId: v.id("doctors"),
+  priceId: v.id("prices"),
+  status: v.union(
+    v.literal("trialing"),
+    v.literal("active"),
+    v.literal("canceled"),
+    v.literal("incomplete"),
+    v.literal("incomplete_expired"),
+    v.literal("past_due"),
+    v.literal("unpaid"),
+    v.literal("paused")
+  ),
+  quantity: v.optional(v.number()),
+  cancelAtPeriodEnd: v.optional(v.boolean()),
+  metadata: v.optional(v.any()),
+  created: v.number(),
+  currentPeriodStart: v.number(),
+  currentPeriodEnd: v.number(),
+  endedAt: v.optional(v.number()),
+  cancelAt: v.optional(v.number()),
+  canceledAt: v.optional(v.number()),
+  trialStart: v.optional(v.number()),
+  trialEnd: v.optional(v.number()),
+})
+  .index("by_stripeId", ["stripeId"])
+  .index("by_doctorId", ["doctorId"]);
+
+// ==================== App Users (Auth link) ====================
+
+const appUsers = defineTable({
+  authUserId: v.string(),
+  email: v.string(),
+  displayName: v.optional(v.string()),
+  firstName: v.optional(v.string()),
+  lastName: v.optional(v.string()),
+  role: v.union(v.literal("patient"), v.literal("doctor"), v.literal("admin")),
+  plan: v.string(),
+})
+  .index("by_authUserId", ["authUserId"])
+  .index("by_email", ["email"]);
+
+// ==================== Export Schema ====================
+
+export default defineSchema({
+  // App users (auth link)
+  appUsers,
+  // Domain tables
+  doctors,
+  patients,
+  services,
+  appointments,
+  files,
+  reports,
+  receipts,
+  doctorImages,
+  // Vaccines
+  vaccins,
+  doses,
+  vaccinationRecords,
+  vaccinReferences,
+  vaccinReferenceDoses,
+  // Charts
+  charts,
+  // AI
+  documents,
+  // Stripe
+  products,
+  prices,
+  subscriptions,
+});
+

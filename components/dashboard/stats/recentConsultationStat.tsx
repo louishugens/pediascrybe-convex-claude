@@ -1,4 +1,5 @@
-import { verifySession, getRecentAppointments } from '@/data/queries'
+import { fetchAuthQuery } from '@/lib/auth-server'
+import { api } from '@/convex/_generated/api'
 import { Card, CardContent, CardTitle, CardHeader, CardFooter } from '@/components/ui/card'
 import { Stethoscope } from 'lucide-react'
 import { Suspense } from 'react'
@@ -30,11 +31,11 @@ export default async function RecentConsultationStat() {
 }
 
 async function RecentConsultationStatContent() {
-  const user = await verifySession()
-  if (!user) {
+  const doctor = await fetchAuthQuery(api.doctors.getCurrent)
+  if (!doctor) {
     return null
   }
-  const appointments = await getRecentAppointments(user.id)
+  const appointments = await fetchAuthQuery(api.appointments.listRecent, { doctorId: doctor._id })
   return appointments.length
 }
 

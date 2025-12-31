@@ -131,7 +131,7 @@ const EditAppointment = ({appointment, patientId, patient}) => {
  
     try{
       const {height, weight, head, motif, findings, otherRemarks, arm, sao2, temperature, pulse, respiratory, systolic, diastolic} = values
-      const body = {height, weight, head, motif, findings, otherRemarks, arm, sao2, temperature, pulse, respiratory, systolic, diastolic, appointmentId: appointment.id}
+      const body = {height, weight, head, motif, findings, otherRemarks, arm, sao2, temperature, pulse, respiratory, systolic, diastolic, appointmentId: appointment._id}
       await fetch('/api/patients/updateAppointment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -143,17 +143,17 @@ const EditAppointment = ({appointment, patientId, patient}) => {
       refresh(
         [
           `/user/patients/${appointment.patientId}/`, 
-          `/user/patients/${appointment.patientId}/${appointment.id}`, 
-          `/user/patients/${appointment.patientId}/${appointment.id}/edit-appointment`
+          `/user/patients/${appointment.patientId}/${appointment._id}`, 
+          `/user/patients/${appointment.patientId}/${appointment._id}/edit-appointment`
         ]
       )
-      router.push(`/user/patients/${patientId}/${appointment.id}`)
+      router.push(`/user/patients/${patientId}/${appointment._id}`)
 
     }
     catch(err){
       console.log(err)
     }
-    // router.push(`/user/patients/${patientId}/${appointment.id}`)
+    // router.push(`/user/patients/${patientId}/${appointment._id}`)
   }
   // const create = async values =>{
   //   try{

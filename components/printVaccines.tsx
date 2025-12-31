@@ -5,17 +5,32 @@ import { format } from 'date-fns'
 import { useReactToPrint } from 'react-to-print';
 import Link from 'next/link';
 import PrintHead from '@/components/printHeaderVax';
-import { Doctor, PatientSelect, VaccinationRecord, Vaccin, Dose } from '@/db/schema';
 import { VaccineRecordsPrint } from '@/components/vaccineRecordsPrint';
 
-type VaccineRecord = VaccinationRecord & {
-  vaccin: Vaccin,
-  dose: Dose
+interface VaccineRecord {
+  _id: string;
+  date: number;
+  notes?: string | null;
+  manufacturer: string;
+  lotNumber: string;
+  expiration: number;
+  dosage: string;
+  route: string;
+  site: string;
+  vaccin: {
+    _id: string;
+    name: string;
+  } | null;
+  dose: {
+    _id: string;
+    doseCount?: number | null;
+    doseType: string;
+  } | null;
 }
 
 interface Props {
-  doctor: Doctor,
-  patient: PatientSelect,
+  doctor: any,
+  patient: any,
   vaccines: VaccineRecord[]
 }
 
@@ -59,7 +74,7 @@ const Print = ({doctor, patient, vaccines}: Props) => {
       </div>
       <div className="flex flex-row justify-between pb-2 mt-6">
         <button onClick={ () => handlePrint()} className="shadow bg-blue-500 rounded-full py-2 px-4 text-white text-sm">Print this out!</button>
-        <Link href={`/user/patients/${patient.id}/vaccines`} className="px-4 py-2 rounded-full bg-slate-200 text-blue-500 text-sm">
+        <Link href={`/user/patients/${patient._id}/vaccines`} className="px-4 py-2 rounded-full bg-slate-200 text-blue-500 text-sm">
           Leave
         </Link>
       </div>

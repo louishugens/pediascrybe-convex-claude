@@ -1,8 +1,12 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Vaccin, VaccinReference, Dose, VaccinReferenceDose, DoseType } from '@prisma/client'
+import { Doc } from '@/convex/_generated/dataModel'
 import { useForm, useFieldArray } from 'react-hook-form'
+
+// Define DoseType as a union type matching the Convex schema
+type DoseType = "regular" | "annual" | "booster" | "unique";
+const DoseTypeValues: DoseType[] = ["regular", "annual", "booster", "unique"];
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { Button } from '@/components/ui/button'
@@ -30,7 +34,7 @@ const formSchema = z.object({
           id: z.string(),
           doseCount: z.coerce.number().nullish(),
           maxAge: z.coerce.number().nullish(),
-          doseType: z.nativeEnum(DoseType),
+          doseType: z.enum(["regular", "annual", "booster", "unique"]),
         })
       ),
       isSelected: z.boolean(),
@@ -46,8 +50,8 @@ export default function UpdateDoctorVaccines({
   referenceVaccines,
   doctorId
 }: {
-  doctorVaccines: (Vaccin & { doses: Dose[] })[]
-  referenceVaccines: (VaccinReference & { doses: VaccinReferenceDose[] })[]
+  doctorVaccines: (Doc<"vaccins"> & { doses: Doc<"doses">[] })[]
+  referenceVaccines: (Doc<"vaccinReferences"> & { doses: Doc<"vaccinReferenceDoses">[] })[]
   doctorId: string
 }) {
   const [isLoading, setIsLoading] = useState(false)
@@ -55,18 +59,18 @@ export default function UpdateDoctorVaccines({
   // console.log('doctorVaccines', doctorVaccines)
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as any,
     defaultValues: {
       vaccines: doctorVaccines.map((vaccine) => ({
-        id: vaccine.id,
+        id: vaccine._id,
         name: vaccine.name,
         doctorId: doctorId,
         isSelected: true,
         isCustom: false,
         doses: vaccine.doses.map(dose => ({
-          id: dose.id,
-          doseCount: dose.doseCount,
-          maxAge: dose.maxAge,
+          id: dose._id,
+          doseCount: dose.doseCount ?? null,
+          maxAge: dose.maxAge ?? null,
           doseType: dose.doseType,
         })),
       }))
@@ -92,7 +96,7 @@ export default function UpdateDoctorVaccines({
         id: `new-dose-${Date.now()}`,
         doseCount: null,
         maxAge: null,
-        doseType: DoseType.regular,
+        doseType: "regular" as DoseType,
       }]
     })
   }
@@ -108,7 +112,7 @@ export default function UpdateDoctorVaccines({
           id: `new-dose-${Date.now()}`,
           doseCount: vaccine.doses.length + 1,
           maxAge: null,
-          doseType: DoseType.regular,
+          doseType: "regular" as DoseType,
         }
       ]
     });
@@ -127,15 +131,15 @@ export default function UpdateDoctorVaccines({
     if (checked) {
       const vaccine = referenceVaccines[index]
       append({
-        id: vaccine.id,
+        id: vaccine._id,
         name: vaccine.name,
         doctorId: doctorId,
         isSelected: true,
         isCustom: false,
         doses: vaccine.doses.map(dose => ({
-          id: dose.id,
-          doseCount: dose.doseCount,
-          maxAge: dose.maxAge,
+          id: dose._id,
+          doseCount: dose.doseCount ?? null,
+          maxAge: dose.maxAge ?? null,
           doseType: dose.doseType,
         })),
       })
@@ -145,7 +149,7 @@ export default function UpdateDoctorVaccines({
   }
 
   const handleReferenceVaccineSelection = (vaccineId: string) => {
-    const selectedVaccine = referenceVaccines.find(v => v.id === vaccineId)
+    const selectedVaccine = referenceVaccines.find(v => v._id === vaccineId)
     if (selectedVaccine && !form.getValues().vaccines.some(v => v.name === selectedVaccine.name)) {
       append({
         id: `new-${Date.now()}`,
@@ -154,9 +158,9 @@ export default function UpdateDoctorVaccines({
         isSelected: true,
         isCustom: false,
         doses: selectedVaccine.doses.map(dose => ({
-          id: `new-dose-${Date.now()}-${dose.id}`,
-          doseCount: dose.doseCount,
-          maxAge: dose.maxAge,
+          id: `new-dose-${Date.now()}-${dose._id}`,
+          doseCount: dose.doseCount ?? null,
+          maxAge: dose.maxAge ?? null,
           doseType: dose.doseType,
         })),
       })
@@ -180,13 +184,16 @@ export default function UpdateDoctorVaccines({
     try {
       const updatedVaccines = data.vaccines
         .filter(v => v.isSelected)
-        .map(({ isSelected, isCustom, ...vaccine }) => ({
+        .map(({ isSelected, isCustom, id, ...vaccine }) => ({
           ...vaccine,
-          doses: vaccine.doses.map(dose => ({
-            ...dose,
-            vaccinId: vaccine.id,
-            doseCount: dose.doseCount === 0 ? 0 : (dose.doseCount || null),
-            maxAge: dose.maxAge === 0 ? 0 : (dose.maxAge || null),
+          // Only include _id if it's an existing vaccine (not a new one)
+          _id: id.startsWith('new-') ? undefined : id as any,
+          doses: vaccine.doses.map(({ id: doseId, ...dose }) => ({
+            // Only include _id if it's an existing dose
+            _id: doseId.startsWith('new-') ? undefined : doseId as any,
+            doseCount: dose.doseCount === 0 ? 0 : (dose.doseCount ?? undefined),
+            maxAge: dose.maxAge === 0 ? 0 : (dose.maxAge ?? undefined),
+            doseType: dose.doseType,
           })),
         }));
       await updateVaccines(updatedVaccines);
@@ -232,8 +239,8 @@ export default function UpdateDoctorVaccines({
           <SelectContent>
             {referenceVaccines.map((vaccine) => (
               <SelectItem 
-                key={vaccine.id} 
-                value={vaccine.id}
+                key={vaccine._id} 
+                value={vaccine._id}
                 disabled={addedVaccineNames.includes(vaccine.name)}
               >
                 {vaccine.name}
@@ -315,7 +322,7 @@ export default function UpdateDoctorVaccines({
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                               {Object.values(DoseType).map((type) => (
+                               {DoseTypeValues.map((type) => (
                                 <SelectItem key={type} value={type}>
                                   {type}
                                 </SelectItem>

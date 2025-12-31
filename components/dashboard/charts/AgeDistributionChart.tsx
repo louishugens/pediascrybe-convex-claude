@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/chart"
 
 interface AgeDistributionProps {
-  patients: Array<{ birthdate: Date }>
+  patients: Array<{ birthdate: number }>
 }
 
 export function AgeDistributionChart({ patients }: AgeDistributionProps) {

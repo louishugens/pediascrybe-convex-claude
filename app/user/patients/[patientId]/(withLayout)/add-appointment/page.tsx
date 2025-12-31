@@ -1,30 +1,15 @@
 import AddAppointment from '@/components/add-appointment'
-import prisma from '@/utils/prisma'
-import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
-import { getServicesByDoctorId } from '@/db/queries'
 import { Suspense, ViewTransition } from 'react'
-  
 import { AddAppointmentSkeleton } from '@/components/skeletons/add-appointment-skeleton'
-
-async function getPatient(patientId) {
-  const patient = await prisma.patient.findUnique({
-    where: {
-      id: patientId,
-    },
-    include: {
-      appointments: true,
-    },
-  })
-
-  return patient
-}
+import { getCurrentDoctor } from '@/lib/convex-data'
+import { fetchAuthQuery } from '@/lib/auth-server'
+import { api } from '@/convex/_generated/api'
+import { Id } from '@/convex/_generated/dataModel'
 
 type Params = Promise<{ patientId: string }>
 
 export default async function Appointment(props: { params: Params }) {
-
-
   return (
     <ViewTransition>
       <Suspense fallback={<AddAppointmentSkeleton />}>
@@ -35,28 +20,29 @@ export default async function Appointment(props: { params: Params }) {
 }
 
 async function AddAppointmentContainer({ params }: { params: Params }) {
+  const doctor = await getCurrentDoctor()
 
-
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const doctorId = user?.id
-
-  if (!doctorId) {
+  if (!doctor) {
     redirect('/')
   }
 
   const { patientId } = await params;
 
-  const patient = await getPatient(patientId)
-  const services = await getServicesByDoctorId(doctorId)
-
-
+  const [patient, services] = await Promise.all([
+    fetchAuthQuery(api.patients.getPatientWithAppointments, { 
+      patientId: patientId as Id<"patients"> 
+    }),
+    fetchAuthQuery(api.services.getServicesByDoctorId, { 
+      doctorId: doctor._id 
+    }),
+  ])
 
   return (
-    <AddAppointment doctorId={doctorId} patientId={patientId} patient={patient} services={services} />
+    <AddAppointment 
+      doctorId={doctor._id} 
+      patientId={patientId as Id<"patients">} 
+      patient={patient} 
+      services={services} 
+    />
   )
 }

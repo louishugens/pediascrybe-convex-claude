@@ -1,19 +1,13 @@
-
 import { VaccineRecordsTable } from '@/components/vaccineRecordsTable'
 import VaccinesSkeleton from '@/components/skeletons/vaccines-skeleton'
-import { getPatientVaccineRecords } from '@/data/queries'
 import Link from 'next/link'
-import { VaccinationRecord, Dose, Vaccin } from '@/db/schema'
 import { ArrowUturnLeftIcon, PlusIcon, PrinterIcon } from '@heroicons/react/24/outline'
 import { Suspense, ViewTransition } from 'react'
+import { fetchAuthQuery } from '@/lib/auth-server'
+import { api } from '@/convex/_generated/api'
+import { Id } from '@/convex/_generated/dataModel'
 
-type VaccineRecordWithDetails = VaccinationRecord & {
-  vaccin: Vaccin;
-  dose: Dose;
-}
 export default async function Page(props: { params: Promise<{ patientId: string }> }) {
-  // const params = await props.params;
-  // const vaccineRecords: VaccineRecordWithDetails[] = await getPatientVaccineRecords(params.patientId)
   return (
     <div className='h-full mb-8 mt-4'>
       <ViewTransition>
@@ -27,7 +21,10 @@ export default async function Page(props: { params: Promise<{ patientId: string 
 
 async function VaccineRecordsTableContainer(props: { params: Promise<{ patientId: string }> }) {
   const params = await props.params;
-  const vaccineRecords: VaccineRecordWithDetails[] = await getPatientVaccineRecords(params.patientId)
+  const vaccineRecords = await fetchAuthQuery(api.vaccines.getPatientVaccineRecords, { 
+    patientId: params.patientId as Id<"patients"> 
+  })
+  
   return (
     <div className='flex flex-col gap-4 w-full h-fit bg-slate-50 rounded-lg p-4'>
       <div className='flex flex-row justify-between'>

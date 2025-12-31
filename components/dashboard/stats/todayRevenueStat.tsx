@@ -1,5 +1,5 @@
-import { verifySession } from '@/data/queries'
-import { getTodayRevenue } from '@/db/queries'
+import { fetchAuthQuery } from '@/lib/auth-server'
+import { api } from '@/convex/_generated/api'
 import { Card, CardContent, CardTitle, CardHeader, CardFooter } from '@/components/ui/card'
 import { DollarSign } from 'lucide-react'
 import { Suspense } from 'react'
@@ -31,11 +31,11 @@ export default async function TodayRevenueStat() {
 }
 
 async function TodayRevenueStatContent() {
-  const user = await verifySession()
-  if (!user) {
+  const doctor = await fetchAuthQuery(api.doctors.getCurrent)
+  if (!doctor) {
     return null
   }
-  const { revenue, currency } = await getTodayRevenue(user.id)
+  const { revenue, currency } = await fetchAuthQuery(api.appointments.getTodayRevenue, { doctorId: doctor._id })
   return formatCurrency(revenue, currency)
 }
 

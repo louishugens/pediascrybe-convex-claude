@@ -29,7 +29,7 @@ const Appointments = async ({doctorId, patientId}) => {
       </tr>
     </thead>
     <tbody className='w-full'>
-      {appointments.map(appointment => <AppointmentComponent appointment={appointment} doctorId={doctorId} patientId={patientId} key={appointment.id} data-superjson />
+      {appointments.map(appointment => <AppointmentComponent appointment={appointment} doctorId={doctorId} patientId={patientId} key={appointment._id} data-superjson />
         
 
       )}

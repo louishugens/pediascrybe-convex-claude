@@ -1,10 +1,11 @@
-
 import AddVaccineForm from '@/components/addVaccineForm'
 import VaccineFormSkeleton from '@/components/skeletons/vaccine-form-skeleton'
-import { getDoctorTrackedVaccines } from '@/data/queries'
 import Link from 'next/link'
 import { Suspense, ViewTransition } from 'react'
 import { ArrowUturnLeftIcon } from '@heroicons/react/24/outline'
+import { fetchAuthQuery } from '@/lib/auth-server'
+import { api } from '@/convex/_generated/api'
+import { getCurrentDoctor } from '@/lib/convex-data'
 
 export default async function Page(props: { params: Promise<{ patientId: string }> }) {
   return (
@@ -22,7 +23,16 @@ export default async function Page(props: { params: Promise<{ patientId: string 
 
 async function AddVaccineFormContainer(props: { params: Promise<{ patientId: string }> }) {
   const params = await props.params;
-  const trackedVaccines = await getDoctorTrackedVaccines()
+  const doctor = await getCurrentDoctor();
+  
+  if (!doctor) {
+    return <p className='text-sm text-muted-foreground'>Please log in to access this page.</p>;
+  }
+
+  const trackedVaccines = await fetchAuthQuery(api.vaccines.getDoctorTrackedVaccines, { 
+    doctorId: doctor._id 
+  });
+
   return (
     <>
       <div className='flex flex-row justify-between items-center'>

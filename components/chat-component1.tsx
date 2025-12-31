@@ -2,7 +2,6 @@
 
 import { useChat } from '@ai-sdk/react';
 import { useState } from 'react';
-import { Patient } from '@/db/schema';
 import { DefaultChatTransport } from 'ai';
 
 export default function Chat({patientId}: {patientId: string}) {

@@ -1,41 +1,14 @@
 import Print from "@/components/printReport";
 import ReportViewSkeleton from "@/components/skeletons/report-view-skeleton";
-import prisma from "@/utils/prisma";
-import { createClient } from '@/utils/supabase/server'
 import { Suspense, ViewTransition } from "react";
-
-async function getPatient(patientId: string) {
-  const patient = await prisma.patient.findUnique({
-    where: {
-      id: patientId
-    },
-  })
-  return patient
-}
-
-async function getDoctor(doctorId: string) {
-  const doctor = await prisma.doctor.findUnique({
-    where: {
-      id: doctorId
-    },
-  })
-  return doctor
-}
-
-async function getReport(id: string) {
-
-  const report = prisma.report.findUnique({
-    where: {
-      id: id
-    }
-  })
-  return report
-}
+import { getCurrentDoctor } from "@/lib/convex-data";
+import { fetchAuthQuery } from "@/lib/auth-server";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 
 type Params = Promise<{ patientId: string, reportId: string }>
 
 const ReportPage = async (props: { params: Params }) => {
-
   return (
     <>
       <ViewTransition>
@@ -50,26 +23,27 @@ const ReportPage = async (props: { params: Params }) => {
 export default ReportPage;
 
 async function ReportContainer({ params }: { params: Params }) {
+  const { patientId, reportId } = await params;
+  const doctor = await getCurrentDoctor();
 
+  if (!doctor) {
+    return <div>Doctor not found</div>;
+  }
 
-  const {
-    patientId,
-    reportId
-  } = await params;
+  const [report, patient] = await Promise.all([
+    fetchAuthQuery(api.reports.getReport, {
+      reportId: reportId as Id<"reports">
+    }),
+    fetchAuthQuery(api.patients.getPatient, {
+      patientId: patientId as Id<"patients">
+    }),
+  ]);
 
-  const supabase = await createClient()
-
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const doctorId = user?.id
-  const doctor = await getDoctor(doctorId!)
-  const report = await getReport(reportId)
-  const patient = await getPatient(patientId)
+  if (!report || !patient) {
+    return <div>Report or patient not found</div>;
+  }
 
   return (
-    <Print doctor={doctor!} patient={patient!} report={report!} />
+    <Print doctor={doctor} patient={patient} report={report} />
   )
 }

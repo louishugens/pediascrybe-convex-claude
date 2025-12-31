@@ -5,14 +5,14 @@ import { useReactToPrint } from 'react-to-print'
 import { format } from 'date-fns'
 import Link from 'next/link'
 import PrintHead from './printHeader'
-import { Appointment, Doctor, Patient } from '@prisma/client'
+import { Doc } from '@/convex/_generated/dataModel'
 import { Button } from './ui/button'
 import { PrinterIcon } from 'lucide-react'
 
 interface PrintProps {
-  appointment: Appointment | null
-  doctor: Doctor | null
-  patient: Patient | null
+  appointment: Doc<"appointments"> | null
+  doctor: Doc<"doctors"> | null
+  patient: Doc<"patients"> | null
 }
 
 const Print = ({appointment, doctor, patient}: PrintProps) => {
@@ -137,7 +137,7 @@ ref={componentRef}>
           <PrinterIcon className="mr-2 h-4 w-4" />
           Print
         </Button>
-        <Link href={`/user/patients/${patient?.id}/${appointment?.id}`} className="px-4 py-2 rounded-full bg-slate-200 text-blue-500 text-sm">
+        <Link href={`/user/patients/${patient?._id}/${appointment?._id}`} className="px-4 py-2 rounded-full bg-slate-200 text-blue-500 text-sm">
           Leave
         </Link>
       </div>

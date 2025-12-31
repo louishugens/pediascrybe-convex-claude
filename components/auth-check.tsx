@@ -1,16 +1,10 @@
-'use cache: private'
-
 import { redirect } from "next/navigation"
-import { createClient } from '@/utils/supabase/server'
+import { isAuthenticated } from "@/lib/auth-server"
 
 export async function AuthCheck() {
-  const supabase = await createClient()
+  const authenticated = await isAuthenticated()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (user) {
+  if (authenticated) {
     redirect('/user')
   }
 

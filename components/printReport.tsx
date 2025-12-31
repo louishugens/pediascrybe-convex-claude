@@ -6,13 +6,13 @@ import { format } from 'date-fns'
 import { useReactToPrint } from 'react-to-print';
 import Link from 'next/link';
 import PrintHead from '@/components/printHeader';
-import { Doctor, Patient, Report } from '@prisma/client';
+import { Doc } from '@/convex/_generated/dataModel';
 import { Preview } from '@/components/preview';
 
 interface Props {
-  doctor: Doctor,
-  patient: Patient,
-  report: Report
+  doctor: Doc<"doctors">,
+  patient: Doc<"patients">,
+  report: Doc<"reports">
 }
 
 
@@ -101,7 +101,7 @@ const Print = ({doctor, patient, report}: Props) => {
       </div>
       <div className="flex flex-row justify-between pb-2 mt-6">
         <button onClick={ () => handlePrint()} className="shadow bg-blue-500 rounded-full py-2 px-4 text-white text-sm">Print this out!</button>
-        <Link href={`/user/patients/${patient.id}/reports`} className="px-4 py-2 rounded-full bg-slate-200 text-blue-500 text-sm">
+        <Link href={`/user/patients/${patient._id}/reports`} className="px-4 py-2 rounded-full bg-slate-200 text-blue-500 text-sm">
           Leave
         </Link>
       </div>

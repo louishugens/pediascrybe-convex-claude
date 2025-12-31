@@ -158,13 +158,13 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
       console.log('appointment :>> ', appointment);
 
       refresh([`/user/patients/${patientId}`])
-      router.push(`/user/patients/${patientId}/${appointment.id}`)
+      router.push(`/user/patients/${patientId}/${appointment._id}`)
 
     }
     catch(err){
       console.log(err)
     }
-    // router.push(`/user_only/${doctorId}/patients/${patientId}/${appointment.id}`)
+    // router.push(`/user_only/${doctorId}/patients/${patientId}/${appointment._id}`)
   }
 
 

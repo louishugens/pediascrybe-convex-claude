@@ -1,73 +1,68 @@
-import { db } from "@/db";
-import { Appointment } from "@/db/schema";
-import { createClient } from '@/utils/supabase/server'
+import { fetchAuthMutation, isAuthenticated } from "@/lib/auth-server";
+import { api } from "@/convex/_generated/api";
 
 export async function POST(req: Request) {
-  if(req.method == 'POST') {
-
-    const supabase = await createClient()
-
-    const { data: {user}, error } = await (await supabase).auth.getUser();
-
-    if (!user) {
+  try {
+    const authenticated = await isAuthenticated();
+    
+    if (!authenticated) {
       return new Response(
         JSON.stringify({
-          error: { statusCode: 500, message: 'User is not defined' }
+          error: { statusCode: 401, message: 'Not authenticated' }
         }),
-        { status: 500 }
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    try {
-      const { height, weight, head, motif, findings, arm, sao2, temperature, pulse, respiratory, systolic, diastolic, otherRemarks, doctorId, patientId, serviceId, cost } = await req.json()
+    const { 
+      height, weight, head, motif, findings, arm, sao2, temperature, 
+      pulse, respiratory, systolic, diastolic, otherRemarks, 
+      doctorId, patientId, serviceId, cost 
+    } = await req.json();
 
-      const appointmentData: any = {
-        height, weight, head, motif, findings, arm, sao2, temperature, pulse, respiratory, systolic, diastolic, otherRemarks, doctorId, patientId
-      }
+    const appointmentId = await fetchAuthMutation(api.appointments.createAppointment, {
+      doctorId,
+      patientId,
+      serviceId: serviceId || undefined,
+      cost: cost || undefined,
+      motif: motif || undefined,
+      findings: findings || undefined,
+      otherRemarks: otherRemarks || undefined,
+      height: height || undefined,
+      weight: weight || undefined,
+      head: head || undefined,
+      arm: arm || undefined,
+      sao2: sao2 || undefined,
+      temperature: temperature || undefined,
+      pulse: pulse || undefined,
+      respiratory: respiratory || undefined,
+      systolic: systolic || undefined,
+      diastolic: diastolic || undefined,
+    });
 
-      // Include serviceId if provided
-      if (serviceId) {
-        appointmentData.serviceId = serviceId
-      }
-      if (cost) {
-        appointmentData.cost = cost
-      }
-
-      const [appointment] = await db.insert(Appointment).values(appointmentData).returning()
-
-      if (!appointment) {
-        return new Response(
-          JSON.stringify({
-            error: { statusCode: 500, message: 'Failed to create appointment' }
-          }),
-          { 
-            status: 500,
-            headers: { 'Content-Type': 'application/json' }
-          }
-        );
-      }
-
-      return new Response(JSON.stringify(appointment), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    } catch (error: any) {
-      console.error('Error creating appointment:', error);
+    if (!appointmentId) {
       return new Response(
         JSON.stringify({
-          error: { 
-            statusCode: 500, 
-            message: error?.message || 'Failed to create appointment',
-            details: error?.meta || null
-          }
+          error: { statusCode: 500, message: 'Failed to create appointment' }
         }),
-        { 
-          status: 500,
-          headers: { 'Content-Type': 'application/json' }
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    return new Response(JSON.stringify({ _id: appointmentId }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error: any) {
+    console.error('Error creating appointment:', error);
+    return new Response(
+      JSON.stringify({
+        error: { 
+          statusCode: 500, 
+          message: error?.message || 'Failed to create appointment'
         }
-      );
-    }
-
+      }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
-
 }

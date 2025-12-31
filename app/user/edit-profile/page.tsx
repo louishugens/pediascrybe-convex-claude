@@ -1,12 +1,10 @@
 import EditDoctor from "@/components/editDoctor"
-import { createClient } from '@/utils/supabase/server'
 import { redirect } from "next/navigation";
 import { Suspense, ViewTransition } from "react";
 import GenericFormSkeleton from "@/components/skeletons/generic-form-skeleton";
-import { getDoctorById } from "@/data/queries";
+import { getCurrentDoctor } from "@/lib/convex-data";
 
 const EditProfile = async () => {
-
   return (
     <ViewTransition>
       <Suspense fallback={<GenericFormSkeleton />}>
@@ -19,23 +17,12 @@ const EditProfile = async () => {
 export default EditProfile
 
 async function EditProfileContainer() {
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const doctorId = user?.id
-
-  if (!doctorId) {
-    redirect('/')
-  }
-
-  const doctor = await getDoctorById(doctorId)
+  const doctor = await getCurrentDoctor();
 
   if (!doctor) {
-    redirect('/')
+    redirect('/');
   }
+
   return (
     <EditDoctor doctor={doctor} />
   )

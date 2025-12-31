@@ -1,5 +1,3 @@
-
-import { getPatientWithAppointments } from '@/db/queries';
 import { openai } from '@ai-sdk/openai';
 import {
   convertToModelMessages,
@@ -10,7 +8,9 @@ import {
 } from 'ai';
 import { z } from 'zod/v4';
 import { differenceInDays } from 'date-fns';
-
+import { fetchAuthQuery } from '@/lib/auth-server';
+import { api } from '@/convex/_generated/api';
+import { Id } from '@/convex/_generated/dataModel';
 
 function omitPII<T extends Record<string, any>>(obj: T, keys: string[]): Partial<T> {
   const result = { ...obj };
@@ -26,7 +26,9 @@ export const maxDuration = 30;
 export async function POST(req: Request, props: { params: Promise<{ patientId: string }>}) {
   const params = await props.params;
   const patientId = params.patientId!
-  const patient = await getPatientWithAppointments(patientId);
+  const patient = await fetchAuthQuery(api.patients.getPatientWithAppointments, { 
+    patientId: patientId as Id<"patients"> 
+  });
   const appointments = patient?.appointments;
   const growthData = appointments?.map((appointment) => ({
     date: appointment.startDate,
@@ -37,9 +39,10 @@ export async function POST(req: Request, props: { params: Promise<{ patientId: s
   }));
   const patientWithoutPII = patient ? omitPII(patient, ['firstname', 'lastname', 'email', 'mothername']) : undefined;
   const { messages }: { messages: UIMessage[] } = await req.json();
+  const modelMessages = await convertToModelMessages(messages);
 
   const result = streamText({
-    model: openai('gpt-5'),
+    model: openai('gpt-4o'),
     system: `You are ScrybGPT, a medical assistant chatbot. You are helping a pediatrician understand their patients' conditions. You are given the patient's profile data and the appointments data, and the pediatrician will ask you questions.
 
     SECURITY DIRECTIVE:
@@ -80,7 +83,7 @@ export async function POST(req: Request, props: { params: Promise<{ patientId: s
       Answer the question based only on the following patient data and appointments data:
       ${JSON.stringify(patientWithoutPII)}
       in addition the general knowledge you have about the medical field.`,
-    messages: convertToModelMessages(messages),
+    messages: modelMessages,
     experimental_transform: smoothStream({
       delayInMs: 20,
       chunking: 'word'
@@ -230,7 +233,7 @@ export async function POST(req: Request, props: { params: Promise<{ patientId: s
 
             if (chartType === 'wfa') {
               patientData = appointments?.map(appointment => ({
-                age: differenceInDays(appointment.startDate, patient?.birthdate ?? new Date()),
+                age: differenceInDays(appointment.startDate, patient?.birthdate ?? new Date().getTime()),
                 value: appointment.weight
               })).filter(item => item.value != null) ?? [];
               yLabel = 'Weight';
@@ -239,8 +242,8 @@ export async function POST(req: Request, props: { params: Promise<{ patientId: s
             } else if (chartType.startsWith('hfa')) {
               patientData = appointments?.map(appointment => ({
                 age: chartType === 'hfa5To19' 
-                  ? Math.floor(differenceInDays(appointment.startDate, patient?.birthdate ?? new Date()) / 30.44) // months
-                  : differenceInDays(appointment.startDate, patient?.birthdate ?? new Date()), // days
+                  ? Math.floor(differenceInDays(appointment.startDate, patient?.birthdate ?? new Date().getTime()) / 30.44) // months
+                  : differenceInDays(appointment.startDate, patient?.birthdate ?? new Date().getTime()), // days
                 value: appointment.height
               })).filter(item => item.value != null) ?? [];
               yLabel = 'Height';
@@ -253,8 +256,8 @@ export async function POST(req: Request, props: { params: Promise<{ patientId: s
                   const bmi = appointment.weight / (heightInM * heightInM);
                   return {
                     age: chartType === 'bfa5To19' 
-                      ? Math.floor(differenceInDays(appointment.startDate, patient?.birthdate ?? new Date()) / 30.44) // months
-                      : differenceInDays(appointment.startDate, patient?.birthdate ?? new Date()), // days
+                      ? Math.floor(differenceInDays(appointment.startDate, patient?.birthdate ?? new Date().getTime()) / 30.44) // months
+                      : differenceInDays(appointment.startDate, patient?.birthdate ?? new Date().getTime()), // days
                     value: Math.round(bmi * 100) / 100 // Truncate to 2 decimal places
                   };
                 }
@@ -265,7 +268,7 @@ export async function POST(req: Request, props: { params: Promise<{ patientId: s
               unit = 'kg/m²';
             } else if (chartType === 'hcfa') {
               patientData = appointments?.map(appointment => ({
-                age: differenceInDays(appointment.startDate, patient?.birthdate ?? new Date()),
+                age: differenceInDays(appointment.startDate, patient?.birthdate ?? new Date().getTime()),
                 value: appointment.head
               })).filter(item => item.value != null) ?? [];
               yLabel = 'Head Circumference';

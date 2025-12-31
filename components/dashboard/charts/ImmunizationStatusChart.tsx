@@ -8,26 +8,33 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { Patient, VaccinationRecord } from "@prisma/client"
+
+interface VaccinationRecord {
+  _id: string;
+  patientId: string;
+}
+
+interface Patient {
+  _id: string;
+  vaccinationRecords?: VaccinationRecord[];
+}
 
 interface ImmunizationStatusProps {
-  patients: (Patient & {
-    VaccinationRecords?: VaccinationRecord[]
-  })[]
+  patients: Patient[]
 }
 
 export function ImmunizationStatusChart({ patients }: ImmunizationStatusProps) {
   const calculateImmunizationStatus = () => {
     const completed = patients.filter(patient => 
-      patient.VaccinationRecords && patient.VaccinationRecords.length >= 4
+      patient.vaccinationRecords && patient.vaccinationRecords.length >= 4
     ).length
     const partial = patients.filter(patient => 
-      patient.VaccinationRecords && 
-      patient.VaccinationRecords.length > 0 && 
-      patient.VaccinationRecords.length < 4
+      patient.vaccinationRecords && 
+      patient.vaccinationRecords.length > 0 && 
+      patient.vaccinationRecords.length < 4
     ).length
     const pending = patients.filter(patient => 
-      !patient.VaccinationRecords || patient.VaccinationRecords.length === 0
+      !patient.vaccinationRecords || patient.vaccinationRecords.length === 0
     ).length
 
     return [
@@ -110,4 +117,4 @@ export function ImmunizationStatusChart({ patients }: ImmunizationStatusProps) {
       </PieChart>
     </ChartContainer>
   )
-} 
+}

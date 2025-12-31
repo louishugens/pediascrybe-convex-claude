@@ -1,11 +1,11 @@
-import { verifySession } from '@/data/queries'
 import { CommonConditionsChart } from '@/components/dashboard/charts/CommonConditionsChart'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Suspense } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
-import { getAppointments } from '@/data/queries'
 import { ViewTransition } from 'react'
-
+import { getCurrentDoctor } from '@/lib/convex-data'
+import { fetchAuthQuery } from '@/lib/auth-server'
+import { api } from '@/convex/_generated/api'
 
 export default async function CommonConditionsContainer() {
   return (
@@ -18,11 +18,13 @@ export default async function CommonConditionsContainer() {
 }
 
 async function CommonConditionsContent() {
-  const user = await verifySession()
-  if (!user) {
+  const doctor = await getCurrentDoctor()
+  if (!doctor) {
     return null
   }
-  const appointments = await getAppointments(user.id)
+  const appointments = await fetchAuthQuery(api.appointments.getAppointments, { 
+    doctorId: doctor._id 
+  })
   
   return (
     <Card className="glass card-hover">
@@ -62,4 +64,3 @@ function CommonConditionsSkeleton() {
     </Card>
   )
 }
-

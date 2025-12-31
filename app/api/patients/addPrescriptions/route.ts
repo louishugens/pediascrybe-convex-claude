@@ -1,79 +1,46 @@
-import prisma from "@/utils/prisma";
-import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { Document } from "langchain/document";
-import { createClient } from '@/utils/supabase/server'
+import { fetchAuthMutation, isAuthenticated } from "@/lib/auth-server";
+import { api } from "@/convex/_generated/api";
 
 export async function POST(req: Request) {
-  if(req.method == 'POST') {
-
-    const supabase = await createClient()
-
-    const { data: {user}, error } = await (await supabase).auth.getUser();
-
-    if (!user) {
+  try {
+    const authenticated = await isAuthenticated();
+    
+    if (!authenticated) {
       return new Response(
         JSON.stringify({
-          error: { statusCode: 500, message: 'User is not defined' }
+          error: { statusCode: 401, message: 'Not authenticated' }
         }),
-        { status: 500 }
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    const {medication, appointmentId}= await req.json()
+    const { medication, appointmentId } = await req.json();
 
-    const appointment = await prisma.appointment.update({
-      where:{
-        id: appointmentId
-      },
-      data: {
-        medication
-      }
-    })
-
+    const appointment = await fetchAuthMutation(api.appointments.updateAppointment, {
+      appointmentId,
+      medication,
+    });
 
     if (appointment) {
-
-      // const embeddings = new OpenAIEmbeddings();
-
-      // const store = new SupabaseVectorStore(embeddings, {
-      //   client: await supabase,
-      //   tableName: "documents",
-      // });
-
-      // if(appointment.vectorId){
-      //   await store.delete({ids:[appointment.vectorId.toString()]});
-      // }
-
-      // const doc = new Document({ pageContent: JSON.stringify(appointment),
-      //   metadata: { patientId: appointment.patientId}});
-
-      // const result = await store.addDocuments([doc]);
-
-      // await prisma.appointment.update({
-      //   where:{
-      //     id: appointment.id
-      //   },
-      //   data: {
-      //     vectorId: parseInt(result[0])
-      //   }
-      // })
-      
-      // revalidatePath(`/user/patients/${appointment.patientId}/${appointment.id}`);
-      // revalidatePath(`/user/patients/${appointment.patientId}/${appointment.id}/add-prescription`);
-
       return new Response(JSON.stringify(appointment), {
-        status: 200
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
       });
-    }else{
+    } else {
       return new Response(
         JSON.stringify({
-       error: { statusCode: 500, message: 'appointment is not update successfully adding prescriptions' }
-       }),
-       { status: 500 }
-     );
+          error: { statusCode: 500, message: 'Appointment was not updated successfully adding prescriptions' }
+        }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
     }
-
+  } catch (error: any) {
+    console.error('Error adding prescriptions:', error);
+    return new Response(
+      JSON.stringify({
+        error: { statusCode: 500, message: error?.message || 'An error occurred' }
+      }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
-
 }

@@ -1,56 +1,51 @@
-import prisma from "@/utils/prisma";
-import { createClient } from '@/utils/supabase/server'
-
+import { fetchAuthMutation, isAuthenticated } from "@/lib/auth-server";
+import { api } from "@/convex/_generated/api";
 
 export async function POST(req: Request) {
-  if(req.method == 'POST') {
-    try {
-      const supabase = await createClient()
-
-      const { data: {user}, error } = await (await supabase).auth.getUser();
-
-      if (!user) {
-        return new Response(
-          JSON.stringify({
-            error: { statusCode: 500, message: 'User is not defined' }
-          }),
-          { status: 500 }
-        );
-      }
-
-      const { firstname, lastname, email, phone, spec, address, id} = await req.json()
-
-      const doctor = await prisma.doctor.update({
-        where:{
-          id: id
-        },
-        data: {
-          firstname, lastname, email, phone, spec, address
-        }
-      })
-
-      
-      if (doctor) {
-        
-        return new Response(JSON.stringify(doctor), {
-          status: 200
-        });
-      }else{
-        return new Response(
-          JSON.stringify({
-         error: { statusCode: 500, message: 'Doctor profile is not update sucessfully' }
-         }),
-         { status: 500 }
-       );
-       
-      }
-    } catch (error) {
+  try {
+    const authenticated = await isAuthenticated();
+    
+    if (!authenticated) {
       return new Response(
         JSON.stringify({
-          error: { statusCode: 500, message: 'An error occurred' }
+          error: { statusCode: 401, message: 'Not authenticated' }
         }),
-        { status: 500 }
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
+
+    const { firstname, lastname, email, phone, spec, address, id } = await req.json();
+
+    const doctor = await fetchAuthMutation(api.doctors.updateDoctor, {
+      doctorId: id,
+      firstname: firstname || undefined,
+      lastname: lastname || undefined,
+      email: email || undefined,
+      phone: phone || undefined,
+      spec: spec || undefined,
+      address: address || undefined,
+    });
+
+    if (doctor) {
+      return new Response(JSON.stringify(doctor), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } else {
+      return new Response(
+        JSON.stringify({
+          error: { statusCode: 500, message: 'Doctor profile was not updated successfully' }
+        }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+  } catch (error: any) {
+    console.error('Error updating doctor:', error);
+    return new Response(
+      JSON.stringify({
+        error: { statusCode: 500, message: error?.message || 'An error occurred' }
+      }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 }

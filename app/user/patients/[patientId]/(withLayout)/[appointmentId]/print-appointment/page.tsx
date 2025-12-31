@@ -1,61 +1,14 @@
 import Print from "@/components/printAppointment";
-import prisma from "@/utils/prisma";
-import { createClient } from '@/utils/supabase/server'
 import { Suspense, ViewTransition } from "react";
 import PrintAppointmentSkeleton from "@/components/skeletons/print-appointment-skeleton";
-
-
-async function getAppointment(appointmentId: string) {
-  const appointment = await prisma.appointment.findUnique({
-    where: {
-      id: appointmentId
-    },
-  })
-  return appointment
-}
-
-async function getPatient(patientId: string) {
-  const patient = await prisma.patient.findUnique({
-    where: {
-      id: patientId
-    },
-  })
-  return patient
-}
-
-async function getDoctor(doctorId: string) {
-  const doctor = await prisma.doctor.findUnique({
-    where: {
-      id: doctorId
-    },
-  })
-  return doctor
-}
-
-
+import { getCurrentDoctor } from "@/lib/convex-data";
+import { fetchAuthQuery } from "@/lib/auth-server";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 
 type Params = Promise<{ patientId: string, appointmentId: string }>
 
 const PrintPage = async (props: { params: Params }) => {
-  // const params = await props.params;
-
-  // const {
-  //   patientId,
-  //   appointmentId
-  // } = params;
-
-  // const supabase = await createClient()
-
-  // const {
-  //   data: { user },
-  // } = await supabase.auth.getUser()
-
-  // const doctorId = user?.id
-
-  // let appointment = await getAppointment(appointmentId)
-  // const patient = await getPatient(patientId)
-  // const doctor = await getDoctor(doctorId as string)
-
   return (
     <>
       <ViewTransition>
@@ -70,21 +23,23 @@ const PrintPage = async (props: { params: Params }) => {
 export default PrintPage;
 
 async function PrintContainer({ params }: { params: Params }) {
-
   const { patientId, appointmentId } = await params;
-  const supabase = await createClient()
+  const doctor = await getCurrentDoctor();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  if (!doctor) {
+    return <div>Doctor not found</div>;
+  }
 
-  const doctorId = user?.id
-
-  const appointment = await getAppointment(appointmentId)
-  const patient = await getPatient(patientId)
-  const doctor = await getDoctor(doctorId as string)
+  const [appointment, patient] = await Promise.all([
+    fetchAuthQuery(api.appointments.getAppointment, {
+      appointmentId: appointmentId as Id<"appointments">
+    }),
+    fetchAuthQuery(api.patients.getPatient, {
+      patientId: patientId as Id<"patients">
+    }),
+  ]);
 
   return (
-    <Print appointment={appointment} patient={patient} doctor={doctor} data-superjson />
+    <Print appointment={appointment} patient={patient} doctor={doctor} />
   );
 }

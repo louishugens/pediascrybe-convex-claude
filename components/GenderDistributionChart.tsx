@@ -8,7 +8,10 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { Patient } from "@prisma/client"
+
+interface Patient {
+  sex?: "male" | "female" | null;
+}
 
 interface GenderDistributionProps {
   patients: Patient[]
@@ -95,4 +98,4 @@ export function GenderDistributionChart({ patients }: GenderDistributionProps) {
       </PieChart>
     </ChartContainer>
   )
-} 
+}

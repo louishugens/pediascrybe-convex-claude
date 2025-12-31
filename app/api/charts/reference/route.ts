@@ -1,11 +1,12 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import prisma from '@/utils/prisma'
-
+import { fetchAuthQuery } from '@/lib/auth-server'
+import { api } from '@/convex/_generated/api'
 
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
     const chartId = searchParams.get('chartId')
+    const sex = searchParams.get('sex') as 'male' | 'female' | null
 
     if (!chartId) {
       return NextResponse.json(
@@ -14,8 +15,9 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const referenceData = await prisma.charts.findUnique({
-      where: { id: chartId }
+    const referenceData = await fetchAuthQuery(api.charts.getReferenceData, { 
+      chartType: chartId,
+      sex: sex
     })
 
     if (!referenceData) {

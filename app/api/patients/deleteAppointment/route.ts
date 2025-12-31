@@ -1,47 +1,36 @@
-import prisma from "@/utils/prisma";
-import { revalidateTag } from "next/cache";
+import { fetchAuthMutation, isAuthenticated } from "@/lib/auth-server";
+import { api } from "@/convex/_generated/api";
 import { NextResponse } from "next/server";
-import { createClient } from '@/utils/supabase/server'
 
 export async function POST(req: Request) {
-  if(req.method == 'POST') {
-
-    const supabase = await createClient()
-
-    const { data: {user}, error } = await (await supabase).auth.getUser();
-
-    if (!user) {
+  try {
+    const authenticated = await isAuthenticated();
+    
+    if (!authenticated) {
       return new Response(
         JSON.stringify({
-          error: { statusCode: 500, message: 'User is not defined' }
+          error: { statusCode: 401, message: 'Not authenticated' }
         }),
-        { status: 500 }
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    const { appointmentId } = await req.json()
+    const { appointmentId } = await req.json();
 
-     const deletedFile  = await prisma.appointment.delete({
-      where:{
-        id: appointmentId
-      },
-    })
-
-    if (deletedFile) {
-
-      revalidateTag("appointments", "max")
-      return new NextResponse("Delete sucessfull", {
-        status: 200
-      });
-    }else{
-      return new NextResponse(
-        JSON.stringify({
-       error: { statusCode: 500, message: 'Appointment not deleted' }
-       }),
-       { status: 500 }
-     );
-    }
-
+    await fetchAuthMutation(api.appointments.deleteAppointment, {
+      appointmentId,
+    });
+    
+    return new NextResponse("Delete successful", {
+      status: 200
+    });
+  } catch (error: any) {
+    console.error('Error deleting appointment:', error);
+    return new NextResponse(
+      JSON.stringify({
+        error: { statusCode: 500, message: error?.message || 'Appointment not deleted' }
+      }),
+      { status: 500 }
+    );
   }
-
 }

@@ -50,7 +50,7 @@ Key Conventions
   - Avoid for data fetching or state management.
 
 Package management
-- Use bun for package management.
+- Use npm for package management.
 
 Follow Next.js docs for Data Fetching, Rendering, and Routing.
 For each enquiry, propose a solution only related to the enquiry. Do not modify existing code unless specified.

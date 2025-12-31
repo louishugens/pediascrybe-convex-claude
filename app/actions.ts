@@ -1,13 +1,10 @@
 'use server'
-import { createClient } from "@/utils/supabase/server"
-import { Dose, Vaccin, VaccinationRecord } from "@prisma/client"
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
-import prisma from "@/utils/prisma"
-import { Prisma } from '@prisma/client'
-import { db } from "@/db"
-import { Appointment, Patient, Service, ServiceInsert } from "@/db/schema"
-import { eq, and } from "drizzle-orm"
+import { fetchAuthMutation, fetchAuthQuery, isAuthenticated } from "@/lib/auth-server"
+import { api } from "@/convex/_generated/api"
+import { Id } from "@/convex/_generated/dataModel"
+import { getCurrentDoctor } from "@/lib/convex-data"
 
 export async function refresh(paths: string[]) {
   for (const path of paths) {
@@ -16,185 +13,79 @@ export async function refresh(paths: string[]) {
 }
 
 export async function verifySession() {
-  const supabase = createClient()
-  const {data: {user}} = await (await supabase).auth.getUser()
-  if (!user) {
+  const authenticated = await isAuthenticated()
+  if (!authenticated) {
     redirect('/')
   }
-  return user.id
+  const doctor = await getCurrentDoctor()
+  if (!doctor) {
+    redirect('/')
+  }
+  return doctor._id
 }
 
-export async function updateVaccines(vaccines: (Vaccin & {doses: Dose[]})[]) {
+interface VaccineInput {
+  _id?: Id<"vaccins">;
+  name: string;
+  doses: {
+    _id?: Id<"doses">;
+    doseCount?: number;
+    maxAge?: number;
+    doseType: "regular" | "annual" | "booster" | "unique";
+  }[];
+}
+
+export async function updateVaccines(vaccines: VaccineInput[]) {
   const doctorId = await verifySession()
   
-  // const updatedVaccines = await Promise.all(vaccines.map(async (vaccine) => {
-  //   try {
-  //     if (vaccine.id) {
-  //       // Check if the vaccine exists
-  //       const existingVaccine = await prisma.vaccin.findUnique({
-  //         where: { id: vaccine.id },
-  //       })
-
-  //       if (!existingVaccine) {
-  //         // If the vaccine doesn't exist, create a new one
-  //         return await prisma.vaccin.create({
-  //           data: {
-  //             name: vaccine.name,
-  //             doctorId: doctorId,
-  //             doses: {
-  //               create: vaccine.doses.map((dose) => ({
-  //                 doseCount: dose.doseCount,
-  //                 maxAge: dose.maxAge,
-  //                 doseType: dose.doseType ?? '',
-  //               }))
-  //             }
-  //           },
-  //           include: { doses: true }
-  //         })
-  //       }
-
-  //       // Update existing vaccine
-  //       return await prisma.vaccin.update({
-  //         where: { id: vaccine.id },
-  //         data: {
-  //           name: vaccine.name,
-  //           doses: {
-  //             deleteMany: {
-  //               vaccinId: vaccine.id,
-  //               id: { notIn: vaccine.doses.map(dose => dose.id).filter(Boolean) as string[] }
-  //             },
-  //             create: vaccine.doses.filter(dose => !dose.id).map((dose) => ({
-  //               doseCount: dose.doseCount,
-  //               maxAge: dose.maxAge,
-  //               doseType: dose.doseType ?? '',
-  //             })),
-  //             update: vaccine.doses.filter(dose => dose.id).map((dose) => ({
-  //               where: { id: dose.id },
-  //               data: {
-  //                 doseCount: dose.doseCount,
-  //                 maxAge: dose.maxAge,
-  //                 doseType: dose.doseType ?? '',
-  //               }
-  //             }))
-  //           }
-  //         },
-  //         include: { doses: true }
-  //       })
-  //     } else {
-  //       // Create new vaccine
-  //       return await prisma.vaccin.create({
-  //         data: {
-  //           name: vaccine.name,
-  //           doctorId: doctorId,
-  //           doses: {
-  //             create: vaccine.doses.map((dose) => ({
-  //               doseCount: dose.doseCount,
-  //               maxAge: dose.maxAge,
-  //               doseType: dose.doseType ?? '',
-  //             }))
-  //           }
-  //         },
-  //         include: { doses: true }
-  //       })
-  //     }
-  //   } catch (error) {
-  //     console.error(`Error processing vaccine ${vaccine.id || 'new'}:`, error)
-  //     throw error
-  //   }
-  // }))
-
   const updatedVaccines = await Promise.all(vaccines.map(async (vaccine) => {
-    return await prisma.vaccin.upsert({
-      where: { id: vaccine.id },
-      update: {
+    if (vaccine._id) {
+      // Update existing vaccine
+      return await fetchAuthMutation(api.vaccines.updateVaccine, {
+        vaccinId: vaccine._id,
         name: vaccine.name,
-        doses: {
-          deleteMany: { vaccinId: vaccine.id },
-          create: vaccine.doses.map((dose) => ({
-            doseCount: dose.doseCount,
-            maxAge: dose.maxAge,
-            doseType: dose.doseType,
-          })),
-        },
-      },
-      create: {
+        doses: vaccine.doses.map((dose) => ({
+          doseCount: dose.doseCount,
+          maxAge: dose.maxAge,
+          doseType: dose.doseType,
+        })),
+      })
+    } else {
+      // Create new vaccine
+      return await fetchAuthMutation(api.vaccines.createVaccine, {
+        doctorId,
         name: vaccine.name,
-        doctorId: doctorId,
-        doses: {
-          create: vaccine.doses.map((dose) => ({
-            doseCount: dose.doseCount,
-            maxAge: dose.maxAge,
-            doseType: dose.doseType,
-          })),
-        },
-      }
-    })
+        doses: vaccine.doses.map((dose) => ({
+          doseCount: dose.doseCount,
+          maxAge: dose.maxAge,
+          doseType: dose.doseType,
+        })),
+      })
+    }
   }))
 
   revalidatePath('/user/profile')
-
-  // const updatedVaccines = await Promise.all(vaccines.map(async (vaccine) => {
-
-  //   // Step 1: Upsert the vaccine (ignoring doses for now)
-  //   const upsertedVaccine = await prisma.vaccin.upsert({
-  //     where: { id: vaccine.id },
-  //     update: {
-  //       name: vaccine.name,
-  //       doctorId: doctorId
-  //     },
-  //     create: {
-  //       name: vaccine.name,
-  //       doctorId: doctorId,
-  //       doses: {
-  //         create: vaccine.doses.map((dose) => ({
-  //           doseCount: dose.doseCount,
-  //           maxAge: dose.maxAge,
-  //           doseType: dose.doseType,
-  //         })),
-  //       },
-  //     },
-  //   });
-  
-  //   // Step 2: Update the doses (delete the old ones and create new ones)
-  //   await prisma.dose.deleteMany({
-  //     where: { vaccinId: upsertedVaccine.id },
-  //   });
-  
-  //   await prisma.dose.createMany({
-  //     data: vaccine.doses.map((dose) => ({
-  //       doseCount: dose.doseCount,
-  //       maxAge: dose.maxAge,
-  //       doseType: dose.doseType,
-  //       vaccinId: upsertedVaccine.id,
-  //     })),
-  //   });
-  
-  //   return upsertedVaccine;
-  // }));
-  
-
   return updatedVaccines
 }
 
-export async function deleteVaccine(vaccineId: string) {
-  const doctorId = await verifySession()
+export async function deleteVaccine(vaccineId: Id<"vaccins">) {
+  await verifySession()
   
   try {
-    await prisma.vaccin.delete({
-      where: { id: vaccineId, doctorId },
-      include: { doses: true },
+    await fetchAuthMutation(api.vaccines.deleteVaccine, {
+      vaccinId: vaccineId,
     })
 
     revalidatePath('/user/profile')
     return { success: true }
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+  } catch (error: any) {
+    console.error('Error deleting vaccine:', error)
+    if (error.message?.includes('vaccination records')) {
       return {
         success: false,
         error: "Cannot delete this vaccine as it has associated vaccination records."
       }
     }
-    console.error('Error deleting vaccine:', error)
     return {
       success: false,
       error: "An unexpected error occurred while deleting the vaccine."
@@ -202,28 +93,39 @@ export async function deleteVaccine(vaccineId: string) {
   }
 }
 
-export async function addVaccinationRecord(vaccinationRecord: Omit<VaccinationRecord, 'id'>) {
+interface VaccinationRecordInput {
+  patientId: Id<"patients">;
+  vaccinId: Id<"vaccins">;
+  doseId: Id<"doses">;
+  date: number;
+  notes?: string;
+  manufacturer: string;
+  lotNumber: string;
+  expiration: number;
+  dosage: string;
+  route: string;
+  site: string;
+}
+
+export async function addVaccinationRecord(vaccinationRecord: VaccinationRecordInput) {
   const doctorId = await verifySession()
   if(!doctorId) {
     redirect('/')
   }
   
   try {
-    const newVaccinationRecord = await prisma.vaccinationRecord.create({
-      data: vaccinationRecord,
-    })
+    const newRecord = await fetchAuthMutation(api.vaccines.createVaccinationRecord, vaccinationRecord)
     
-    revalidatePath(`/user/patients/${newVaccinationRecord.patientId}/vaccines`)
-    return { success: true, data: newVaccinationRecord }
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+    revalidatePath(`/user/patients/${vaccinationRecord.patientId}/vaccines`)
+    return { success: true, data: newRecord }
+  } catch (error: any) {
+    console.error('Error adding vaccination record:', error)
+    if (error.message?.includes('already recorded')) {
       return { 
         success: false, 
         error: 'This dose for this vaccine has already been recorded for this patient.' 
       }
     }
-    // Handle other errors
-    console.error('Error adding vaccination record:', error)
     return { 
       success: false, 
       error: 'An unexpected error occurred while adding the vaccination record.' 
@@ -231,10 +133,10 @@ export async function addVaccinationRecord(vaccinationRecord: Omit<VaccinationRe
   }
 }
 
-export async function deleteVaccinationRecord(vaccinationRecordId: string, patientId: string) {
+export async function deleteVaccinationRecord(vaccinationRecordId: Id<"vaccinationRecords">, patientId: Id<"patients">) {
   try {
-    await prisma.vaccinationRecord.delete({
-      where: { id: vaccinationRecordId },
+    await fetchAuthMutation(api.vaccines.deleteVaccinationRecord, {
+      recordId: vaccinationRecordId,
     })
     revalidatePath(`/user/patients/${patientId}/vaccines`)
     return { success: true }
@@ -244,11 +146,31 @@ export async function deleteVaccinationRecord(vaccinationRecordId: string, patie
   }
 }
 
-export async function updateVaccinationRecord(vaccinationRecord: VaccinationRecord) {
+interface VaccinationRecordUpdate {
+  _id: Id<"vaccinationRecords">;
+  patientId: Id<"patients">;
+  date?: number;
+  notes?: string;
+  manufacturer?: string;
+  lotNumber?: string;
+  expiration?: number;
+  dosage?: string;
+  route?: string;
+  site?: string;
+}
+
+export async function updateVaccinationRecord(vaccinationRecord: VaccinationRecordUpdate) {
   try {
-    await prisma.vaccinationRecord.update({
-      where: { id: vaccinationRecord.id },
-      data: vaccinationRecord,
+    await fetchAuthMutation(api.vaccines.updateVaccinationRecord, {
+      recordId: vaccinationRecord._id,
+      date: vaccinationRecord.date,
+      notes: vaccinationRecord.notes,
+      manufacturer: vaccinationRecord.manufacturer,
+      lotNumber: vaccinationRecord.lotNumber,
+      expiration: vaccinationRecord.expiration,
+      dosage: vaccinationRecord.dosage,
+      route: vaccinationRecord.route,
+      site: vaccinationRecord.site,
     })
     revalidatePath(`/user/patients/${vaccinationRecord.patientId}/vaccines`)
     return { success: true }
@@ -262,16 +184,16 @@ export async function addService(data: { name: string; price: number; currency: 
   const doctorId = await verifySession()
   
   try {
-    const newService = await db.insert(Service).values({
+    const newService = await fetchAuthMutation(api.services.createService, {
+      doctorId,
       name: data.name,
       price: data.price,
       currency: data.currency,
-      doctorId: doctorId,
       type: data.type,
-    }).returning()
+    })
     
     revalidatePath('/user/profile')
-    return { success: true, data: newService[0] }
+    return { success: true, data: newService }
   } catch (error) {
     console.error('Error adding service:', error)
     return {
@@ -281,29 +203,30 @@ export async function addService(data: { name: string; price: number; currency: 
   }
 }
 
-export async function updateService(data: { id: string; name: string; price: number; currency: string; type: 'clinical' | 'documentation' }) {
-  // const doctorId = await verifySession()
+export async function updateService(data: { id: Id<"services">; name: string; price: number; currency: string; type: 'clinical' | 'documentation' }) {
   try {
-    const updatedService = await db.update(Service).set({
+    const updatedService = await fetchAuthMutation(api.services.updateService, {
+      serviceId: data.id,
       name: data.name,
       price: data.price,
       currency: data.currency,
       type: data.type,
-    }).where(eq(Service.id, data.id)).returning()
+    })
     revalidatePath('/user/profile')
-    return { success: true, data: updatedService[0] }
+    return { success: true, data: updatedService }
   } catch (error) { 
     console.error('Error updating service:', error)
     return { success: false, error: 'An unexpected error occurred while updating the service.' }
   }
 }
 
-export async function deleteService(serviceId: string) {
-  const doctorId = await verifySession()
+export async function deleteService(serviceId: Id<"services">) {
+  await verifySession()
   
   try {
-    await db.delete(Service)
-      .where(and(eq(Service.id, serviceId), eq(Service.doctorId, doctorId)))
+    await fetchAuthMutation(api.services.deleteService, {
+      serviceId,
+    })
 
     revalidatePath('/user/profile')
     return { success: true }
@@ -316,47 +239,29 @@ export async function deleteService(serviceId: string) {
   }
 }   
 
-export async function deletePatient(patientId: string) {
-  const doctorId = await verifySession()
+export async function deletePatient(patientId: Id<"patients">) {
+  await verifySession()
+  
   try {
-
-    const patient = await db.query.Patient.findFirst({
-      where: eq(Patient.id, patientId),
-      with: {
-        appointments: true,
-        reports: true,
-        receipts: true,
-        VaccinationRecords: true,
-      }
+    const result = await fetchAuthMutation(api.patients.deletePatient, {
+      patientId,
     })
-    if (patient && patient.appointments.length > 0) {
-      return { success: false, error: 'Patient has appointments. Please delete the appointments first.' }
-    }
-    if (patient && patient.reports.length > 0) {
-      return { success: false, error: 'Patient has reports. Please delete the reports first.' }
-    }
-    if (patient && patient.receipts.length > 0) {
-      return { success: false, error: 'Patient has receipts. Please delete the receipts first.' }
-    }
-    if (patient && patient.VaccinationRecords.length > 0) {
-      return { success: false, error: 'Patient has vaccination records. Please delete the vaccination records first.' }
-    }
-    if (patient) {
-      await db.delete(Patient).where(and(eq(Patient.id, patientId), eq(Patient.doctorId, doctorId)))
-      revalidatePath('/user/patients')
-      return { success: true, message: 'Patient deleted successfully.' }
-    }
-    return { success: false, error: 'Patient not found.' }
-  } catch (error) {
+    
+    revalidatePath('/user/patients')
+    return result
+  } catch (error: any) {
     console.error('Error deleting patient:', error)
-    return { success: false, error: 'An unexpected error occurred while deleting the patient.' }
+    return { success: false, error: error.message || 'An unexpected error occurred while deleting the patient.' }
   }
 }
 
-export async function deleteAppointment(appointmentId: string, patientId: string) {
-  const doctorId = await verifySession()
+export async function deleteAppointment(appointmentId: Id<"appointments">, patientId: Id<"patients">) {
+  await verifySession()
+  
   try {
-    await db.delete(Appointment).where(and(eq(Appointment.id, appointmentId), eq(Appointment.doctorId, doctorId)))
+    await fetchAuthMutation(api.appointments.deleteAppointment, {
+      appointmentId,
+    })
     revalidatePath(`/user/patients/${patientId}`)
     return { success: true }
   } catch (error) {

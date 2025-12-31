@@ -1,47 +1,36 @@
-import prisma from "@/utils/prisma";
-import { revalidateTag } from "next/cache";
+import { fetchAuthMutation, isAuthenticated } from "@/lib/auth-server";
+import { api } from "@/convex/_generated/api";
 import { NextResponse } from "next/server";
-import { createClient } from '@/utils/supabase/server'
 
 export async function POST(req: Request) {
-  if(req.method == 'POST') {
-
-    const supabase = await createClient()
+  try {
+    const authenticated = await isAuthenticated();
     
-    const { data: {user}, error } = await (await supabase).auth.getUser();
-
-    if (!user) {
+    if (!authenticated) {
       return new Response(
         JSON.stringify({
-          error: { statusCode: 500, message: 'User is not defined' }
+          error: { statusCode: 401, message: 'Not authenticated' }
         }),
-        { status: 500 }
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    const { receiptId } = await req.json()
+    const { receiptId } = await req.json();
 
-     const deletedFile = await prisma.receipt.delete({
-      where:{
-        id: receiptId
-      }
-    })
-
-    if (deletedFile) {
-
-      revalidateTag("receipts", "max")
-      return new NextResponse("Delete sucessfull", {
-        status: 200
-      });
-    }else{
-      return new NextResponse(
-        JSON.stringify({
-       error: { statusCode: 500, message: 'file is not saved' }
-       }),
-       { status: 500 }
-     );
-    }
-
+    await fetchAuthMutation(api.receipts.deleteReceipt, {
+      receiptId,
+    });
+    
+    return new NextResponse("Delete successful", {
+      status: 200
+    });
+  } catch (error: any) {
+    console.error('Error deleting receipt:', error);
+    return new NextResponse(
+      JSON.stringify({
+        error: { statusCode: 500, message: error?.message || 'Receipt not deleted' }
+      }),
+      { status: 500 }
+    );
   }
-
 }

@@ -192,12 +192,7 @@ const CreateReport = ({patientId, patient, consultations}) => {
 
 
 
-  type Doctor = {
-    id: string
-  }
-
-
-  const doctor: Doctor | null = useDoctor()
+  const doctor = useDoctor()
   const router = useRouter()
 
 
@@ -215,7 +210,7 @@ const CreateReport = ({patientId, patient, consultations}) => {
       const report = await res.json()
 
       router.refresh()
-      router.push(`/user/patients/${patientId}/reports/${report.id}`)
+      router.push(`/user/patients/${patientId}/reports/${report._id}`)
 
     }
     catch(err){

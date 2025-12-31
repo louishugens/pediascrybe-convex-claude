@@ -1,9 +1,6 @@
-// import "server-only";
 'use server'
-import prisma from "@/utils/prisma"
 import Link from "next/link";
 import { format, differenceInYears, formatDistanceToNow } from "date-fns";
-import { createClient } from '@/utils/supabase/server'
 import { Skeleton } from "@/components/ui/skeleton"
 import { Suspense } from "react";
 import DemographicData from "@/components/patient/demographicData";
@@ -18,7 +15,6 @@ const Layout = async ({
   children: React.ReactNode
   params: Params
 }) => {
-  
   
   return (
     <div className='flex flex-col w-full h-full'> 
