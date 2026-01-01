@@ -9,7 +9,7 @@ import PulseLoader from "react-spinners/PulseLoader"
 import { useRouter } from 'next/navigation';
 import posthog from 'posthog-js';
 import { authClient } from '@/lib/auth-client';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 
 export default function Signup() {
   const override = {
@@ -185,10 +185,6 @@ export default function Signup() {
           <Doctor className="mx-auto" />
         </div>
       </div>
-      <Toaster 
-        position="top-center" 
-        richColors={true}
-      />
     </div>
   );
 }

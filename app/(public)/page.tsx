@@ -7,7 +7,7 @@ import { useState } from "react";
 import BeatLoader from 'react-spinners/BeatLoader';
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { Toaster, toast } from 'sonner'
+import { toast } from 'sonner'
 import posthog from 'posthog-js';
 import { authClient } from '@/lib/auth-client';
 
@@ -154,10 +154,6 @@ export default function Home() {
           <Doctor />
         </div>
       </div>
-      <Toaster 
-        position="top-center" 
-        richColors={true}
-      />
     </div>
   )
 }

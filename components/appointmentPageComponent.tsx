@@ -8,7 +8,7 @@ import { FileIcon } from "lucide-react";
 import {BeatLoader} from 'react-spinners'
 import Image from "next/image";
 import { X } from "lucide-react";
-import toast, {Toaster} from "react-hot-toast";
+import { toast } from "sonner";
 import UploadedFile from "./uploadedFile";
 import { Id } from "@/convex/_generated/dataModel";
 

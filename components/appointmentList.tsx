@@ -1,14 +1,11 @@
 import { Suspense, ViewTransition } from "react"
 import AppointmentComponent from "./appointment"
-import { cacheTag } from "next/cache"
 import AppointmentListSkeleton from "./appointmentListSkeleton"
 import { fetchAuthQuery } from "@/lib/auth-server"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 
 export default async function AppointmentList({ patientId }: { patientId: string }) {
-  "use cache"
-  cacheTag(`patient-appointments-${patientId}`)
   const appointments = await fetchAuthQuery(api.appointments.getPatientAppointments, { 
     patientId: patientId as Id<"patients"> 
   })

@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import AppointmentList from '@/components/appointmentList'
-import { cacheTag } from 'next/cache'
 import { Suspense, ViewTransition } from 'react'
 
 import PatientPageSkeleton from '@/components/skeletons/patient-page-skeleton'
@@ -22,9 +21,7 @@ async function Patient({ params }: { params: Params }) {
 export default Patient
 
 async function PatientContainer({ params }: { params: Params }) {
-  'use cache'
   const { patientId } = await params;
-  cacheTag(`appointments-${patientId}`)
 
   return (
     <>

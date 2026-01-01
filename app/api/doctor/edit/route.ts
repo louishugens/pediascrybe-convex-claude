@@ -16,7 +16,7 @@ export async function POST(req: Request) {
 
     const { firstname, lastname, email, phone, spec, address, id } = await req.json();
 
-    const doctor = await fetchAuthMutation(api.doctors.updateDoctor, {
+    await fetchAuthMutation(api.doctors.updateDoctor, {
       doctorId: id,
       firstname: firstname || undefined,
       lastname: lastname || undefined,
@@ -26,19 +26,10 @@ export async function POST(req: Request) {
       address: address || undefined,
     });
 
-    if (doctor) {
-      return new Response(JSON.stringify(doctor), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    } else {
-      return new Response(
-        JSON.stringify({
-          error: { statusCode: 500, message: 'Doctor profile was not updated successfully' }
-        }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
   } catch (error: any) {
     console.error('Error updating doctor:', error);
     return new Response(

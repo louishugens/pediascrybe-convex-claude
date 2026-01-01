@@ -1,6 +1,21 @@
 import { query } from "./_generated/server";
 import { v } from "convex/values";
 
+// List all available charts (for debugging)
+export const listAllCharts = query({
+  args: {},
+  handler: async (ctx) => {
+    const charts = await ctx.db.query("charts").collect();
+    return charts.map(chart => ({
+      _id: chart._id,
+      chartId: chart.chartId,
+      hasP03: !!chart.p03,
+      hasP50: !!chart.p50,
+      hasP97: !!chart.p97,
+    }));
+  },
+});
+
 // Get chart reference data by chart type
 export const getReferenceData = query({
   args: { 
@@ -31,16 +46,21 @@ export const getReferenceData = query({
         chartId = args.sex === "female" ? "ghcfa" : "bhcfa";
         break;
       case "wfl":
-        chartId = args.sex === "female" ? "gwfl" : "bwfl";
+        chartId = args.sex === "female" ? "gwfh" : "bwfh";
+        break;
+      case "wfl0To2":
+        chartId = args.sex === "female" ? "gwfh_0_2" : "bwfh_0_2";
         break;
       default:
         return null;
     }
     
-    // Query charts table - since charts don't have a specific index, 
-    // we need to collect all and find the right one
-    const charts = await ctx.db.query("charts").collect();
-    return charts.find(chart => chart._id === chartId) || null;
+    // Query charts table using the by_chartId index
+    const chart = await ctx.db
+      .query("charts")
+      .withIndex("by_chartId", (q) => q.eq("chartId", chartId))
+      .first();
+    return chart || null;
   },
 });
 

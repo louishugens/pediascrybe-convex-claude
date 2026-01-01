@@ -5,6 +5,7 @@ import { AnalyticsWrapper } from '@/components/analytics';
 import type { Metadata } from 'next'
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { ConvexClientProvider } from '@/components/ConvexClientProvider';
+import { Toaster } from 'sonner';
 
 export const metadata: Metadata = {
   title: 'Pediatric Care, Elevated by AI Integration | Pediascrybe',
@@ -34,6 +35,7 @@ export default async function RootLayout({children}) {
         <ConvexClientProvider>
           <div className='flex-1'>{children}</div>
         </ConvexClientProvider>
+        <Toaster richColors position="top-center" />
         <AnalyticsWrapper />
         <SpeedInsights />
       </body>

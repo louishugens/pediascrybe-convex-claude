@@ -20,7 +20,6 @@ const AddExamsPage = async (props: { params: Params }) => {
 export default AddExamsPage
 
 async function AddExamsContainer({ params }: { params: Params }) {
-  'use cache'
   const { patientId, appointmentId } = await params;
 
   const appointment = await fetchAuthQuery(api.appointments.getAppointment, { 

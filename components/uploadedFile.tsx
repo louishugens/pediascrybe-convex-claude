@@ -3,7 +3,7 @@ import {useState} from 'react'
 import { X, FileIcon, VideoIcon } from 'lucide-react'
 import Image from 'next/image'
 import { BeatLoader } from 'react-spinners'
-import toast, { Toaster } from 'react-hot-toast'
+import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 
 

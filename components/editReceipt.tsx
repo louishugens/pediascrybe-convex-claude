@@ -9,7 +9,7 @@ import { useState } from "react";
 import BeatLoader  from 'react-spinners/BeatLoader';
 import * as z from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Toaster, toast } from 'sonner'
+import { toast } from 'sonner'
 import {
   Form,
   FormControl,
@@ -151,7 +151,6 @@ const EditReceipt = ({patientId, receipt}: Props) => {
 
   return ( 
   <div className="flex flex-col w-full items-center">
-    <Toaster richColors position="top-center" />
     <p className='text-lg text-primary font-bold mt-8'>Edit Receipt</p>
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex bg-muted rounded-md p-8 flex-col mt-8 w-2/3 text-sm">

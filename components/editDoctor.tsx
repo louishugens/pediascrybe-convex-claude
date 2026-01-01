@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from "react";
 import BeatLoader  from 'react-spinners/BeatLoader';
 import { refresh } from '@/app/actions';
+import toast from 'react-hot-toast';
 
 
 const EditDoctor = ({doctor}) => {
@@ -44,24 +45,35 @@ const EditDoctor = ({doctor}) => {
   const onSubmit = async (values) => {
     setLoading(true)
  
-    try{
+    try {
       const {firstname, lastname, email, phone, spec, address} = values
-      const body = {firstname, lastname, email, phone, spec, address, id: doctor.id}
+      const body = {firstname, lastname, email, phone, spec, address, id: doctor._id}
+      
       const res = await fetch('/api/doctor/edit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       })
 
-      refresh(['/user/profile', '/user/edit-profile'])
+      const data = await res.json()
 
-      router.push(`/user/profile`)
+      if (!res.ok) {
+        const errorMessage = data?.error?.message || 'Failed to update profile'
+        toast.error(errorMessage)
+        setLoading(false)
+        return
+      }
 
+      toast.success('Profile updated successfully')
+      setLoading(false)
+      // Revalidate cache and navigate
+      await refresh(['/user/profile', '/user/edit-profile'])
+      router.push('/user/profile')
+    } catch (err: any) {
+      console.error('Error submitting form:', err)
+      toast.error(err?.message || 'An error occurred')
+      setLoading(false)
     }
-    catch(err){
-      console.log(err)
-    }
-    router.push(`/user/profile`)
   }
 
   return (

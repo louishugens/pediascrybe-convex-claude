@@ -8,7 +8,7 @@ export async function POST(req: Request) {
   const {patient, appointment} = await req.json();
 
   const result = streamObject({
-    model: openai('gpt-4.1'),
+    model: openai('gpt-5-mini'),
     output: 'array',
     schema: prescriptionsSchema,
     system: `

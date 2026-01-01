@@ -7,7 +7,7 @@ import { api } from "@/convex/_generated/api"
 
 // Client component that receives preloaded data
 export function PatientListClient({ preloadedPatients }) {
-  const patients = usePreloadedAuthQuery(preloadedPatients)
+  const patients = usePreloadedAuthQuery(preloadedPatients) ?? []
   
   return (
     <>

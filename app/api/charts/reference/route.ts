@@ -6,7 +6,6 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
     const chartId = searchParams.get('chartId')
-    const sex = searchParams.get('sex') as 'male' | 'female' | null
 
     if (!chartId) {
       return NextResponse.json(
@@ -15,9 +14,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const referenceData = await fetchAuthQuery(api.charts.getReferenceData, { 
-      chartType: chartId,
-      sex: sex
+    const referenceData = await fetchAuthQuery(api.charts.getChartReference, { 
+      chartId: chartId
     })
 
     if (!referenceData) {

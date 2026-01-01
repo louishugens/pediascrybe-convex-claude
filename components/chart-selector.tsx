@@ -1,5 +1,6 @@
 "use client"
 
+import { memo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -53,7 +54,7 @@ const getChartIcon = (chartType: string) => {
   }
 }
 
-export default function ChartSelector({ data, onChartSelect }: ChartSelectorProps) {
+function ChartSelectorInner({ data, onChartSelect }: ChartSelectorProps) {
   if (data.error) {
     return (
       <Card className="w-full max-w-2xl mx-auto mb-4">
@@ -156,3 +157,16 @@ export default function ChartSelector({ data, onChartSelect }: ChartSelectorProp
     </Card>
   )
 }
+
+// Wrap with memo to prevent unnecessary re-renders
+const ChartSelector = memo(ChartSelectorInner, (prevProps, nextProps) => {
+  return (
+    prevProps.data.type === nextProps.data.type &&
+    prevProps.data.patientAge === nextProps.data.patientAge &&
+    prevProps.data.availableCharts.length === nextProps.data.availableCharts.length &&
+    prevProps.data.message === nextProps.data.message &&
+    prevProps.onChartSelect === nextProps.onChartSelect
+  )
+})
+
+export default ChartSelector

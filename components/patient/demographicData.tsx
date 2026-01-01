@@ -1,16 +1,12 @@
 import Link from 'next/link';
 import { formatDistanceToNow, format } from 'date-fns';
-import { cacheTag } from 'next/cache';
 import DeletePatientButton from './deletePatientButton';
 import { fetchAuthQuery } from '@/lib/auth-server';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 
 export default async function DemographicData({ params }: { params: Promise<{ patientId: string }> }) {
-  "use cache"
-  
   const { patientId } = await params;
-  cacheTag(`patient-profile-${patientId}`)
 
   const patient = await fetchAuthQuery(api.patients.getPatient, { 
     patientId: patientId as Id<"patients"> 

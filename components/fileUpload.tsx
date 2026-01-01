@@ -1,5 +1,5 @@
 
-import toast, { Toaster } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { X, FileIcon } from 'lucide-react';
 import Image from 'next/image';
@@ -119,16 +119,13 @@ export default function FileUpoad({endpoint, value,  onChange}: FileUploadProps)
         console.log('res :>> ', res);
         onChange(res?.[0].url);
         // saveFile(res?.[0].url, fileType, appointmentId)
-        toast.success("File uploaded successfully", {
-          icon: '👏',
-        })
+        toast.success("File uploaded successfully 👏")
       }}
       onUploadError={(err: Error) => {
         toast.error(`Error: ${err.message}`)
         console.log(err)
       }}
     />
-    <Toaster />
     </>
   )
 }

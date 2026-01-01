@@ -12,7 +12,9 @@ export default function Error({
 }) {
   useEffect(() => {
     // Log the error to an error reporting service
-    console.error(error)
+    if (error) {
+      console.error(error.message || error)
+    }
   }, [error])
 
   const router = useRouter()

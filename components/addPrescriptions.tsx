@@ -24,14 +24,14 @@ export const formSchema = z.object({
   prescriptions: z
     .array(
       z.object({
-        drug: z.string().min(1).max(255).refine((value) => value.trim() !== "", {
+        drug: z.string().min(1).refine((value) => value.trim() !== "", {
           message: "Please enter the drug name",
         }),
         count: z
           .number()
           .min(1, { message: "Must be greater than 1" }),
-        unit: z.string().min(1).max(255).default("flacon"),
-        posology: z.string().min(1).max(255).refine((value) => value.trim() !== "", {
+        unit: z.string().min(1).default("flacon"),
+        posology: z.string().min(1).refine((value) => value.trim() !== "", {
           message: "Please enter the posology",
         }),
       })

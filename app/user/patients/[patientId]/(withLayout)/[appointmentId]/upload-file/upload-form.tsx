@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { useRouter } from 'next/navigation'
-import toast, { Toaster } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { BeatLoader } from "react-spinners"
 
 import {
@@ -70,15 +70,11 @@ export default function UploadForm({ patientId, appointmentId }: UploadFormProps
     })
     const file = await res.json()
     if (file) {
-      toast.success("File saved!", {
-        icon: '👏',
-      })
+      toast.success("File saved! 👏")
       refresh([`/user/patients/${patientId}/${appointmentId}`])
       router.push(`/user/patients/${patientId}/${appointmentId}/`)
     } else {
-      toast.error("Something went wrong!", {
-        icon: '😢',
-      })
+      toast.error("Something went wrong! 😢")
       setLoading(false)
     }
 
@@ -142,7 +138,6 @@ export default function UploadForm({ patientId, appointmentId }: UploadFormProps
           </div>
         </form>
       </Form>
-      <Toaster />
     </div>
   )
 }

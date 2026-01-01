@@ -34,10 +34,13 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
+  // Memoize transport to prevent recreating on every render
+  const transport = useMemo(() => new DefaultChatTransport({
+    api: `/api/ai/chat/${patientId}`,
+  }), [patientId])
+
   const { messages, sendMessage, status } = useChat({
-    transport: new DefaultChatTransport({
-      api: `/api/ai/chat/${patientId}`,
-    }),
+    transport,
   })
 
   // Handle chart selection from the chart selector - memoized to prevent recreation
@@ -48,35 +51,14 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
   const isLoading = status === "submitted" || status === "streaming"
 
   // Auto-scroll to bottom when new messages arrive
+  // Use messages.length as dependency instead of messages object to reduce re-runs
   useEffect(() => {
-    const scrollToBottom = () => {
+    const timeoutId = setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-    }
+    }, 100)
     
-    // Check if the latest message has charts
-    const latestMessage = messages[messages.length - 1]
-    const hasCharts = latestMessage?.parts.some(part => 
-      (part.type === "tool-displayGrowthChart" || part.type === "tool-selectGrowthChart") && 
-      (part as any).state === "output-available"
-    )
-    
-    if (hasCharts) {
-      // For chart messages, use longer delays
-      const timeouts = [
-        setTimeout(scrollToBottom, 100),   // Quick initial scroll
-        setTimeout(scrollToBottom, 500),   // Chart starts rendering
-        setTimeout(scrollToBottom, 1200),  // Chart likely rendered
-        setTimeout(scrollToBottom, 2000),  // Final scroll to ensure completion
-      ]
-      
-      return () => timeouts.forEach(clearTimeout)
-    } else {
-      // For regular messages, immediate scroll with short delay
-      scrollToBottom()
-      const timeoutId = setTimeout(scrollToBottom, 200)
-      return () => clearTimeout(timeoutId)
-    }
-  }, [messages])
+    return () => clearTimeout(timeoutId)
+  }, [messages.length])
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault()
@@ -151,8 +133,8 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
           {messages.map((message) => (
             <div key={message.id} className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
               {message.role === "assistant" && (
-                <Avatar className="w-8 h-8 flex-shrink-0">
-                  <AvatarFallback className="bg-gradient-to-br from-green-500 to-green-600 text-white text-xs">
+                <Avatar className="w-8 h-8 shrink-0">
+                  <AvatarFallback className="bg-linear-to-br from-green-500 to-green-600 text-white text-xs">
                     <Bot className="w-4 h-4" />
                   </AvatarFallback>
                 </Avatar>

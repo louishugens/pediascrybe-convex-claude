@@ -8,7 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, Suspense } from "react";
 import BeatLoader from 'react-spinners/BeatLoader';
 import { authClient } from '@/lib/auth-client';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -150,7 +150,6 @@ export default function ResetPasswordPage() {
           <Doctor />
         </div>
       </div>
-      <Toaster position="top-center" richColors={true} />
     </div>
   )
 }

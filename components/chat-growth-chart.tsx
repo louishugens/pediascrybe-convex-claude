@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback, memo } from 'react'
 
 // Simple cache for reference data to avoid repeated API calls
 const referenceDataCache = new Map<string, any>()
@@ -38,7 +38,7 @@ interface ChatGrowthChartProps {
   data: GrowthChartData
 }
 
-export default function ChatGrowthChart({ data }: ChatGrowthChartProps) {
+function ChatGrowthChartInner({ data }: ChatGrowthChartProps) {
   const [chartData, setChartData] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -79,6 +79,65 @@ export default function ChatGrowthChart({ data }: ChatGrowthChartProps) {
       color: "#0000ff",
     },
   }) satisfies ChartConfig, [data.patientName])
+
+  // Memoize tooltip formatter to prevent recreation on every render
+  const tooltipFormatter = useCallback((value: any, name: string) => (
+    <div className="flex min-w-[180px] items-center text-xs text-muted-foreground py-1">
+      <div
+        className="h-2.5 w-2.5 shrink-0 rounded-[2px] bg-[--color-bg] mr-2"
+        style={{ "--color-bg": `var(--color-${name})` } as React.CSSProperties}
+      />
+      <span className="flex-1">{chartConfig[name as keyof typeof chartConfig]?.label || name}</span>
+      <div className="ml-4 flex items-baseline gap-0.5 font-mono font-medium tabular-nums text-foreground">
+        {data.unit === 'kg/m²' && typeof value === 'number' ? 
+          (Math.round(value * 100) / 100).toFixed(2) : value}
+        <span className="font-normal text-muted-foreground ml-1">{data.unit}</span>
+      </div>
+    </div>
+  ), [chartConfig, data.unit])
+
+  // Memoize label formatter to prevent recreation on every render
+  const tooltipLabelFormatter = useCallback((label: any, payload: any[]) => {
+    if (payload && payload.length > 0) {
+      const xValue = payload[0].payload[measureType];
+      const truncatedXValue = typeof xValue === 'number' 
+        ? Math.floor(xValue * 10) / 10
+        : xValue;
+      
+      let ageFormatted = '';
+      let displayValue = truncatedXValue;
+      let displayUnit = xUnit;
+      
+      if (measureType === 'age' && typeof xValue === 'number') {
+        if (data.chartType === 'hfa5To19' || data.chartType === 'bfa5To19') {
+          const ageInMonths = xValue + 60;
+          displayValue = ageInMonths;
+          displayUnit = 'months';
+          const years = Math.floor(ageInMonths / 12);
+          const months = ageInMonths % 12;
+          ageFormatted = years > 0 ? ` (${years}y ${months}m)` : ` (${months}m)`;
+        } else if (xUnit === 'days') {
+          const years = Math.floor(xValue / 365);
+          const months = Math.floor((xValue % 365) / 30);
+          if (years > 0) {
+            ageFormatted = ` (${years}y ${months}m)`;
+          } else if (months > 0) {
+            ageFormatted = ` (${months}m)`;
+          }
+        }
+      }
+      
+      const labelText = measureType === 'length' ? 'Length' : 'Age';
+      
+      return (
+        <div className="mb-3 text-sm font-medium">
+          {labelText}: <span className="font-bold">{displayValue} {displayUnit}</span>
+          <span className="text-muted-foreground">{ageFormatted}</span>
+        </div>
+      );
+    }
+    return null;
+  }, [measureType, xUnit, data.chartType])
 
   useEffect(() => {
     let isCancelled = false;
@@ -194,7 +253,9 @@ export default function ChatGrowthChart({ data }: ChatGrowthChartProps) {
     return () => {
       isCancelled = true;
     }
-  }, [data])
+  // Use specific primitive values as dependencies instead of the entire data object
+  // to prevent re-running when parent creates new object references
+  }, [data.chartType, data.patientSex, data.patientName, data.growthData.length])
 
   if (loading) {
     return (
@@ -298,75 +359,8 @@ export default function ChatGrowthChart({ data }: ChatGrowthChartProps) {
                     indicator='dashed'
                     labelKey={data.chartType}
                     nameKey={measureType}
-                    formatter={(value, name, props) => (
-                      <div className="flex min-w-[180px] items-center text-xs text-muted-foreground py-1">
-                        <div
-                          className="h-2.5 w-2.5 shrink-0 rounded-[2px] bg-[--color-bg] mr-2"
-                          style={
-                            {
-                              "--color-bg": `var(--color-${name})`,
-                            } as React.CSSProperties
-                          }
-                        />
-                        <span className="flex-1">{chartConfig[name as keyof typeof chartConfig]?.label ||
-                          name}</span>
-                        <div className="ml-4 flex items-baseline gap-0.5 font-mono font-medium tabular-nums text-foreground">
-                          {data.unit === 'kg/m²' && typeof value === 'number' ? 
-                            (Math.round(value * 100) / 100).toFixed(2) : value}
-                          <span className="font-normal text-muted-foreground ml-1">
-                            {data.unit}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                    labelFormatter={(label, payload) => {
-                      if (payload && payload.length > 0) {
-                        const xValue = payload[0].payload[measureType];
-                        const truncatedXValue = typeof xValue === 'number' 
-                          ? Math.floor(xValue * 10) / 10
-                          : xValue;
-                        
-                        // Format age in years/months 
-                        let ageFormatted = '';
-                        let displayValue = truncatedXValue;
-                        let displayUnit = xUnit;
-                        
-                        if (measureType === 'age' && typeof xValue === 'number') {
-                          if (data.chartType === 'hfa5To19' || data.chartType === 'bfa5To19') {
-                            // For 5-19 charts, convert index to months starting at 60 months (5 years)
-                            const ageInMonths = xValue + 60;
-                            displayValue = ageInMonths;
-                            displayUnit = 'months';
-                            const years = Math.floor(ageInMonths / 12);
-                            const months = ageInMonths % 12;
-                            if (years > 0) {
-                              ageFormatted = ` (${years}y ${months}m)`;
-                            } else {
-                              ageFormatted = ` (${months}m)`;
-                            }
-                          } else if (xUnit === 'days') {
-                            // For regular charts with days
-                            const years = Math.floor(xValue / 365);
-                            const months = Math.floor((xValue % 365) / 30);
-                            if (years > 0) {
-                              ageFormatted = ` (${years}y ${months}m)`;
-                            } else if (months > 0) {
-                              ageFormatted = ` (${months}m)`;
-                            }
-                          }
-                        }
-                        
-                        const labelText = measureType === 'length' ? 'Length' : 'Age';
-                        
-                        return (
-                          <div className="mb-3 text-sm font-medium">
-                            {labelText}: <span className="font-bold">{displayValue} {displayUnit}</span>
-                            <span className="text-muted-foreground">{ageFormatted}</span>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
+                    formatter={tooltipFormatter}
+                    labelFormatter={tooltipLabelFormatter}
                   />
                 } 
                 defaultIndex={1}
@@ -392,6 +386,7 @@ export default function ChatGrowthChart({ data }: ChatGrowthChartProps) {
                 stroke="var(--color-3rd)"
                 strokeWidth={1}
                 dot={false}
+                isAnimationActive={false}
               />
               <Line
                 dataKey="15th"
@@ -399,6 +394,7 @@ export default function ChatGrowthChart({ data }: ChatGrowthChartProps) {
                 stroke="var(--color-15th)"
                 strokeWidth={1}
                 dot={false}
+                isAnimationActive={false}
               />
               <Line
                 dataKey="50th"
@@ -406,6 +402,7 @@ export default function ChatGrowthChart({ data }: ChatGrowthChartProps) {
                 stroke="var(--color-50th)"
                 strokeWidth={1}
                 dot={false}
+                isAnimationActive={false}
               />
               <Line
                 dataKey="85th"
@@ -413,6 +410,7 @@ export default function ChatGrowthChart({ data }: ChatGrowthChartProps) {
                 stroke="var(--color-85th)"
                 strokeWidth={1}
                 dot={false}
+                isAnimationActive={false}
               />
               <Line
                 dataKey="97th"
@@ -420,6 +418,7 @@ export default function ChatGrowthChart({ data }: ChatGrowthChartProps) {
                 stroke="var(--color-97th)"
                 strokeWidth={1}
                 dot={false}
+                isAnimationActive={false}
               />
             </LineChart>
           </ChartContainer>
@@ -428,3 +427,17 @@ export default function ChatGrowthChart({ data }: ChatGrowthChartProps) {
     </Card>
   )
 }
+
+// Wrap with memo and custom comparison to prevent unnecessary re-renders
+const ChatGrowthChart = memo(ChatGrowthChartInner, (prevProps, nextProps) => {
+  // Only re-render if these specific values change
+  return (
+    prevProps.data.chartType === nextProps.data.chartType &&
+    prevProps.data.patientSex === nextProps.data.patientSex &&
+    prevProps.data.patientName === nextProps.data.patientName &&
+    prevProps.data.growthData.length === nextProps.data.growthData.length &&
+    prevProps.data.title === nextProps.data.title
+  )
+})
+
+export default ChatGrowthChart

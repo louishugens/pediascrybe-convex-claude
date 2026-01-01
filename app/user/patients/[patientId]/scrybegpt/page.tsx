@@ -20,7 +20,6 @@ export default async function Page(props: { params: Params }) {
 }
 
 async function ChatContainer({ params }: { params: Params }) {
-  'use cache'
   const { patientId } = await params;
   const patient = await fetchAuthQuery(api.patients.getPatient, { 
     patientId: patientId as Id<"patients"> 

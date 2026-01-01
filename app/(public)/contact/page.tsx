@@ -9,7 +9,7 @@ import BeatLoader from 'react-spinners/BeatLoader';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Toaster, toast } from 'sonner'
+import { toast } from 'sonner'
 
 
 const FormSchema = z.object({
@@ -147,7 +147,6 @@ const Contact = () => {
           {/* <p>Phone: <a href="tel:+11234567890" className="text-blue-500">+1 (123) 456-7890</a></p> */}
         </div>
       </div>
-      <Toaster position='top-center' richColors={true} />
     </div>
   );
 };

@@ -20,8 +20,6 @@ const AddPrescriptionsPage = async (props: { params: Params }) => {
 export default AddPrescriptionsPage
 
 async function AddPrescriptionsContainer({ params }: { params: Params }) {
-  'use cache'
-
   const { patientId, appointmentId } = await params;
 
   const appointment = await fetchAuthQuery(api.appointments.getAppointment, { 

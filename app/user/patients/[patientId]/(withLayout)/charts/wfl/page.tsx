@@ -31,6 +31,10 @@ const WFLChart = async ({ params }: { params: Params }) => {
     chartType: "wfl",
     sex: patient?.sex ?? null
   });
+  const referenceData0To2 = await fetchAuthQuery(api.charts.getReferenceData, { 
+    chartType: "wfl0To2",
+    sex: patient?.sex ?? null
+  });
 
   let formatted: { length: number; value: number; }[] = []
   let formatted_0_2: { length: number; value: number; }[] = []
@@ -122,7 +126,7 @@ const WFLChart = async ({ params }: { params: Params }) => {
   };
 
   const data = referenceData ? formatReferenceData(referenceData as ChartData, formatted) : [];
-  const data_0_2 = referenceData ? formatReferenceData_0_2(referenceData as ChartData, formatted_0_2) : [];
+  const data_0_2 = referenceData0To2 ? formatReferenceData_0_2(referenceData0To2 as ChartData, formatted_0_2) : [];
   
   return (
     <>

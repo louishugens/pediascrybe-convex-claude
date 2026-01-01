@@ -7,7 +7,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { useState } from "react";
 import BeatLoader from 'react-spinners/BeatLoader';
 import { authClient } from '@/lib/auth-client';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 
 export default function ResetPage() {
   const [loading, setLoading] = useState(false);
@@ -97,7 +97,6 @@ export default function ResetPage() {
           <Doctor />
         </div>
       </div>
-      <Toaster position="top-center" richColors={true} />
     </div>
   )
 }

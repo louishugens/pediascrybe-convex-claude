@@ -79,6 +79,17 @@ const AddPatient = () => {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
+    defaultValues: {
+      firstname: "",
+      lastname: "",
+      email: "",
+      mothername: "",
+      phone: "",
+      religion: "",
+      allergies: "",
+      history: "",
+      electrophoresis: "",
+    },
   })
 
   const doctor = useDoctor()
@@ -91,7 +102,7 @@ const AddPatient = () => {
     try{
       const {firstname, lastname, email, birthdate, mothername, sex, religion, phone, allergies, history, bloodtype, electrophoresis} = values
       console.log('bloodtype :>> ', bloodtype);
-      const body = {firstname, lastname, email, birthdate, mothername, sex, religion, phone, id: doctor!._id, allergies, history, bloodtype, electrophoresis}
+      const body = {firstname, lastname, email, birthdate, mothername, sex, religion, phone, doctorId: doctor!._id, allergies, history, bloodtype, electrophoresis}
       await fetch('/api/patients/addPatient', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -7,7 +7,7 @@ export async function POST(req: Request) {
   const { prompt }: { prompt: string } = await req.json();
 
   const result = streamText({
-    model: openai('gpt-4.1'),
+    model: openai('gpt-5-mini'),
     system: `You are ScrybeGPT, a helpful medical assistant specializing in pediatrics.\
       Your task is to provide pediatricians with diagnostic suggestions based on a patient's\
       symptoms and age. When interacting with a pediatrician, follow these steps:\
