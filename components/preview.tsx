@@ -12,7 +12,6 @@ import { CodeNode } from '@lexical/code';
 import { LinkNode } from '@lexical/link';
 import { $generateNodesFromDOM } from '@lexical/html';
 import { $getRoot, $insertNodes } from 'lexical';
-import '@/css/lexical.scss';
 
 interface PreviewProps {
   value: string;

@@ -146,7 +146,12 @@ const CreateReport = ({patientId, patient, consultations}) => {
         content += chunk
 
         // Update form as we receive chunks
-        const cleanContent = content.replace(/<\/?body>/g, '').trim()
+        // Remove markdown code blocks and body tags
+        const cleanContent = content
+          .replace(/^```html\n?/i, '')
+          .replace(/```$/g, '')
+          .replace(/<\/?body>/g, '')
+          .trim()
         // Ensure the content is wrapped in a paragraph if it's plain text
         const formattedContent = cleanContent.startsWith('<') ? cleanContent : `<p>${cleanContent}</p>`
         

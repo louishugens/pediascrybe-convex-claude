@@ -97,9 +97,9 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
   return (
     <Card className="flex flex-col h-full w-full  mx-auto bg-white shadow-lg overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between gap-3 p-4 border-b bg-gradient-to-r from-green-50 to-green-100">
+      <div className="flex items-center justify-between gap-3 p-4 border-b bg-linear-to-r from-green-50 to-green-100">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-linear-to-br from-green-500 to-green-600 flex items-center justify-center">
             <Bot className="w-4 h-4 text-white" />
           </div>
           <div>
@@ -280,7 +280,7 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
               </div>
 
               {message.role === "user" && (
-                <Avatar className="w-8 h-8 flex-shrink-0">
+                <Avatar className="w-8 h-8 shrink-0">
                   <AvatarFallback className="bg-gray-600 text-white text-xs">
                     <User className="w-4 h-4" />
                   </AvatarFallback>
@@ -291,8 +291,8 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
 
           {isLoading && (
             <div className="flex gap-3 justify-start">
-              <Avatar className="w-8 h-8 flex-shrink-0">
-                <AvatarFallback className="bg-gradient-to-br from-green-500 to-green-600 text-white text-xs">
+              <Avatar className="w-8 h-8 shrink-0">
+                <AvatarFallback className="bg-linear-to-br from-green-500 to-green-600 text-white text-xs">
                   <Bot className="w-4 h-4" />
                 </AvatarFallback>
               </Avatar>

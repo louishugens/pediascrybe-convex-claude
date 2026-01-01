@@ -16,11 +16,13 @@ export async function POST(req: Request) {
     }
 
     const { messages } = await req.json()
+    console.log('Incoming messages:', JSON.stringify(messages, null, 2))
 
-    const textStream = await streamText({
+    const textStream = streamText({
       model: openai('gpt-4o-mini'),
-      messages
+      messages,
     })
+
 
     if (!textStream) {
       return new Response(JSON.stringify(textStream), {

@@ -21,7 +21,6 @@ const ReportsPage = async (props: { params: Params }) => {
 export default ReportsPage;
 
 async function ReportsContainer({ params }: { params: Params }) {
-  'use cache'
   const { patientId } = await params;
 
   const reports = await fetchAuthQuery(api.reports.listByPatient, { 

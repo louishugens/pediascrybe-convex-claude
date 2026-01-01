@@ -22,7 +22,6 @@ const CreateReportPage = async (props: { params: Params }) => {
 export default CreateReportPage;
 
 async function CreateReportContainer({ params }: { params: Params }) {
-  'use cache'
   const { patientId } = await params;
 
   const patient = await fetchAuthQuery(api.patients.getPatient, { 

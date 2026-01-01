@@ -16,7 +16,6 @@ import { LinkNode } from '@lexical/link';
 import { $generateHtmlFromNodes, $generateNodesFromDOM } from '@lexical/html';
 import { $getRoot, $insertNodes, EditorState, LexicalEditor } from 'lexical';
 import { cn } from '@/lib/utils';
-import '@/css/lexical.scss';
 
 // Toolbar imports
 import {
@@ -232,16 +231,18 @@ function ToolbarPlugin() {
   );
 }
 
-// Plugin to load initial HTML content
-function InitialContentPlugin({ value }: { value: string }) {
+// Plugin to sync external HTML content into the editor
+function ExternalContentPlugin({ value }: { value: string }) {
   const [editor] = useLexicalComposerContext();
 
   useEffect(() => {
     if (value) {
       editor.update(() => {
         const root = $getRoot();
-        // Only set content if root is empty
-        if (root.getTextContent().trim() === '') {
+        const currentContent = $generateHtmlFromNodes(editor);
+        
+        // Only update if the external value is different from current editor content
+        if (currentContent !== value) {
           const parser = new DOMParser();
           const dom = parser.parseFromString(value, 'text/html');
           const nodes = $generateNodesFromDOM(editor, dom);
@@ -250,7 +251,7 @@ function InitialContentPlugin({ value }: { value: string }) {
         }
       });
     }
-  }, []);
+  }, [editor, value]);
 
   return null;
 }
@@ -296,7 +297,7 @@ export const Editor = ({ onChange, value }: EditorProps) => {
         <HistoryPlugin />
         <ListPlugin />
         <OnChangePlugin onChange={handleChange} />
-        <InitialContentPlugin value={value} />
+        <ExternalContentPlugin value={value} />
       </LexicalComposer>
     </div>
   );
