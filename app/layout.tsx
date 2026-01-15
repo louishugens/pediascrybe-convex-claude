@@ -1,4 +1,4 @@
-import { Montserrat } from 'next/font/google'
+import { Montserrat, Inter, Figtree } from 'next/font/google'
 import  '@/css/globals.css'
 import { AnalyticsWrapper } from '@/components/analytics';
 // import GA from '@/components/googleAnalytics';
@@ -6,6 +6,9 @@ import type { Metadata } from 'next'
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { ConvexClientProvider } from '@/components/ConvexClientProvider';
 import { Toaster } from 'sonner';
+import { cn } from "@/lib/utils";
+
+const figtree = Figtree({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   title: 'Pediatric Care, Elevated by AI Integration | Pediascrybe',
@@ -30,7 +33,7 @@ export default async function RootLayout({children}) {
 
 
   return (
-    <html lang="en" className={montserrat.className}>
+    <html lang="en" className={cn(montserrat.className, figtree.variable)}>
       <body className='min-h-screen bg-background font-sans antialiased' >  
         <ConvexClientProvider>
           <div className='flex-1'>{children}</div>

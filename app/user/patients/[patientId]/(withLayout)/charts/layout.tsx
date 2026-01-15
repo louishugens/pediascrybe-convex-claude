@@ -14,7 +14,7 @@ const Layout = async ({
 
 
   return (
-    <>
+    <div className="w-full overflow-hidden">
       <ViewTransition>
         <Suspense fallback={<ChartsNavSkeleton />}>
           <ChartNavContainer params={params} />
@@ -23,7 +23,7 @@ const Layout = async ({
       <div className="mt-4">
         {children}
       </div>
-    </>
+    </div>
   )
 }
 

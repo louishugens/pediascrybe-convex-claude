@@ -56,27 +56,27 @@ function ChatGrowthChartInner({ data }: ChatGrowthChartProps) {
   const chartConfig = useMemo(() => ({
     "3rd": {
       label: "3rd percentile",
-      color: "hsl(var(--chart-1))",
+      color: "var(--chart-1)",
     },
     "15th": {
       label: "15th percentile", 
-      color: "hsl(var(--chart-2))",
+      color: "var(--chart-2)",
     },
     "50th": {
       label: "50th percentile",
-      color: "hsl(var(--chart-3))",
+      color: "var(--chart-3)",
     },
     "85th": {
       label: "85th percentile",
-      color: "hsl(var(--chart-4))",
+      color: "var(--chart-4)",
     },
     "97th": {
       label: "97th percentile", 
-      color: "hsl(var(--chart-5))",
+      color: "var(--chart-5)",
     },
     [data.patientName]: {
       label: data.patientName,
-      color: "#0000ff",
+      color: "var(--primary)",
     },
   }) satisfies ChartConfig, [data.patientName])
 
@@ -288,7 +288,7 @@ function ChatGrowthChartInner({ data }: ChatGrowthChartProps) {
         <CardTitle className="text-lg font-semibold text-center">
           {data.title}
         </CardTitle>
-        <p className="text-sm text-gray-600 text-center">
+        <p className="text-sm text-muted-foreground text-center">
           {data.dataPoints} data points available
         </p>
       </CardHeader>
@@ -296,27 +296,27 @@ function ChatGrowthChartInner({ data }: ChatGrowthChartProps) {
         {/* Custom Legend outside chart */}
         <div className="flex flex-wrap justify-center gap-4 mb-2 text-xs">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded" style={{ backgroundColor: "#0000ff" }}></div>
+            <div className="w-3 h-3 rounded bg-primary"></div>
             <span className="font-bold">{data.patientName}</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded" style={{ backgroundColor: "hsl(var(--chart-1))" }}></div>
+            <div className="w-3 h-3 rounded bg-chart-1"></div>
             <span>3rd percentile</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded" style={{ backgroundColor: "hsl(var(--chart-2))" }}></div>
+            <div className="w-3 h-3 rounded bg-chart-2"></div>
             <span>15th percentile</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded" style={{ backgroundColor: "hsl(var(--chart-3))" }}></div>
+            <div className="w-3 h-3 rounded bg-chart-3"></div>
             <span>50th percentile</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded" style={{ backgroundColor: "hsl(var(--chart-4))" }}></div>
+            <div className="w-3 h-3 rounded bg-chart-4"></div>
             <span>85th percentile</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded" style={{ backgroundColor: "hsl(var(--chart-5))" }}></div>
+            <div className="w-3 h-3 rounded bg-chart-5"></div>
             <span>97th percentile</span>
           </div>
         </div>
@@ -370,10 +370,10 @@ function ChatGrowthChartInner({ data }: ChatGrowthChartProps) {
               <Line
                 dataKey={data.patientName}
                 type="monotone"
-                stroke="#0900ff"
+                stroke="var(--primary)"
                 strokeWidth={2}
-                dot={{ r: 2, fill: "#0000ff", strokeWidth: 1 }}
-                activeDot={{ r: 4, strokeWidth: 1, stroke: "#fff" }}
+                dot={{ r: 2, fill: "var(--primary)", strokeWidth: 1 }}
+                activeDot={{ r: 4, strokeWidth: 1, stroke: "var(--background)" }}
                 connectNulls={true}
                 isAnimationActive={false}
                 name={data.patientName}

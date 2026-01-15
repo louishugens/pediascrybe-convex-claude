@@ -52,7 +52,7 @@ function ImmunizationStatusSkeleton() {
       <CardContent>
         <div className="flex-1 flex items-center justify-center py-8">
           <div className="relative aspect-square max-h-[200px] w-full max-w-[200px]">
-            <Skeleton className="h-full w-full rounded-full bg-green-700/20" />
+            <Skeleton className="h-full w-full rounded-full bg-primary/20" />
             <div className="absolute inset-0 flex items-center justify-center">
               <Skeleton className="h-36 w-36 rounded-full bg-background" />
             </div>

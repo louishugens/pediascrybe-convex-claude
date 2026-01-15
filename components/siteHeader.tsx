@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils"
 import { MainNav } from "@/components/mainNav"
 import { MobileNav } from "@/components/mobileNav"
 
+
 export function SiteHeader() {
   const pathname = usePathname()
   return (
@@ -14,7 +15,7 @@ export function SiteHeader() {
         <div className="flex flex-1 items-center  space-x-2 justify-end">
           <MobileNav />
           <nav className="hidden md:flex gap-x-4 items-center text-sm">
-            <Link
+            {/* <Link
               href="/contact"
               className={cn(
                 "transition-colors hover:text-foreground/80",
@@ -24,7 +25,7 @@ export function SiteHeader() {
               )}
             >
               Contact
-            </Link>
+            </Link> */}
             <Link href="/" className="text-sm text-foreground border border-primary bg-muted px-4 py-1 rounded-full">
               Login
             </Link>

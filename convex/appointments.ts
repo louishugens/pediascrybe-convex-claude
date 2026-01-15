@@ -221,7 +221,7 @@ export const getDailyRevenueData = query({
       .collect();
     
     const filteredAppointments = appointments.filter(apt => 
-      apt.startDate >= startDate && apt.cost
+      apt.startDate >= startDate && apt.cost !== undefined && apt.cost > 0
     );
     
     // Group by date

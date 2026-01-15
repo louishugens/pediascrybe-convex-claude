@@ -22,8 +22,10 @@ async function DailyRevenueContent() {
   if (!doctor) {
     return null
   }
+  // Fetch all data (yearToDate: false) and let the client-side handle filtering
   const data = await fetchAuthQuery(api.appointments.getDailyRevenueData, { 
-    doctorId: doctor._id 
+    doctorId: doctor._id,
+    yearToDate: false 
   })
   return <DailyRevenueChart data={data} />
 }

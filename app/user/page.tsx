@@ -24,7 +24,7 @@ export default async function Page() {
           <p className="text-sm text-muted-foreground mt-2">Welcome to your dashboard</p>
         </div>
         <Link href="/user/transactions">
-          <Button variant="link" className="gap-2 bg-blue-500 text-primary-foreground rounded-full">
+          <Button variant="default" className="gap-2 rounded-full">
             <Receipt className="h-4 w-4" />
             View Transactions
           </Button>

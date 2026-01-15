@@ -3,6 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import Image from "next/image"
 
 // import { siteConfig } from "@/config/site"
 import { cn } from "@/lib/utils"
@@ -15,9 +16,10 @@ export function MainNav() {
   return (
     <div className="mr-4 flex ">
       <Link href="/" className="mr-6 flex items-center space-x-2">
-        <span className="text-xl font-bold sm:inline-block text-primary italic">
+        <Image src="/logo.svg" alt="Pediascrybe" width={20} height={20} className="w-auto h-6 object-contain" />
+        {/* <span className="text-xl font-bold sm:inline-block text-primary italic">
           Pediascrybe
-        </span>
+        </span> */}
       </Link>
     </div>
   )

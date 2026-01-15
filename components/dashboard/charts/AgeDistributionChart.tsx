@@ -70,7 +70,7 @@ export function AgeDistributionChart({ patients }: AgeDistributionProps) {
               cursor={false}
               content={<ChartTooltipContent hideLabel />}
             />
-            <Bar dataKey="count" fill="hsl(142.1 76.2% 26.3%)" radius={8} /> 
+            <Bar dataKey="count" fill="var(--primary)" radius={8} /> 
           </BarChart> 
          </ChartContainer>
       // </CardContent>

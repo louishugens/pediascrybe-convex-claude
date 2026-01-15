@@ -1,16 +1,38 @@
-import { Skeleton } from "@/components/ui/skeleton"
+'use client';
+
+import { motion } from 'motion/react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const ChartsNavSkeleton = () => {
-  return (
-    <div className='flex flex-row w-full h-auto gap-4'>
-      <Skeleton className="mt-4 h-10 w-20 rounded-full" />
-      <Skeleton className="mt-4 h-10 w-32 rounded-full" />
-      <Skeleton className="mt-4 h-10 w-32 rounded-full" />
-      <Skeleton className="mt-4 h-10 w-36 rounded-full" />
-      <Skeleton className="mt-4 h-10 w-28 rounded-full" />
-      <Skeleton className="mt-4 h-10 w-40 rounded-full" />
-    </div>
-  )
-}
+  const items = [
+    { width: 'w-16' },    // Leave button
+    { width: 'w-20' },    // Weight
+    { width: 'w-18' },    // Height  
+    { width: 'w-14' },    // W/H
+    { width: 'w-14' },    // BMI
+    { width: 'w-16' },    // Head
+  ];
 
-export default ChartsNavSkeleton
+  return (
+    <nav className="flex flex-wrap items-center gap-2 max-w-full">
+      {items.map((item, index) => (
+        <motion.div
+          key={index}
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ 
+            duration: 0.3, 
+            delay: index * 0.05,
+            ease: 'easeOut'
+          }}
+        >
+          <Skeleton 
+            className={`h-9 ${item.width} rounded-full bg-muted/60`}
+          />
+        </motion.div>
+      ))}
+    </nav>
+  );
+};
+
+export default ChartsNavSkeleton;

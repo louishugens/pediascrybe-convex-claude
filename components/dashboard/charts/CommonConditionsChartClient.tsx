@@ -38,7 +38,7 @@ export function CommonConditionsChartClient({ conditions }: CommonConditionsChar
         <Tooltip />
         <Bar 
           dataKey="count" 
-          fill="hsl(142.1 76.2% 36.3%)" 
+          fill="var(--primary)" 
           radius={[0, 4, 4, 0]}
         />
       </BarChart>

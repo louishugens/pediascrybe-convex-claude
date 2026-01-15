@@ -1,0 +1,79 @@
+'use client';
+
+import { motion } from 'motion/react';
+import Link from 'next/link';
+import { FileText, Shield, Receipt, ChevronRight, LucideIcon } from 'lucide-react';
+
+interface QuickActionsProps {
+  patientId: string;
+}
+
+interface QuickActionItemProps {
+  href: string;
+  label: string;
+  Icon: LucideIcon;
+  color: string;
+}
+
+function QuickActionItem({ href, label, Icon, color }: QuickActionItemProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Link href={href}>
+        <motion.div
+          whileHover={{ x: 4, backgroundColor: 'var(--muted)' }}
+          whileTap={{ scale: 0.98 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+          className="flex items-center gap-3 p-2.5 rounded-lg cursor-pointer group"
+        >
+          <div className={color}>
+            <Icon className="h-4 w-4" />
+          </div>
+          <span className="flex-1 text-sm font-medium text-foreground">
+            {label}
+          </span>
+          <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+        </motion.div>
+      </Link>
+    </motion.div>
+  );
+}
+
+export default function QuickActions({ patientId }: QuickActionsProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
+      className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-4 shadow-sm"
+    >
+      <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+        Quick Actions
+      </h4>
+      
+      <div className="space-y-2">
+        <QuickActionItem 
+          href={`/user/patients/${patientId}/reports`}
+          label="Reports & Certificates"
+          Icon={FileText}
+          color="text-blue-500"
+        />
+        <QuickActionItem 
+          href={`/user/patients/${patientId}/vaccines`}
+          label="Vaccines"
+          Icon={Shield}
+          color="text-green-500"
+        />
+        <QuickActionItem 
+          href={`/user/patients/${patientId}/receipts`}
+          label="Receipts"
+          Icon={Receipt}
+          color="text-amber-500"
+        />
+      </div>
+    </motion.div>
+  );
+}

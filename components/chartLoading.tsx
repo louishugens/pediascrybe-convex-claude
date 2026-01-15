@@ -1,76 +1,72 @@
-import { Skeleton } from "@/components/ui/skeleton"
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ChartLoading() {
   return (
-    <div className="w-full max-w-4xl mx-auto p-6 bg-white rounded-lg border">
-      {/* Chart Header */}
-      <div className="mb-6">
-        <Skeleton className="h-8 w-64 mb-2 bg-green-100" />
-        <Skeleton className="h-4 w-96 bg-green-50" />
-      </div>
+    <div className="p-4">
+      <Card className="overflow-hidden">
+        <CardHeader className="flex flex-row justify-between items-center pb-2">
+          <div className="space-y-2">
+            <Skeleton className="h-5 w-64" />
+            <Skeleton className="h-4 w-48" />
+          </div>
+          <Skeleton className="h-9 w-24 rounded-full" />
+        </CardHeader>
 
-      {/* Main Chart Area */}
-      <div className="relative h-80 bg-gray-50/30 rounded-lg p-6">
-        {/* Horizontal grid lines */}
-        <div className="absolute inset-6 space-y-12">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="border-t border-gray-200" />
-          ))}
-        </div>
+        <CardContent>
+          {/* Chart Area */}
+          <div className="relative h-[400px] rounded-xl bg-muted/20 overflow-hidden">
+            {/* Y-axis labels */}
+            <div className="absolute left-3 top-6 bottom-12 flex flex-col justify-between">
+              {[160, 120, 80, 40, 0].map((label) => (
+                <Skeleton key={label} className="h-3 w-8" />
+              ))}
+            </div>
 
-        {/* Bars container */}
-        <div className="relative h-full flex items-end justify-center gap-8 pb-8">
-          {/* Bar 1 - Very tall */}
-          <div className="flex flex-col items-center">
-            <Skeleton className="w-16 h-60 bg-green-100 rounded-lg" />
-            <Skeleton className="h-3 w-8 mt-3 bg-green-100" />
+            {/* Y-axis line */}
+            <div className="absolute left-13 top-4 bottom-10 w-px bg-muted-foreground/30" />
+
+            {/* X-axis line */}
+            <div className="absolute left-13 right-6 bottom-10 h-px bg-muted-foreground/30" />
+
+            {/* Chart lines - mimicking percentile curves */}
+            <svg
+              className="absolute left-14 right-6 top-6 bottom-12 w-[calc(100%-5rem)] h-[calc(100%-4.5rem)] animate-pulse"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+            >
+              {/* Percentile curves from top to bottom */}
+              {[25, 33, 41, 49, 57].map((baseY, i) => (
+                <path
+                  key={i}
+                  d={`M 0 ${baseY + 25} Q 25 ${baseY + 15}, 50 ${baseY + 8} T 100 ${baseY - 10}`}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  className="text-blue-400/30"
+                />
+              ))}
+            </svg>
+
+            {/* X-axis labels */}
+            <div className="absolute left-14 right-6 bottom-2 flex justify-between">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Skeleton key={i} className="h-3 w-10" />
+              ))}
+            </div>
           </div>
 
-          {/* Bar 2 - Short */}
-          <div className="flex flex-col items-center">
-            <Skeleton className="w-16 h-16 bg-green-100 rounded-lg" />
-            <Skeleton className="h-3 w-8 mt-3 bg-green-100" />
+          {/* Legend */}
+          <div className="mt-6 flex flex-wrap justify-center gap-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <Skeleton className="h-3 w-3 rounded-sm" />
+                <Skeleton className="h-3 w-16" />
+              </div>
+            ))}
           </div>
-
-          {/* Bar 3 - Very short */}
-          <div className="flex flex-col items-center">
-            <Skeleton className="w-16 h-8 bg-green-100 rounded-lg" />
-            <Skeleton className="h-3 w-8 mt-3 bg-green-100" />
-          </div>
-
-          {/* Bar 4 - Short */}
-          <div className="flex flex-col items-center">
-            <Skeleton className="w-16 h-12 bg-green-100 rounded-lg" />
-            <Skeleton className="h-3 w-8 mt-3 bg-green-100" />
-          </div>
-
-          {/* Bar 5 - Medium */}
-          <div className="flex flex-col items-center">
-            <Skeleton className="w-16 h-24 bg-green-100 rounded-lg" />
-            <Skeleton className="h-3 w-8 mt-3 bg-green-100" />
-          </div>
-
-          {/* Bar 6 - Very short */}
-          <div className="flex flex-col items-center">
-            <Skeleton className="w-16 h-6 bg-green-100 rounded-lg" />
-            <Skeleton className="h-3 w-8 mt-3 bg-green-100" />
-          </div>
-
-          {/* Bar 7 - Medium */}
-          <div className="flex flex-col items-center">
-            <Skeleton className="w-16 h-20 bg-green-100 rounded-lg" />
-            <Skeleton className="h-3 w-8 mt-3 bg-green-100" />
-          </div>
-        </div>
-      </div>
-
-      {/* Chart Footer */}
-      <div className="mt-6 flex justify-between items-center">
-        <div className="flex gap-2">
-          <Skeleton className="h-8 w-20 rounded bg-green-100" />
-        </div>
-        <Skeleton className="h-4 w-32 bg-green-100" />
-      </div>
+        </CardContent>
+      </Card>
     </div>
-  )
+  );
 }

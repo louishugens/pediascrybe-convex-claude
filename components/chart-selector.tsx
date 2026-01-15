@@ -71,10 +71,10 @@ function ChartSelectorInner({ data, onChartSelect }: ChartSelectorProps) {
     <Card className="w-full max-w-2xl mx-auto mb-4">
       <CardHeader>
         <CardTitle className="text-lg font-semibold flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-green-600" />
+          <TrendingUp className="w-5 h-5 text-primary" />
           Growth Chart Selection
         </CardTitle>
-        <p className="text-sm text-gray-600">{data.message}</p>
+        <p className="text-sm text-muted-foreground">{data.message}</p>
         <div className="flex flex-wrap gap-2 mt-2">
           <Badge variant="outline" className="text-xs">
             Age: {data.patientAge} years
@@ -95,7 +95,7 @@ function ChartSelectorInner({ data, onChartSelect }: ChartSelectorProps) {
       </CardHeader>
       <CardContent>
         {data.availableCharts.length === 0 ? (
-          <div className="text-center py-6 text-gray-500">
+          <div className="text-center py-6 text-muted-foreground">
             <p>No growth charts available for this patient.</p>
             <p className="text-sm mt-1">Patient needs weight, height, or head circumference measurements.</p>
           </div>
@@ -103,13 +103,13 @@ function ChartSelectorInner({ data, onChartSelect }: ChartSelectorProps) {
           <div className="space-y-3">
             {data.recommendedCharts.length > 0 && (
               <div>
-                <h4 className="text-sm font-medium text-green-700 mb-2">Recommended Charts</h4>
+                <h4 className="text-sm font-medium text-primary mb-2">Recommended Charts</h4>
                 <div className="grid gap-2">
                   {data.recommendedCharts.map((chart) => (
                     <Button
                       key={chart.type}
                       variant="default"
-                      className="justify-start h-auto p-3 bg-green-50 hover:bg-green-100 text-green-800 border border-green-200"
+                      className="justify-start h-auto p-3 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20"
                       onClick={() => onChartSelect?.(chart.type)}
                     >
                       <div className="flex items-center gap-3 w-full">
@@ -118,7 +118,7 @@ function ChartSelectorInner({ data, onChartSelect }: ChartSelectorProps) {
                           <div className="font-medium">{chart.title}</div>
                           <div className="text-xs opacity-80">{chart.description}</div>
                         </div>
-                        <Badge className="bg-green-600">Recommended</Badge>
+                        <Badge className="bg-primary text-primary-foreground">Recommended</Badge>
                       </div>
                     </Button>
                   ))}
@@ -128,7 +128,7 @@ function ChartSelectorInner({ data, onChartSelect }: ChartSelectorProps) {
             
             {data.availableCharts.filter(chart => !chart.recommended).length > 0 && (
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Other Available Charts</h4>
+                <h4 className="text-sm font-medium text-foreground mb-2">Other Available Charts</h4>
                 <div className="grid gap-2">
                   {data.availableCharts
                     .filter(chart => !chart.recommended)
@@ -143,7 +143,7 @@ function ChartSelectorInner({ data, onChartSelect }: ChartSelectorProps) {
                           {getChartIcon(chart.type)}
                           <div className="text-left flex-1">
                             <div className="font-medium">{chart.title}</div>
-                            <div className="text-xs text-gray-600">{chart.description}</div>
+                            <div className="text-xs text-muted-foreground">{chart.description}</div>
                           </div>
                         </div>
                       </Button>

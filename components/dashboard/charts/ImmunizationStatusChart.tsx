@@ -38,9 +38,9 @@ export function ImmunizationStatusChart({ patients }: ImmunizationStatusProps) {
     ).length
 
     return [
-      { status: "Completed", count: completed, fill: "hsl(142.1 76.2% 36.3%)" },
-      { status: "Partial", count: partial, fill: "hsl(48 96% 53%)" },
-      { status: "Pending", count: pending, fill: "hsl(0 84% 60%)" }
+      { status: "Completed", count: completed, fill: "var(--primary)" },
+      { status: "Partial", count: partial, fill: "color-mix(in oklch, var(--primary) 60%, transparent)" },
+      { status: "Pending", count: pending, fill: "color-mix(in oklch, var(--primary) 30%, transparent)" }
     ]
   }
 
@@ -55,15 +55,15 @@ export function ImmunizationStatusChart({ patients }: ImmunizationStatusProps) {
     },
     completed: {
       label: "Completed",
-      color: "hsl(142.1 76.2% 36.3%)",
+      color: "var(--primary)",
     },
     partial: {
       label: "Partial",
-      color: "hsl(48 96% 53%)",
+      color: "color-mix(in oklch, var(--primary) 60%, transparent)",
     },
     pending: {
       label: "Pending",
-      color: "hsl(0 84% 60%)",
+      color: "color-mix(in oklch, var(--primary) 30%, transparent)",
     },
   } satisfies ChartConfig
 

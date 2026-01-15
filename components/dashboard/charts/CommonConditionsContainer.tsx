@@ -56,7 +56,7 @@ function CommonConditionsSkeleton() {
               <span className="text-xs text-muted-foreground font-medium w-32 text-left truncate">
                 {condition}
               </span>
-              <Skeleton className={`h-8 ${barWidths[index]} rounded bg-green-700/20`} />
+              <Skeleton className={`h-8 ${barWidths[index]} rounded bg-primary/20`} />
             </div>
           ))}
         </div>

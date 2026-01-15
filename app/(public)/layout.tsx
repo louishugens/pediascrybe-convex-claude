@@ -1,5 +1,5 @@
 import { SiteHeader } from '@/components/siteHeader';
-import Footer from '@/components/Footer';
+// import Footer from '@/components/Footer';
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { AuthCheck } from '@/components/auth-check'
@@ -22,9 +22,9 @@ export default function RootLayout({children}) {
       </Suspense>
       <SiteHeader />
       <div className='flex-1'>{children}</div>
-      <Suspense fallback={null}>
+      {/* <Suspense fallback={null}>
         <Footer />
-      </Suspense>
+      </Suspense> */}
     </div>
   )
 }

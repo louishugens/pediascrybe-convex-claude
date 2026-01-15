@@ -58,7 +58,7 @@ function AgeDistributionSkeleton() {
           <div className="flex items-end justify-between gap-4 h-full">
             {ageRanges.map((range, index) => (
               <div key={range} className="flex flex-col items-center flex-1 h-full justify-end gap-2">
-                <Skeleton className={`w-full ${barHeights[index]} rounded-t-lg bg-green-700/20`} />
+                <Skeleton className={`w-full ${barHeights[index]} rounded-t-lg bg-primary/20`} />
                 <span className="text-xs text-muted-foreground font-medium">{range}</span>
               </div>
             ))}

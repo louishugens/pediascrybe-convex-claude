@@ -1,60 +1,46 @@
-import Link from 'next/link'
-import AppointmentList from '@/components/appointmentList'
-import { Suspense, ViewTransition } from 'react'
-
-import PatientPageSkeleton from '@/components/skeletons/patient-page-skeleton'
+import { Suspense } from 'react'
+import { ViewTransition } from 'react'
+import { Skeleton } from '@/components/ui/skeleton'
+import ChartCarouselWrapper from '@/components/patient/chart-carousel-wrapper'
+import ConsultationListWrapper from '@/components/patient/consultation-list-wrapper'
+import ChartCarouselSkeleton from '@/components/patient/chart-carousel-skeleton'
 
 type Params = Promise<{ patientId: string }>
 
+function ConsultationListSkeleton() {
+  return (
+    <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-4">
+      <div className="flex items-center justify-between mb-4">
+        <Skeleton className="h-5 w-32" />
+        <Skeleton className="h-9 w-36 rounded-full" />
+      </div>
+      <div className="space-y-2">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-14 w-full rounded-lg" />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 async function Patient({ params }: { params: Params }) {
+  const { patientId } = await params;
 
   return (
     <ViewTransition>
-      <Suspense fallback={<PatientPageSkeleton />}>
-        <PatientContainer params={params} />
-      </Suspense>
+      <div className="flex flex-col gap-6">
+        {/* Chart Carousel */}
+        <Suspense fallback={<ChartCarouselSkeleton />}>
+          <ChartCarouselWrapper patientId={patientId} />
+        </Suspense>
+
+        {/* Consultation List */}
+        <Suspense fallback={<ConsultationListSkeleton />}>
+          <ConsultationListWrapper patientId={patientId} />
+        </Suspense>
+      </div>
     </ViewTransition>
   )
 }
 
-
 export default Patient
-
-async function PatientContainer({ params }: { params: Params }) {
-  const { patientId } = await params;
-
-  return (
-    <>
-      <div className="flex flex-col w-full items-center">
-        <div className="flex flex-row w-full gap-4">
-          <Link href={`/user/patients/${patientId}/charts`} className="mt-4 text-sm bg-blue-500 text-slate-100 rounded-full px-4 py-2 self-start">Growth Charts</Link>
-          <Link href={`/user/patients/${patientId}/vaccines`} className="mt-4 text-sm bg-blue-500 text-slate-100 rounded-full px-4 py-2 self-start">Vaccines</Link>
-          <Link href={`/user/patients/${patientId}/reports`} className="mt-4 text-sm bg-blue-500 text-slate-100 rounded-full px-4 py-2 self-start">Reports, Certificates and Reference Notes</Link>
-          <Link href={`/user/patients/${patientId}/receipts`} className="mt-4 text-sm bg-blue-500 text-slate-100 rounded-full px-4 py-2 self-start">Receipts</Link>
-        </div>
-        <div className="flex flex-row w-full justify-between pt-4">
-          <p className=' font-bold text-white'><span className=' text-primary'>Consultation list</span></p>
-          <Link
-            className='self-end px-4 py-2 bg-blue-500 text-slate-100 rounded-full text-sm shadow'
-            href={`/user/patients/${patientId}/add-appointment`}>Add Consultation</Link>
-        </div>
-        <table className="table-auto color-0 rounded-lg relative text-sm w-full mt-4 border-separate border-spacing-y-1.5">
-          <thead className="rounded-t-lg  bg-blue-50">
-            <tr className="rounded-full shadow">
-              <th className="text-left px-4 py-2 rounded-l-full">Date</th>
-              <th className="text-left px-4 py-2">Height</th>
-              <th className="text-left px-4 py-2">Weight</th>
-              <th className="text-left px-4 py-2">Head Circumference</th>
-              <th className="text-left px-4 py-2 rounded-r-full">Actions</th>
-            </tr>
-          </thead>
-          <tbody className='w-full'>
-            <AppointmentList patientId={patientId} />
-            {/* {appointments.map(appointment => <AppointmentComponent appointment={appointment} doctorId={doctorId} patientId={patientId} data-superjson key={appointment.id} /> */}
-            {/* )} */}
-          </tbody>
-        </table>
-      </div>
-    </>
-  )
-}

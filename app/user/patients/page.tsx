@@ -10,7 +10,7 @@ import { redirect } from "next/navigation"
 
 function PatientSkeleton() {
   return (
-    <div className="basis-1/3 h-auto rounded-lg p-4 border border-slate-300">
+    <div className="basis-1/3 h-auto rounded-lg p-4 border border-border">
       <Skeleton className="h-6 w-32 mb-2" />
       <Skeleton className="h-4 w-24 mb-4" />
       <div className="flex flex-row justify-between mt-6">
@@ -60,9 +60,9 @@ export default async function Patients({ searchParams }: PatientsProps) {
   return (
     <div className='h-full mb-8 pb-4'>
       <div className="flex flex-row w-full justify-between">
-        <p className='font-bold text-white'><span className='text-primary'>Patient list</span></p>
+        <p className='font-bold text-foreground'><span className='text-primary'>Patient list</span></p>
         <Link 
-          className='self-end px-4 py-2 bg-blue-500 text-white rounded-full text-sm' 
+          className='self-end px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm hover:bg-primary/80 transition-colors' 
           href={`/user/add-patient`}
         >
           Add Patient

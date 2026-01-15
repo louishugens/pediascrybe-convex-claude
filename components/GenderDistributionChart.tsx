@@ -23,8 +23,8 @@ export function GenderDistributionChart({ patients }: GenderDistributionProps) {
     const female = patients.filter(patient => patient.sex === 'female').length
 
     return [
-      { gender: "Boys", count: male, fill: "hsl(142.1 76.2% 36.3%)" },
-      { gender: "Girls", count: female, fill: "hsl(142.1 76.2% 26.3%)" }
+      { gender: "Boys", count: male, fill: "var(--primary)" },
+      { gender: "Girls", count: female, fill: "color-mix(in oklch, var(--primary) 60%, transparent)" }
     ]
   }
 
@@ -39,11 +39,11 @@ export function GenderDistributionChart({ patients }: GenderDistributionProps) {
     },
     male: {
       label: "Boys",
-      color: "hsl(142.1 76.2% 36.3%)",
+      color: "var(--primary)",
     },
     female: {
       label: "Girls",
-      color: "hsl(142.1 76.2% 56.3%)",
+      color: "color-mix(in oklch, var(--primary) 60%, transparent)",
     },
   } satisfies ChartConfig
  

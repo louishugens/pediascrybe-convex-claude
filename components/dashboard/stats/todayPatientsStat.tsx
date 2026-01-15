@@ -11,7 +11,7 @@ export default async function TodayPatientsStat() {
     <Card className="glass card-hover">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-sm font-medium">Today&apos;s Patients</CardTitle>
-        <Users className="h-4 w-4 text-blue-500" />
+        <Users className="h-4 w-4 text-primary" />
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold text-primary">
