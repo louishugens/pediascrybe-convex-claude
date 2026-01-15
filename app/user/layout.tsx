@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import { ClientAuthBoundary } from "@/lib/auth-client"
+import { BreadcrumbNav } from "@/components/breadcrumb-nav"
 
 interface LayoutProps {
   children: React.ReactNode
@@ -47,12 +48,14 @@ const Layout = ({ children }: LayoutProps) => {
         <SidebarProvider>
           <AppSidebar />
           <SidebarInset>
-            <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-              <SidebarTrigger className="-ml-1" />
-              <Separator orientation="vertical" className="mr-2 h-4 self-center!" />
-              <span className="text-sm text-muted-foreground">Dashboard</span>
+            <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+              <div className="flex items-center gap-2 px-4">
+                <SidebarTrigger className="-ml-1" />
+                <Separator orientation="vertical" className="mr-2 h-4 my-auto" />
+                <BreadcrumbNav />
+              </div>
             </header>
-            <div className="flex-1 p-4 overflow-x-hidden">
+            <div className="flex-1 p-4 overflow-x-clip">
               {children}
             </div>
           </SidebarInset>

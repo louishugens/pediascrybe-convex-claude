@@ -55,17 +55,17 @@ const Layout = async ({
   params: Params
 }) => {
   return (
-    <div className="flex gap-6 w-full">
+    <div className="flex gap-6 w-full relative">
       {/* Main Content */}
-      <div className="flex-1 min-w-0 overflow-hidden">
+      <div className="flex-1 min-w-0 overflow-x-clip">
         <ViewTransition>
           {children}
         </ViewTransition>
       </div>
       
-      {/* Sidebar - uses self-start to enable sticky behavior within flex */}
-      <aside className="hidden lg:block w-[320px] shrink-0 self-start sticky top-4">
-        <div className="space-y-4">
+      {/* Sidebar - fixed positioning to stay visible while scrolling */}
+      <aside className="hidden lg:block w-[320px] shrink-0">
+        <div className="fixed w-[320px] top-20 space-y-4 max-h-[calc(100vh-6rem)] overflow-y-auto pr-4">
           <Suspense fallback={<SidebarSkeleton />}>
             <PatientSidebar params={params} />
           </Suspense>

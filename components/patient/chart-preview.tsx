@@ -64,7 +64,7 @@ export default function ChartPreview({
     },
     [name]: {
       label: name ?? 'patient',
-      color: "#3b82f6", // blue
+      color: "var(--primary)",
     },
   } satisfies ChartConfig
 
@@ -110,23 +110,24 @@ export default function ChartPreview({
               indicator='dashed'
               labelKey={type}
               nameKey={mesure}
-              formatter={(value, lineName) => (
-                <>
-                  <div
-                    className="h-2.5 w-2.5 shrink-0 rounded-[2px] bg-[--color-bg]"
-                    style={{
-                      "--color-bg": `var(--color-${lineName})`,
-                    } as React.CSSProperties}
-                  />
-                  <div className="flex min-w-[130px] items-center text-xs text-muted-foreground">
-                    {chartConfig[lineName as keyof typeof chartConfig]?.label || lineName}
-                    <div className="ml-auto flex items-baseline gap-0.5 font-mono font-medium tabular-nums text-foreground">
-                      {value}
-                      <span className="font-normal text-muted-foreground">{yUnit}</span>
+              formatter={(value, lineName) => {
+                const lineColor = chartConfig[lineName as keyof typeof chartConfig]?.color;
+                return (
+                  <div className="flex items-center gap-2 w-full">
+                    <div
+                      className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+                      style={{ backgroundColor: lineColor }}
+                    />
+                    <div className="flex flex-1 min-w-[130px] items-center text-xs text-muted-foreground">
+                      {chartConfig[lineName as keyof typeof chartConfig]?.label || lineName}
+                      <div className="ml-auto flex items-baseline gap-0.5 font-mono font-medium tabular-nums text-foreground">
+                        {value}
+                        <span className="font-normal text-muted-foreground">{yUnit}</span>
+                      </div>
                     </div>
                   </div>
-                </>
-              )}
+                );
+              }}
               labelFormatter={(label, payload) => {
                 if (payload && payload.length > 0) {
                   const xValue = payload[0].payload[mesure];
@@ -186,9 +187,9 @@ export default function ChartPreview({
         <Line
           dataKey={name}
           type="monotone"
-          stroke="#3b82f6"
+          stroke="var(--primary)"
           strokeWidth={2}
-          dot={{ r: 3, fill: "#3b82f6", strokeWidth: 1 }}
+          dot={{ r: 3, fill: "var(--primary)", strokeWidth: 1 }}
           activeDot={{ r: 5, strokeWidth: 2, stroke: "#fff" }}
           connectNulls={true}
           isAnimationActive={false}

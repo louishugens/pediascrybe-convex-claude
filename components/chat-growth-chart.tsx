@@ -81,20 +81,23 @@ function ChatGrowthChartInner({ data }: ChatGrowthChartProps) {
   }) satisfies ChartConfig, [data.patientName])
 
   // Memoize tooltip formatter to prevent recreation on every render
-  const tooltipFormatter = useCallback((value: any, name: string) => (
-    <div className="flex min-w-[180px] items-center text-xs text-muted-foreground py-1">
-      <div
-        className="h-2.5 w-2.5 shrink-0 rounded-[2px] bg-[--color-bg] mr-2"
-        style={{ "--color-bg": `var(--color-${name})` } as React.CSSProperties}
-      />
-      <span className="flex-1">{chartConfig[name as keyof typeof chartConfig]?.label || name}</span>
-      <div className="ml-4 flex items-baseline gap-0.5 font-mono font-medium tabular-nums text-foreground">
-        {data.unit === 'kg/m²' && typeof value === 'number' ? 
-          (Math.round(value * 100) / 100).toFixed(2) : value}
-        <span className="font-normal text-muted-foreground ml-1">{data.unit}</span>
+  const tooltipFormatter = useCallback((value: any, name: string) => {
+    const lineColor = chartConfig[name as keyof typeof chartConfig]?.color;
+    return (
+      <div className="flex items-center gap-2 w-full min-w-[180px] text-xs text-muted-foreground py-1">
+        <div
+          className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+          style={{ backgroundColor: lineColor }}
+        />
+        <span className="flex-1">{chartConfig[name as keyof typeof chartConfig]?.label || name}</span>
+        <div className="ml-4 flex items-baseline gap-0.5 font-mono font-medium tabular-nums text-foreground">
+          {data.unit === 'kg/m²' && typeof value === 'number' ? 
+            (Math.round(value * 100) / 100).toFixed(2) : value}
+          <span className="font-normal text-muted-foreground ml-1">{data.unit}</span>
+        </div>
       </div>
-    </div>
-  ), [chartConfig, data.unit])
+    );
+  }, [chartConfig, data.unit])
 
   // Memoize label formatter to prevent recreation on every render
   const tooltipLabelFormatter = useCallback((label: any, payload: any[]) => {

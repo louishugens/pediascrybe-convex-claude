@@ -142,25 +142,26 @@ function ChartContent({
               indicator='dashed'
               labelKey={type}
               nameKey={mesure}
-              formatter={(value, lineName) => (
-                <>
-                  <div
-                    className="h-2.5 w-2.5 shrink-0 rounded-[2px] bg-[--color-bg]"
-                    style={{
-                      "--color-bg": `var(--color-${lineName})`,
-                    } as React.CSSProperties}
-                  />
-                  <div className="flex min-w-[130px] items-center text-xs text-muted-foreground">
-                    {chartConfig[lineName as keyof typeof chartConfig]?.label || lineName}
-                    <div className="ml-auto flex items-baseline gap-0.5 font-mono font-medium tabular-nums text-foreground">
-                      {value}
-                      <span className="font-normal text-muted-foreground">
-                        {yUnit}
-                      </span>
+              formatter={(value, lineName) => {
+                const lineColor = chartConfig[lineName as keyof typeof chartConfig]?.color;
+                return (
+                  <div className="flex items-center gap-2 w-full">
+                    <div
+                      className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+                      style={{ backgroundColor: lineColor }}
+                    />
+                    <div className="flex flex-1 min-w-[130px] items-center text-xs text-muted-foreground">
+                      {chartConfig[lineName as keyof typeof chartConfig]?.label || lineName}
+                      <div className="ml-auto flex items-baseline gap-0.5 font-mono font-medium tabular-nums text-foreground">
+                        {value}
+                        <span className="font-normal text-muted-foreground">
+                          {yUnit}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </>
-              )}
+                );
+              }}
               labelFormatter={(label, payload) => {
                 if (payload && payload.length > 0) {
                   const xValue = payload[0].payload[mesure];
@@ -224,10 +225,10 @@ function ChartContent({
         <Line
           dataKey={patientName}
           type="monotone"
-          stroke="#3b82f6"
+          stroke="var(--primary)"
           strokeWidth={2.5}
-          dot={{ r: 4, fill: "#3b82f6", strokeWidth: 2, stroke: "#fff" }}
-          activeDot={{ r: 6, strokeWidth: 3, stroke: "#fff", fill: "#3b82f6" }}
+          dot={{ r: 4, fill: "var(--primary)", strokeWidth: 2, stroke: "#fff" }}
+          activeDot={{ r: 6, strokeWidth: 3, stroke: "#fff", fill: "var(--primary)" }}
           connectNulls={true}
           isAnimationActive={true}
           animationDuration={800}
@@ -285,7 +286,7 @@ export function ChartShad({
     },
     [patientName]: {
       label: patientName,
-      color: "#3b82f6",
+      color: "var(--primary)",
     },
   } satisfies ChartConfig
 
