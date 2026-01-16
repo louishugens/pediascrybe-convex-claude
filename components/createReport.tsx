@@ -31,17 +31,61 @@ import EditDoctor from '@/components/editDoctor';
 import { Editor } from '@/components/editor';
 import { useCompletion } from '@ai-sdk/react';
 import { useSubscriptionGuard } from '@/hooks/use-subscription-guard';
+import { useAIQueryAccess } from '@/components/subscription-guard';
+import { UpgradeModal } from '@/components/upgrade-modal';
+import { ViewTransition } from 'react';
+import { Spinner } from '@/components/ui/spinner'
+import { Id, Doc } from '@/convex/_generated/dataModel';
 
+interface CreateReportProps {
+  patientId: Id<"patients">;
+  patient: Doc<"patients">;
+  records: Doc<"appointments">[];
+}
 
-const CreateReport = ({patientId, patient, records}) => {
+const CreateReport = ({patientId, patient, records}: CreateReportProps) => {
 
   const [generating, setGenerating] = useState(false)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  
+  // Check for ai_report feature access
+  const { isAllowed: canUseAIReport, reason: aiBlockReason, isLoading: checkingAccess } = useAIQueryAccess('ai_report');
 
 
 
   const fetchReportSuggestions = async () => {
-    // Check subscription before AI generation
-    if (!requireSubscription("generate AI reports")) return;
+    // Check if user can use AI Report feature
+    if (!canUseAIReport) {
+      setShowUpgradeModal(true);
+      return;
+    }
+
+    // Calculate age from birthdate with granularity for infants
+    const birthDate = new Date(patient.birthdate);
+    const today = new Date();
+    const diffMs = today.getTime() - birthDate.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    let age: string;
+    if (diffDays < 7) {
+      age = `${diffDays} day${diffDays !== 1 ? 's' : ''}`;
+    } else if (diffDays < 30) {
+      const weeks = Math.floor(diffDays / 7);
+      age = `${weeks} week${weeks !== 1 ? 's' : ''}`;
+    } else if (diffDays < 365) {
+      const months = Math.floor(diffDays / 30);
+      age = `${months} month${months !== 1 ? 's' : ''}`;
+    } else {
+      const years = Math.floor(diffDays / 365);
+      age = `${years} year${years !== 1 ? 's' : ''}`;
+    }
+
+    // Format patient info with readable birthdate and calculated age
+    const patientInfo = {
+      ...patient,
+      birthdate: birthDate.toLocaleDateString(),
+      age: age,
+    };
 
     const messages = [
       {
@@ -58,7 +102,7 @@ const CreateReport = ({patientId, patient, records}) => {
       },
       {
         role: "user",
-        content: `The patient's information are ${JSON.stringify(patient)}`,
+        content: `The patient's information are ${JSON.stringify(patientInfo)}`,
       },
       {
         role: "user",
@@ -193,81 +237,86 @@ const CreateReport = ({patientId, patient, records}) => {
 
 
   return ( 
-  <div className="flex flex-col w-full items-center">
-    <p className='text-lg text-primary font-bold mt-8'>Create Report or Cetificate or Reference Note</p>
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex bg-muted rounded-md p-8 flex-col mt-8 w-2/3 text-sm">
-        <div className="grid gap-x-8 gap-y-8 grid-cols-2 mt-4">
+  <div className="flex flex-col w-full items-start">
+    <p className='text-lg text-primary font-bold my-4'>Create Report or Cetificate or Reference Note</p>
+    <ViewTransition>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex bg-muted rounded-md p-4 flex-col w-full text-sm">
+          <div className="grid gap-x-8 gap-y-8 grid-cols-2">
+            <FormField
+              control={form.control}
+              name='reportType'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Type</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select the report's type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Report">Report</SelectItem>
+                      <SelectItem value="Certificate">Certificate</SelectItem>
+                      <SelectItem value="ReferenceNote">Reference Note</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <div>
+        {
+            reportType && 
+              (
+                generating
+                ?
+                  <span className=' font-light text-primary flex flex-row gap-2 items-center justify-start'><span>ScrybeGPT thinking </span><Spinner aria-label="Loading Spinner" data-testid="loader"/></span>
+                :
+                  <span className=' font-light text-primary'>Generate with ScrybeGPT? <span className='px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs cursor-pointer'  onClick={fetchReportSuggestions}>Yes</span></span>
+              )
+            
+          } 
+          </div>
           <FormField
-            control={form.control}
-            name='reportType'
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Type</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+              control={form.control}
+              name="content"
+              render={({ field }) => (
+                <FormItem className='mt-4'>
+                  <FormLabel>Content</FormLabel>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select the report's type" />
-                    </SelectTrigger>
+                    {/* <Textarea placeholder="Medical history" {...field} /> */}
+                    <Editor 
+                      {...field}
+                    />
                   </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Report">Report</SelectItem>
-                    <SelectItem value="Certificate">Certificate</SelectItem>
-                    <SelectItem value="ReferenceNote">Reference Note</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <div className=" mt-8">
-       {
-          reportType && 
-            (
-              generating
-              ?
-                <span className=' font-light text-primary flex flex-row gap-2'><span>ScrybeGPT thinking </span><PulseLoader className='my-auto' color={"hsl(var(--primary))"} size={5} aria-label="Loading Spinner" data-testid="loader"/></span>
-              :
-                <span className=' font-light text-primary'>Generate with ScrybeGPT? <span className='px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs cursor-pointer'  onClick={fetchReportSuggestions}>Yes</span></span>
-            )
-          
-        } 
-        </div>
-        <FormField
-            control={form.control}
-            name="content"
-            render={({ field }) => (
-              <FormItem className='mt-8'>
-                <FormLabel>Content</FormLabel>
-                <FormControl>
-                  {/* <Textarea placeholder="Medical history" {...field} /> */}
-                  <Editor 
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}  
-          />
-        <button className="py-2 px-4 rounded-full bg-primary text-primary-foreground text-lg font-semibold w-1/2 center mt-8 mx-auto" type='submit'>
-          {
+                  <FormMessage />
+                </FormItem>
+              )}  
+            />
+          <button className="py-2 px-4 rounded-full bg-primary text-primary-foreground text-lg font-semibold w-1/2 center mt-8 mx-auto" type='submit'>
+            {
               loading
               ?
-              <BeatLoader
-                color={color}
-                size={10}
-                aria-label="Loading Spinner"
-                data-testid="loader"
-              />
+              <span className='flex flex-row gap-2 items-center justify-center'><span>Saving report </span><Spinner aria-label="Loading Spinner" data-testid="loader"/></span>
               :
-                "Create report"
-          }
-        </button>
-      </form>
-    </Form>
+                "Save report"
+            }
+          </button>
+        </form>
+      </Form>
+    </ViewTransition>
+    
+    {/* Upgrade Modal for AI Report */}
+    <UpgradeModal
+      open={showUpgradeModal}
+      onOpenChange={setShowUpgradeModal}
+      reason={aiBlockReason?.includes('limit') ? 'ai_query_limit' : 'feature_locked'}
+      featureName="AI Report Generation"
+    />
   </div>
    );
 }
- 
+
 export default CreateReport;

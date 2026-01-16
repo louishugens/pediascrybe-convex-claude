@@ -76,7 +76,7 @@ export default function VaccineRecordView({ vaccinationRecord }: { vaccinationRe
               <InfoItem icon={Factory} iconColor="text-red-500" label="Manufacturer" value={vaccinationRecord.manufacturer} />
               <InfoItem icon={Hash} iconColor="text-black" label="Lot Number" value={vaccinationRecord.lotNumber} />
               <InfoItem icon={Clock} iconColor="text-primary" label="Expiration Date" value={new Date(vaccinationRecord.expiration)} />
-              <InfoItem icon={Droplet} iconColor="text-blue-500" label="Dosage" value={vaccinationRecord.dosage || 'N/A'} />
+              <InfoItem icon={Droplet} iconColor="text-primary" label="Dosage" value={vaccinationRecord.dosage || 'N/A'} />
               <InfoItem icon={Syringe} iconColor="text-red-500" label="Administration Route" value={vaccinationRecord.route || 'N/A'} />
               <InfoItem icon={MapPin} iconColor="text-black" label="Administration Site" value={vaccinationRecord.site || 'N/A'} />
             </div>

@@ -19,6 +19,7 @@ interface BreadcrumbData {
   href: string
   patientId?: string
   appointmentId?: string
+  reportId?: string
 }
 
 // Map of abbreviations to full names
@@ -62,27 +63,32 @@ function getBreadcrumbs(pathname: string): BreadcrumbData[] {
       const isPatientId = segments[i - 1] === "patients" && 
         !["add-patient", "edit-patient"].includes(segment)
       
-      // Check if we're after a patient ID and this looks like an appointment ID
-      // (not a known route like charts, vaccines, reports, etc.)
-      const knownRoutes = [
+      // Check if this is an appointment ID - only if the previous segment is a patient ID
+      // (i.e., the segment before that was "patients")
+      // This ensures we only treat the first unknown ID after a patient as an appointment ID,
+      // not IDs that come after routes like "reports", "receipts", etc.
+      const knownPatientSubroutes = [
         "charts", "vaccines", "reports", "receipts", "scrybegpt",
         "add-record", "edit-patient", "hfa", "wfa", "bfa", "hcfa", "wfl",
-        "print-hfa", "print-wfa", "print-bfa", "print-hcfa", "print-wfl",
-        "print-hfa5To19", "print-bfa5To19", "print-wfl0To2",
-        "hfa5To19", "bfa5To19", "wfl0To2",
-        "create-receipt", "create-report", "add-record", "print"
+        "hfa5To19", "bfa5To19", "wfl0To2"
       ]
-      const prevSegment = segments[i - 1]
-      const isAppointmentId = !knownRoutes.includes(segment) && 
+      const isAppointmentId = i >= 2 && 
+        segments[i - 2] === "patients" &&
+        !["add-patient", "edit-patient"].includes(segments[i - 1]) &&
+        !knownPatientSubroutes.includes(segment) &&
         !segment.startsWith("print-") &&
         !segment.startsWith("edit-") &&
         !segment.startsWith("add-") &&
+        !segment.startsWith("create-")
+
+      // Check if this is a report ID (previous segment is "reports")
+      const isReportId = segments[i - 1] === "reports" &&
         !segment.startsWith("create-") &&
-        segments.some((s, idx) => s === "patients" && idx < i - 1)
+        !segment.startsWith("edit-")
 
       // Format the label
       let label = segment
-      if (!isPatientId && !isAppointmentId) {
+      if (!isPatientId && !isAppointmentId && !isReportId) {
         // Check if we have a mapped label for this segment
         if (labelMap[segment]) {
           label = labelMap[segment]
@@ -100,6 +106,7 @@ function getBreadcrumbs(pathname: string): BreadcrumbData[] {
         href,
         ...(isPatientId ? { patientId: segment } : {}),
         ...(isAppointmentId ? { appointmentId: segment } : {}),
+        ...(isReportId ? { reportId: segment } : {}),
       })
     }
   }
@@ -127,18 +134,33 @@ function DynamicBreadcrumbItem({
     crumb.appointmentId ? { appointmentId: crumb.appointmentId as Id<"appointments"> } : "skip"
   )
 
+  // Fetch report info if this is a report ID breadcrumb
+  const report = useQuery(
+    api.reports.getById,
+    crumb.reportId ? { reportId: crumb.reportId as Id<"reports"> } : "skip"
+  )
+
   // Determine the display label
   let displayLabel = crumb.label
   if (crumb.patientId && patient) {
     displayLabel = `${patient.firstname} ${patient.lastname}`
   } else if (crumb.appointmentId && appointment) {
-    // Format appointment date
+    // Format as "{recordType} - {date}"
     const date = new Date(appointment.startDate)
-    displayLabel = date.toLocaleDateString("en-US", {
+    const recordType = appointment.service?.name || "Record"
+    displayLabel = `${recordType} - ${date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
-    })
+    })}`
+  } else if (crumb.reportId && report) {
+    // Format as "{reportType} - {date}"
+    const date = new Date(report.createdAt)
+    displayLabel = `${report.reportType} - ${date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    })}`
   }
 
   if (isLast) {

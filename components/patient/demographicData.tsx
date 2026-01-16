@@ -24,7 +24,7 @@ export default async function DemographicData({ params }: { params: Promise<{ pa
         </Link>
         <div className="flex flex-row gap-2">
           <Link 
-            className='px-4 py-1 bg-blue-500 text-white rounded-full text-sm' 
+            className='px-4 py-1 bg-primary text-primary-foreground rounded-full text-sm' 
             href={`/user/patients/${patientId}/edit-patient`}
           >
             Edit Patient

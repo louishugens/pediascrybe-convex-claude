@@ -90,7 +90,7 @@ function Chart({patient, type, title, ylabel, xlabel, formatted, name, reference
     <div className="w-full shadow-md rounded-lg p-8 mb-8">
       <div className="flex flex-row justify-between w-full items-start">
         <p className="text-slate-900 text-sm">{title}</p>
-        <Link href={`/user/patients/${patient._id}/charts/print-${type}`} className="px-4 py-2 rounded-full bg-slate-200 text-blue-500 text-sm">
+        <Link href={`/user/patients/${patient._id}/charts/print-${type}`} className="px-4 py-2 rounded-full bg-muted text-primary text-sm">
           Export
         </Link>
       </div>

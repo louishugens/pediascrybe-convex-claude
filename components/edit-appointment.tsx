@@ -5,8 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { z } from "zod"
-import BeatLoader from "react-spinners/BeatLoader"
-import PulseLoader from "react-spinners/PulseLoader"
+import { Spinner } from "@/components/ui/spinner"
 import { refresh } from "@/app/actions"
 import { useCompletion } from '@ai-sdk/react'
 import { Button } from "@/components/ui/button"
@@ -462,11 +461,13 @@ const EditAppointment = ({ appointment, patientId, patient, services }: EditAppo
                   name="motif"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Signs and Symptoms</FormLabel>
+                      <div className="h-[17px] flex items-center">
+                        <FormLabel>Signs and Symptoms</FormLabel>
+                      </div>
                       <FormControl>
                         <Textarea
                           placeholder="How does the patient feel?"
-                          className="min-h-[120px] resize-none"
+                          className="h-[120px] resize-none overflow-y-auto"
                           {...field}
                         />
                       </FormControl>
@@ -480,14 +481,14 @@ const EditAppointment = ({ appointment, patientId, patient, services }: EditAppo
                   name="findings"
                   render={({ field }) => (
                     <FormItem>
-                      <div className="flex justify-between items-center">
+                      <div className="flex justify-between items-center h-[17px]">
                         <FormLabel>Diagnostic</FormLabel>
                         {thinking &&
                           symptoms &&
                           (isLoading ? (
                             <span className="font-light text-primary flex items-center gap-2">
                               <span className="text-sm">ScrybeGPT thinking</span>
-                              <PulseLoader color="hsl(var(--primary))" size={5} aria-label="Loading Spinner" />
+                              <Spinner aria-label="Loading Spinner" data-testid="loader" />
                             </span>
                           ) : (
                             <span className="font-light text-primary text-sm">
@@ -495,7 +496,7 @@ const EditAppointment = ({ appointment, patientId, patient, services }: EditAppo
                               <Button
                                 type="button"
                                 size="sm"
-                                className="ml-2 py-1 px-3 text-xs h-auto"
+                                className="ml-2 py-0.5 px-3 text-xs h-auto"
                                 onClick={() => fetchDiagnosticSuggestions(patientWithoutAppointments, {
                                   motif: symptoms,
                                   height: height || null,
@@ -518,7 +519,7 @@ const EditAppointment = ({ appointment, patientId, patient, services }: EditAppo
                       <FormControl>
                         <Textarea
                           placeholder="What do you believe the patient is suffering from?"
-                          className="min-h-[120px] resize-none"
+                          className="h-[120px] resize-none overflow-y-auto"
                           value={completion || field.value}
                           onChange={field.onChange}
                         />
@@ -537,7 +538,7 @@ const EditAppointment = ({ appointment, patientId, patient, services }: EditAppo
                       <FormControl>
                         <Textarea
                           placeholder="Any other remarks about the patient?"
-                          className="min-h-[120px] resize-none"
+                          className="h-[120px] resize-none overflow-y-auto"
                           {...field}
                         />
                       </FormControl>
@@ -554,7 +555,7 @@ const EditAppointment = ({ appointment, patientId, patient, services }: EditAppo
                   className="w-full max-w-md text-lg font-semibold py-3 rounded-full"
                 >
                   {loading ? (
-                    <BeatLoader color="#ffffff" size={10} aria-label="Loading Spinner" />
+                    <span className="flex items-center gap-2"><span>Saving record</span><Spinner aria-label="Loading Spinner" /></span>
                   ) : (
                     "Update Record"
                   )}

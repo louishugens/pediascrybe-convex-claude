@@ -29,7 +29,7 @@ export default function Error({
       <ul className='text-muted-foreground'>
         <li className='ml-2'>-Refresh the page to restart the process</li>
         <li className='ml-2'>-Log out and log back in to reset your session</li>
-        <li className='ml-2'>-For immediate assistance, <a className='text-blue-500' href='mailto:admin@pediascrybe.com'>Contact Our Expert Support Team</a></li>
+        <li className='ml-2'>-For immediate assistance, <a className='text-primary' href='mailto:admin@pediascrybe.com'>Contact Our Expert Support Team</a></li>
       </ul>
       <p className='font-medium'>Or you can click below.</p>
       <button

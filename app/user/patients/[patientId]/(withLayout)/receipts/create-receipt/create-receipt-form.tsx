@@ -213,7 +213,7 @@ export default function CreateReceiptForm({ patientId }: { patientId: string }) 
           />
           <div className="flex flex-row justify-between">
             <h4 className='text-sm font-semibold mt-8'>Services</h4>
-            <button className='px-4 py-0.5 rounded-full bg-blue-500 text-white text-sm  mt-4' type='button' onClick={() => append({ service: '', price: 50 })}>
+            <button className='px-4 py-0.5 rounded-full bg-primary text-primary-foreground text-sm  mt-4' type='button' onClick={() => append({ service: '', price: 50 })}>
               Add
             </button>
           </div>

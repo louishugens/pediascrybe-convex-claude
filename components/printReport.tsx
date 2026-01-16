@@ -100,8 +100,8 @@ const Print = ({doctor, patient, report}: Props) => {
         </div> */}
       </div>
       <div className="flex flex-row justify-between pb-2 mt-6">
-        <button onClick={ () => handlePrint()} className="shadow bg-blue-500 rounded-full py-2 px-4 text-white text-sm">Print this out!</button>
-        <Link href={`/user/patients/${patient._id}/reports`} className="px-4 py-2 rounded-full bg-slate-200 text-blue-500 text-sm">
+        <button onClick={ () => handlePrint()} className="shadow bg-primary rounded-full py-2 px-4 text-primary-foreground text-sm">Print this out!</button>
+        <Link href={`/user/patients/${patient._id}/reports`} className="px-4 py-2 rounded-full bg-muted text-primary text-sm">
           Leave
         </Link>
       </div>

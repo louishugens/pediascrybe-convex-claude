@@ -15,10 +15,11 @@ import { experimental_useObject as useObject } from '@ai-sdk/react';
 import { prescriptionsSchema } from '@/app/api/ai/prescriptions/schema';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { useAIQueryAccess } from '@/components/subscription-guard';
+import { useAIQueryAccess, useSubscriptionCheck } from '@/components/subscription-guard';
 import { UpgradeModal } from '@/components/upgrade-modal';
 import { useSubscriptionGuard } from '@/hooks/use-subscription-guard';
-
+import { ArrowLeft, PlusIcon } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { Doc } from '@/convex/_generated/dataModel';
 
 type PatientType = Doc<"patients">;
@@ -61,9 +62,11 @@ const AddPrescriptions = ({patient, patientId, appointment}: {patient: PatientTy
   let [generating, setGenerating] = useState(false)
 
   // Subscription checks
-  const { isAllowed: canUseAI, reason: aiBlockReason, isLoading: checkingAccess } = useAIQueryAccess('ai_prescription_recommendations');
+  const { isAllowed: canUseAI, reason: aiBlockReason, isLoading: checkingAccess } = useAIQueryAccess('ai_prescription');
+  const { hasAccess: hasPrescriptionAccess, isLoading: checkingPrescriptionAccess } = useSubscriptionCheck('ai_prescription');
   const incrementAIQuery = useMutation(api.usage.incrementAIQuery);
   const { requireSubscription } = useSubscriptionGuard();
+  const [showFeatureLockedModal, setShowFeatureLockedModal] = useState(false);
 
   const { object, submit, isLoading, stop } = useObject({
     api: '/api/ai/prescriptions',
@@ -254,6 +257,11 @@ const AddPrescriptions = ({patient, patientId, appointment}: {patient: PatientTy
   });
 
   const onSubmit = async values => {
+    // Check prescription feature access
+    if (!hasPrescriptionAccess) {
+      setShowFeatureLockedModal(true);
+      return;
+    }
     // Check subscription before proceeding
     if (!requireSubscription("add prescriptions")) return;
     
@@ -284,28 +292,37 @@ const AddPrescriptions = ({patient, patientId, appointment}: {patient: PatientTy
   // console.log('errors :>> ', errors?.prescriptions?.[4].count);
 
 
+  const handleBack = () => {
+    router.push(`/user/patients/${patientId}/${appointment._id}`);
+  };
+
   return (
     <div className="pb-4">
     <div className="w-full h-auto shadow-md rounded-lg p-4 bg-slate-50 mt-4 text-sm">
-      <p className='font-bold'>Add medicines</p>
+      <div className="flex items-center justify-between mb-2">
+        <p className='font-bold'>Add medicines</p>
+        <button
+          type="button"
+          onClick={handleBack}
+          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Return
+        </button>
+      </div>
       <form className='mt-4' onSubmit={handleSubmit(onSubmit)}>
       {
         noReturn ? (
           <span className='font-light text-red-500'>No prescription suggestions could be generated for this patient.</span>
         ) : isLoading || checkingAccess ? (
-          <span className='font-light text-primary'>ScrybeGPT thinking <PulseLoader color={"hsl(var(--primary))"} size={5} aria-label="Loading Spinner" data-testid="loader"/></span>
-        ) : !canUseAI ? (
-          <span className='font-light text-amber-600'>
-            {aiBlockReason || 'AI features require a Pro subscription'}{' '}
-            <span className='px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs cursor-pointer' onClick={() => setShowUpgradeModal(true)}>Upgrade</span>
-          </span>
+          <span className='font-light text-primary flex flex-row gap-2 items-center justify-start'><span>ScrybeGPT thinking </span><Spinner aria-label="Loading Spinner" data-testid="loader"/></span>
         ) : (
-          <span className='font-light text-primary'>Generate with ScrybeGPT? <span className='px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs cursor-pointer'  onClick={fetchPrescriptionsSuggestions}>Yes</span></span>
+          <span className='font-light text-primary flex flex-row gap-2 items-center justify-start'><span>Generate with ScrybeGPT? </span><span className='px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs cursor-pointer' onClick={fetchPrescriptionsSuggestions}>Yes</span></span>
         )
       }
       {fields.map((field, index) => {
         return (
-          <section key={field.id} className="relative pt-8">
+          <div key={field.id} className="relative pt-8">
             <XCircleIcon className='h-6 w-6 text-red-500 absolute right-0 top-0 mt-4 mr-4 cursor-pointer' onClick={() => remove(index)}/>
             <div className='grid grid-cols-12 gap-4'>
               <div className="col-span-4">
@@ -344,38 +361,42 @@ const AddPrescriptions = ({patient, patientId, appointment}: {patient: PatientTy
               </div>
             </div>
             
-          </section>
+          </div>
           )
         })}
         <p className='px-4 pt-1 text-sm text-red-600'>{errors?.prescriptions?.root?.message as React.ReactNode}</p>
         <div className="flex flex-row justify-between">
-          <button className='py-1 px-4 rounded-full bg-primary text-primary-foreground text-sm  mt-4' type='button' onClick={() => append({drug: '', count: 1, unit: 'flacon', posology: ''})}>
-            Add
+          <button className='py-1 px-4 rounded-full bg-primary/70 hover:bg-primary text-primary-foreground text-sm  mt-4 flex flex-row gap-2 items-center justify-center' type='button' onClick={() => append({drug: '', count: 1, unit: 'flacon', posology: ''})}>
+            <PlusIcon className='h-4 w-4' />
+            Add Medicine
           </button>
-          {<button className='py-1 px-4 rounded-full bg-blue-500 text-white text-sm  mt-4' type='submit'>
+          {<button className='py-1 px-4 rounded-full bg-primary text-primary-foreground text-sm  mt-4 flex flex-row gap-2 items-center justify-center' type='submit'>
             {
               loading
               ?
-              <BeatLoader
-                color={color}
-                size={5}
-                aria-label="Loading Spinner"
-                data-testid="loader"
-              />
+              <span className='flex flex-row gap-2 items-center justify-center'><span>Saving prescription </span><Spinner aria-label="Loading Spinner" data-testid="loader"/></span>
               :
-                "Send"}
+                "Save Prescription"}
           </button>}
         </div>
       </form>
       
     </div>
     
-    {/* Upgrade Modal */}
+    {/* Upgrade Modal for AI */}
     <UpgradeModal
       open={showUpgradeModal}
       onOpenChange={setShowUpgradeModal}
       reason={aiBlockReason?.includes('limit') ? 'ai_query_limit' : 'feature_locked'}
       featureName="AI Prescription Recommendations"
+    />
+
+    {/* Upgrade Modal for Feature Locked */}
+    <UpgradeModal
+      open={showFeatureLockedModal}
+      onOpenChange={setShowFeatureLockedModal}
+      reason="feature_locked"
+      featureName="Prescriptions"
     />
     </div>
   )

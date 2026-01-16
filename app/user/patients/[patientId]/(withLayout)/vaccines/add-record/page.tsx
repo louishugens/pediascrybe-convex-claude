@@ -45,7 +45,7 @@ async function AddVaccineFormContainer(props: { params: Promise<{ patientId: str
         trackedVaccines && trackedVaccines.length > 0 ? (
           <AddVaccineForm vaccines={trackedVaccines} patientId={params.patientId} />
         ) : (
-          <p className='text-sm text-muted-foreground'>No tracked vaccines found. Please click <Link href='/user/profile/add-vaccines' className='text-blue-500'>here</Link> to add tracked vaccines.</p>
+          <p className='text-sm text-muted-foreground'>No tracked vaccines found. Please click <Link href='/user/profile/add-vaccines' className='text-primary'>here</Link> to add tracked vaccines.</p>
         )
       }
     </>

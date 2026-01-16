@@ -272,7 +272,7 @@ const AddExams = ({patient, patientId, appointment}) => {
           <button className='py-1 px-4 rounded-full bg-primary text-primary-foreground text-sm  mt-4' type='button' onClick={() => append({exam: ''})}>
             Add
           </button>
-          {<button className='py-1 px-4 rounded-full bg-blue-500 text-white text-sm  mt-4' type='submit'>
+          {<button className='py-1 px-4 rounded-full bg-primary text-primary-foreground text-sm  mt-4' type='submit'>
             {
               loading
               ?

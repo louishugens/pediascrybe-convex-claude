@@ -59,7 +59,7 @@ export default function QuickActions({ patientId }: QuickActionsProps) {
           href={`/user/patients/${patientId}/reports`}
           label="Reports & Certificates"
           Icon={FileText}
-          color="text-blue-500"
+          color="text-primary"
         />
         <QuickActionItem 
           href={`/user/patients/${patientId}/vaccines`}

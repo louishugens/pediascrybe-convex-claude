@@ -120,7 +120,7 @@ export function SubscriptionSection() {
         <p className="text-sm font-semibold">Subscription Plan</p>
         <Link 
           href="/user/settings/subscription" 
-          className="text-sm text-blue-500 hover:text-blue-600 flex items-center gap-1"
+          className="text-sm text-primary hover:text-primary/80 flex items-center gap-1"
         >
           <Settings className="w-3 h-3" />
           Full Details

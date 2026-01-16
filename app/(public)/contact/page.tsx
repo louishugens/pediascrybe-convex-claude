@@ -143,7 +143,7 @@ const Contact = () => {
         {/* Additional Contact Info */}
         <div>
           <h2 className="text-2xl font-semibold mb-4">Other Ways to Reach Us</h2>
-          <p className="mb-2">Email: <a href="mailto:support@pediascrybe.com" className="text-blue-500">support@pediascrybe.com</a></p>
+          <p className="mb-2">Email: <a href="mailto:support@pediascrybe.com" className="text-primary">support@pediascrybe.com</a></p>
           {/* <p>Phone: <a href="tel:+11234567890" className="text-blue-500">+1 (123) 456-7890</a></p> */}
         </div>
       </div>
