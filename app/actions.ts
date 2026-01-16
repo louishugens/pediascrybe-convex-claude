@@ -248,7 +248,7 @@ export async function deletePatient(patientId: Id<"patients">) {
     })
     
     revalidatePath('/user/patients')
-    return result
+    return { success: true, data: result }
   } catch (error: any) {
     console.error('Error deleting patient:', error)
     return { success: false, error: error.message || 'An unexpected error occurred while deleting the patient.' }

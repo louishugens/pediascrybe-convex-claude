@@ -220,6 +220,28 @@ export function SubscriptionSection() {
                   )}
                 />
               </div>
+              {/* Records Progress */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-600">Records</span>
+                  <span className="text-slate-500">
+                    {usageWithLimits.usage.recordCount} / {usageWithLimits.limits.recordCount === -1 ? '∞' : usageWithLimits.limits.recordCount}
+                  </span>
+                </div>
+                <Progress 
+                  value={usageWithLimits.limits.recordCount === -1 ? 0 : usageWithLimits.percentUsed.recordCount} 
+                  className={cn(
+                    "h-1.5",
+                    usageWithLimits.percentUsed.recordCount >= 90 && "[&>div]:bg-red-500"
+                  )}
+                />
+                {usageWithLimits.percentUsed.recordCount >= 80 && usageWithLimits.limits.recordCount !== -1 && (
+                  <p className="text-xs text-amber-600 flex items-center gap-1 pt-1">
+                    <AlertCircle className="w-3 h-3" />
+                    Approaching usage limits
+                  </p>
+                )}
+              </div>
 
               {/* ScrybeGPT Progress */}
               <div className="space-y-1">

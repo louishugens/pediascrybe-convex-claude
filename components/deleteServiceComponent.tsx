@@ -35,7 +35,7 @@ export function DeleteServiceComponent({ serviceId }: { serviceId: Id<"services"
   return (
     <TooltipProvider>
       <Tooltip>
-        <TooltipTrigger asChild>
+        <TooltipTrigger asChild className="">
           <Button
             variant="destructive"
             size="icon"

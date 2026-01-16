@@ -40,11 +40,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 const AddPatient = () => {
 
   const schema = z.object({
-    firstname: z.string({ error: (issue) => issue.input === undefined ? 
+    firstname: z.string().min(1, { error: (issue) => issue.input === undefined ? 
       "Please enter patient's first name" :
       "Not a string" 
       }),
-    lastname:  z.string({ error: (issue) => issue.input === undefined ? 
+    lastname:  z.string().min(1, { error: (issue) => issue.input === undefined ? 
       "Please enter patient's last name" :
       "Not a string" 
       }),
@@ -54,9 +54,9 @@ const AddPatient = () => {
       "Not a date" 
       }),
     mothername: z.string().optional(),
-      sex: z.string({error: (issue) => issue.input === undefined ? 
+    sex: z.enum(["male", "female"], {error: (issue) => issue.input === undefined ? 
       "Please enter patient's sex" :
-      "Not a string" 
+      "Not a valid sex" 
       }),
     religion: z.string().optional(),
     phone: z.string().optional(),
@@ -99,13 +99,15 @@ const AddPatient = () => {
     try{
       const {firstname, lastname, email, birthdate, mothername, sex, religion, phone, allergies, history, bloodtype, electrophoresis} = values
       const body = {firstname, lastname, email, birthdate, mothername, sex, religion, phone, doctorId: doctor!._id, allergies, history, bloodtype, electrophoresis}
-      await fetch('/api/patients/addPatient', {
+      const response = await fetch('/api/patients/addPatient', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       })
-      router.refresh()
-      router.push(`/user/patients`)
+      const patient = await response.json()
+      console.log('patient :>> ', patient)
+      // router.refresh()
+      router.push(`/user/patients/${patient}`)
 
     }
     catch(err){

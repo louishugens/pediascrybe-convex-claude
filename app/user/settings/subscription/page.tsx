@@ -277,7 +277,30 @@ export default function SubscriptionSettingsPage() {
                     </p>
                   )}
                 </div>
-
+                {/* Records */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-foreground font-medium">Records</span>
+                    <span className="text-muted-foreground">
+                      {usageWithLimits.usage.recordCount} / {usageWithLimits.limits.recordCount === -1 ? '∞' : usageWithLimits.limits.recordCount}
+                    </span>
+                  </div>
+                  <Progress 
+                    value={usageWithLimits.limits.recordCount === -1 ? 0 : usageWithLimits.percentUsed.recordCount} 
+                    className={cn(
+                      "h-2",
+                      usageWithLimits.percentUsed.recordCount >= 90 && "bg-red-100"
+                    )}
+                  />
+                  {usageWithLimits.percentUsed.recordCount >= 80 && usageWithLimits.limits.recordCount !== -1 && (
+                    <p className="text-xs text-amber-600 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      {usageWithLimits.percentUsed.recordCount >= 100 
+                        ? 'Limit reached. Upgrade for more records.'
+                        : 'Approaching limit. Consider upgrading.'}
+                    </p>
+                  )}
+                </div>
                 {/* ScrybeGPT Messages */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
