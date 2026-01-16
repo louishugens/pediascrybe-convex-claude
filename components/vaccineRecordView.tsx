@@ -71,11 +71,11 @@ export default function VaccineRecordView({ vaccinationRecord }: { vaccinationRe
             </div> */}
 
             <div className="grid grid-cols-2 gap-4">
-              <InfoItem icon={Calendar} iconColor="text-green-500" label="Administered Date" value={new Date(vaccinationRecord.date)} />
+              <InfoItem icon={Calendar} iconColor="text-primary" label="Administered Date" value={new Date(vaccinationRecord.date)} />
               {/* <InfoItem icon={User} iconColor="text-blue-500" label="Patient" value={patientName} /> */}
               <InfoItem icon={Factory} iconColor="text-red-500" label="Manufacturer" value={vaccinationRecord.manufacturer} />
               <InfoItem icon={Hash} iconColor="text-black" label="Lot Number" value={vaccinationRecord.lotNumber} />
-              <InfoItem icon={Clock} iconColor="text-green-500" label="Expiration Date" value={new Date(vaccinationRecord.expiration)} />
+              <InfoItem icon={Clock} iconColor="text-primary" label="Expiration Date" value={new Date(vaccinationRecord.expiration)} />
               <InfoItem icon={Droplet} iconColor="text-blue-500" label="Dosage" value={vaccinationRecord.dosage || 'N/A'} />
               <InfoItem icon={Syringe} iconColor="text-red-500" label="Administration Route" value={vaccinationRecord.route || 'N/A'} />
               <InfoItem icon={MapPin} iconColor="text-black" label="Administration Site" value={vaccinationRecord.site || 'N/A'} />
@@ -84,7 +84,7 @@ export default function VaccineRecordView({ vaccinationRecord }: { vaccinationRe
             {vaccinationRecord.notes && (
               <div className="pt-4 border-t">
                 <div className="flex items-center space-x-2">
-                  <Clipboard className="w-5 h-5 text-green-500" />
+                  <Clipboard className="w-5 h-5 text-primary" />
                   <h3 className="font-semibold">Notes</h3>
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">{vaccinationRecord.notes}</p>

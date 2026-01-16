@@ -35,7 +35,7 @@ export async function POST(req: Request) {
       7. Respond with the JSON array only. Do not include any surrounding text, explanation, or formatting.
       `,
     prompt:
-      ` The patient's demographic data is ${JSON.stringify(patient)}. The consultation information is ${JSON.stringify(appointment)}.`,
+      ` The patient's demographic data is ${JSON.stringify(patient)}. The record information is ${JSON.stringify(appointment)}.`,
   });
 
   // console.log('result :>> ', result);

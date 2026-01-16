@@ -13,7 +13,7 @@ export default function Stats({patients}) {
   return(
     <div className="grid gap-4 grid-cols-2 mt-4">
     <div className="h-auto shadow-md rounded-lg p-4 bg-slate-900">
-      <p className="text-2xl  font-bold text-green-500 ">Patients</p>
+      <p className="text-2xl  font-bold text-primary ">Patients</p>
       <div className="flex justify-center">
         <div className="center bg-slate-800 h-40 w-40 rounded-full relative">
           <p className="text-4xl text-white font-semibold absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">{patientCount}</p>

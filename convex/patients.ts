@@ -114,7 +114,7 @@ export const count = query({
   },
 });
 
-// Create patient
+// Create patient (with subscription limit check)
 export const create = mutation({
   args: {
     doctorId: v.id("doctors"),
@@ -133,6 +133,53 @@ export const create = mutation({
     electrophoresis: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Get doctor to find their auth user ID
+    const doctor = await ctx.db.get(args.doctorId);
+    if (!doctor) {
+      throw new Error("Doctor not found");
+    }
+
+    // Get current patient count
+    const patients = await ctx.db
+      .query("patients")
+      .withIndex("by_doctorId", (q) => q.eq("doctorId", args.doctorId))
+      .collect();
+    const currentCount = patients.length;
+
+    // Get subscription to determine limit
+    const subscription = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_doctorId", (q) => q.eq("doctorId", args.doctorId))
+      .order("desc")
+      .first();
+
+    let patientLimit = 10; // Free tier limit
+
+    if (subscription) {
+      const activeStatuses = ["trialing", "active"];
+      if (activeStatuses.includes(subscription.status)) {
+        // Use tierName directly from subscription
+        const tierName = subscription.tierName || subscription.metadata?.tierName;
+        if (tierName) {
+          const tier = await ctx.db
+            .query("subscriptionTiers")
+            .withIndex("by_name", (q) => q.eq("name", tierName))
+            .first();
+
+          if (tier) {
+            patientLimit = tier.limits.patientCount;
+          }
+        }
+      }
+    }
+
+    // Check limit (-1 means unlimited)
+    if (patientLimit !== -1 && currentCount >= patientLimit) {
+      throw new Error(
+        `Patient limit reached (${patientLimit}). Please upgrade your subscription to add more patients.`
+      );
+    }
+
     const now = Date.now();
     return await ctx.db.insert("patients", {
       ...args,

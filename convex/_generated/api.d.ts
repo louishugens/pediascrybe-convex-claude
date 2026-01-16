@@ -18,6 +18,7 @@ import type * as emails_magicLink from "../emails/magicLink.js";
 import type * as emails_resetPassword from "../emails/resetPassword.js";
 import type * as emails_verifyEmail from "../emails/verifyEmail.js";
 import type * as emails_verifyOTP from "../emails/verifyOTP.js";
+import type * as emails_welcome from "../emails/welcome.js";
 import type * as files from "../files.js";
 import type * as http from "../http.js";
 import type * as patients from "../patients.js";
@@ -25,6 +26,10 @@ import type * as receipts from "../receipts.js";
 import type * as reports from "../reports.js";
 import type * as seed from "../seed.js";
 import type * as services from "../services.js";
+import type * as stripe from "../stripe.js";
+import type * as stripeWebhooks from "../stripeWebhooks.js";
+import type * as subscriptions from "../subscriptions.js";
+import type * as usage from "../usage.js";
 import type * as vaccines from "../vaccines.js";
 
 import type {
@@ -44,6 +49,7 @@ declare const fullApi: ApiFromModules<{
   "emails/resetPassword": typeof emails_resetPassword;
   "emails/verifyEmail": typeof emails_verifyEmail;
   "emails/verifyOTP": typeof emails_verifyOTP;
+  "emails/welcome": typeof emails_welcome;
   files: typeof files;
   http: typeof http;
   patients: typeof patients;
@@ -51,6 +57,10 @@ declare const fullApi: ApiFromModules<{
   reports: typeof reports;
   seed: typeof seed;
   services: typeof services;
+  stripe: typeof stripe;
+  stripeWebhooks: typeof stripeWebhooks;
+  subscriptions: typeof subscriptions;
+  usage: typeof usage;
   vaccines: typeof vaccines;
 }>;
 

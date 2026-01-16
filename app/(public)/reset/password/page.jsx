@@ -94,8 +94,8 @@ function ResetPasswordForm() {
   if (resetSuccess) {
     return (
       <div className="text-center py-8">
-        <div className="w-16 h-16 rounded-2xl bg-green-100 flex items-center justify-center mx-auto mb-6">
-          <CheckCircle className="w-8 h-8 text-green-600" />
+        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
+          <CheckCircle className="w-8 h-8 text-primary" />
         </div>
         <h3 className="text-xl font-bold text-foreground mb-2">Password Reset!</h3>
         <p className="text-muted-foreground mb-2">
@@ -214,7 +214,7 @@ export default function ResetPasswordPage() {
       </div>
 
       {/* Right Side - Decorative */}
-      <div className="hidden lg:flex flex-1 relative bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 overflow-hidden">
+      <div className="hidden lg:flex flex-1 relative bg-linear-to-br from-primary/5 via-primary/10 to-primary/5 overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-40">
           <div className="absolute top-20 right-20 w-72 h-72 bg-primary/20 rounded-full blur-3xl" />
@@ -233,7 +233,7 @@ export default function ResetPasswordPage() {
                 className="object-cover"
                 unoptimized
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-primary/30 to-transparent" />
+              <div className="absolute inset-0 bg-linear-to-t from-primary/30 to-transparent" />
             </div>
             
             {/* Floating Icon */}

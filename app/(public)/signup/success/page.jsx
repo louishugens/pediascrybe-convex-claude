@@ -11,8 +11,8 @@ export default function SignupSuccess() {
         <div className="w-full max-w-md mx-auto text-center">
           {/* Success Icon */}
           <div className="relative mb-8 inline-block">
-            <div className="w-20 h-20 rounded-2xl bg-green-100 flex items-center justify-center mx-auto">
-              <CheckCircle2 className="w-10 h-10 text-green-600" />
+            <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
+              <CheckCircle2 className="w-10 h-10 text-primary" />
             </div>
             <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
               <Sparkles className="w-4 h-4 text-primary" />
@@ -58,10 +58,10 @@ export default function SignupSuccess() {
       </div>
 
       {/* Right Side - Decorative */}
-      <div className="hidden lg:flex flex-1 relative bg-gradient-to-br from-green-50 via-primary/5 to-green-50 overflow-hidden">
+      <div className="hidden lg:flex flex-1 relative bg-linear-to-br from-primary/5 via-primary/10 to-primary/5 overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-40">
-          <div className="absolute top-20 right-20 w-72 h-72 bg-green-200/50 rounded-full blur-3xl" />
+          <div className="absolute top-20 right-20 w-72 h-72 bg-primary/20 rounded-full blur-3xl" />
           <div className="absolute bottom-20 left-20 w-96 h-96 bg-primary/20 rounded-full blur-3xl" />
         </div>
 
@@ -78,7 +78,7 @@ export default function SignupSuccess() {
                   className="object-cover"
                   unoptimized
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-green-500/30 to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-primary/30 to-transparent" />
               </div>
               <div className="relative w-48 h-60 rounded-2xl overflow-hidden shadow-2xl border-4 border-white/50 transform rotate-3 hover:rotate-0 transition-transform duration-300">
                 <Image
@@ -88,13 +88,13 @@ export default function SignupSuccess() {
                   className="object-cover"
                   unoptimized
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-green-500/30 to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-primary/30 to-transparent" />
               </div>
             </div>
 
             {/* Success Badge */}
             <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-white rounded-full px-6 py-3 shadow-lg flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-green-500" />
+              <CheckCircle2 className="w-5 h-5 text-primary" />
               <span className="text-sm font-medium text-foreground">Account Created!</span>
             </div>
           </div>

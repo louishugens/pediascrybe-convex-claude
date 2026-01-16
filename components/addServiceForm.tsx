@@ -90,7 +90,7 @@ export function AddServiceForm({ className }: AddServiceFormProps) {
             <Label htmlFor="name">Service Name</Label>
             <Input
               id="name"
-              placeholder="e.g., Consultation"
+              placeholder="e.g., General Exam"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required

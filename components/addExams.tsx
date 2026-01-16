@@ -13,6 +13,11 @@ import { refresh } from '@/app/actions';
 import { experimental_useObject as useObject } from '@ai-sdk/react';
 import { examsSchema } from '@/app/api/ai/exams/schema';
 import { z } from 'zod';
+import { useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { useAIQueryAccess } from '@/components/subscription-guard';
+import { UpgradeModal } from '@/components/upgrade-modal';
+import { useSubscriptionGuard } from '@/hooks/use-subscription-guard';
 
 const ExamsSchema =  Yup.object({
   exams: Yup.array().of(
@@ -25,11 +30,17 @@ const AddExams = ({patient, patientId, appointment}) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [color, setColor] = useState('#ffffff')
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const router = useRouter()
   const [exams, setExams] = useState(appointment.exams || [{exam: null}])
   const [thinking, setThinking] = useState(false)
   const [hasFetched, setHasFetched] = useState(false)
   const [noReturn, setNoReturn] = useState(false)
+
+  // Subscription checks
+  const { isAllowed: canUseAI, reason: aiBlockReason, isLoading: checkingAccess } = useAIQueryAccess('ai_lab_proposals');
+  const incrementAIQuery = useMutation(api.usage.incrementAIQuery);
+  const { requireSubscription } = useSubscriptionGuard();
 
   const { object, submit, isLoading, stop } = useObject({
     api: '/api/ai/exams',
@@ -62,7 +73,20 @@ const AddExams = ({patient, patientId, appointment}) => {
   }, [object, hasFetched, isLoading]);
 
   const fetchExamsSuggestions = async () => {
+    // Check if user can use AI
+    if (!canUseAI) {
+      setShowUpgradeModal(true);
+      return;
+    }
+
     setHasFetched(true);
+    
+    // Increment AI query usage
+    try {
+      await incrementAIQuery({});
+    } catch (error) {
+      console.error('Failed to increment AI usage:', error);
+    }
 
       const body = {
         patient: {
@@ -182,6 +206,9 @@ const AddExams = ({patient, patientId, appointment}) => {
   });
 
   const onSubmit = async values => {
+    // Check subscription before proceeding
+    if (!requireSubscription("add lab exams")) return;
+    
     setLoading(true)
  
     try{
@@ -215,8 +242,13 @@ const AddExams = ({patient, patientId, appointment}) => {
       {
         noReturn ? (
           <span className='font-light text-red-500'>No exam suggestions could be generated for this patient.</span>
-        ) : isLoading ? (
-          <span className=' font-light text-primary'> ScrybeGPT thinking <PulseLoader color={"#21C55D"} size={5} aria-label="Loading Spinner" data-testid="loader"/></span>
+        ) : isLoading || checkingAccess ? (
+          <span className=' font-light text-primary'> ScrybeGPT thinking <PulseLoader color={"hsl(var(--primary))"} size={5} aria-label="Loading Spinner" data-testid="loader"/></span>
+        ) : !canUseAI ? (
+          <span className='font-light text-amber-600'>
+            {aiBlockReason || 'AI features require a Pro subscription'}{' '}
+            <span className='px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs cursor-pointer' onClick={() => setShowUpgradeModal(true)}>Upgrade</span>
+          </span>
         ) : (
           <span className=' font-light text-primary'>Generate with ScrybeGPT? <span className='px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs cursor-pointer'  onClick={fetchExamsSuggestions}>Yes</span></span>
         )
@@ -237,7 +269,7 @@ const AddExams = ({patient, patientId, appointment}) => {
         })}
         <p className='px-4 pt-1 text-sm text-red-600'>{errors?.exams?.message?.toString()}</p>
         <div className="flex flex-row justify-between">
-          <button className='py-1 px-4 rounded-full bg-green-500 text-white text-sm  mt-4' type='button' onClick={() => append({exam: ''})}>
+          <button className='py-1 px-4 rounded-full bg-primary text-primary-foreground text-sm  mt-4' type='button' onClick={() => append({exam: ''})}>
             Add
           </button>
           {<button className='py-1 px-4 rounded-full bg-blue-500 text-white text-sm  mt-4' type='submit'>
@@ -257,6 +289,14 @@ const AddExams = ({patient, patientId, appointment}) => {
       </form>
       
     </div>
+    
+    {/* Upgrade Modal */}
+    <UpgradeModal
+      open={showUpgradeModal}
+      onOpenChange={setShowUpgradeModal}
+      reason={aiBlockReason?.includes('limit') ? 'ai_query_limit' : 'feature_locked'}
+      featureName="AI Lab Exam Proposals"
+    />
     </div>
   )
 }

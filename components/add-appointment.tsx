@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft } from "lucide-react"
 import { Id } from "@/convex/_generated/dataModel"
+import { useSubscriptionGuard } from "@/hooks/use-subscription-guard"
 
 interface Service {
   _id: Id<"services">;
@@ -69,6 +70,10 @@ const AddAppointment = ({ doctorId, patientId, patient, services }: AddAppointme
     api: "/api/ai/diagnostic",
   })
   const router = useRouter()
+  const { requireSubscription } = useSubscriptionGuard()
+
+  // Check if doctor has services
+  const hasServices = services && services.length > 0
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema) as any,
@@ -117,12 +122,15 @@ const AddAppointment = ({ doctorId, patientId, patient, services }: AddAppointme
   }, [symptoms])
 
   const fetchDiagnosticSuggestions = async (patient: any, appointment: any) => {
+    // Check subscription before AI generation
+    if (!requireSubscription("generate AI diagnostics")) return;
+    
     if (symptoms) {
       setGenerating(true)
 
       const { firstname, lastname, email, mothername, ...patientWithoutIdentity } = patient
 
-      const body = `The patient's information is ${JSON.stringify(patientWithoutIdentity)}. The consultation information is ${JSON.stringify(appointment)}.`
+      const body = `The patient's information is ${JSON.stringify(patientWithoutIdentity)}. The record information is ${JSON.stringify(appointment)}.`
 
       await complete(body)
       setGenerating(false)
@@ -139,6 +147,9 @@ const AddAppointment = ({ doctorId, patientId, patient, services }: AddAppointme
   const { appointments, ...patientWithoutAppointments } = patient
 
   const onSubmit = async (values: FormValues) => {
+    // Check subscription before proceeding
+    if (!requireSubscription("add records")) return;
+    
     setLoading(true)
     try {
       const body = {
@@ -169,12 +180,49 @@ const AddAppointment = ({ doctorId, patientId, patient, services }: AddAppointme
 
   const service = form.watch("serviceId")
 
+  // If no services, show prompt to add services
+  if (!hasServices) {
+    return (
+      <div className="py-4">
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-xl text-primary font-bold">New Record</CardTitle>
+              <Button variant="outline" size="icon" asChild>
+                <Link href={`/user/patients/${patientId}`}>
+                  <ArrowLeft className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mb-4">
+                <span className="text-3xl">⚠️</span>
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">No Services Found</h3>
+              <p className="text-muted-foreground mb-6 max-w-md">
+                Before creating a record, you need to add at least one service to your profile. 
+                Services define the type of records you can create (e.g., Consultation, Follow-up, etc.).
+              </p>
+              <Button asChild>
+                <Link href="/user/profile">
+                  Add Services in Profile
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="py-4">
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
-            <CardTitle className="text-xl text-green-600 font-bold">New Appointment</CardTitle>
+            <CardTitle className="text-xl text-primary font-bold">New Record</CardTitle>
             <Button variant="outline" size="icon" asChild>
               <Link href={`/user/patients/${patientId}`}>
                 <ArrowLeft className="h-4 w-4" />
@@ -185,14 +233,14 @@ const AddAppointment = ({ doctorId, patientId, patient, services }: AddAppointme
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* Service Selection */}
+              {/* Record Type (Service) Selection */}
               <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="serviceId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Service Type</FormLabel>
+                      <FormLabel>Record Type</FormLabel>
                       <Select
                         onValueChange={(value) => {
                           field.onChange(value);
@@ -205,7 +253,7 @@ const AddAppointment = ({ doctorId, patientId, patient, services }: AddAppointme
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a service" />
+                            <SelectValue placeholder="Select a record type" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -474,17 +522,17 @@ const AddAppointment = ({ doctorId, patientId, patient, services }: AddAppointme
                         {thinking &&
                           symptoms &&
                           (generating ? (
-                            <span className="font-light text-green-600 flex items-center gap-2">
+                            <span className="font-light text-primary flex items-center gap-2">
                               <span className="text-sm">ScrybeGPT thinking</span>
-                              <PulseLoader color="#16a34a" size={5} aria-label="Loading Spinner" />
+                              <PulseLoader color="hsl(var(--primary))" size={5} aria-label="Loading Spinner" />
                             </span>
                           ) : (
-                            <span className="font-light text-green-600 text-sm">
+                            <span className="font-light text-primary text-sm">
                               Generate with ScrybeGPT?{" "}
                               <Button
                                 type="button"
                                 size="sm"
-                                className="ml-2 bg-green-600 hover:bg-green-700 py-1 px-3 text-xs h-auto"
+                                className="ml-2 py-1 px-3 text-xs h-auto"
                                 onClick={() => fetchDiagnosticSuggestions(patientWithoutAppointments, {
                                   motif: symptoms,
                                   height: height,
@@ -539,9 +587,9 @@ const AddAppointment = ({ doctorId, patientId, patient, services }: AddAppointme
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full max-w-md bg-green-600 hover:bg-green-700 text-lg font-semibold py-3 rounded-full"
+                  className="w-full max-w-md text-lg font-semibold py-3 rounded-full"
                 >
-                  {loading ? <BeatLoader color="#ffffff" size={10} aria-label="Loading Spinner" /> : "Add Appointment"}
+                  {loading ? <BeatLoader color="#ffffff" size={10} aria-label="Loading Spinner" /> : "Add Record"}
                 </Button>
               </div>
             </form>

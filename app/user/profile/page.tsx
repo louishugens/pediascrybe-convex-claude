@@ -20,6 +20,7 @@ import ProfilePageSkeleton from '@/components/skeletons/profile-page-skeleton';
 import { preloadAuthQuery, fetchAuthQuery } from '@/lib/auth-server';
 import { api } from '@/convex/_generated/api';
 import { getCurrentDoctor } from '@/lib/convex-data';
+import { SubscriptionSection } from '@/components/subscription-section';
 
 const ProfilePage = async () => {
   return (
@@ -62,6 +63,10 @@ async function ProfilePageContainer() {
           <p className="text-sm font-semibold col-span-2">Address: <span className="font-normal">{doctor.address}</span></p>
         </div>
       </div>
+      
+      {/* Subscription Plan Section */}
+      <SubscriptionSection />
+      
       <div className="w-full h-auto shadow-md rounded-lg p-4 bg-slate-50 mt-4">
         <div className="flex flex-row items-center justify-between mb-4">
           <p className="text-sm font-semibold">Tracked Vaccines</p>

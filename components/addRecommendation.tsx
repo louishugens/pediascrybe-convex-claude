@@ -36,6 +36,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { refresh } from '@/app/actions';
+import { useSubscriptionGuard } from '@/hooks/use-subscription-guard';
 
 
 
@@ -55,6 +56,7 @@ const AddRecommendation = ({patient, patientId, appointment}) => {
   const router = useRouter()
   const [recommendation, setRecommendation] = useState(appointment.recommendation || '')
   const [thinking, setThinking] = useState(false)
+  const { requireSubscription } = useSubscriptionGuard()
 
   // useEffect(() => {
   //   const fetchPrescriptionsSuggestions = async () => {
@@ -118,6 +120,9 @@ const AddRecommendation = ({patient, patientId, appointment}) => {
   // });
 
   const onSubmit = async values => {
+    // Check subscription before proceeding
+    if (!requireSubscription("add recommendations")) return;
+    
     setLoading(true)
  
     try{
@@ -150,7 +155,7 @@ const AddRecommendation = ({patient, patientId, appointment}) => {
     <div className="w-full h-auto shadow-md rounded-lg p-4 bg-slate-50 mt-4 text-sm flex flex-col items-center">
       <p className='font-bold'>Add Recommendations</p>
       {/* <form className='mt-4' onSubmit={handleSubmit(onSubmit)}>
-      {thinking && <span className=' font-light text-primary'> ScrybeGPT thinking <PulseLoader color={"#21C55D"} size={5} aria-label="Loading Spinner" data-testid="loader"/></span> }
+      {thinking && <span className=' font-light text-primary'> ScrybeGPT thinking <PulseLoader color={"hsl(var(--primary))"} size={5} aria-label="Loading Spinner" data-testid="loader"/></span> }
       {fields.map((field, index) => {
         return (
           <section key={field.id} className="relative pt-8">
@@ -197,7 +202,7 @@ const AddRecommendation = ({patient, patientId, appointment}) => {
         })}
         <p className='px-4 pt-1 text-sm text-red-600'>{errors?.prescriptions?.root?.message as React.ReactNode}</p>
         <div className="flex flex-row justify-between">
-          <button className='py-1 px-4 rounded-full bg-green-500 text-white text-sm  mt-4' type='button' onClick={() => append({drug: '', count: 1, unit: 'flacon', posology: ''})}>
+          <button className='py-1 px-4 rounded-full bg-primary text-primary-foreground text-sm  mt-4' type='button' onClick={() => append({drug: '', count: 1, unit: 'flacon', posology: ''})}>
             Add
           </button>
           {<button className='py-1 px-4 rounded-full bg-blue-500 text-white text-sm  mt-4' type='submit'>
@@ -230,7 +235,7 @@ const AddRecommendation = ({patient, patientId, appointment}) => {
                   </FormItem>
                 )}  
               />
-            <button className="py-2 px-4 rounded-full bg-green-500 text-lg font-semibold w-1/2 center mt-8 mx-auto" type='submit'>
+            <button className="py-2 px-4 rounded-full bg-primary text-primary-foreground text-lg font-semibold w-1/2 center mt-8 mx-auto" type='submit'>
               {
                   loading
                   ?

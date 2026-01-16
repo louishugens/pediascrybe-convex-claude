@@ -22,7 +22,7 @@ function QuickActionItem({ href, label, Icon, color }: QuickActionItemProps) {
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <Link href={href}>
+      <Link href={href as any}>
         <motion.div
           whileHover={{ x: 4, backgroundColor: 'var(--muted)' }}
           whileTap={{ scale: 0.98 }}
@@ -65,7 +65,7 @@ export default function QuickActions({ patientId }: QuickActionsProps) {
           href={`/user/patients/${patientId}/vaccines`}
           label="Vaccines"
           Icon={Shield}
-          color="text-green-500"
+          color="text-primary"
         />
         <QuickActionItem 
           href={`/user/patients/${patientId}/receipts`}

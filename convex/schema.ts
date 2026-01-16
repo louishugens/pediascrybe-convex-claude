@@ -86,6 +86,7 @@ const appointments = defineTable({
   weight: v.optional(v.number()),
   head: v.optional(v.number()),
   arm: v.optional(v.number()),
+  thorax: v.optional(v.number()),
   sao2: v.optional(v.number()),
   temperature: v.optional(v.number()),
   pulse: v.optional(v.number()),
@@ -247,7 +248,9 @@ const prices = defineTable({
 const subscriptions = defineTable({
   stripeId: v.string(),
   doctorId: v.id("doctors"),
-  priceId: v.id("prices"),
+  priceId: v.optional(v.id("prices")), // Optional - may not exist in our local DB
+  stripePriceId: v.optional(v.string()), // Store the Stripe price ID directly
+  tierName: v.optional(v.string()), // Store tier name directly for easy lookup
   status: v.union(
     v.literal("trialing"),
     v.literal("active"),
@@ -271,7 +274,8 @@ const subscriptions = defineTable({
   trialEnd: v.optional(v.number()),
 })
   .index("by_stripeId", ["stripeId"])
-  .index("by_doctorId", ["doctorId"]);
+  .index("by_doctorId", ["doctorId"])
+  .index("by_tierName", ["tierName"]);
 
 // ==================== App Users (Auth link) ====================
 
@@ -283,9 +287,58 @@ const appUsers = defineTable({
   lastName: v.optional(v.string()),
   role: v.union(v.literal("patient"), v.literal("doctor"), v.literal("admin")),
   plan: v.string(),
+  stripeCustomerId: v.optional(v.string()),
 })
   .index("by_authUserId", ["authUserId"])
-  .index("by_email", ["email"]);
+  .index("by_email", ["email"])
+  .index("by_stripeCustomerId", ["stripeCustomerId"]);
+
+// ==================== Usage Tracking ====================
+
+const usage = defineTable({
+  doctorId: v.id("doctors"),
+  period: v.string(), // "2026-01" format (YYYY-MM)
+  // All usage counters for the period
+  scrybegptMessages: v.optional(v.number()),
+  aiPrescription: v.optional(v.number()),
+  aiLabExam: v.optional(v.number()),
+  aiDiagnostic: v.optional(v.number()),
+  aiReport: v.optional(v.number()),
+  // Legacy fields (kept for backward compatibility)
+  aiQueries: v.optional(v.number()),
+  documentGeneration: v.optional(v.number()),
+  createdAt: v.number(),
+  updatedAt: v.number(),
+})
+  .index("by_doctorId", ["doctorId"])
+  .index("by_doctorId_period", ["doctorId", "period"]);
+
+// ==================== Subscription Tiers ====================
+
+const subscriptionTiers = defineTable({
+  name: v.string(), // "starter", "pro", "premium"
+  displayName: v.string(),
+  description: v.string(),
+  stripePriceId: v.string(), // Single USD price ID
+  priceAmountCents: v.number(), // Price in cents (e.g., 2900 for $29)
+  limits: v.object({
+    patientCount: v.number(),        // 100, 500, -1 (unlimited)
+    recordCount: v.number(),         // 200, 1000, -1 (unlimited)
+    scrybegptMessages: v.number(),   // 50, 300, -1 (unlimited)
+    aiPrescription: v.number(),      // 20, 100, -1 (unlimited)
+    aiLabExam: v.number(),           // 20, 100, -1 (unlimited)
+    aiDiagnostic: v.number(),        // 20, 100, -1 (unlimited)
+    aiReport: v.number(),            // 0, 50, -1 (unlimited)
+  }),
+  features: v.array(v.string()),
+  trialPeriodDays: v.number(),
+  sortOrder: v.number(),
+  isPopular: v.boolean(),
+  createdAt: v.number(),
+})
+  .index("by_name", ["name"])
+  .index("by_sortOrder", ["sortOrder"])
+  .index("by_stripePriceId", ["stripePriceId"]);
 
 // ==================== Export Schema ====================
 
@@ -315,5 +368,8 @@ export default defineSchema({
   products,
   prices,
   subscriptions,
+  // Usage & Subscription Tiers
+  usage,
+  subscriptionTiers,
 });
 

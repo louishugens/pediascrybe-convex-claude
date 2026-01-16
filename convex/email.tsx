@@ -2,6 +2,7 @@ import "./polyfills";
 import VerifyEmail from "./emails/verifyEmail";
 import MagicLinkEmail from "./emails/magicLink";
 import VerifyOTP from "./emails/verifyOTP";
+import PediascrybeWelcome from "./emails/welcome";
 import { render } from "@react-email/components";
 import ResetPasswordEmail from "./emails/resetPassword";
 import { components } from "./_generated/api";
@@ -81,5 +82,23 @@ export const sendResetPassword = async (
     to,
     subject: "Reset your password",
     html: await render(<ResetPasswordEmail url={url} />),
+  });
+};
+
+export const sendWelcomeEmail = async (
+  ctx: ActionCtx,
+  {
+    to,
+    userName,
+  }: {
+    to: string;
+    userName?: string;
+  },
+) => {
+  await resend.sendEmail(ctx, {
+    from: "Pediascrybe <info@pediascrybe.com>",
+    to,
+    subject: "Welcome to Pediascrybe!",
+    html: await render(<PediascrybeWelcome userName={userName} />),
   });
 };

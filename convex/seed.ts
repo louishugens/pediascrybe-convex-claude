@@ -133,3 +133,177 @@ export const clearReferenceData = mutation({
   },
 });
 
+// Seed subscription tiers (for development/testing without Stripe)
+export const seedSubscriptionTiers = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+
+    const tiers = [
+      {
+        name: "starter",
+        displayName: "Starter",
+        description: "Perfect for new pediatricians and low-volume practices",
+        stripePriceId: "price_starter_placeholder", // Replace with real Stripe price ID
+        priceAmountCents: 2900, // $29/month
+        limits: {
+          patientCount: 100,
+          recordCount: 200,
+          scrybegptMessages: 50,
+          aiPrescription: 20,
+          aiLabExam: 20,
+          aiDiagnostic: 20,
+          aiReport: 0, // Not available in Starter
+        },
+        features: [
+          "emr",
+          "basic_growth_charts",
+          "billing_receipts",
+          "multi_currency",
+          "scrybegpt",
+          "ai_diagnostic",
+          "ai_prescription",
+          "ai_lab_exam",
+          "basic_analytics",
+          "pdf_export",
+          "email_support",
+        ],
+        trialPeriodDays: 7,
+        sortOrder: 0,
+        isPopular: false,
+      },
+      {
+        name: "pro",
+        displayName: "Pro",
+        description: "For established pediatricians with full AI support",
+        stripePriceId: "price_pro_placeholder", // Replace with real Stripe price ID
+        priceAmountCents: 4900, // $49/month
+        limits: {
+          patientCount: 500,
+          recordCount: 1000,
+          scrybegptMessages: 300,
+          aiPrescription: 100,
+          aiLabExam: 100,
+          aiDiagnostic: 100,
+          aiReport: 50,
+        },
+        features: [
+          "emr",
+          "basic_growth_charts",
+          "all_growth_charts",
+          "vaccination_management",
+          "billing_receipts",
+          "multi_currency",
+          "scrybegpt",
+          "ai_diagnostic",
+          "ai_prescription",
+          "ai_lab_exam",
+          "ai_report",
+          "advanced_analytics",
+          "pdf_export",
+          "email_chat_support",
+        ],
+        trialPeriodDays: 7,
+        sortOrder: 1,
+        isPopular: true,
+      },
+      {
+        name: "premium",
+        displayName: "Premium",
+        description: "For high-volume practitioners preparing for growth",
+        stripePriceId: "price_premium_placeholder", // Replace with real Stripe price ID
+        priceAmountCents: 9900, // $99/month
+        limits: {
+          patientCount: -1, // unlimited
+          recordCount: -1, // unlimited
+          scrybegptMessages: -1, // unlimited
+          aiPrescription: -1, // unlimited
+          aiLabExam: -1, // unlimited
+          aiDiagnostic: -1, // unlimited
+          aiReport: -1, // unlimited
+        },
+        features: [
+          "emr",
+          "basic_growth_charts",
+          "all_growth_charts",
+          "vaccination_management",
+          "billing_receipts",
+          "multi_currency",
+          "scrybegpt",
+          "ai_diagnostic",
+          "ai_prescription",
+          "ai_lab_exam",
+          "ai_report",
+          "advanced_analytics",
+          "pdf_export",
+          "priority_support",
+          "telehealth", // Coming soon
+          "staff_accounts", // Coming soon
+        ],
+        trialPeriodDays: 7,
+        sortOrder: 2,
+        isPopular: false,
+      },
+    ];
+
+    const results: Array<{ name: string; action: string; id: any }> = [];
+
+    for (const tier of tiers) {
+      // Check if tier already exists
+      const existing = await ctx.db
+        .query("subscriptionTiers")
+        .withIndex("by_name", (q) => q.eq("name", tier.name))
+        .first();
+
+      if (existing) {
+        // Update existing tier
+        await ctx.db.patch(existing._id, {
+          displayName: tier.displayName,
+          description: tier.description,
+          stripePriceId: tier.stripePriceId,
+          priceAmountCents: tier.priceAmountCents,
+          limits: tier.limits,
+          features: tier.features,
+          trialPeriodDays: tier.trialPeriodDays,
+          sortOrder: tier.sortOrder,
+          isPopular: tier.isPopular,
+        });
+        results.push({ name: tier.name, action: "updated", id: existing._id });
+      } else {
+        // Create new tier
+        const id = await ctx.db.insert("subscriptionTiers", {
+          ...tier,
+          createdAt: now,
+        });
+        results.push({ name: tier.name, action: "created", id });
+      }
+    }
+
+    return results;
+  },
+});
+
+// Update subscription tier with real Stripe price ID (after running seedStripeProducts)
+export const updateTierStripePriceId = mutation({
+  args: {
+    tierName: v.string(),
+    stripePriceId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const tier = await ctx.db
+      .query("subscriptionTiers")
+      .withIndex("by_name", (q) => q.eq("name", args.tierName))
+      .first();
+
+    if (!tier) {
+      throw new Error(`Tier "${args.tierName}" not found`);
+    }
+
+    await ctx.db.patch(tier._id, {
+      stripePriceId: args.stripePriceId,
+    });
+
+    return { success: true, tierId: tier._id };
+  },
+});
+

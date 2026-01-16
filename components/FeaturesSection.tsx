@@ -6,8 +6,8 @@ import React from 'react';
 
 const features = [
   {
-    title: 'Add Patients & Consultations',
-    description: 'Easily input and manage patient details and consultation notes.',
+    title: 'Add Patients & Records',
+    description: 'Easily input and manage patient details and medical records.',
     icon: '📝' // Placeholder icon. Replace with your desired icon or image.
   },
   {

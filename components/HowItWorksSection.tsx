@@ -14,8 +14,8 @@ const steps = [
     icon: '👶'
   },
   {
-    title: 'Consult & Diagnose',
-    description: 'Use AI-powered diagnostic suggestions during consultations.',
+    title: 'Create Records & Diagnose',
+    description: 'Use AI-powered diagnostic suggestions when creating records.',
     icon: '🔍'
   },
   {

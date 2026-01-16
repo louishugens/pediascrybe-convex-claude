@@ -12,7 +12,7 @@ export default function Search() {
         type="search" 
         onChange={(e) => router.push(`?search=${e.target.value}`)}
         placeholder="Search for patients"
-        className="w-full h-10 pl-8 px-4 border border-slate-400 rounded-full shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm placeholder:italic placeholder:text-sm placeholder:text-slate-400"
+        className="w-full h-10 pl-8 px-4 border border-slate-400 rounded-full shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm placeholder:italic placeholder:text-sm placeholder:text-slate-400"
       />
     </div>
   )

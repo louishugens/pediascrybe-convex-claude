@@ -102,7 +102,7 @@ const AppointmentPageComponent = ({appointment, patientId}: AppointmentPageCompo
     <div className="w-full h-auto shadow-md rounded-lg p-4 bg-slate-50 text-sm text-slate-900">
       <div className="flex flex-row justify-between">
         <div className="flex flex-col">
-          <p className='text-blue-500'>Consultation of <span className='font-bold '>{format(appointment.startDate, 'yyy-MM-dd hh:mm:ss')}</span></p>
+          <p className='text-primary'>Record of <span className='font-bold '>{format(appointment.startDate, 'yyy-MM-dd hh:mm:ss')}</span></p>
         </div>
         {
           loading
@@ -180,10 +180,10 @@ const AppointmentPageComponent = ({appointment, patientId}: AppointmentPageCompo
             </div>
           ))}</div>
           <div className="mt-1 flex flex-row justify-between">
-          <Link href={`/user/patients/${patientId}/${appointment._id}/add-prescription`} className='self-end mt-2 shadow bg-slate-200 rounded-full py-1 px-4 text-blue-500'>
+          <Link href={`/user/patients/${patientId}/${appointment._id}/add-prescription`} className='self-end mt-2 shadow bg-slate-200 rounded-full py-1 px-4 text-primary'>
               Add or edit
             </Link>
-            <Link href={`/user/patients/${patientId}/${appointment._id}/print-prescription`} className='self-end mt-2 shadow bg-blue-500 rounded-full py-1 px-4 text-white'>
+            <Link href={`/user/patients/${patientId}/${appointment._id}/print-prescription`} className='self-end mt-2 shadow bg-primary rounded-full py-1 px-4 text-primary-foreground'>
               Print
             </Link>
           </div>
@@ -197,10 +197,10 @@ const AppointmentPageComponent = ({appointment, patientId}: AppointmentPageCompo
             {/* <Link href={`/user/patients/${patientId}/${appointmentId}/add-exams`} className='self-end mt-2 shadow bg-blue-500 rounded-full py-2 px-4 text-white '>
               Add
             </Link> */}
-            <Link href={`/user/patients/${patientId}/${appointment._id}/add-exams`} className='self-end mt-2 shadow text-blue-500 rounded-full py-1 px-4 bg-slate-200'>
+            <Link href={`/user/patients/${patientId}/${appointment._id}/add-exams`} className='self-end mt-2 shadow text-primary rounded-full py-1 px-4 bg-slate-200'>
               Add or edit
             </Link>
-            <Link href={`/user/patients/${patientId}/${appointment._id}/print-exams`} className='self-end mt-2 shadow text-slate-200 rounded-full py-1 px-4 bg-blue-500'>
+            <Link href={`/user/patients/${patientId}/${appointment._id}/print-exams`} className='self-end mt-2 shadow text-primary-foreground rounded-full py-1 px-4 bg-primary'>
               Print
             </Link>
           </div>
@@ -209,7 +209,7 @@ const AppointmentPageComponent = ({appointment, patientId}: AppointmentPageCompo
           <p className="font-semibold mb-2">Recommendations</p>
           <p className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.recommendation}</p>
           <div className="mt-1 flex flex-row justify-between">
-            <Link href={`/user/patients/${patientId}/${appointment._id}/add-recommendation`} className='self-end mt-2 shadow text-blue-500 rounded-full py-1 px-4 bg-slate-200'>
+            <Link href={`/user/patients/${patientId}/${appointment._id}/add-recommendation`} className='self-end mt-2 shadow text-primary rounded-full py-1 px-4 bg-slate-200'>
               Add or edit
             </Link>
           </div>
@@ -220,7 +220,7 @@ const AppointmentPageComponent = ({appointment, patientId}: AppointmentPageCompo
           <p className="font-semibold">Uploaded files</p>
           {
             appointment.files?.length < 3 &&
-            <Link href={`/user/patients/${patientId}/${appointment._id}/upload-file`} className='self-end mt-2 shadow bg-slate-200 rounded-full py-1 px-4 text-blue-500'>
+            <Link href={`/user/patients/${patientId}/${appointment._id}/upload-file`} className='self-end mt-2 shadow bg-slate-200 rounded-full py-1 px-4 text-primary'>
             Upload file
           </Link>}
         </div>

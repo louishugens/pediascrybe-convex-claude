@@ -160,7 +160,7 @@ export default function CreateReceiptForm({ patientId }: { patientId: string }) 
           render={({ field }) => (
             <FormItem className='mt-8'>
               <FormLabel>Service</FormLabel>
-                <Input placeholder="Consultation, exam reading, ..." {...field} />
+                <Input placeholder="Record type, exam reading, ..." {...field} />
               <FormMessage />
             </FormItem>
           )}
@@ -230,7 +230,7 @@ export default function CreateReceiptForm({ patientId }: { patientId: string }) 
                       render={({ field }) => (
                         <FormItem className='mt-8'>
                           <FormLabel>Service</FormLabel>
-                          <Input placeholder="Consultation, exam reading, ..." {...field} />
+                          <Input placeholder="Record type, exam reading, ..." {...field} />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -255,7 +255,7 @@ export default function CreateReceiptForm({ patientId }: { patientId: string }) 
           })}
           <p className='px-4 pt-1 text-sm text-red-600'>{form.formState.errors?.services?.message as React.ReactNode}</p>
 
-          <button className="py-2 px-4 rounded-full bg-green-500 text-lg font-semibold w-1/2 center mt-8 mx-auto" type='submit'>
+          <button className="py-2 px-4 rounded-full bg-primary text-primary-foreground text-lg font-semibold w-1/2 center mt-8 mx-auto" type='submit'>
             {
               loading
                 ?

@@ -40,7 +40,7 @@ export function NavMain({
                 tooltip={item.title}
                 isActive={isActive}
               >
-                <Link href={item.url}>
+                <Link href={item.url as any}>
                   {item.icon && <item.icon />}
                   <span>{item.title}</span>
                 </Link>

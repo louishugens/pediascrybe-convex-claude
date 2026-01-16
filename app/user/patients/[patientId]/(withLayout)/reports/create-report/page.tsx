@@ -27,7 +27,7 @@ async function CreateReportContainer({ params }: { params: Params }) {
   const patient = await fetchAuthQuery(api.patients.getPatient, { 
     patientId: patientId as Id<"patients"> 
   });
-  const consultations = await fetchAuthQuery(api.appointments.getPatientAppointments, { 
+  const records = await fetchAuthQuery(api.appointments.getPatientAppointments, { 
     patientId: patientId as Id<"patients"> 
   });
   
@@ -38,7 +38,7 @@ async function CreateReportContainer({ params }: { params: Params }) {
           <ArrowUturnLeftIcon className='w-4 h-4' />
         </Link>
       </div>
-      <CreateReport patientId={patientId} patient={patient} consultations={consultations} />
+      <CreateReport patientId={patientId} patient={patient} records={records} />
     </div>
   )
 }

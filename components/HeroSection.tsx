@@ -23,7 +23,7 @@ const HeroSection = () => {
   }
 
   return (
-    <div className="relative h-screen overflow-hidden bg-gradient-to-br from-muted via-primary/25 to-green-200/25">
+    <div className="relative h-screen overflow-hidden bg-linear-to-br from-muted via-primary/25 to-primary/10">
       <div className="z-40 flex flex-col md:flex-row px-8 md:px-16 h-screen mt-16 md:mt-0">
         <motion.div 
           variants={container}

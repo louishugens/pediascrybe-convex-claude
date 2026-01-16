@@ -30,86 +30,47 @@ import { Textarea } from "@/components/ui/textarea"
 import EditDoctor from '@/components/editDoctor';
 import { Editor } from '@/components/editor';
 import { useCompletion } from '@ai-sdk/react';
+import { useSubscriptionGuard } from '@/hooks/use-subscription-guard';
 
 
-const CreateReport = ({patientId, patient, consultations}) => {
+const CreateReport = ({patientId, patient, records}) => {
 
   const [generating, setGenerating] = useState(false)
 
 
 
   const fetchReportSuggestions = async () => {
+    // Check subscription before AI generation
+    if (!requireSubscription("generate AI reports")) return;
 
     const messages = [
-      // {
-      //   role: "system",
-      //   content: `As ScrybeGPT, your task is to generate a medical report or certificate based on the patient's profile and past consultations. Follow these steps:
-      
-      //             1. Receive and understand the patient's profile, including age, gender, and any relevant medical history.
-      //             2. Review the list of past consultations, focusing on the symptoms (motif), diagnosis, and treatments provided.
-      //             3. Identify the language used most frequently in the consultation's motif data.
-      //             4. Summarize the key medical information in a structured format using HTML tags:
-      //                - Use <h1> to <h3> tags for headings.
-      //                - Use <p> for paragraphs.
-      //                - Use <ul> and <li> for lists.
-      //             5. Translate the summary into the identified language, if it is different from the current language.
-      //             6. Ensure the final report is well-structured, readable, and correctly formatted with HTML tags.
-      
-      //           The final medical report should be a comprehensive and concise summary of the patient's medical history and past consultations, presented in a professional and structured manner using HTML formatting.`
-      // },
       {
         role: "system",
-        content: `As ScrybeGPT, your task is to generate a medical ${reportType} or certificate based on the patient's profile and past consultations, and then output only the HTML-formatted section of the ${reportType}. Follow these steps:
+        content: `As ScrybeGPT, your task is to generate a medical ${reportType} or certificate based on the patient's profile and past records, and then output only the HTML-formatted section of the ${reportType}. Follow these steps:
       
-                  1. Review the patient's profile and list of past consultations.
-                  2. Summarize the key medical information, including patient details, consultation dates, symptoms, findings, and recommendations.
+                  1. Review the patient's profile and list of past records.
+                  2. Summarize the key medical information, including patient details, record dates, symptoms, findings, and recommendations.
                   3. Format this summary using HTML tags for headings, paragraphs, and lists.
-                  4. Identify the language used most frequently in the consultation motifs. If it's different from English, translate the summary into that language.
+                  4. Identify the language used most frequently in the record motifs. If it's different from English, translate the summary into that language.
                   5. After creating the HTML-formatted ${reportType}, output only this section enclosed within HTML tags.
       
-                Respond with just the body section of the HTML-formatted medical ${reportType} and ensure it's in the language most frequently identified in the consultation motifs.`
+                Respond with just the body section of the HTML-formatted medical ${reportType} and ensure it's in the language most frequently identified in the record motifs.`
       },
-      // {
-      //   role: "user",
-      //   content: `Patient Profile: [Patient Details]`
-      // },
-      // {
-      //   role: "user",
-      //   content: `Past Consultations: [List of Consultations]`
-      // },
-
-      
-      // {
-      //   role: "system",
-      //   content:`As ScrybeGPT, a helpful medical assidtant, your task is to propose to pediatricians a medical ${reportType} or a medical certificate\
-      //           You are given the patients profile and a list of consultations records and your job is to produce the ${reportType} based on these info\
-      //           You will follow the steps below:\
-      //           1- Identify the language used in consultation.motif\
-      //           2- Generate the medical ${reportType} or medical certicitate from all the info received by summarizing all the data\
-      //           3- Format the ${reportType} in HTML for styling heading, list and paragraph etc.., 
-      //           4-  Tranlate it in the laguage identified in 1
-      //           5- Send the ${reportType} text only to the pediatrician, no need to introduce the ${reportType}\
-      //   `
-      // },
       {
         role: "user",
         content: `The patient's information are ${JSON.stringify(patient)}`,
       },
       {
         role: "user",
-        content: `The patient's consultations are ${JSON.stringify(consultations)}`,
+        content: `The patient's records are ${JSON.stringify(records)}`,
       },
       {
         role: "user",
         content: `The report type is ${reportType}`, 
       },
-      // {
-      //   role: "system",
-      //   content: `Submit the html body part of the ${reportType}  only in the proper format and language`
-      // }
       {
         role: "system",
-        content: `Translate the ${reportType} into the most frequently identified language from the consultation's motif data, and ensure proper HTML formatting.`
+        content: `Translate the ${reportType} into the most frequently identified language from the record's motif data, and ensure proper HTML formatting.`
       },
       {
         role: "system",
@@ -199,9 +160,13 @@ const CreateReport = ({patientId, patient, consultations}) => {
 
   const doctor = useDoctor()
   const router = useRouter()
+  const { requireSubscription } = useSubscriptionGuard()
 
 
   const onSubmit = async (values: FormValues) => {
+    // Check subscription before proceeding
+    if (!requireSubscription("create reports")) return;
+    
     setLoading(true)
  
     try{
@@ -262,7 +227,7 @@ const CreateReport = ({patientId, patient, consultations}) => {
             (
               generating
               ?
-                <span className=' font-light text-primary flex flex-row gap-2'><span>ScrybeGPT thinking </span><PulseLoader className='my-auto' color={"#21C55D"} size={5} aria-label="Loading Spinner" data-testid="loader"/></span>
+                <span className=' font-light text-primary flex flex-row gap-2'><span>ScrybeGPT thinking </span><PulseLoader className='my-auto' color={"hsl(var(--primary))"} size={5} aria-label="Loading Spinner" data-testid="loader"/></span>
               :
                 <span className=' font-light text-primary'>Generate with ScrybeGPT? <span className='px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs cursor-pointer'  onClick={fetchReportSuggestions}>Yes</span></span>
             )
@@ -285,7 +250,7 @@ const CreateReport = ({patientId, patient, consultations}) => {
               </FormItem>
             )}  
           />
-        <button className="py-2 px-4 rounded-full bg-green-500 text-lg font-semibold w-1/2 center mt-8 mx-auto" type='submit'>
+        <button className="py-2 px-4 rounded-full bg-primary text-primary-foreground text-lg font-semibold w-1/2 center mt-8 mx-auto" type='submit'>
           {
               loading
               ?

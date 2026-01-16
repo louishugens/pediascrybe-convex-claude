@@ -66,7 +66,7 @@ function getBreadcrumbs(pathname: string): BreadcrumbData[] {
       // (not a known route like charts, vaccines, reports, etc.)
       const knownRoutes = [
         "charts", "vaccines", "reports", "receipts", "scrybegpt",
-        "add-appointment", "edit-patient", "hfa", "wfa", "bfa", "hcfa", "wfl",
+        "add-record", "edit-patient", "hfa", "wfa", "bfa", "hcfa", "wfl",
         "print-hfa", "print-wfa", "print-bfa", "print-hcfa", "print-wfl",
         "print-hfa5To19", "print-bfa5To19", "print-wfl0To2",
         "hfa5To19", "bfa5To19", "wfl0To2",

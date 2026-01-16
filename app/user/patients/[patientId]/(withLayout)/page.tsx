@@ -2,12 +2,12 @@ import { Suspense } from 'react'
 import { ViewTransition } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import ChartCarouselWrapper from '@/components/patient/chart-carousel-wrapper'
-import ConsultationListWrapper from '@/components/patient/consultation-list-wrapper'
+import RecordListWrapper from '@/components/patient/record-list-wrapper'
 import ChartCarouselSkeleton from '@/components/patient/chart-carousel-skeleton'
 
 type Params = Promise<{ patientId: string }>
 
-function ConsultationListSkeleton() {
+function RecordListSkeleton() {
   return (
     <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-4">
       <div className="flex items-center justify-between mb-4">
@@ -34,9 +34,9 @@ async function Patient({ params }: { params: Params }) {
           <ChartCarouselWrapper patientId={patientId} />
         </Suspense>
 
-        {/* Consultation List */}
-        <Suspense fallback={<ConsultationListSkeleton />}>
-          <ConsultationListWrapper patientId={patientId} />
+        {/* Record List */}
+        <Suspense fallback={<RecordListSkeleton />}>
+          <RecordListWrapper patientId={patientId} />
         </Suspense>
       </div>
     </ViewTransition>

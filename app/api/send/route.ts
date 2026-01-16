@@ -1,4 +1,4 @@
-import PediascrybeWelcome from '@/emails/welcome';
+import PediascrybeWelcome from '../../../emails/welcome';
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 

@@ -8,6 +8,10 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { ClientAuthBoundary } from "@/lib/auth-client"
 import { BreadcrumbNav } from "@/components/breadcrumb-nav"
+import { SubscriptionGuardProvider } from "@/hooks/use-subscription-guard"
+import { SubscriptionDialog } from "@/components/subscription-dialog"
+import { SubscriptionBanner } from "@/components/subscription-banner"
+import { SubscriptionSync } from "@/components/subscription-sync"
 
 interface LayoutProps {
   children: React.ReactNode
@@ -45,9 +49,10 @@ const Layout = ({ children }: LayoutProps) => {
   return (
     <Suspense fallback={<SidebarSkeleton />}>
       <ClientAuthBoundary>
-        <SidebarProvider>
-          <AppSidebar />
-          <SidebarInset>
+        <SubscriptionGuardProvider>
+          <SidebarProvider>
+            <AppSidebar />
+            <SidebarInset>
             <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
               <div className="flex items-center gap-2 px-4">
                 <SidebarTrigger className="-ml-1" />
@@ -55,11 +60,15 @@ const Layout = ({ children }: LayoutProps) => {
                 <BreadcrumbNav />
               </div>
             </header>
+            <SubscriptionBanner />
             <div className="flex-1 p-4 overflow-x-clip">
               {children}
             </div>
-          </SidebarInset>
-        </SidebarProvider>
+            </SidebarInset>
+            <SubscriptionDialog />
+            <SubscriptionSync />
+          </SidebarProvider>
+        </SubscriptionGuardProvider>
       </ClientAuthBoundary>
     </Suspense>
   )

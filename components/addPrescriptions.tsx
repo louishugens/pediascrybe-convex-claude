@@ -13,6 +13,11 @@ import  * as z from "zod"
 import { refresh } from '@/app/actions';
 import { experimental_useObject as useObject } from '@ai-sdk/react';
 import { prescriptionsSchema } from '@/app/api/ai/prescriptions/schema';
+import { useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { useAIQueryAccess } from '@/components/subscription-guard';
+import { UpgradeModal } from '@/components/upgrade-modal';
+import { useSubscriptionGuard } from '@/hooks/use-subscription-guard';
 
 import { Doc } from '@/convex/_generated/dataModel';
 
@@ -47,6 +52,7 @@ const AddPrescriptions = ({patient, patientId, appointment}: {patient: PatientTy
   const [noReturn, setNoReturn] = useState(false)
   const [hasFetched, setHasFetched] = useState(false)
   const [color, setColor] = useState('#ffffff')
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const router = useRouter()
   const [prescriptions, setPrescriptions] = useState(
     Array.isArray(appointment.medication) ? appointment.medication : []
@@ -54,13 +60,32 @@ const AddPrescriptions = ({patient, patientId, appointment}: {patient: PatientTy
   // const [thinking, setThinking] = useState(false)
   let [generating, setGenerating] = useState(false)
 
+  // Subscription checks
+  const { isAllowed: canUseAI, reason: aiBlockReason, isLoading: checkingAccess } = useAIQueryAccess('ai_prescription_recommendations');
+  const incrementAIQuery = useMutation(api.usage.incrementAIQuery);
+  const { requireSubscription } = useSubscriptionGuard();
+
   const { object, submit, isLoading, stop } = useObject({
     api: '/api/ai/prescriptions',
     schema: z.array(prescriptionsSchema),
   });
 
   const fetchPrescriptionsSuggestions = async () => {
+    // Check if user can use AI
+    if (!canUseAI) {
+      setShowUpgradeModal(true);
+      return;
+    }
+
     setHasFetched(true);
+    
+    // Increment AI query usage
+    try {
+      await incrementAIQuery({});
+    } catch (error) {
+      console.error('Failed to increment AI usage:', error);
+    }
+
     const body = {
       patient:{
         age: formatDistanceToNow(new Date(patient.birthdate)), 
@@ -229,6 +254,9 @@ const AddPrescriptions = ({patient, patientId, appointment}: {patient: PatientTy
   });
 
   const onSubmit = async values => {
+    // Check subscription before proceeding
+    if (!requireSubscription("add prescriptions")) return;
+    
     setLoading(true)
  
     try{
@@ -264,8 +292,13 @@ const AddPrescriptions = ({patient, patientId, appointment}: {patient: PatientTy
       {
         noReturn ? (
           <span className='font-light text-red-500'>No prescription suggestions could be generated for this patient.</span>
-        ) : isLoading ? (
-          <span className='font-light text-primary'>ScrybeGPT thinking <PulseLoader color={"#21C55D"} size={5} aria-label="Loading Spinner" data-testid="loader"/></span>
+        ) : isLoading || checkingAccess ? (
+          <span className='font-light text-primary'>ScrybeGPT thinking <PulseLoader color={"hsl(var(--primary))"} size={5} aria-label="Loading Spinner" data-testid="loader"/></span>
+        ) : !canUseAI ? (
+          <span className='font-light text-amber-600'>
+            {aiBlockReason || 'AI features require a Pro subscription'}{' '}
+            <span className='px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs cursor-pointer' onClick={() => setShowUpgradeModal(true)}>Upgrade</span>
+          </span>
         ) : (
           <span className='font-light text-primary'>Generate with ScrybeGPT? <span className='px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs cursor-pointer'  onClick={fetchPrescriptionsSuggestions}>Yes</span></span>
         )
@@ -316,7 +349,7 @@ const AddPrescriptions = ({patient, patientId, appointment}: {patient: PatientTy
         })}
         <p className='px-4 pt-1 text-sm text-red-600'>{errors?.prescriptions?.root?.message as React.ReactNode}</p>
         <div className="flex flex-row justify-between">
-          <button className='py-1 px-4 rounded-full bg-green-500 text-white text-sm  mt-4' type='button' onClick={() => append({drug: '', count: 1, unit: 'flacon', posology: ''})}>
+          <button className='py-1 px-4 rounded-full bg-primary text-primary-foreground text-sm  mt-4' type='button' onClick={() => append({drug: '', count: 1, unit: 'flacon', posology: ''})}>
             Add
           </button>
           {<button className='py-1 px-4 rounded-full bg-blue-500 text-white text-sm  mt-4' type='submit'>
@@ -336,6 +369,14 @@ const AddPrescriptions = ({patient, patientId, appointment}: {patient: PatientTy
       </form>
       
     </div>
+    
+    {/* Upgrade Modal */}
+    <UpgradeModal
+      open={showUpgradeModal}
+      onOpenChange={setShowUpgradeModal}
+      reason={aiBlockReason?.includes('limit') ? 'ai_query_limit' : 'feature_locked'}
+      featureName="AI Prescription Recommendations"
+    />
     </div>
   )
 }

@@ -78,7 +78,7 @@ const EditDoctor = ({doctor}) => {
 
   return (
     <div className="flex flex-col w-full items-center">
-      <p className=' text-2xl text-green-500 font-bold'>Edit Profile</p>
+      <p className=' text-2xl text-primary font-bold'>Edit Profile</p>
       <form className="flex flex-col mt-8 w-2/3 text-sm" onSubmit={handleSubmit(onSubmit)}>
         <div className="grid gap-x-8 gap-y-4 grid-cols-2 mt-4">
           <label className="flex flex-col mb-4 h-16">
@@ -143,7 +143,7 @@ const EditDoctor = ({doctor}) => {
           </label>
         </div>
 
-        <button className="py-2 px-4 rounded-full bg-green-500 text-lg font-semibold w-1/2 center mt-4 mx-auto" type='submit'>
+        <button className="py-2 px-4 rounded-full bg-primary text-primary-foreground text-lg font-semibold w-1/2 center mt-4 mx-auto" type='submit'>
           {
               loading
               ?

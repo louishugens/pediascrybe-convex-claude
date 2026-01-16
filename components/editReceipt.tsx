@@ -47,6 +47,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { refresh } from '@/app/actions';
+import { useSubscriptionGuard } from '@/hooks/use-subscription-guard';
 
 
 interface Props {
@@ -112,9 +113,13 @@ const EditReceipt = ({patientId, receipt}: Props) => {
 
   const doctor = useDoctor()
   const router = useRouter()
+  const { requireSubscription } = useSubscriptionGuard()
 
 
   const onSubmit = async (values: FormValues) => {
+    // Check subscription before proceeding
+    if (!requireSubscription("update receipts")) return;
+    
     setLoading(true)
  
     try{
@@ -202,7 +207,7 @@ const EditReceipt = ({patientId, receipt}: Props) => {
           render={({ field }) => (
             <FormItem className='mt-8'>
               <FormLabel>Service</FormLabel>
-                <Input placeholder="Consultation, exam reading, ..." {...field} />
+                <Input placeholder="Record type, exam reading, ..." {...field} />
               <FormMessage />
             </FormItem>
           )}
@@ -270,7 +275,7 @@ const EditReceipt = ({patientId, receipt}: Props) => {
                     render={({ field }) => (
                       <FormItem className='mt-8'>
                         <FormLabel>Service</FormLabel>
-                          <Input placeholder="Consultation, exam reading, ..." {...field} />
+                          <Input placeholder="Record type, exam reading, ..." {...field} />
                         <FormMessage />
                       </FormItem>
                     )}
@@ -295,7 +300,7 @@ const EditReceipt = ({patientId, receipt}: Props) => {
         })}
         <p className='px-4 pt-1 text-sm text-red-600'>{form.formState.errors?.services?.message as React.ReactNode}</p>
 
-        <button className="py-2 px-4 rounded-full bg-green-500 text-lg font-semibold w-1/2 center mt-8 mx-auto" type='submit'>
+        <button className="py-2 px-4 rounded-full bg-primary text-primary-foreground text-lg font-semibold w-1/2 center mt-8 mx-auto" type='submit'>
           {
               loading
               ?

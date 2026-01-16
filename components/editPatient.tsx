@@ -1,23 +1,18 @@
 'use client'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form';
-import * as yup from "yup";
-import { yupResolver } from '@hookform/resolvers/yup';
-import PulseLoader from "react-spinners/PulseLoader"
 import { useRouter } from 'next/navigation';
-import useDoctor from '@/utils/hooks/useDoctor';
 import { useState } from "react";
-import BeatLoader  from 'react-spinners/BeatLoader';
+import BeatLoader from 'react-spinners/BeatLoader';
 import * as z from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
-import { CalendarIcon } from "lucide-react"
+import { CalendarIcon, ArrowLeft } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -38,7 +33,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { refresh } from '@/app/actions';
+import { useSubscriptionGuard } from '@/hooks/use-subscription-guard';
 
 const EditPatient = ({patient, doctorId}) => {
   // const schema = yup.object({
@@ -72,8 +69,7 @@ const EditPatient = ({patient, doctorId}) => {
 
   type FormValues = z.infer<typeof schema>
   
-  let [color, setColor] = useState("#ffffff")
-  let [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   const form = useForm<FormValues>({
     defaultValues:{
@@ -95,17 +91,19 @@ const EditPatient = ({patient, doctorId}) => {
     reValidateMode: 'onBlur'
   });
 
-  console.log(patient)
-
   const router = useRouter()
+  const { requireSubscription } = useSubscriptionGuard()
 
 
   const onSubmit = async (values) => {
+    // Check subscription before proceeding
+    if (!requireSubscription("update patients")) return;
+    
     setLoading(true)
  
     try{
       const {firstname, lastname, email, birthdate, mothername, sex, religion, phone, allergies, history, bloodtype, electrophoresis} = values
-      const body = {firstname, lastname, email, birthdate, mothername, sex, religion, phone, patientId: patient._id, allergies, history, bloodtype, electrophoresis}
+      const body = {firstname, lastname, email, birthdate, mothername, sex, religion, phone, id: patient._id, allergies, history, bloodtype, electrophoresis}
       await fetch('/api/patients/updatePatient', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -128,12 +126,22 @@ const EditPatient = ({patient, doctorId}) => {
 
 
   return (
-    <div className='pt-4'>
-      <div className="flex flex-col w-full items-center">
-        <p className=' text-2xl text-primary font-bold mt-8'>Update Patient</p>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex bg-muted rounded-md p-8 flex-col mt-8 w-2/3 text-sm">
-            <div className="grid gap-x-8 gap-y-8 grid-cols-2 mt-4">
+    <div className="py-4">
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-xl text-primary font-bold">Edit Patient Information</CardTitle>
+            <Button variant="outline" size="icon" asChild>
+              <Link href={`/user/patients/${patient._id}`}>
+                <ArrowLeft className="h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
               <FormField
                 control={form.control}
                 name="firstname"
@@ -268,11 +276,14 @@ const EditPatient = ({patient, doctorId}) => {
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
                           mode="single"
+                          captionLayout="dropdown"
                           selected={field.value}
                           onSelect={field.onChange}
                           disabled={(date) =>
                             date > new Date() || date < new Date("1900-01-01")
                           }
+                          startMonth={new Date(1900, 0)}
+                          endMonth={new Date()}
                           initialFocus
                         />
                       </PopoverContent>
@@ -338,141 +349,41 @@ const EditPatient = ({patient, doctorId}) => {
                 )}
               />
             </div>
-            <FormField
+              <FormField
                 control={form.control}
                 name="history"
                 render={({ field }) => (
-                  <FormItem className='mt-8'>
+                  <FormItem className="md:col-span-2">
                     <FormLabel>History</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Medical history" {...field} />
-                      {/* <Input placeholder="History" {...field} /> */}
+                      <Textarea 
+                        placeholder="Medical history" 
+                        className="min-h-[120px] resize-none"
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}  
               />
-            <button className="py-2 px-4 rounded-full bg-green-500 text-lg font-semibold w-1/2 center mt-8 mx-auto" type='submit'>
-              {
-                  loading
-                  ?
-                  <BeatLoader
-                    color={color}
-                    size={10}
-                    aria-label="Loading Spinner"
-                    data-testid="loader"
-                  />
-                  :
-                    "Update Patient"
-              }
-            </button>
-          </form>
-        </Form>
 
-        {/* <p className=' text-2xl text-green-500 font-bold'>Edit Patient</p>
-        <form className="flex flex-col mt-8 w-2/3 text-sm" onSubmit={handleSubmit(onSubmit)}>
-          <div className="grid gap-x-8 gap-y-4 grid-cols-2 mt-4">
-            <label className="flex flex-col mb-4 h-16">
-              <span className="font-medium">First name</span>
-              <input
-                placeholder="John"
-                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
-                type="text"
-                {...register('firstname')}
-              />
-              <p className='px-4 pt-1 text-sm text-red-600'>{errors.firstname?.message}</p>
-            </label>
-            <label className="flex flex-col mb-4 h-16">
-              <span className="font-medium">Last name</span>
-              <input
-                placeholder="Doe"
-                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
-                type="text"
-                {...register('lastname')}
-              />
-              <p className='px-4 pt-1 text-sm text-red-600'>{errors.lastname?.message}</p>
-            </label>
-            <label className="flex flex-col mb-4 h-16">
-              <span className="font-medium">Mother&apos;s name</span>
-              <input
-                placeholder="Jane Doe"
-                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
-                type="text"
-                {...register('mothername')}
-              />
-              <p className='px-4 pt-1 text-sm text-red-600'>{errors.mothername?.message}</p>
-            </label>
-            <label className="flex flex-col mb-4 h-16">
-              <span className="font-medium">Phone</span>
-              <input
-                placeholder="+50937000000"
-                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
-                type="tel"
-                {...register('phone')}
-              />
-              <p className='px-4 pt-1 text-sm text-red-600'>{errors.phone?.message}</p>
-            </label>
-            <label className="flex flex-col mb-4 h-16">
-              <span className="font-medium">Email</span>
-              <input
-                placeholder="johndoe@example.com"
-                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
-                type="email"
-                {...register('email')}
-              />
-              <p className='px-4 pt-1 text-sm text-red-600'>{errors.email?.message}</p>
-            </label>
-            <label className="flex flex-col mb-4 h-16">
-              <span className="font-medium">Sex</span>
-              <select
-                // placeholder="Doe"
-                // className="placeholder:italic bg-white shadow-md rounded-full py-2 px-4"
-                // type="text"
-                {...register('sex')}
-              >
-                <option value="female">female</option>
-                <option value="male">male</option>
-              </select>
-              <p className='px-4 pt-1 text-sm text-red-600'>{errors.sex?.message}</p>
-            </label>
-            <label className="flex flex-col mb-4 h-16">
-              <span className="font-medium">Religion</span>
-              <input
-                placeholder="Catholic"
-                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
-                type="text"
-                {...register('religion')}
-              />
-              <p className='px-4 pt-1 text-sm text-red-600'>{errors.religion?.message}</p>
-            </label>
-            <label className="flex flex-col mb-6 h-16">
-              <span className="font-medium">Birth Date</span>
-              <input
-                placeholder="Birth date of the patient"
-                className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
-                type="date"
-                {...register('birthdate')}
-              />
-              <p className='px-4 pt-1 text-sm text-red-600'>{errors.birthdate?.message}</p>
-            </label>
-          </div>
-
-          <button className="py-2 px-4 rounded-full bg-green-500 text-lg font-semibold w-1/2 center mt-4 mx-auto" type='submit'>
-            {
-                loading
-                ?
-                <BeatLoader
-                  color={color}
-                  size={10}
-                  aria-label="Loading Spinner"
-                  data-testid="loader"
-                />
-                :
-                  "Edit Patient"
-            }
-          </button>
-        </form> */}
-      </div>
+              <div className="flex justify-center pt-4 md:col-span-2">
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full max-w-md bg-primary hover:bg-primary/80 text-lg font-semibold py-3 rounded-full"
+                >
+                  {loading ? (
+                    <BeatLoader color="#ffffff" size={10} aria-label="Loading Spinner" />
+                  ) : (
+                    "Save Changes"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
     </div>
   )
 }

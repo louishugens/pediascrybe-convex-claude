@@ -5,8 +5,8 @@ import CommonConditionsContainer from "@/components/dashboard/charts/CommonCondi
 import DailyRevenueContainer from "@/components/dashboard/charts/DailyRevenueContainer";
 import Greeter from "@/components/greeter";
 import TotalPatientStat from "@/components/dashboard/stats/totalPatientStat";
-import TotalConsultationStat from "@/components/dashboard/stats/totalConsultationStat";
-import RecentConsultationStat from "@/components/dashboard/stats/recentConsultationStat";
+import TotalRecordStat from "@/components/dashboard/stats/totalRecordStat";
+import RecentRecordStat from "@/components/dashboard/stats/recentRecordStat";
 import TodayRevenueStat from "@/components/dashboard/stats/todayRevenueStat";
 import MonthlyRevenueStat from "@/components/dashboard/stats/monthlyRevenueStat";
 import TodayPatientsStat from "@/components/dashboard/stats/todayPatientsStat";
@@ -37,8 +37,8 @@ export default async function Page() {
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4">
         <TotalPatientStat />
-        <TotalConsultationStat />
-        <RecentConsultationStat />
+        <TotalRecordStat />
+        <RecentRecordStat />
       </div>
       <div className="mt-4">
         <DailyRevenueContainer />

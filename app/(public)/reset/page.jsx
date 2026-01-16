@@ -76,14 +76,14 @@ export default function ResetPage() {
 
           {emailSent ? (
             <div className="space-y-6">
-              <div className="p-6 rounded-2xl bg-green-50 border border-green-200">
+              <div className="p-6 rounded-2xl bg-primary/5 border border-primary/20">
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <CheckCircle className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-green-800 mb-1">Check your email</h3>
-                    <p className="text-sm text-green-700">
+                    <h3 className="font-semibold text-foreground mb-1">Check your email</h3>
+                    <p className="text-sm text-muted-foreground">
                       We&apos;ve sent you a password reset link. Click the link in the email to reset your password.
                     </p>
                   </div>
@@ -145,7 +145,7 @@ export default function ResetPage() {
       </div>
 
       {/* Right Side - Decorative */}
-      <div className="hidden lg:flex flex-1 relative bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 overflow-hidden">
+      <div className="hidden lg:flex flex-1 relative bg-linear-to-br from-primary/5 via-primary/10 to-primary/5 overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-40">
           <div className="absolute top-20 right-20 w-72 h-72 bg-primary/20 rounded-full blur-3xl" />
@@ -164,7 +164,7 @@ export default function ResetPage() {
                 className="object-cover"
                 unoptimized
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-primary/30 to-transparent" />
+              <div className="absolute inset-0 bg-linear-to-t from-primary/30 to-transparent" />
             </div>
             
             {/* Floating Icon */}

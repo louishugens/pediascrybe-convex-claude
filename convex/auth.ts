@@ -55,11 +55,11 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
           }
 
           // Schedule Stripe customer creation
-          // await ctx.scheduler.runAfter(0, internal.stripe.createStripeCustomer, {
-          //   userId: String(doc._id),
-          //   email: doc.email,
-          //   name: doc.name ?? undefined,
-          // });
+          await ctx.scheduler.runAfter(0, internal.stripe.createStripeCustomer, {
+            authUserId: String(doc._id),
+            email: doc.email,
+            name: doc.name ?? undefined,
+          });
         },
       },
     },

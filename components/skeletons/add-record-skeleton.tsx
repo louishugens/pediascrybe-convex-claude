@@ -1,18 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
-export function AddAppointmentSkeleton() {
+export function AddRecordSkeleton() {
   return (
     <div className="py-4">
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl text-green-600 font-bold">
+          <CardTitle className="text-xl text-primary font-bold">
             <Skeleton className="h-7 w-48" />
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            {/* Service Selection */}
+            {/* Record Type Selection */}
             <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
               <div className="space-y-2">
                 <Skeleton className="h-4 w-24" />

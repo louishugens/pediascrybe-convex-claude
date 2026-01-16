@@ -36,7 +36,7 @@ export default function AddProfileDocument({patient}) {
       onClick={() => loadProfileDocument()}
     >
       {
-        loading ? <BeatLoader size={6} color={'#21C55D'} loading={loading} /> :
+        loading ? <BeatLoader size={6} color={'hsl(var(--primary))'} loading={loading} /> :
         "Load to AI"
       }
     </button>

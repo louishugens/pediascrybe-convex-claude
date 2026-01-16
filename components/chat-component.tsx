@@ -22,6 +22,7 @@ import {
   ReasoningTrigger,
 } from '@/components/ai-elements/reasoning';
 import { Response } from '@/components/ai-elements/response';
+import { useSubscriptionGuard } from '@/hooks/use-subscription-guard';
 
 interface ChatProps {
   patientId: string
@@ -33,6 +34,7 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
   const [input, setInput] = useState("")
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const { requireSubscription } = useSubscriptionGuard()
 
   // Memoize transport to prevent recreating on every render
   const transport = useMemo(() => new DefaultChatTransport({
@@ -45,8 +47,11 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
 
   // Handle chart selection from the chart selector - memoized to prevent recreation
   const handleChartSelect = useCallback((chartType: string) => {
+    // Check subscription before using ScrybeGPT
+    if (!requireSubscription("use ScrybeGPT")) return
+    
     sendMessage({ text: `Show me the ${chartType} growth chart` })
-  }, [sendMessage])
+  }, [sendMessage, requireSubscription])
 
   const isLoading = status === "submitted" || status === "streaming"
 
@@ -63,10 +68,13 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim() || isLoading) return
+    
+    // Check subscription before using ScrybeGPT
+    if (!requireSubscription("use ScrybeGPT")) return
 
     sendMessage({ text: input })
     setInput("")
-  }, [input, isLoading, sendMessage])
+  }, [input, isLoading, sendMessage, requireSubscription])
 
   // Memoize complex className calculations
   const messageContainerClasses = useMemo(() => ({

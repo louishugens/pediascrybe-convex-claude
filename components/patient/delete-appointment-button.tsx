@@ -58,9 +58,9 @@ export default function DeleteAppointmentButton({
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete Consultation</DialogTitle>
+          <DialogTitle>Delete Record</DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete this consultation? This action cannot be undone.
+            Are you sure you want to delete this record? This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="gap-2 sm:gap-2">

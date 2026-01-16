@@ -1,6 +1,6 @@
 import EditAppointment from "@/components/edit-appointment";
 import { Suspense, ViewTransition } from "react";
-import { AddAppointmentSkeleton } from "@/components/skeletons/add-appointment-skeleton";
+import { AddRecordSkeleton } from "@/components/skeletons/add-record-skeleton";
 import { getCurrentDoctor } from "@/lib/convex-data";
 import { fetchAuthQuery } from "@/lib/auth-server";
 import { api } from "@/convex/_generated/api";
@@ -11,7 +11,7 @@ type Params = Promise<{ patientId: string, appointmentId: string }>
 const EditAppointmentPage = async (props: { params: Params }) => {
   return (
     <ViewTransition>
-      <Suspense fallback={<AddAppointmentSkeleton />}>
+      <Suspense fallback={<AddRecordSkeleton />}>
         <EditAppointmentContainer params={props.params} />
       </Suspense>
     </ViewTransition>

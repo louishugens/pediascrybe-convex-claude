@@ -7,30 +7,30 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ViewTransition } from 'react'
 
 
-export default async function RecentConsultationStat() {
+export default async function RecentRecordStat() {
   return (
     <Card className="glass card-hover">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium">Recent Consultations</CardTitle>
+        <CardTitle className="text-sm font-medium">Recent Records</CardTitle>
         <Stethoscope className="h-4 w-4 text-primary" />
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold text-primary">
           <ViewTransition>
             <Suspense fallback={<Skeleton className="h-8 w-8 rounded-full color-primary" />}>
-              <RecentConsultationStatContent />
+              <RecentRecordStatContent />
             </Suspense>
           </ViewTransition>
         </div>
       </CardContent>
       <CardFooter>
-        <p className="text-xs text-muted-foreground italic">Consultations in the last 30 days</p>
+        <p className="text-xs text-muted-foreground italic">Records in the last 30 days</p>
       </CardFooter>
     </Card>
   )
 }
 
-async function RecentConsultationStatContent() {
+async function RecentRecordStatContent() {
   const doctor = await fetchAuthQuery(api.doctors.getCurrent)
   if (!doctor) {
     return null
@@ -38,4 +38,3 @@ async function RecentConsultationStatContent() {
   const appointments = await fetchAuthQuery(api.appointments.listRecent, { doctorId: doctor._id })
   return appointments.length
 }
-

@@ -23,7 +23,7 @@ export function generateDiagnosticPrompt(appointment: { motif?: string; height?:
       6. Respond with the translated diagnostic suggestions only.\
     ",
     },
-    {role: "user", content: `The patient info is """${JSON.stringify(patient)}""" and the consultation info is """${JSON.stringify(appointment)}"""`},
+    {role: "user", content: `The patient info is """${JSON.stringify(patient)}""" and the record info is """${JSON.stringify(appointment)}"""`},
     {role: "system", content: "mimic the pediatrician's language and resppond as if you where the pediatrician writing the diagnostic in the proper language."},
 
   ]

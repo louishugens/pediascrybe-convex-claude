@@ -262,7 +262,7 @@ export default function Signup() {
                 </div>
                 <label htmlFor="terms" className="text-sm text-muted-foreground cursor-pointer">
                   I agree to the{' '}
-                  <Link href="/terms" className="text-primary font-medium hover:underline">
+                  <Link href={"/terms" as any} className="text-primary font-medium hover:underline">
                     Terms and Conditions
                   </Link>
                 </label>

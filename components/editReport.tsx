@@ -28,6 +28,7 @@ import {
 import { Editor } from '@/components/editor';
 import { refresh } from '@/app/actions';
 import { Id } from '@/convex/_generated/dataModel';
+import { useSubscriptionGuard } from '@/hooks/use-subscription-guard';
 
 interface Report {
   _id: Id<"reports">;
@@ -72,9 +73,13 @@ const EditReport = ({patientId, report}: Props) => {
 
   const doctor = useDoctor()
   const router = useRouter()
+  const { requireSubscription } = useSubscriptionGuard()
 
 
   const onSubmit = async (values: FormValues) => {
+    // Check subscription before proceeding
+    if (!requireSubscription("update reports")) return;
+    
     setLoading(true)
  
     try{
@@ -146,7 +151,7 @@ const EditReport = ({patientId, report}: Props) => {
               </FormItem>
             )}  
           />
-        <button className="py-2 px-4 rounded-full bg-green-500 text-lg font-semibold w-1/2 center mt-8 mx-auto" type='submit'>
+        <button className="py-2 px-4 rounded-full bg-primary text-primary-foreground text-lg font-semibold w-1/2 center mt-8 mx-auto" type='submit'>
           {
               loading
               ?

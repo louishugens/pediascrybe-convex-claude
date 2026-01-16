@@ -10,7 +10,7 @@ import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import DeleteAppointmentButton from './delete-appointment-button';
 
-interface ConsultationListWrapperProps {
+interface RecordListWrapperProps {
   patientId: string;
 }
 
@@ -30,7 +30,7 @@ const itemVariants = {
   visible: { opacity: 1, y: 0 },
 };
 
-export default function ConsultationListWrapper({ patientId }: ConsultationListWrapperProps) {
+export default function RecordListWrapper({ patientId }: RecordListWrapperProps) {
   const appointments = useQuery(api.appointments.getPatientAppointments, { 
     patientId: patientId as Id<"patients"> 
   });
@@ -44,11 +44,11 @@ export default function ConsultationListWrapper({ patientId }: ConsultationListW
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
-        <h3 className="font-semibold text-foreground">Consultations</h3>
+        <h3 className="font-semibold text-foreground">Records</h3>
         <Button asChild size="sm">
-          <Link href={`/user/patients/${patientId}/add-appointment`}>
+          <Link href={`/user/patients/${patientId}/add-record`}>
             <Plus className="h-4 w-4 mr-2" />
-            Add Consultation
+            Add Record
           </Link>
         </Button>
       </div>
@@ -87,10 +87,10 @@ export default function ConsultationListWrapper({ patientId }: ConsultationListW
                     <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center">
                       <span className="text-xl">📋</span>
                     </div>
-                    <p className="text-sm text-muted-foreground">No consultations yet</p>
+                    <p className="text-sm text-muted-foreground">No records yet</p>
                     <Button asChild variant="outline" size="sm">
-                      <Link href={`/user/patients/${patientId}/add-appointment`}>
-                        Add First Consultation
+                      <Link href={`/user/patients/${patientId}/add-record`}>
+                        Add First Record
                       </Link>
                     </Button>
                   </div>

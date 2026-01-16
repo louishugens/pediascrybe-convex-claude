@@ -7,7 +7,7 @@ const AppointmentPageSkeleton = () => {
         <div className="flex flex-row justify-between">
           <div className="flex flex-col">
             <div className='flex items-center gap-2'>
-              <span className='text-blue-500'>Consultation of</span>
+              <span className='text-primary'>Record of</span>
               <Skeleton className="h-5 w-40" />
             </div>
           </div>

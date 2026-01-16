@@ -173,8 +173,8 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
   return (
     <div className='py-4'>
       <div className="flex flex-col w-full">
-        <p className='text-1xl text-green-500 font-bold'>
-          New Consultation
+        <p className='text-1xl text-primary font-bold'>
+          New Record
         </p>
         <form className="flex flex-col mt-4 w-full text-sm" onSubmit={handleSubmit(onSubmit)}>
           <div className="grid gap-x-8 gap-y-4 grid-cols-3">
@@ -308,7 +308,7 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
                     (
                       generating
                       ?
-                        <span className=' font-light text-primary flex flex-row gap-2'><span>ScrybeGPT thinking </span><PulseLoader className='my-auto' color={"#21C55D"} size={5} aria-label="Loading Spinner" data-testid="loader"/></span>
+                        <span className=' font-light text-primary flex flex-row gap-2'><span>ScrybeGPT thinking </span><PulseLoader className='my-auto' color={"hsl(var(--primary))"} size={5} aria-label="Loading Spinner" data-testid="loader"/></span>
                       :
                         <span className=' font-light text-primary'>Generate with ScrybeGPT? <span className='px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs cursor-pointer'  onClick={fetchDiagnosticSuggestions}>Yes</span></span>
                     )
@@ -355,7 +355,7 @@ const AddAppointment = ({doctorId, patientId, patient}) => {
             </label> */}
           </div>
 
-          <button className="py-2 px-4 rounded-full bg-green-500 text-lg font-semibold w-1/2 center mt-4 mx-auto" type='submit'>
+          <button className="py-2 px-4 rounded-full bg-primary text-primary-foreground text-lg font-semibold w-1/2 center mt-4 mx-auto" type='submit'>
             {
                 loading
                 ?

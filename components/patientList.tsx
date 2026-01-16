@@ -44,10 +44,10 @@ export function PatientListClient({ preloadedPatients }: PatientListProps) {
                 View
               </Link>
               <Link 
-                href={`/user/patients/${patient._id}/add-appointment`} 
+                href={`/user/patients/${patient._id}/add-record`} 
                 className="py-2 px-4 rounded-full bg-primary text-xs text-white font-medium"
               >
-                Add Consultation
+                Add Record
               </Link>
             </div>
           </div>

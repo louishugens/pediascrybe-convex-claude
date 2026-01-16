@@ -142,7 +142,7 @@ export default function DemographicsDialog({
         </AnimatePresence>
 
         <DialogFooter className="flex-row gap-2 sm:gap-2">
-          <Button variant="outline" asChild>
+          <Button variant="outline" asChild onClick={() => onOpenChange(false)}>
             <Link href={`/user/patients/${patientId}/edit-patient`}>
               <Pencil className="h-4 w-4 mr-2" />
               Edit Patient
