@@ -190,7 +190,7 @@ export default function Home() {
             {/* Floating Badge */}
             <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-white rounded-full px-6 py-3 shadow-lg flex items-center gap-2">
               <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-              <span className="text-sm font-medium text-foreground">Trusted by 500+ pediatricians</span>
+              <span className="text-sm font-medium text-foreground">Built with pediatricians</span>
             </div>
           </div>
 

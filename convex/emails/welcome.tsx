@@ -16,35 +16,29 @@ import {
 
 interface PediascrybeWelcomeProps {
   userName?: string;
-  brandName?: string;
-  brandTagline?: string;
-  brandLogoUrl?: string;
 }
 
 const PediascrybeWelcome = ({
   userName,
-  brandName = "Pediascrybe",
-  brandTagline = "Transforming Pediatric Care",
-  brandLogoUrl = "https://www.pediascrybe.com/logo.png",
 }: PediascrybeWelcomeProps) => {
   const footerLinks = [
-    { text: "Features", href: "https://www.pediascrybe.com/features" },
-    { text: "Pricing", href: "https://www.pediascrybe.com/pricing" },
-    { text: "Support", href: "https://www.pediascrybe.com/support" }
+    { text: "Features", href: "https://pediascrybe.com/#features" },
+    { text: "Pricing", href: "https://pediascrybe.com/#pricing" },
+    { text: "Support", href: "https://pediascrybe.com/contact" }
   ];
 
   const quickStartSteps = [
     {
-      title: "Add Your First Patient",
-      description: "Start by adding patient records to build your practice database.",
+      title: "Complete Your Profile Setup",
+      description: "Choose your subscription plan to activate your trial and access all platform features.",
     },
     {
-      title: "Create Appointments",
-      description: "Schedule and manage consultations with ease.",
+      title: "Configure Practice Settings",
+      description: "Set up your practice information and customize the platform to your workflow needs.",
     },
     {
-      title: "Use AI-Powered Features",
-      description: "Get smart diagnostic suggestions, prescriptions, and lab recommendations.",
+      title: "Start Adding Patient Records",
+      description: "Begin building your secure patient database with our HIPAA-compliant system.",
     },
   ];
 
@@ -52,57 +46,66 @@ const PediascrybeWelcome = ({
     <Html lang="en" dir="ltr">
       <Tailwind>
         <Head />
-        <Body className="bg-[#f0f7ff] font-sans py-[40px] m-0">
-          <Preview>Welcome to Pediascrybe - Let&apos;s get started!</Preview>
-          <Container className="bg-[#ffffff] max-w-[600px] mx-auto px-[32px] py-[40px] rounded-[16px]">
+        <Body className="bg-[#F6F8FA] font-sans py-[40px] m-0">
+          <Preview>Complete your Pediascrybe setup - Choose your plan to start your trial</Preview>
+          <Container className="bg-[#FFFFFF] max-w-[600px] mx-auto px-[32px] py-[40px] rounded-[16px]">
             {/* Header with Logo */}
             <div className="text-center mb-[32px]">
               <Img
-                src={brandLogoUrl}
-                alt={`${brandName} Logo`}
+                src="https://app.pediascrybe.com/logo.svg"
+                alt="Pediascrybe Logo"
                 className="w-full h-auto object-cover max-w-[200px] mx-auto"
               />
             </div>
 
             {/* Main Content */}
             <div className="text-left">
-              <Heading className="text-[#1e3a5f] text-[28px] font-bold leading-[32px] m-0 mb-[24px]">
-                Welcome to Pediascrybe!
+              <Heading className="text-[#020304] text-[28px] font-bold leading-[32px] m-0 mb-[24px]">
+                Welcome to Pediascrybe
               </Heading>
               
-              <Text className="text-[#1e3a5f] text-[16px] leading-[24px] m-0 mb-[24px]">
-                {userName ? `Hello Dr. ${userName},` : 'Hello,'}
+              <Text className="text-[#020304] text-[16px] leading-[24px] m-0 mb-[24px]">
+                {userName ? `Dear Dr. ${userName},` : 'Dear Healthcare Professional,'}
               </Text>
               
-              <Text className="text-[#1e3a5f] text-[16px] leading-[24px] m-0 mb-[24px]">
-                Thank you for joining Pediascrybe! We&apos;re excited to have you on board. 
-                Our platform is designed to help pediatricians like you streamline patient 
-                care, save time on documentation, and leverage AI-powered insights.
+              <Text className="text-[#020304] text-[16px] leading-[24px] m-0 mb-[24px]">
+                Thank you for joining Pediascrybe, the trusted AI-powered platform for pediatric care management. 
+                To complete your setup and begin your trial, please select a subscription plan that best fits your practice needs.
               </Text>
 
-              {/* Welcome Banner */}
-              <div className="text-center mb-[32px] py-[24px] px-[16px] bg-[#f0f7ff] rounded-[12px] border-2 border-solid border-[#2563eb]">
-                <Text className="text-[#1e3a5f] text-[18px] leading-[24px] m-0 font-semibold">
-                  Your 7-day free trial has started!
+              {/* Action Required Banner */}
+              <div className="text-center mb-[32px] py-[24px] px-[16px] bg-[#F6F8FA] rounded-[12px] border-2 border-solid border-[#3B82F6]">
+                <Text className="text-[#020304] text-[18px] leading-[24px] m-0 font-semibold">
+                  Action Required: Choose Your Plan
                 </Text>
                 <Text className="text-[#64748b] text-[14px] leading-[20px] m-0 mt-[8px]">
-                  Explore all features with full access during your trial period.
+                  Complete your profile setup to activate your trial and access all features.
                 </Text>
               </div>
 
-              {/* Quick Start Guide */}
-              <Heading className="text-[#1e3a5f] text-[20px] font-bold leading-[24px] m-0 mb-[16px]">
-                Quick Start Guide
+              {/* CTA Button - Primary Action */}
+              <div className="text-center mb-[32px]">
+                <Button
+                  href="https://app.pediascrybe.com/user/profile"
+                  className="bg-[#3B82F6] text-[#FFFFFF] px-[32px] py-[16px] rounded-full text-[18px] font-semibold no-underline inline-block box-border"
+                >
+                  Complete Setup & Start Trial
+                </Button>
+              </div>
+
+              {/* Setup Steps */}
+              <Heading className="text-[#020304] text-[20px] font-bold leading-[24px] m-0 mb-[16px]">
+                Next Steps to Get Started
               </Heading>
 
               {quickStartSteps.map((step, index) => (
                 <Section key={index} className="mb-[16px]">
                   <div className="flex gap-[12px]">
-                    <div className="bg-[#2563eb] text-[#ffffff] w-[28px] h-[28px] rounded-full flex items-center justify-center text-[14px] font-bold shrink-0">
+                    <div className="bg-[#3B82F6] text-[#FFFFFF] w-[28px] h-[28px] rounded-full flex items-center justify-center text-[14px] font-bold shrink-0">
                       {index + 1}
                     </div>
                     <div>
-                      <Text className="text-[#1e3a5f] text-[16px] leading-[24px] m-0 font-semibold">
+                      <Text className="text-[#020304] text-[16px] leading-[24px] m-0 font-semibold">
                         {step.title}
                       </Text>
                       <Text className="text-[#64748b] text-[14px] leading-[20px] m-0">
@@ -113,91 +116,69 @@ const PediascrybeWelcome = ({
                 </Section>
               ))}
 
-              {/* CTA Button */}
-              <div className="text-center mt-[32px] mb-[32px]">
-                <Button
-                  href="https://www.pediascrybe.com/user"
-                  className="bg-[#2563eb] text-[#ffffff] px-[32px] py-[14px] rounded-[8px] text-[16px] font-semibold no-underline inline-block"
-                >
-                  Go to Dashboard
-                </Button>
-              </div>
-
-              {/* Key Features */}
-              <Text className="text-[#1e3a5f] text-[16px] leading-[24px] m-0 mb-[16px] font-semibold">
-                What you can do with Pediascrybe:
+              {/* Plan Benefits */}
+              <Text className="text-[#020304] text-[16px] leading-[24px] m-0 mb-[16px] font-semibold">
+                What you'll gain access to:
               </Text>
               
-              <ul className="text-[#1e3a5f] text-[14px] leading-[24px] m-0 mb-[24px] pl-[20px]">
-                <li className="mb-[8px]">Manage patient records with comprehensive EMR</li>
-                <li className="mb-[8px]">Track growth with WHO growth charts</li>
-                <li className="mb-[8px]">Get AI-powered diagnostic suggestions</li>
-                <li className="mb-[8px]">Generate prescriptions with weight-based dosing</li>
-                <li className="mb-[8px]">Create professional reports and receipts</li>
-                <li className="mb-[8px]">Manage vaccination schedules</li>
+              <ul className="text-[#020304] text-[14px] leading-[20px] m-0 mb-[24px] pl-[20px]">
+                <li className="mb-[8px]">AI-powered diagnostic assistance and clinical decision support</li>
+                <li className="mb-[8px]">Automated patient documentation and record management</li>
+                <li className="mb-[8px]">Intelligent prescription and lab recommendation systems</li>
+                <li className="mb-[8px]">HIPAA-compliant data security and patient privacy protection</li>
+                <li className="mb-[8px]">Streamlined appointment scheduling and practice management</li>
               </ul>
 
-              <Text className="text-[#64748b] text-[14px] leading-[20px] m-0 mt-[24px]">
-                Need help getting started? Check out our{" "}
-                <Link
-                  href="https://www.pediascrybe.com/docs"
-                  className="text-[#2563eb] no-underline hover:underline"
-                >
-                  documentation
-                </Link>{" "}
-                or reach out to our support team at{" "}
-                <Link
-                  href="mailto:support@pediascrybe.com"
-                  className="text-[#2563eb] no-underline hover:underline"
-                >
-                  support@pediascrybe.com
-                </Link>
+              {/* Trial Information */}
+              <div className="bg-[#F6F8FA] p-[20px] rounded-[8px] mb-[24px]">
+                <Text className="text-[#020304] text-[16px] leading-[24px] m-0 font-semibold mb-[8px]">
+                  Trial Information
+                </Text>
+                <Text className="text-[#64748b] text-[14px] leading-[20px] m-0">
+                  Your trial will begin immediately after plan selection. Experience the full capabilities 
+                  of our platform with no commitment. Cancel anytime during your trial period.
+                </Text>
+              </div>
+
+              {/* Support Section */}
+              {/* <Text className="text-[#020304] text-[16px] leading-[24px] m-0 mb-[16px]">
+                Need assistance with plan selection or setup? Our professional support team is ready to help. 
+                <Link href="https://app.pediascrybe.com/support" className="text-[#3B82F6] no-underline">Contact our support team</Link> 
+                for personalized guidance.
+              </Text> */}
+
+              <Text className="text-[#020304] text-[16px] leading-[24px] m-0 mb-[24px]">
+                We look forward to supporting your pediatric practice with our advanced healthcare technology platform.
               </Text>
-              
-              <Text className="text-[#1e3a5f] text-[16px] leading-[24px] m-0 mt-[24px] font-medium">
-                Welcome aboard!
-              </Text>
-              <Text className="text-[#1e3a5f] text-[16px] leading-[24px] m-0">
+
+              <Text className="text-[#020304] text-[16px] leading-[24px] m-0">
+                Best regards,<br />
                 The Pediascrybe Team
               </Text>
             </div>
 
             {/* Footer */}
-            <div className="mt-[48px] py-[20px] border-t border-solid border-[#e2e8f0] rounded-[8px]">
-              {/* Footer Links */}
-              <Text className="text-[#1e3a5f] text-[12px] leading-[18px] m-0 mb-[16px] text-center">
-                {footerLinks.map((link, i) => (
-                  <React.Fragment key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="text-[#2563eb] text-[12px] no-underline hover:underline"
-                    >
+            <div className="mt-[40px] pt-[24px] border-t border-solid border-[#e5e7eb] bg-[#F6F8FA] p-[20px] rounded-[12px]">
+              <div className="text-center mb-[16px]">
+                {footerLinks.map((link, index) => (
+                  <span key={index}>
+                    <Link href={link.href} className="text-[#3B82F6] text-[14px] no-underline">
                       {link.text}
                     </Link>
-                    {i < footerLinks.length - 1 && (
-                      <span className="text-[#1e3a5f] mx-[8px]">•</span>
+                    {index < footerLinks.length - 1 && (
+                      <span className="text-[#64748b] mx-[8px]">|</span>
                     )}
-                  </React.Fragment>
+                  </span>
                 ))}
+              </div>
+              
+              <Text className="text-[#64748b] text-[12px] leading-[16px] text-center m-0">
+                © {new Date().getFullYear()} Pediascrybe. All rights reserved.
               </Text>
-
-              {/* Brand Footer Text */}
-              <Text className="text-[#1e3a5f] text-[12px] leading-[18px] m-0 mb-[8px] text-center">
-                {brandName} - {brandTagline}
-              </Text>
-
-              {/* Copyright */}
-              <Text className="text-[#1e3a5f] text-[12px] leading-[18px] m-0 text-center">
-                © 2025 Pediascrybe. All rights reserved.
-              </Text>
-
-              {/* Website Link */}
-              <Text className="text-[#1e3a5f] text-[12px] leading-[18px] m-0 mt-[8px] text-center">
-                <Link
-                  href="https://www.pediascrybe.com"
-                  className="text-[#2563eb] text-[12px] no-underline hover:underline"
-                >
-                  www.pediascrybe.com
+              
+              <Text className="text-[#64748b] text-[12px] leading-[16px] text-center m-0 mt-[8px]">
+                <Link href="https://app.pediascrybe.com/unsubscribe" className="text-[#3B82F6] no-underline">
+                  Unsubscribe
                 </Link>
               </Text>
             </div>
@@ -209,7 +190,7 @@ const PediascrybeWelcome = ({
 };
 
 PediascrybeWelcome.PreviewProps = {
-  userName: "Elena",
+  userName: "Sarah Johnson",
 };
 
 export default PediascrybeWelcome;
