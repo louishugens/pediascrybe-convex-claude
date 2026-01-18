@@ -1,7 +1,7 @@
 import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
 import { authComponent, createAuth } from "./auth";
-import { internal } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import Stripe from "stripe";
 
 const http = httpRouter();
@@ -118,6 +118,53 @@ http.route({
     }
     
     return new Response("OK", { status: 200 });
+  }),
+});
+
+// ==================== Public API Endpoints ====================
+
+// Allowed origins for CORS
+const allowedOrigins = [
+  "https://pediascrybe.com",
+  "https://www.pediascrybe.com",
+  "http://localhost:3000",
+  "http://localhost:3001",
+];
+
+// Helper to get CORS origin
+const getCorsOrigin = (request: Request): string => {
+  const origin = request.headers.get("Origin") || "";
+  return allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+};
+
+// Public API endpoint for pricing tiers (for public marketing site)
+http.route({
+  path: "/api/pricing",
+  method: "GET",
+  handler: httpAction(async (ctx, request) => {
+    const tiers = await ctx.runQuery(api.stripe.getSubscriptionTiers);
+    return new Response(JSON.stringify({ tiers }), {
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": getCorsOrigin(request),
+        "Cache-Control": "public, max-age=3600", // Cache for 1 hour
+      },
+    });
+  }),
+});
+
+// Handle CORS preflight for the pricing endpoint
+http.route({
+  path: "/api/pricing",
+  method: "OPTIONS",
+  handler: httpAction(async (ctx, request) => {
+    return new Response(null, {
+      headers: {
+        "Access-Control-Allow-Origin": getCorsOrigin(request),
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+    });
   }),
 });
 
