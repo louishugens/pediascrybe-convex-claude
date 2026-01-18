@@ -17,7 +17,7 @@ export async function POST(req: Request) {
 
     const { services, date, currency, patientId, id, cost } = await req.json();
 
-    const receipt = await fetchAuthMutation(api.receipts.updateReceipt, {
+    await fetchAuthMutation(api.receipts.updateReceipt, {
       receiptId: id,
       services: services || undefined,
       date: date ? new Date(date).getTime() : undefined,
@@ -25,8 +25,8 @@ export async function POST(req: Request) {
       cost: cost || undefined,
     });
 
-    if (receipt) {
-      return NextResponse.json(receipt);
+    if (id) {
+      return NextResponse.json({ _id: id });
     } else {
       return new NextResponse(
         JSON.stringify({

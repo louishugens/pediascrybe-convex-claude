@@ -22,22 +22,22 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Check, ChevronsUpDown } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
 import { XCircleIcon } from '@heroicons/react/24/outline';
+import { Spinner } from '@/components/ui/spinner';
 
 
 export default function CreateReceiptForm({ patientId }: { patientId: string }) {
@@ -51,7 +51,7 @@ export default function CreateReceiptForm({ patientId }: { patientId: string }) 
       .array(
         z.object({
           service: z.string().min(1, "Please enter the service name"),
-          price: z.number().min(0, "Please enter a valid price"),
+          price: z.number().min(1, "Please enter a valid price"),
         })
       )
       .min(1, "Please add at least one service"),
@@ -59,14 +59,19 @@ export default function CreateReceiptForm({ patientId }: { patientId: string }) 
 
   type FormValues = z.infer<typeof schema>
 
-  let [color, setColor] = useState("#ffffff")
   let [loading, setLoading] = useState(false)
+  const [currencyOpen, setCurrencyOpen] = useState(false)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema) as any,
+    defaultValues: {
+      currency: "",
+      date: undefined,
+      services: [],
+    },
   })
 
-  console.log('serviceerror :>> ', form.formState.errors.services?.message);
+  console.log('form errors :>> ', form.formState.errors);
 
   const doctor = useDoctor()
   const router = useRouter()
@@ -108,10 +113,10 @@ export default function CreateReceiptForm({ patientId }: { patientId: string }) 
 
 
   return (
-    <div className="flex flex-col w-full items-center">
-      <p className='text-lg text-primary font-bold mt-8'>Create Receipt</p>
+    <div className="flex flex-col w-full items-start">
+      <p className='text-lg text-primary font-bold'>Create Receipt</p>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex bg-muted rounded-md p-8 flex-col mt-8 w-2/3 text-sm">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex bg-muted rounded-md p-8 flex-col mt-4 w-full text-sm">
           <FormField
             control={form.control}
             name="date"
@@ -187,33 +192,69 @@ export default function CreateReceiptForm({ patientId }: { patientId: string }) 
             control={form.control}
             name='currency'
             render={({ field }) => (
-              <FormItem className='mt-8'>
+              <FormItem className='mt-8 flex flex-col'>
                 <FormLabel>Your currency</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select the currency preference" className='italic' />
-                    </SelectTrigger>
-                  </FormControl>
-                  <ScrollArea>
-                    <SelectContent>
-                      {
-                        options.map((option, index) => (
-                          <SelectItem key={index} value={`${countryToCurrency[option.value]}-(${option.label})`}>{`${countryToCurrency[option.value]} (${option.label})`}</SelectItem>
-                        ))
-                      }
-                      {/* <SelectItem value="USD">USD</SelectItem>
-                  <SelectItem value="LOCAL">Local Currency</SelectItem> */}
-                    </SelectContent>
-                  </ScrollArea>
-                </Select>
+                <Popover open={currencyOpen} onOpenChange={setCurrencyOpen}>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={currencyOpen}
+                        className={cn(
+                          "w-full justify-between",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value
+                          ? options.find((option) => `${countryToCurrency[option.value]}-(${option.label})` === field.value)
+                            ? `${field.value.split('-')[0]} (${field.value.split('-(')[1]?.slice(0, -1)})`
+                            : "Select the currency preference"
+                          : "Select the currency preference"}
+                        <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                    <Command>
+                      <CommandInput placeholder="Search currency..." />
+                      <CommandList>
+                        <CommandEmpty>No currency found.</CommandEmpty>
+                        <CommandGroup>
+                          {options.map((option, index) => {
+                            const value = `${countryToCurrency[option.value]}-(${option.label})`
+                            const label = `${countryToCurrency[option.value]} (${option.label})`
+                            return (
+                              <CommandItem
+                                key={index}
+                                value={label}
+                                onSelect={() => {
+                                  field.onChange(value)
+                                  setCurrencyOpen(false)
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    field.value === value ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {label}
+                              </CommandItem>
+                            )
+                          })}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
                 <FormMessage />
               </FormItem>
             )}
           />
           <div className="flex flex-row justify-between">
             <h4 className='text-sm font-semibold mt-8'>Services</h4>
-            <button className='px-4 py-0.5 rounded-full bg-primary text-primary-foreground text-sm  mt-4' type='button' onClick={() => append({ service: '', price: 50 })}>
+            <button className='px-4 py-0.5 rounded-full bg-primary text-primary-foreground text-sm  mt-4' type='button' onClick={() => append({ service: '', price: 1 })}>
               Add
             </button>
           </div>
@@ -230,7 +271,13 @@ export default function CreateReceiptForm({ patientId }: { patientId: string }) 
                       render={({ field }) => (
                         <FormItem className='mt-8'>
                           <FormLabel>Service</FormLabel>
-                          <Input placeholder="Record type, exam reading, ..." {...field} />
+                          <FormControl>
+                            <Input 
+                              placeholder="Record type, exam reading, ..." 
+                              {...field}
+                              value={field.value ?? ''}
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -243,7 +290,15 @@ export default function CreateReceiptForm({ patientId }: { patientId: string }) 
                       render={({ field }) => (
                         <FormItem className='mt-8'>
                           <FormLabel>Price</FormLabel>
-                          <Input placeholder="Price" type='number' {...field} />
+                          <FormControl>
+                            <Input 
+                              placeholder="Price" 
+                              type='number' 
+                              {...field}
+                              value={field.value ?? ''}
+                              onChange={(e) => field.onChange(Number(e.target.value))}
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -259,14 +314,9 @@ export default function CreateReceiptForm({ patientId }: { patientId: string }) 
             {
               loading
                 ?
-                <BeatLoader
-                  color={color}
-                  size={10}
-                  aria-label="Loading Spinner"
-                  data-testid="loader"
-                />
+                <span className='flex flex-row gap-2 items-center justify-center'><span>Saving receipt </span><Spinner aria-label="Loading Spinner" data-testid="loader"/></span>
                 :
-                "Create receipt"
+                "Save receipt"
             }
           </button>
         </form>

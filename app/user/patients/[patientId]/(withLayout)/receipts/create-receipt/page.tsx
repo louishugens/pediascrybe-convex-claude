@@ -22,7 +22,7 @@ async function CreateReceiptContainer({ params }: { params: Params }) {
   const { patientId } = await params;
 
   return (
-    <div className='h-full mb-8 mt-4'>
+    <div className='h-full mb-4'>
       <div className='flex flex-row w-full h-auto gap-4 justify-end px-4'>
         <Link href={`/user/patients/${patientId}/receipts`} className='text-black bg-white p-2 rounded-full shadow-sm hover:bg-gray-100 transition-colors'>
           <ArrowUturnLeftIcon className='w-4 h-4' />

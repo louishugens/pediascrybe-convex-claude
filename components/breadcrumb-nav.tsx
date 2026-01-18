@@ -20,6 +20,7 @@ interface BreadcrumbData {
   patientId?: string
   appointmentId?: string
   reportId?: string
+  receiptId?: string
 }
 
 // Map of abbreviations to full names
@@ -86,9 +87,14 @@ function getBreadcrumbs(pathname: string): BreadcrumbData[] {
         !segment.startsWith("create-") &&
         !segment.startsWith("edit-")
 
+      // Check if this is a receipt ID (previous segment is "receipts")
+      const isReceiptId = segments[i - 1] === "receipts" &&
+        !segment.startsWith("create-") &&
+        !segment.startsWith("edit-")
+
       // Format the label
       let label = segment
-      if (!isPatientId && !isAppointmentId && !isReportId) {
+      if (!isPatientId && !isAppointmentId && !isReportId && !isReceiptId) {
         // Check if we have a mapped label for this segment
         if (labelMap[segment]) {
           label = labelMap[segment]
@@ -107,6 +113,7 @@ function getBreadcrumbs(pathname: string): BreadcrumbData[] {
         ...(isPatientId ? { patientId: segment } : {}),
         ...(isAppointmentId ? { appointmentId: segment } : {}),
         ...(isReportId ? { reportId: segment } : {}),
+        ...(isReceiptId ? { receiptId: segment } : {}),
       })
     }
   }
@@ -140,6 +147,12 @@ function DynamicBreadcrumbItem({
     crumb.reportId ? { reportId: crumb.reportId as Id<"reports"> } : "skip"
   )
 
+  // Fetch receipt info if this is a receipt ID breadcrumb
+  const receipt = useQuery(
+    api.receipts.getById,
+    crumb.receiptId ? { receiptId: crumb.receiptId as Id<"receipts"> } : "skip"
+  )
+
   // Determine the display label
   let displayLabel = crumb.label
   if (crumb.patientId && patient) {
@@ -157,6 +170,14 @@ function DynamicBreadcrumbItem({
     // Format as "{reportType} - {date}"
     const date = new Date(report.createdAt)
     displayLabel = `${report.reportType} - ${date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    })}`
+  } else if (crumb.receiptId && receipt) {
+    // Format as "Receipt - {date}"
+    const date = new Date(receipt.date || receipt.createdAt)
+    displayLabel = `Receipt - ${date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",

@@ -20,13 +20,6 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { XCircleIcon } from '@heroicons/react/24/outline';
 import { Id } from '@/convex/_generated/dataModel';
 
@@ -39,16 +32,23 @@ interface Receipt {
 }
 import countryList from 'react-select-country-list'
 import countryToCurrency from 'country-to-currency'
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Check, ChevronsUpDown } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
 import { refresh } from '@/app/actions';
 import { useSubscriptionGuard } from '@/hooks/use-subscription-guard';
-
+import { Spinner } from '@/components/ui/spinner';
 
 interface Props {
   receipt: Receipt,
@@ -64,30 +64,16 @@ const EditReceipt = ({patientId, receipt}: Props) => {
   const options = useMemo(() => countryList().getData(), [])
 
   const schema = z.object({
-    currency: z.string({ error: (issue) => issue.input === undefined ? 
-      "Please select the currency" :
-      "Not a string" 
-      }),
-    date: z.date({error: (issue) => issue.input === undefined ? 
-      "Please enter patient's birth date" :
-      "Not a date" 
-      }),
+    currency: z.string().min(1, "Please select the currency"),
+    date: z.date({ message: "Please select a date" }),
     services: z
-    .array(
-      z.object({
-        service: z.string({ error: (issue) => issue.input === undefined ? 
-          "Please select the currency" :
-          "Not a string" 
-          }),
-        price: z.coerce.number({ error: (issue) => issue.input === undefined ? 
-          "Please enter the cost for the service" :
-          "Not a number" 
-          }),
-      })
-    )
-    .min(1, {
-      message: "Please add at least one service",
-    }),
+      .array(
+        z.object({
+          service: z.string().min(1, "Please enter the service name"),
+          price: z.number().min(1, "Please enter a valid price"),
+        })
+      )
+      .min(1, "Please add at least one service"),
   })
 
 
@@ -95,23 +81,21 @@ const EditReceipt = ({patientId, receipt}: Props) => {
   let [color, setColor] = useState("#ffffff")
   let [loading, setLoading] = useState(false)
   const [id, setId] = useState(receipt._id)
+  const [currencyOpen, setCurrencyOpen] = useState(false)
 
   const services = receipt.services as unknown as Service[]
-
-  console.log('receipt :>> ', receipt);
 
   type FormValues = z.infer<typeof schema>
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema) as any,
-    defaultValues:{
-      currency: receipt.currency!,
+    defaultValues: {
+      currency: receipt.currency || "",
       date: receipt.date ? new Date(receipt.date) : undefined,
-      services: [...services, { service: '', price: undefined }]
-    }
+      services: services || [],
+    },
   })
 
-  const doctor = useDoctor()
   const router = useRouter()
   const { requireSubscription } = useSubscriptionGuard()
 
@@ -132,7 +116,7 @@ const EditReceipt = ({patientId, receipt}: Props) => {
         body: JSON.stringify(body)
       })
       const receipt = await res.json()
-
+      setLoading(false)
       refresh([`/user/patients/${patientId}/receipts/${id}`, `/user/patients/${patientId}/receipts/${id}/edit-receipt`, `/user/patients/${patientId}/receipts/`])
       router.push(`/user/patients/${patientId}/receipts/${receipt._id}`)
 
@@ -155,10 +139,10 @@ const EditReceipt = ({patientId, receipt}: Props) => {
 
 
   return ( 
-  <div className="flex flex-col w-full items-center">
-    <p className='text-lg text-primary font-bold mt-8'>Edit Receipt</p>
+  <div className="flex flex-col w-full items-start">
+    <p className='text-lg text-primary font-bold'>Edit Receipt</p>
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex bg-muted rounded-md p-8 flex-col mt-8 w-2/3 text-sm">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex bg-muted rounded-md p-8 flex-col mt-4 w-full text-sm">
         <FormField
           control={form.control}
           name="date"
@@ -234,39 +218,77 @@ const EditReceipt = ({patientId, receipt}: Props) => {
           control={form.control}
           name='currency'
           render={({ field }) => (
-            <FormItem className='mt-8'>
+            <FormItem className='mt-8 flex flex-col'>
               <FormLabel>Your currency</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select the currency preference" className='italic'/>
-                  </SelectTrigger>
-                </FormControl>
-                <ScrollArea>
-                <SelectContent>
-                  {
-                    options.map((option, index) => (
-                      <SelectItem key={index} value={`${countryToCurrency[option.value]}-(${option.label})`}>{`${countryToCurrency[option.value]} (${option.label})`}</SelectItem>
-                    ))
-                  }
-                </SelectContent>
-                </ScrollArea>
-              </Select>
+              <Popover open={currencyOpen} onOpenChange={setCurrencyOpen}>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={currencyOpen}
+                      className={cn(
+                        "w-full justify-between",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value
+                        ? field.value.includes('-(')
+                          ? `${field.value.split('-')[0]} (${field.value.split('-(')[1]?.slice(0, -1)})`
+                          : field.value
+                        : "Select the currency preference"}
+                      <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                  <Command>
+                    <CommandInput placeholder="Search currency..." />
+                    <CommandList>
+                      <CommandEmpty>No currency found.</CommandEmpty>
+                      <CommandGroup>
+                        {options.map((option, index) => {
+                          const value = `${countryToCurrency[option.value]}-(${option.label})`
+                          const label = `${countryToCurrency[option.value]} (${option.label})`
+                          return (
+                            <CommandItem
+                              key={index}
+                              value={label}
+                              onSelect={() => {
+                                field.onChange(value)
+                                setCurrencyOpen(false)
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  (field.value === value || field.value === countryToCurrency[option.value]) ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {label}
+                            </CommandItem>
+                          )
+                        })}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}
         />
         <div className="flex flex-row justify-between">
           <h4 className='text-sm font-semibold mt-8'>Services</h4>
-          <button className='px-4 py-0.5 rounded-full bg-primary text-primary-foreground text-sm  mt-4' type='button' onClick={() => append({service: '', price: 50})}>
+          <button className='px-4 py-0.5 rounded-full bg-primary text-primary-foreground text-sm  mt-4' type='button' onClick={() => append({service: '', price: 1})}>
             Add
           </button>
         </div>
 
         {fields.map((field, index) => {
           return (
-            <section key={field.id} className="relative mt-8">
-              <XCircleIcon className='h-6 w-6 text-red-500 absolute right-0 top-0 mt-4 mr-4 cursor-pointer' onClick={() => remove(index)}/>
+            <section key={field.id} className="relative pt-8">
+              <XCircleIcon className='h-6 w-6 text-red-500 absolute right-0 top-0 mt-4 mr-4 cursor-pointer' onClick={() => remove(index)} />
               <div className='grid grid-cols-12 gap-4'>
                 <div className="col-span-6">
                   <FormField
@@ -275,7 +297,13 @@ const EditReceipt = ({patientId, receipt}: Props) => {
                     render={({ field }) => (
                       <FormItem className='mt-8'>
                         <FormLabel>Service</FormLabel>
-                          <Input placeholder="Record type, exam reading, ..." {...field} />
+                        <FormControl>
+                          <Input 
+                            placeholder="Record type, exam reading, ..." 
+                            {...field}
+                            value={field.value ?? ''}
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -288,7 +316,15 @@ const EditReceipt = ({patientId, receipt}: Props) => {
                     render={({ field }) => (
                       <FormItem className='mt-8'>
                         <FormLabel>Price</FormLabel>
-                          <Input placeholder="Price" type='number' {...field} />
+                        <FormControl>
+                          <Input 
+                            placeholder="Price" 
+                            type='number' 
+                            {...field}
+                            value={field.value ?? ''}
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -304,14 +340,9 @@ const EditReceipt = ({patientId, receipt}: Props) => {
           {
               loading
               ?
-              <BeatLoader
-                color={color}
-                size={10}
-                aria-label="Loading Spinner"
-                data-testid="loader"
-              />
+              <span className='flex flex-row gap-2 items-center justify-center'><span>Saving receipt </span><Spinner aria-label="Loading Spinner" data-testid="loader"/></span>
               :
-                "Edit receipt"
+                "Save receipt"
           }
         </button>
       </form>
