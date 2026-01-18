@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
   const { lastname, email } = await req.json();
   try {
     const data = await resend.emails.send({
-      from: 'Pediascrybe <info@pediascrybe.com>',
+      from: 'Pediascrybe <info@email.pediascrybe.com>',
       to: [email],
       bcc: ['louishugens@gmail.com'],
       subject: 'Welcome to Pediascrybe - Transforming Pediatric Care!',

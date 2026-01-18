@@ -90,7 +90,7 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
         },
       },
     },
-    // Configure simple, non-verified email/password to get started
+    // Configure email verification
     emailVerification: {
       sendVerificationEmail: async ({ user, url }) => {
         await sendEmailVerification(requireActionCtx(ctx), {

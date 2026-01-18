@@ -12,7 +12,7 @@ export async function POST(req) {
 
     try {
         await resend.emails.send({
-            from: 'Pediascrybe Contact <noreply@pediascrybe.com>', // Replace with your sender email address
+            from: 'Pediascrybe Contact <noreply@email.pediascrybe.com>',
             to: 'louishugens@gmail.com', // Replace with your support email address
             subject: `New Contact Form Submission from ${name}`,
             html: `Message from: ${senderEmail}<br /><br />${message}`,
