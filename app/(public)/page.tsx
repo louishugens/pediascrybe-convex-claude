@@ -166,7 +166,7 @@ export default function Home() {
               {/* First Doctor Image */}
               <div className="relative w-48 h-64 rounded-2xl overflow-hidden shadow-2xl border-4 border-white/50 transform -rotate-3 hover:rotate-0 transition-transform duration-300">
                 <Image
-                  src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400&h=500&fit=crop&crop=face"
+                  src="/doctor-female-black.jpg"
                   alt="Doctor"
                   fill
                   className="object-cover"
@@ -177,7 +177,7 @@ export default function Home() {
               {/* Second Doctor Image */}
               <div className="relative w-56 h-72 rounded-2xl overflow-hidden shadow-2xl border-4 border-white/50 transform rotate-2 hover:rotate-0 transition-transform duration-300">
                 <Image
-                  src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&h=500&fit=crop&crop=face"
+                  src="/doctor-male-white.jpg"
                   alt="Doctor"
                   fill
                   className="object-cover"

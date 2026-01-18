@@ -123,7 +123,7 @@ export default function Signup() {
               <div className="flex gap-3">
                 <div className="relative w-32 h-40 rounded-xl overflow-hidden border-2 border-white/50 transform -rotate-6">
                   <Image
-                    src="https://images.unsplash.com/photo-1651008376811-b90baee60c1f?w=300&h=400&fit=crop&crop=face"
+                    src="/doctor-female-white.jpg"
                     alt="Pediatrician"
                     fill
                     className="object-cover"
@@ -132,7 +132,7 @@ export default function Signup() {
                 </div>
                 <div className="relative w-32 h-40 rounded-xl overflow-hidden border-2 border-white/50 transform rotate-3 translate-y-4">
                   <Image
-                    src="https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=300&h=400&fit=crop&crop=face"
+                    src="/doctor-male-black.jpg"
                     alt="Pediatrician"
                     fill
                     className="object-cover"

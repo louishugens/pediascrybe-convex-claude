@@ -72,7 +72,7 @@ export default function SignupSuccess() {
             <div className="flex gap-4 items-end">
               <div className="relative w-40 h-52 rounded-2xl overflow-hidden shadow-2xl border-4 border-white/50 transform -rotate-6 hover:rotate-0 transition-transform duration-300">
                 <Image
-                  src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=300&h=400&fit=crop&crop=face"
+                  src="/doctor-female-black.jpg"
                   alt="Doctor"
                   fill
                   className="object-cover"
@@ -82,7 +82,7 @@ export default function SignupSuccess() {
               </div>
               <div className="relative w-48 h-60 rounded-2xl overflow-hidden shadow-2xl border-4 border-white/50 transform rotate-3 hover:rotate-0 transition-transform duration-300">
                 <Image
-                  src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=300&h=400&fit=crop&crop=face"
+                  src="/doctor-male-white.jpg"
                   alt="Doctor"
                   fill
                   className="object-cover"
