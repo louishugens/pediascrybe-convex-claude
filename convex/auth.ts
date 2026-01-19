@@ -60,6 +60,12 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
             email: doc.email,
             name: doc.name ?? undefined,
           });
+
+          // Schedule welcome email
+          await ctx.scheduler.runAfter(0, internal.email.sendWelcomeEmailAction, {
+            to: doc.email,
+            userName: doc.lastName ?? doc.firstName ?? doc.name?.split(" ").pop(),
+          });
         },
       },
     },

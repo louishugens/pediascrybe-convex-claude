@@ -7,7 +7,8 @@ import { render } from "@react-email/components";
 import ResetPasswordEmail from "./emails/resetPassword";
 import { components } from "./_generated/api";
 import { Resend } from "@convex-dev/resend";
-import { type ActionCtx } from "./_generated/server";
+import { type ActionCtx, internalAction } from "./_generated/server";
+import { v } from "convex/values";
 
 export const resend = new Resend(components.resend, {
   testMode: false,
@@ -102,3 +103,17 @@ export const sendWelcomeEmail = async (
     html: await render(<PediascrybeWelcome userName={userName} />),
   });
 };
+
+// Internal action for scheduling welcome email from mutations
+export const sendWelcomeEmailAction = internalAction({
+  args: {
+    to: v.string(),
+    userName: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    await sendWelcomeEmail(ctx, {
+      to: args.to,
+      userName: args.userName,
+    });
+  },
+});

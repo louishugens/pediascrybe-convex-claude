@@ -97,19 +97,33 @@ const PediascrybeWelcome = ({
 
               {quickStartSteps.map((step, index) => (
                 <Section key={index} className="mb-[16px]">
-                  <div className="flex gap-[12px]">
-                    <div className="bg-[#2563eb] text-[#ffffff] w-[28px] h-[28px] rounded-full flex items-center justify-center text-[14px] font-bold shrink-0">
-                      {index + 1}
-                    </div>
-                    <div>
-                      <Text className="text-[#1e3a5f] text-[16px] leading-[24px] m-0 font-semibold">
-                        {step.title}
-                      </Text>
-                      <Text className="text-[#64748b] text-[14px] leading-[20px] m-0">
-                        {step.description}
-                      </Text>
-                    </div>
-                  </div>
+                  <table cellPadding="0" cellSpacing="0" style={{ width: '100%' }}>
+                    <tr>
+                      <td style={{ width: '40px', verticalAlign: 'top', paddingRight: '12px' }}>
+                        <div style={{
+                          backgroundColor: '#2563eb',
+                          color: '#ffffff',
+                          width: '28px',
+                          height: '28px',
+                          borderRadius: '50%',
+                          fontSize: '14px',
+                          fontWeight: 'bold',
+                          textAlign: 'center',
+                          lineHeight: '28px',
+                        }}>
+                          {index + 1}
+                        </div>
+                      </td>
+                      <td style={{ verticalAlign: 'top' }}>
+                        <Text className="text-[#1e3a5f] text-[16px] leading-[24px] m-0 font-semibold">
+                          {step.title}
+                        </Text>
+                        <Text className="text-[#64748b] text-[14px] leading-[20px] m-0">
+                          {step.description}
+                        </Text>
+                      </td>
+                    </tr>
+                  </table>
                 </Section>
               ))}
 

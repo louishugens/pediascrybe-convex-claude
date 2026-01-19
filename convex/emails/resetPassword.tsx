@@ -25,7 +25,7 @@ const ResetPasswordEmail = ({
   userName,
   brandName = "Pediascrybe",
   brandTagline = "Transforming Pediatric Care",
-  brandLogoUrl = "https://app.pediascrybe.com/logo.svg",
+  brandLogoUrl = "https://app.pediascrybe.com/logo.png",
 }: ResetPasswordEmailProps) => {
   const footerLinks = [
     { text: "Features", href: "https://pediascrybe.com/#features" },
