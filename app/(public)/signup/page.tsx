@@ -62,15 +62,12 @@ export default function Signup() {
     }
 
     if (data?.user) {
-      try {
-        await fetch('/api/send', {
-          method: 'POST',
-          body: JSON.stringify({ email, lastname }),
-        })
-      } catch (e) {
-        console.log('Email send error:', e);
-      }
-      
+      posthog.identify(data.user.id, {
+        email: email,
+        name: `${firstname} ${lastname}`,
+        firstName: firstname,
+        lastName: lastname,
+      })
       posthog.capture('Signup success')
       router.push('/signup/success' as any)
     }

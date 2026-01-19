@@ -53,7 +53,11 @@ export default function Home() {
     }
     
     if (data?.user) {
-      posthog.identify(data.user.email)
+      posthog.identify(data.user.id, {
+        email: data.user.email,
+        name: data.user.name,
+      })
+      posthog.capture('Login success')
       setLoading(false)
       toast.success('Sign in successful')
       reset()

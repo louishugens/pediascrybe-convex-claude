@@ -33,9 +33,18 @@ const nextConfig: NextConfig = {
         source: "/ingest/:path*",
         destination: "https://us.i.posthog.com/:path*",
       },
+    ];
+  },
+
+  async headers() {
+    return [
       {
-        source: "/ingest/flags",
-        destination: "https://us.i.posthog.com/flags",
+        source: "/ingest/:path*",
+        headers: [
+          { key: "Access-Control-Allow-Origin", value: "*" },
+          { key: "Access-Control-Allow-Methods", value: "GET, POST, OPTIONS" },
+          { key: "Access-Control-Allow-Headers", value: "Content-Type" },
+        ],
       },
     ];
   },

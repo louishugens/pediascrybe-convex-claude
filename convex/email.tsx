@@ -99,7 +99,7 @@ export const sendWelcomeEmail = async (
   await resend.sendEmail(ctx, {
     from: "Pediascrybe <info@email.pediascrybe.com>",
     to,
-    subject: "Welcome to Pediascrybe!",
+    subject: "Welcome to Pediascrybe - Transforming Pediatric Care!",
     html: await render(<PediascrybeWelcome userName={userName} />),
   });
 };
