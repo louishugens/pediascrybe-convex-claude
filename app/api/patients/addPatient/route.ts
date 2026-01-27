@@ -1,10 +1,20 @@
 import { fetchAuthMutation, isAuthenticated } from "@/lib/auth-server";
+import { checkBotId } from 'botid/server';
 import { api } from "@/convex/_generated/api";
 
 export async function POST(req: Request) {
   try {
+    // Bot protection check
+    const verification = await checkBotId();
+    if (verification.isBot) {
+      return new Response(
+        JSON.stringify({ error: { statusCode: 403, message: 'Access denied' } }),
+        { status: 403, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     const authenticated = await isAuthenticated();
-    
+
     if (!authenticated) {
       return new Response(
         JSON.stringify({

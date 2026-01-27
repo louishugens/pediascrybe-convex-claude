@@ -4,4 +4,4 @@ Disallow: /user/*
 Disallow: /signin/
 Disallow: /signup/
 
-Sitemap: https://www.pediascrybe.com/sitemap.xml
+Sitemap: https://app.pediascrybe.com/sitemap.xml

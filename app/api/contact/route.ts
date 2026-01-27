@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { checkBotId } from 'botid/server';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -7,7 +8,13 @@ export async function POST(req) {
         return new Response(JSON.stringify({ message: 'Only POST requests allowed' }), { status: 405 });
     }
 
-    const { senderEmail, message, name } = await req.json();;
+    // Bot protection check
+    const verification = await checkBotId();
+    if (verification.isBot) {
+        return new Response(JSON.stringify({ message: 'Access denied' }), { status: 403 });
+    }
+
+    const { senderEmail, message, name } = await req.json();
   
 
     try {

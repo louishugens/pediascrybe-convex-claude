@@ -1,9 +1,16 @@
 import { openai } from '@ai-sdk/openai';
 import { streamText } from 'ai';
+import { checkBotId } from 'botid/server';
 
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
+  // Bot protection check
+  const verification = await checkBotId();
+  if (verification.isBot) {
+    return new Response(JSON.stringify({ error: 'Access denied' }), { status: 403 });
+  }
+
   const { prompt }: { prompt: string } = await req.json();
 
   const result = streamText({

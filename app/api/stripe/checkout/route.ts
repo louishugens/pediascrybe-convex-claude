@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { ConvexHttpClient } from 'convex/browser';
+import { checkBotId } from 'botid/server';
 import { api } from '@/convex/_generated/api';
 
 // Lazy initialization to avoid errors when env vars are not set
@@ -20,9 +21,15 @@ function getConvex() {
 
 export async function POST(request: NextRequest) {
   try {
+    // Bot protection check
+    const verification = await checkBotId();
+    if (verification.isBot) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    }
+
     const stripe = getStripe();
     const convex = getConvex();
-    
+
     const body = await request.json();
     const { tierName, customerId, successUrl, cancelUrl } = body;
 
