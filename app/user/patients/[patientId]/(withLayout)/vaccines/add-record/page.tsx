@@ -5,6 +5,7 @@ import { Suspense, ViewTransition } from 'react'
 import { ArrowUturnLeftIcon } from '@heroicons/react/24/outline'
 import { fetchAuthQuery } from '@/lib/auth-server'
 import { api } from '@/convex/_generated/api'
+import { Id } from '@/convex/_generated/dataModel'
 import { getCurrentDoctor } from '@/lib/convex-data'
 
 export default async function Page(props: { params: Promise<{ patientId: string }> }) {
@@ -24,14 +25,19 @@ export default async function Page(props: { params: Promise<{ patientId: string 
 async function AddVaccineFormContainer(props: { params: Promise<{ patientId: string }> }) {
   const params = await props.params;
   const doctor = await getCurrentDoctor();
-  
+
   if (!doctor) {
     return <p className='text-sm text-muted-foreground'>Please log in to access this page.</p>;
   }
 
-  const trackedVaccines = await fetchAuthQuery(api.vaccines.getDoctorTrackedVaccines, { 
-    doctorId: doctor._id 
-  });
+  const [trackedVaccines, complianceData] = await Promise.all([
+    fetchAuthQuery(api.vaccines.getDoctorTrackedVaccines, {
+      doctorId: doctor._id
+    }),
+    fetchAuthQuery(api.vaccines.getPatientVaccineCompliance, {
+      patientId: params.patientId as Id<"patients">
+    }).catch(() => null),
+  ]);
 
   return (
     <>
@@ -43,7 +49,12 @@ async function AddVaccineFormContainer(props: { params: Promise<{ patientId: str
       </div>
       {
         trackedVaccines && trackedVaccines.length > 0 ? (
-          <AddVaccineForm vaccines={trackedVaccines} patientId={params.patientId} />
+          <AddVaccineForm
+            vaccines={trackedVaccines}
+            patientId={params.patientId}
+            birthdate={complianceData?.patient.birthdate}
+            vaccinationRecords={complianceData?.records}
+          />
         ) : (
           <p className='text-sm text-muted-foreground'>No tracked vaccines found. Please click <Link href='/user/profile/add-vaccines' className='text-primary'>here</Link> to add tracked vaccines.</p>
         )

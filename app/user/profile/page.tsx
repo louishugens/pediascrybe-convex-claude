@@ -21,6 +21,7 @@ import { preloadAuthQuery, fetchAuthQuery } from '@/lib/auth-server';
 import { api } from '@/convex/_generated/api';
 import { getCurrentDoctor } from '@/lib/convex-data';
 import { SubscriptionSection } from '@/components/subscription-section';
+import { SubscriptionLink } from '@/components/subscription-link';
 
 const ProfilePage = async () => {
   return (
@@ -71,14 +72,14 @@ async function ProfilePageContainer() {
         <div className="flex flex-row items-center justify-between mb-4">
           <p className="text-sm font-semibold">Tracked Vaccines</p>
           {trackedVaccines && trackedVaccines.length > 0 ? (
-            <Link href="/user/profile/add-vaccines" className="text-sm font-semibold text-white bg-primary rounded-full px-4 py-2">Update Vaccines</Link>
+            <SubscriptionLink feature="vaccination_management" featureDisplayName="Vaccination Management" href="/user/profile/add-vaccines" className="text-sm font-semibold text-white bg-primary rounded-full px-4 py-2">Update Vaccines</SubscriptionLink>
           ) : (
-            <Link href="/user/profile/add-vaccines" className="text-sm font-semibold text-white bg-primary rounded-full px-4 py-2">Add Vaccines</Link>
+            <SubscriptionLink feature="vaccination_management" featureDisplayName="Vaccination Management" href="/user/profile/add-vaccines" className="text-sm font-semibold text-white bg-primary rounded-full px-4 py-2">Add Vaccines</SubscriptionLink>
           )}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {trackedVaccines?.map((vaccine: any) => (
-            <Card key={vaccine._id} className="rounded-md overflow-visible">
+            <Card key={vaccine._id} className="rounded-md pt-0 overflow-visible">
               <CardContent className="p-4 relative">
                 <DeleteVaccinComponent vaccineId={vaccine._id} />
                 <Popover>

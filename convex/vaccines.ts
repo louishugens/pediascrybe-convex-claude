@@ -265,6 +265,50 @@ export const removeRecord = mutation({
   },
 });
 
+// ==================== Vaccine Compliance ====================
+
+// Get all data needed for patient vaccination compliance calculation
+export const getPatientVaccineCompliance = query({
+  args: { patientId: v.id("patients") },
+  handler: async (ctx, args) => {
+    const patient = await ctx.db.get(args.patientId);
+    if (!patient) throw new Error("Patient not found");
+
+    // Get doctor's tracked vaccines with doses
+    const vaccins = await ctx.db
+      .query("vaccins")
+      .withIndex("by_doctorId", (q) => q.eq("doctorId", patient.doctorId))
+      .collect();
+
+    const vaccinesWithDoses = await Promise.all(
+      vaccins.map(async (vaccin) => {
+        const doses = await ctx.db
+          .query("doses")
+          .withIndex("by_vaccinId", (q) => q.eq("vaccinId", vaccin._id))
+          .collect();
+        return { ...vaccin, doses };
+      })
+    );
+
+    // Get patient's vaccination records
+    const records = await ctx.db
+      .query("vaccinationRecords")
+      .withIndex("by_patientId", (q) => q.eq("patientId", args.patientId))
+      .collect();
+
+    return {
+      patient: {
+        _id: patient._id,
+        birthdate: patient.birthdate,
+        firstname: patient.firstname,
+        lastname: patient.lastname,
+      },
+      vaccines: vaccinesWithDoses,
+      records,
+    };
+  },
+});
+
 // ==================== Vaccine References ====================
 
 // Get all vaccine references

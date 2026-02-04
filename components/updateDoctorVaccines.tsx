@@ -149,6 +149,11 @@ export default function UpdateDoctorVaccines({
   }
 
   const handleReferenceVaccineSelection = (vaccineId: string) => {
+    if (vaccineId === 'add-all') {
+      handleAddAllReferenceVaccines()
+      return
+    }
+
     const selectedVaccine = referenceVaccines.find(v => v._id === vaccineId)
     if (selectedVaccine && !form.getValues().vaccines.some(v => v.name === selectedVaccine.name)) {
       append({
@@ -164,6 +169,35 @@ export default function UpdateDoctorVaccines({
           doseType: dose.doseType,
         })),
       })
+    }
+  }
+
+  const handleAddAllReferenceVaccines = () => {
+    const currentVaccineNames = form.getValues().vaccines.map(v => v.name)
+    const vaccinesNotYetAdded = referenceVaccines.filter(
+      refVaccine => !currentVaccineNames.includes(refVaccine.name)
+    )
+
+    vaccinesNotYetAdded.forEach((vaccine) => {
+      append({
+        id: `new-${Date.now()}-${vaccine._id}`,
+        name: vaccine.name,
+        doctorId: doctorId,
+        isSelected: true,
+        isCustom: false,
+        doses: vaccine.doses.map(dose => ({
+          id: `new-dose-${Date.now()}-${dose._id}`,
+          doseCount: dose.doseCount ?? null,
+          maxAge: dose.maxAge ?? null,
+          doseType: dose.doseType,
+        })),
+      })
+    })
+
+    if (vaccinesNotYetAdded.length > 0) {
+      toast.success(`Added ${vaccinesNotYetAdded.length} vaccine${vaccinesNotYetAdded.length > 1 ? 's' : ''}`)
+    } else {
+      toast.info('All reference vaccines are already added')
     }
   }
 
@@ -237,9 +271,12 @@ export default function UpdateDoctorVaccines({
             <SelectValue placeholder="Select a reference vaccine" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="add-all" className="font-semibold">
+              Add All
+            </SelectItem>
             {referenceVaccines.map((vaccine) => (
-              <SelectItem 
-                key={vaccine._id} 
+              <SelectItem
+                key={vaccine._id}
                 value={vaccine._id}
                 disabled={addedVaccineNames.includes(vaccine.name)}
               >

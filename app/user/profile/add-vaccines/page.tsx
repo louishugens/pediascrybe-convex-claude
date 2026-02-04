@@ -32,10 +32,10 @@ async function AddVaccinesContainer() {
 
   return (
     <div className='h-screen mb-8 pb-4 overflow-y-auto '>
-      <UpdateDoctorVaccines 
-        doctorVaccines={doctorVaccines} 
-        referenceVaccines={referenceVaccines} 
-        doctorId={doctor._id} 
+      <UpdateDoctorVaccines
+        doctorVaccines={doctorVaccines}
+        referenceVaccines={referenceVaccines}
+        doctorId={doctor._id}
       />
     </div>
   )
