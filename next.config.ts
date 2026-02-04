@@ -1,11 +1,12 @@
 import type { NextConfig } from 'next'
 import { withBotId } from 'botid/next/config';
+import { withWorkflow } from "workflow/next";
 
 const nextConfig: NextConfig = {
   // Cache Components temporarily disabled for debugging
   cacheComponents: true,
   experimental: {
-    browserDebugInfoInTerminal: true,
+    // browserDebugInfoInTerminal: true,
     // clientSegmentCache: true, // this is a new experimental feature that is not yet supported by Next.js
   },
   reactCompiler: true,
@@ -54,4 +55,4 @@ const nextConfig: NextConfig = {
   skipTrailingSlashRedirect: true,
 }
 
-export default withBotId(nextConfig)
+export default withWorkflow(withBotId(nextConfig))

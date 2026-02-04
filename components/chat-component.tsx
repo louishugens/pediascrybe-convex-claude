@@ -45,25 +45,37 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
     transport,
   })
 
+  // Deduplicate messages to prevent React key warnings
+  const uniqueMessages = useMemo(() => {
+    const seen = new Map()
+    return messages.filter((message) => {
+      if (seen.has(message.id)) {
+        return false
+      }
+      seen.set(message.id, true)
+      return true
+    })
+  }, [messages])
+
   // Handle chart selection from the chart selector - memoized to prevent recreation
   const handleChartSelect = useCallback((chartType: string) => {
     // Check subscription before using ScrybeGPT
     if (!requireSubscription("use ScrybeGPT")) return
-    
+
     sendMessage({ text: `Show me the ${chartType} growth chart` })
   }, [sendMessage, requireSubscription])
 
   const isLoading = status === "submitted" || status === "streaming"
 
   // Auto-scroll to bottom when new messages arrive
-  // Use messages.length as dependency instead of messages object to reduce re-runs
+  // Use uniqueMessages.length as dependency instead of messages object to reduce re-runs
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
     }, 100)
-    
+
     return () => clearTimeout(timeoutId)
-  }, [messages.length])
+  }, [uniqueMessages.length])
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault()
@@ -105,7 +117,7 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
   return (
     <Card className="flex flex-col h-full w-full py-0 mx-auto bg-card shadow-lg overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between gap-3 p-4 border-b bg-linear-to-r from-primary/5 to-primary/10">
+      <div className="flex items-center justify-between gap-3 p-4 border-b bg-linear-to-r from-primary/5 to-primary/10 shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
             <Bot className="w-4 h-4 text-primary-foreground" />
@@ -126,9 +138,9 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
       </div>
 
       {/* Messages Area */}
-      <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
+      <ScrollArea className="flex-1 p-4 overflow-y-auto" ref={scrollAreaRef}>
         <div className="space-y-4">
-          {messages.length === 0 && (
+          {uniqueMessages.length === 0 && (
             <div className="text-center py-8">
               <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                 <Bot className="w-6 h-6 text-primary" />
@@ -138,7 +150,7 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
             </div>
           )}
 
-          {messages.map((message) => (
+          {uniqueMessages.map((message) => (
             <div key={message.id} className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
               {message.role === "assistant" && (
                 <Avatar className="w-8 h-8 shrink-0">
@@ -151,16 +163,57 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
               <div
                 className={`${
                   // Check if message has a growth chart or chart selector to make it wider
-                  message.parts.some(part => 
-                    (part.type === "tool-displayGrowthChart" || part.type === "tool-selectGrowthChart") && 
-                    (part as any).state === "output-available"
-                  ) ? "w-[95%]" : "max-w-[80%]"
+                  message.parts.some(part => {
+                    if ((part.type === "tool-displayGrowthChart" || part.type === "tool-selectGrowthChart") && (part as any).state === "output-available") {
+                      let output = (part as any).output;
+                      if (typeof output === 'string') {
+                        try { output = JSON.parse(output); } catch (e) { return false; }
+                      }
+                      // Extract from workflow wrapper
+                      if (output?.type === "tool-result" && output?.output?.value) {
+                        try { output = JSON.parse(output.output.value); } catch (e) { return false; }
+                      }
+                      return output?.type === "growthChart" || output?.type === "chartSelector";
+                    }
+                    return false;
+                  }) ? "w-[95%]" : "max-w-[80%]"
                 } rounded-2xl px-4 py-3 ${
                   message.role === "user" ? messageContainerClasses.user : messageContainerClasses.assistant
                 }`}
               >
                 <div className="space-y-2">
                   {message.parts.map((part, index) => {
+                    // Debug logging for all parts
+                    if (part.type.startsWith('tool-')) {
+                      let rawOutput = (part as any).output;
+                      let parsedOutput = rawOutput;
+                      if (typeof rawOutput === 'string') {
+                        try {
+                          parsedOutput = JSON.parse(rawOutput);
+                        } catch (e) {
+                          // Keep rawOutput if parsing fails
+                        }
+                      }
+                      // Extract from workflow wrapper
+                      let unwrappedOutput = parsedOutput;
+                      if (parsedOutput?.type === "tool-result" && parsedOutput?.output?.value) {
+                        try {
+                          unwrappedOutput = JSON.parse(parsedOutput.output.value);
+                        } catch (e) {
+                          // Keep parsedOutput if parsing fails
+                        }
+                      }
+                      console.log('[Chat Frontend] Tool part detected:', {
+                        type: part.type,
+                        state: (part as any).state,
+                        hasOutput: !!rawOutput,
+                        outputIsString: typeof rawOutput === 'string',
+                        parsedType: parsedOutput?.type,
+                        unwrappedType: unwrappedOutput?.type,
+                        unwrappedOutput: unwrappedOutput,
+                      });
+                    }
+
                     if (part.type === "text") {
                       if (message.role === "assistant") {
                         return (
@@ -210,7 +263,25 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
                           </div>
                         )
                       } else if (part.state === "output-available") {
-                        const output = part.output as any;
+                        let output = (part as any).output;
+                        // Parse if it's a JSON string (from workflow)
+                        if (typeof output === 'string') {
+                          try {
+                            output = JSON.parse(output);
+                          } catch (e) {
+                            console.error('Failed to parse tool output:', e);
+                          }
+                        }
+
+                        // Extract actual data from workflow wrapper
+                        if (output?.type === "tool-result" && output?.output?.value) {
+                          try {
+                            output = JSON.parse(output.output.value);
+                          } catch (e) {
+                            console.error('Failed to parse nested tool output:', e);
+                          }
+                        }
+
                         if (output?.type === "chartSelector") {
                           return (
                             <div key={index} className="mt-4 mb-3">
@@ -241,7 +312,25 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
                           </div>
                         )
                       } else if (part.state === "output-available") {
-                        const output = part.output as any;
+                        let output = (part as any).output;
+                        // Parse if it's a JSON string (from workflow)
+                        if (typeof output === 'string') {
+                          try {
+                            output = JSON.parse(output);
+                          } catch (e) {
+                            console.error('Failed to parse tool output:', e);
+                          }
+                        }
+
+                        // Extract actual data from workflow wrapper
+                        if (output?.type === "tool-result" && output?.output?.value) {
+                          try {
+                            output = JSON.parse(output.output.value);
+                          } catch (e) {
+                            console.error('Failed to parse nested tool output:', e);
+                          }
+                        }
+
                         if (output?.type === "growthChart") {
                           return (
                             <div key={index} className="mt-4 mb-3">
@@ -325,7 +414,7 @@ export default function Chat({ patientId, firstname, lastname }: ChatProps) {
       </ScrollArea>
 
       {/* Input Area */}
-      <div className="border-t bg-muted/50 p-4">
+      <div className="border-t bg-muted/50 p-4 shrink-0">
         <form onSubmit={handleSubmit} className="flex gap-2">
           <Input
             value={input}

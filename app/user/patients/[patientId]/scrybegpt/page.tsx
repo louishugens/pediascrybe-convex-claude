@@ -9,7 +9,7 @@ type Params = Promise<{ patientId: string }>
 
 export default async function Page(props: { params: Params }) {
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-[calc(100vh-6rem)]">
       <ViewTransition>
         <Suspense fallback={<ChatSkeleton />}>
           <ChatContainer params={props.params} />

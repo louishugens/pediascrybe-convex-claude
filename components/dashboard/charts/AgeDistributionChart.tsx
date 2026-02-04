@@ -57,7 +57,7 @@ export function AgeDistributionChart({ patients }: AgeDistributionProps) {
     //     <CardDescription>Distribution of patients by age groups</CardDescription>
     //   </CardHeader>
     //   <CardContent>
-        <ChartContainer config={chartConfig}>
+        <ChartContainer config={chartConfig} className="h-[250px] w-full">
           <BarChart data={chartData}>
             <CartesianGrid vertical={false} />
             <XAxis
@@ -70,13 +70,13 @@ export function AgeDistributionChart({ patients }: AgeDistributionProps) {
               cursor={false}
               content={<ChartTooltipContent hideLabel />}
             />
-            <Bar dataKey="count" fill="var(--primary)" radius={8} /> 
-          </BarChart> 
+            <Bar dataKey="count" fill="var(--primary)" radius={8} />
+          </BarChart>
          </ChartContainer>
       // </CardContent>
       // <CardFooter>
       //   <p className="text-xs text-muted-foreground italic">Age distribution among all the patients</p>
       // </CardFooter>
-    // </Card> 
+    // </Card>
   )
 } 

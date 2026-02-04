@@ -1,34 +1,31 @@
-import OpenAI from 'openai'
+import { generateText } from 'ai';
+import { getModelWithFallbacks, handleAIError } from '@/lib/ai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!
-})
- 
+export const maxDuration = 30;
+
 export async function POST(req: Request) {
+  const { messages } = await req.json();
 
+  // Get powerful model with fallbacks (was gpt-4.1)
+  const { model, providerOptions } = getModelWithFallbacks('powerful');
 
-  const { messages } = await req.json()
-
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4.1',
-    // model: 'gpt-4',
-    temperature: 0.0,
-    // stream: true,
-    messages: messages
-  })
-
-  
-
-  if (!response) {
-    return new Response(JSON.stringify(response), {
-      status: 500
+  try {
+    const response = await generateText({
+      model,
+      providerOptions,
+      messages,
     });
+
+    if (!response) {
+      return new Response(JSON.stringify(response), {
+        status: 500,
+      });
+    }
+
+    return new Response(JSON.stringify(response.text), {
+      status: 200,
+    });
+  } catch (error) {
+    return handleAIError(error);
   }
-
-  // console.log('response :>> ', response.choices[0].message);
-
-  return new Response(JSON.stringify(response.choices[0].message.content), {
-    status: 200
-  });
-
 }

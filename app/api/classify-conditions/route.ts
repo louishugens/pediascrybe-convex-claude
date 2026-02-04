@@ -1,45 +1,56 @@
-import { openai } from '@ai-sdk/openai';
-import { generateObject } from 'ai';
-import { NextResponse } from 'next/server'
-import { Redis } from '@upstash/redis'; 
+import { streamText, Output } from 'ai';
 import { z } from 'zod';
+import {
+  getModelWithFallbacks,
+  getCachedOrGenerate,
+  hashInputs,
+  handleAIError,
+} from '@/lib/ai';
 
-// Define the response schema
-const conditionsSchema = z.object({
-  conditions: z.array(z.object({
-    name: z.string(),
-    count: z.number()
-  }))
+// Define the element schema for the conditions array
+const conditionElementSchema = z.object({
+  name: z.string(),
+  count: z.number(),
 });
 
-const redis = Redis.fromEnv();
+export const maxDuration = 45;
 
 export async function POST(req: Request) {
   try {
-    const { diagnoses } = await req.json()
-    
-    // Check cache first
-    const cacheKey = `conditions-${JSON.stringify(diagnoses).slice(0, 32)}`
-    const cached = await redis.get(cacheKey)
-    if (cached && typeof cached === 'string') return NextResponse.json(JSON.parse(cached))
+    const { diagnoses } = await req.json();
 
-    // console.log('diagnoses', diagnoses)
-    const result = await generateObject({
-      model: openai('gpt-4.1-nano'),
-      // model: openai('gpt-4o-mini'), 
-      schema: conditionsSchema,
-      prompt: `You are a pediatric diagnosis classifier. Analyze the provided medical findings and group them into common pediatric conditions. Return only a JSON array of objects with 'name' and 'count' properties, sorted by count in descending order. Limit to top 10 conditions and order from most common to least common. Here are the diagnoses: ${JSON.stringify(diagnoses)}`,
-    })  
+    // Generate cache key from diagnoses
+    const cacheKey = `conditions:${hashInputs({ diagnoses })}`;
 
-    const conditions = result.object.conditions;
+    // Use cached result or generate new one
+    const conditions = await getCachedOrGenerate(
+      cacheKey,
+      async () => {
+        // Get fast tier model with fallbacks
+        const { model, providerOptions } = getModelWithFallbacks('fast');
 
-    // Cache the results for 1 day
-    await redis.set(cacheKey, JSON.stringify(conditions), { ex: 60 * 60 * 24 })
+        const result = streamText({
+          model,
+          providerOptions,
+          output: Output.array({
+            element: conditionElementSchema,
+          }),
+          prompt: `You are a pediatric diagnosis classifier. Analyze the provided medical findings and group them into common pediatric conditions. Return a JSON array of objects with 'name' and 'count' properties, sorted by count in descending order. Limit to top 10 conditions and order from most common to least common. Here are the diagnoses: ${JSON.stringify(diagnoses)}`,
+        });
 
-    return NextResponse.json(conditions)
+        // Wait for the stream to complete and get the final array
+        const content = await result.content;
+        return content;
+      },
+      { ttlSeconds: 60 * 60 * 24 } // 1 day cache
+    );
+
+    return new Response(JSON.stringify(conditions), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (error) {
-    console.error('Error classifying conditions:', error) 
-    return NextResponse.json({ error: 'Classification failed' }, { status: 500 })
+    console.error('Error classifying conditions:', error);
+    return handleAIError(error);
   }
-} 
-
+}

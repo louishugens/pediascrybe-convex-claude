@@ -1,19 +1,39 @@
-import OpenAI from 'openai'
-import { NextResponse } from 'next/server';
+import { generateText } from 'ai';
+import { getModelWithFallbacks, handleAIError } from '@/lib/ai';
+
+export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY!
-  })
+  const { prompt } = await req.json();
 
-  const { prompt } = await req.json()
-  
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4-1106-preview',
-    messages: prompt
-  })
+  // Get powerful model with fallbacks (was gpt-4-1106-preview)
+  const { model, providerOptions } = getModelWithFallbacks('powerful');
 
-  return new Response(JSON.stringify(response), {
-    status: 200
-  });
+  try {
+    const response = await generateText({
+      model,
+      providerOptions,
+      messages: prompt,
+    });
+
+    // Return in similar format to legacy OpenAI response
+    return new Response(
+      JSON.stringify({
+        choices: [
+          {
+            message: {
+              content: response.text,
+              role: 'assistant',
+            },
+          },
+        ],
+        usage: response.usage,
+      }),
+      {
+        status: 200,
+      }
+    );
+  } catch (error) {
+    return handleAIError(error);
+  }
 }

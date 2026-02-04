@@ -20,7 +20,7 @@ interface GrowthChartData {
   type: 'growthChart'
   chartType: string
   patientSex: string | null
-  patientName: string
+  patientLabel: string
   patientBirthdate: Date
   growthData: Array<{
     age?: number
@@ -56,29 +56,29 @@ function ChatGrowthChartInner({ data }: ChatGrowthChartProps) {
   const chartConfig = useMemo(() => ({
     "3rd": {
       label: "3rd percentile",
-      color: "var(--chart-1)",
+      color: "#ef4444",
     },
     "15th": {
-      label: "15th percentile", 
-      color: "var(--chart-2)",
+      label: "15th percentile",
+      color: "#f97316",
     },
     "50th": {
       label: "50th percentile",
-      color: "var(--chart-3)",
+      color: "#22c55e",
     },
     "85th": {
       label: "85th percentile",
-      color: "var(--chart-4)",
+      color: "#ec4899",
     },
     "97th": {
-      label: "97th percentile", 
-      color: "var(--chart-5)",
+      label: "97th percentile",
+      color: "#a855f7",
     },
-    [data.patientName]: {
-      label: data.patientName,
+    [data.patientLabel]: {
+      label: data.patientLabel,
       color: "var(--primary)",
     },
-  }) satisfies ChartConfig, [data.patientName])
+  }) satisfies ChartConfig, [data.patientLabel])
 
   // Memoize tooltip formatter to prevent recreation on every render
   const tooltipFormatter = useCallback((value: any, name: string) => {
@@ -226,7 +226,7 @@ function ChatGrowthChartInner({ data }: ChatGrowthChartProps) {
               '50th': referenceData.p50?.[index] ?? null, 
               '85th': referenceData.p85?.[index] ?? null, 
               '97th': referenceData.p97?.[index] ?? null,
-              [data.patientName]: patientDataMap.get(index) ?? null
+              [data.patientLabel]: patientDataMap.get(index) ?? null
             })
           }
 
@@ -258,7 +258,7 @@ function ChatGrowthChartInner({ data }: ChatGrowthChartProps) {
     }
   // Use specific primitive values as dependencies instead of the entire data object
   // to prevent re-running when parent creates new object references
-  }, [data.chartType, data.patientSex, data.patientName, data.growthData.length])
+  }, [data.chartType, data.patientSex, data.patientLabel, data.growthData.length])
 
   if (loading) {
     return (
@@ -300,39 +300,38 @@ function ChatGrowthChartInner({ data }: ChatGrowthChartProps) {
         <div className="flex flex-wrap justify-center gap-4 mb-2 text-xs">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded bg-primary"></div>
-            <span className="font-bold">{data.patientName}</span>
+            <span className="font-bold">{data.patientLabel}</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-chart-1"></div>
+            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#ef4444' }}></div>
             <span>3rd percentile</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-chart-2"></div>
+            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#f97316' }}></div>
             <span>15th percentile</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-chart-3"></div>
+            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#22c55e' }}></div>
             <span>50th percentile</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-chart-4"></div>
+            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#ec4899' }}></div>
             <span>85th percentile</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-chart-5"></div>
+            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#a855f7' }}></div>
             <span>97th percentile</span>
           </div>
         </div>
-        <div className="h-96 w-full">
-          <ChartContainer config={chartConfig}>
+        <ChartContainer config={chartConfig} className="h-100 w-full">
           <LineChart
             accessibilityLayer
             data={memoizedChartData}
             margin={{
               left: 12,
               right: 12,
-              top: 40,
-              bottom: 80,
+              top: 20,
+              bottom: 20,
             }}>
               <CartesianGrid vertical={false} />
               <XAxis
@@ -347,8 +346,8 @@ function ChatGrowthChartInner({ data }: ChatGrowthChartProps) {
                   }
                   return value.toString();
                 }}
-                label={{ value: `${data.xLabel} (${xUnit})`, position: "insideBottom", offset: 35, fontSize: 12, fontWeight: "bold"}} 
-                height={80}
+                label={{ value: `${data.xLabel} (${xUnit})`, position: "insideBottom", offset: -5, fontSize: 12, fontWeight: "bold"}}
+                height={50}
               />
               <YAxis 
                 label={{ value: `${data.yLabel} (${data.unit})`, angle: -90, position: 'insideLeft', fontSize: 12, fontWeight: "bold"}} 
@@ -371,61 +370,64 @@ function ChatGrowthChartInner({ data }: ChatGrowthChartProps) {
               
               {/* Patient data line */}
               <Line
-                dataKey={data.patientName}
+                dataKey={data.patientLabel}
                 type="monotone"
                 stroke="var(--primary)"
-                strokeWidth={2}
-                dot={{ r: 2, fill: "var(--primary)", strokeWidth: 1 }}
-                activeDot={{ r: 4, strokeWidth: 1, stroke: "var(--background)" }}
+                strokeWidth={2.5}
+                dot={{ r: 4, fill: "var(--primary)", strokeWidth: 2, stroke: "#fff" }}
+                activeDot={{ r: 6, strokeWidth: 3, stroke: "#fff", fill: "var(--primary)" }}
                 connectNulls={true}
                 isAnimationActive={false}
-                name={data.patientName}
+                name={data.patientLabel}
               />
               
               {/* Reference percentile lines */}
               <Line
                 dataKey="3rd"
                 type="monotone"
-                stroke="var(--color-3rd)"
-                strokeWidth={1}
+                stroke="#ef4444"
+                strokeWidth={1.5}
+                strokeOpacity={0.7}
                 dot={false}
                 isAnimationActive={false}
               />
               <Line
                 dataKey="15th"
                 type="monotone"
-                stroke="var(--color-15th)"
-                strokeWidth={1}
+                stroke="#f97316"
+                strokeWidth={1.5}
+                strokeOpacity={0.7}
                 dot={false}
                 isAnimationActive={false}
               />
               <Line
                 dataKey="50th"
                 type="monotone"
-                stroke="var(--color-50th)"
-                strokeWidth={1}
+                stroke="#22c55e"
+                strokeWidth={2}
                 dot={false}
                 isAnimationActive={false}
               />
               <Line
                 dataKey="85th"
                 type="monotone"
-                stroke="var(--color-85th)"
-                strokeWidth={1}
+                stroke="#ec4899"
+                strokeWidth={1.5}
+                strokeOpacity={0.7}
                 dot={false}
                 isAnimationActive={false}
               />
               <Line
                 dataKey="97th"
                 type="monotone"
-                stroke="var(--color-97th)"
-                strokeWidth={1}
+                stroke="#a855f7"
+                strokeWidth={1.5}
+                strokeOpacity={0.7}
                 dot={false}
                 isAnimationActive={false}
               />
             </LineChart>
           </ChartContainer>
-        </div>
       </CardContent>
     </Card>
   )
@@ -437,7 +439,7 @@ const ChatGrowthChart = memo(ChatGrowthChartInner, (prevProps, nextProps) => {
   return (
     prevProps.data.chartType === nextProps.data.chartType &&
     prevProps.data.patientSex === nextProps.data.patientSex &&
-    prevProps.data.patientName === nextProps.data.patientName &&
+    prevProps.data.patientLabel === nextProps.data.patientLabel &&
     prevProps.data.growthData.length === nextProps.data.growthData.length &&
     prevProps.data.title === nextProps.data.title
   )

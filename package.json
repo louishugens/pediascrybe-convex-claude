@@ -48,6 +48,7 @@
     "@upstash/redis": "^1.36.0",
     "@vercel/analytics": "^1.6.1",
     "@vercel/speed-insights": "^1.3.1",
+    "@workflow/ai": "^4.0.1-beta.51",
     "ai": "^6.0.5",
     "autoprefixer": "^10.4.23",
     "babel-plugin-react-compiler": "^1.0.0",

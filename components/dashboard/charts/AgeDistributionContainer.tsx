@@ -30,11 +30,7 @@ async function AgeDistributionContent() {
         <CardDescription>Distribution of patients by age groups</CardDescription>
       </CardHeader>
       <CardContent>
-        <ViewTransition>
-          <Suspense fallback={<AgeDistributionSkeleton />}>
-            <AgeDistributionChart patients={patients} />
-          </Suspense>
-        </ViewTransition>
+        <AgeDistributionChart patients={patients} />
       </CardContent>
       <CardFooter>
         <p className="text-xs text-muted-foreground italic">Age distribution among all the patients</p>
