@@ -224,12 +224,6 @@ export const book = mutation({
       throw new Error("Not authorized to book for this patient");
     }
 
-    // Prevent same-day booking
-    const today = new Date().toISOString().split("T")[0];
-    if (args.date <= today) {
-      throw new Error("Appointments must be booked at least one day in advance");
-    }
-
     // Validate the slot is still available
     const existing = await ctx.db
       .query("telehealthAppointments")

@@ -21,6 +21,7 @@ interface BreadcrumbData {
   patientId?: string
   appointmentId?: string
   appointmentPatientId?: string
+  telehealthAppointmentId?: string
 }
 
 function getBreadcrumbs(pathname: string): BreadcrumbData[] {
@@ -43,7 +44,12 @@ function getBreadcrumbs(pathname: string): BreadcrumbData[] {
 
       // Check if this is an appointment ID (previous segment is "appointments")
       const isAppointmentId = segments[i - 1] === "appointments" &&
-        !["add", "edit"].includes(segment)
+        !["add", "edit"].includes(segment) &&
+        !segments.includes("telehealth")
+
+      // Check if this is a telehealth call ID
+      const isTelehealthId = segments[i - 1] === "call" &&
+        segments.includes("telehealth")
 
       // Find the patient ID from earlier segments for appointment lookups
       let appointmentPatientId: string | undefined
@@ -55,7 +61,7 @@ function getBreadcrumbs(pathname: string): BreadcrumbData[] {
       }
 
       let label = segment
-      if (!isPatientId && !isAppointmentId) {
+      if (!isPatientId && !isAppointmentId && !isTelehealthId) {
         label = segment
           .split("-")
           .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -67,6 +73,7 @@ function getBreadcrumbs(pathname: string): BreadcrumbData[] {
         href,
         ...(isPatientId ? { patientId: segment } : {}),
         ...(isAppointmentId ? { appointmentId: segment, appointmentPatientId } : {}),
+        ...(isTelehealthId ? { telehealthAppointmentId: segment } : {}),
       })
     }
   }
@@ -96,11 +103,21 @@ function DynamicBreadcrumbItem({
       : "skip"
   )
 
+  // Fetch telehealth appointment info (patient sees doctor name)
+  const telehealthApt = useQuery(
+    api.telehealth.getById,
+    crumb.telehealthAppointmentId ? { id: crumb.telehealthAppointmentId as Id<"telehealthAppointments"> } : "skip"
+  )
+
   let displayLabel = crumb.label
   if (crumb.patientId && patient) {
     displayLabel = `${patient.firstname} ${patient.lastname}`
   } else if (crumb.appointmentId && appointment) {
     displayLabel = format(new Date(appointment.startDate), "MMM d, yyyy")
+  } else if (crumb.telehealthAppointmentId && telehealthApt) {
+    // Patient sees doctor name with Dr. prefix
+    const name = telehealthApt.doctorName
+    displayLabel = name.startsWith("Dr") ? name : `Dr. ${name}`
   }
 
   if (isLast) {

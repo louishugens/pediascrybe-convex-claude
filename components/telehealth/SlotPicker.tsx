@@ -28,7 +28,16 @@ export function SlotPicker({ doctorId, date, selectedSlot, onSelect }: SlotPicke
     )
   }
 
-  if (slots.length === 0) {
+  // Filter out past slots if the date is today
+  const now = new Date()
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
+  const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`
+
+  const filteredSlots = date === todayStr
+    ? slots.filter((slot) => slot.startTime > currentTime)
+    : slots
+
+  if (filteredSlots.length === 0) {
     return (
       <p className="text-center text-sm text-muted-foreground py-8">
         No available slots for this date.
@@ -38,7 +47,7 @@ export function SlotPicker({ doctorId, date, selectedSlot, onSelect }: SlotPicke
 
   return (
     <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-      {slots.map((slot) => {
+      {filteredSlots.map((slot) => {
         const isSelected =
           selectedSlot?.startTime === slot.startTime &&
           selectedSlot?.endTime === slot.endTime

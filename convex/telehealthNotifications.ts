@@ -105,7 +105,7 @@ export const notifyDoctorOfBooking = internalMutation({
         to: appUser.email,
         doctorName: `${doctor.firstname}`,
         childName,
-        type: "telehealth_confirmed" as const,
+        type: "telehealth_booking_request" as const,
         message: `New telehealth appointment request for ${childName} on ${apt.date} at ${apt.startTime}. Please confirm or propose an alternative time.`,
         portalUrl: `${siteUrl}/user/telehealth/appointments`,
       });

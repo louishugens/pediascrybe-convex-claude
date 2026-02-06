@@ -21,6 +21,7 @@ interface BreadcrumbData {
   appointmentId?: string
   reportId?: string
   receiptId?: string
+  telehealthAppointmentId?: string
 }
 
 // Map of abbreviations to full names
@@ -92,9 +93,13 @@ function getBreadcrumbs(pathname: string): BreadcrumbData[] {
         !segment.startsWith("create-") &&
         !segment.startsWith("edit-")
 
+      // Check if this is a telehealth appointment ID (previous segment is "call" under telehealth)
+      const isTelehealthId = segments[i - 1] === "call" &&
+        segments.includes("telehealth")
+
       // Format the label
       let label = segment
-      if (!isPatientId && !isAppointmentId && !isReportId && !isReceiptId) {
+      if (!isPatientId && !isAppointmentId && !isReportId && !isReceiptId && !isTelehealthId) {
         // Check if we have a mapped label for this segment
         if (labelMap[segment]) {
           label = labelMap[segment]
@@ -114,6 +119,7 @@ function getBreadcrumbs(pathname: string): BreadcrumbData[] {
         ...(isAppointmentId ? { appointmentId: segment } : {}),
         ...(isReportId ? { reportId: segment } : {}),
         ...(isReceiptId ? { receiptId: segment } : {}),
+        ...(isTelehealthId ? { telehealthAppointmentId: segment } : {}),
       })
     }
   }
@@ -153,6 +159,12 @@ function DynamicBreadcrumbItem({
     crumb.receiptId ? { receiptId: crumb.receiptId as Id<"receipts"> } : "skip"
   )
 
+  // Fetch telehealth appointment info (doctor sees patient name)
+  const telehealthApt = useQuery(
+    api.telehealth.getById,
+    crumb.telehealthAppointmentId ? { id: crumb.telehealthAppointmentId as Id<"telehealthAppointments"> } : "skip"
+  )
+
   // Determine the display label
   let displayLabel = crumb.label
   if (crumb.patientId && patient) {
@@ -182,6 +194,9 @@ function DynamicBreadcrumbItem({
       day: "numeric",
       year: "numeric",
     })}`
+  } else if (crumb.telehealthAppointmentId && telehealthApt) {
+    // Doctor sees patient name
+    displayLabel = telehealthApt.patientName
   }
 
   if (isLast) {

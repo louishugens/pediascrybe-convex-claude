@@ -256,12 +256,13 @@ export const sendTelehealthNotificationEmail = async (
     parentName?: string;
     doctorName?: string;
     childName: string;
-    type: "telehealth_confirmed" | "telehealth_rescheduled" | "telehealth_cancelled" | "telehealth_reminder";
+    type: "telehealth_booking_request" | "telehealth_confirmed" | "telehealth_rescheduled" | "telehealth_cancelled" | "telehealth_reminder";
     message: string;
     portalUrl: string;
   },
 ) => {
   const SUBJECT_MAP = {
+    telehealth_booking_request: `New telehealth appointment request for ${childName}`,
     telehealth_confirmed: `Telehealth appointment confirmed for ${childName}`,
     telehealth_rescheduled: `Telehealth appointment rescheduled for ${childName}`,
     telehealth_cancelled: `Telehealth appointment cancelled for ${childName}`,
@@ -293,6 +294,7 @@ export const sendTelehealthNotificationAction = internalAction({
     doctorName: v.optional(v.string()),
     childName: v.string(),
     type: v.union(
+      v.literal("telehealth_booking_request"),
       v.literal("telehealth_confirmed"),
       v.literal("telehealth_rescheduled"),
       v.literal("telehealth_cancelled"),

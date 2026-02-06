@@ -97,10 +97,6 @@ export const getAvailableSlots = query({
     date: v.string(), // "2026-03-15"
   },
   handler: async (ctx, args) => {
-    // Block same-day and past dates
-    const today = new Date().toISOString().split("T")[0];
-    if (args.date <= today) return [];
-
     // Parse the date to get day of week
     const dateObj = new Date(args.date + "T00:00:00");
     const dayOfWeek = dateObj.getUTCDay();
@@ -197,14 +193,12 @@ export const getAvailableDates = query({
       exceptions.filter((e) => e.date.startsWith(monthPrefix)).map((e) => e.date)
     );
 
-    // Generate dates in the month that match active days, aren't blocked, and are in the future
-    const today = new Date().toISOString().split("T")[0];
+    // Generate dates in the month that match active days and aren't blocked
     const dates: string[] = [];
     const daysInMonth = new Date(args.year, args.month, 0).getDate();
 
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${args.year}-${String(args.month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-      if (dateStr <= today) continue; // Skip today and past dates
       const dateObj = new Date(dateStr + "T00:00:00");
       const dow = dateObj.getUTCDay();
 

@@ -29,16 +29,6 @@ export const generateToken = action({
       throw new Error("Payment must be completed before joining");
     }
 
-    // Verify time window: within 10 min before → 60 min after scheduled start
-    const appointmentTime = new Date(`${appointment.date}T${appointment.startTime}:00`).getTime();
-    const now = Date.now();
-    const tenMinBefore = appointmentTime - 10 * 60 * 1000;
-    const sixtyMinAfter = appointmentTime + 60 * 60 * 1000;
-
-    if (now < tenMinBefore || now > sixtyMinAfter) {
-      throw new Error("You can only join within 10 minutes before or 60 minutes after the scheduled start time");
-    }
-
     // Determine participant identity
     const participantIdentity: string = appointment.role === "doctor"
       ? `doctor-${appointment.doctorId}`

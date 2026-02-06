@@ -17,12 +17,17 @@ interface TelehealthNotificationProps {
   parentName?: string;
   doctorName?: string;
   childName: string;
-  type: "telehealth_confirmed" | "telehealth_rescheduled" | "telehealth_cancelled" | "telehealth_reminder";
+  type: "telehealth_booking_request" | "telehealth_confirmed" | "telehealth_rescheduled" | "telehealth_cancelled" | "telehealth_reminder";
   message: string;
   portalUrl: string;
 }
 
 const NOTIFICATION_CONFIG = {
+  telehealth_booking_request: {
+    subject: "New Telehealth Appointment Request",
+    previewText: "You have a new telehealth appointment request",
+    heading: "New Appointment Request",
+  },
   telehealth_confirmed: {
     subject: "Telehealth Appointment Confirmed",
     previewText: "Your telehealth appointment has been confirmed",

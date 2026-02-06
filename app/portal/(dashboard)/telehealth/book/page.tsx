@@ -158,10 +158,11 @@ export default function BookTelehealthPage() {
                 setSelectedSlot(null)
               }}
               disabled={(date) => {
-                const today = new Date()
-                today.setHours(23, 59, 59, 999) // block the entire day including tonight
+                const yesterday = new Date()
+                yesterday.setDate(yesterday.getDate() - 1)
+                yesterday.setHours(23, 59, 59, 999)
                 const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
-                return date <= today || !availableDateSet.has(dateStr)
+                return date <= yesterday || !availableDateSet.has(dateStr)
               }}
               modifiers={{
                 available: (date) => {
