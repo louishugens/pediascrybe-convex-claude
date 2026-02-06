@@ -70,7 +70,7 @@ const AddPrescriptions = ({patient, patientId, appointment}: {patient: PatientTy
 
   const { object, submit, isLoading, stop } = useObject({
     api: '/api/ai/prescriptions',
-    schema: z.array(prescriptionsSchema),
+    schema: z.object({ elements: z.array(prescriptionsSchema) }),
   });
 
   const fetchPrescriptionsSuggestions = async () => {
@@ -115,11 +115,12 @@ const AddPrescriptions = ({patient, patientId, appointment}: {patient: PatientTy
   };
 
   useEffect(() => {
-    if (object && Array.isArray(object) && object.length > 0) {
+    const prescriptions = object?.elements;
+    if (prescriptions && Array.isArray(prescriptions) && prescriptions.length > 0) {
       setNoReturn(false);
       // Get current drug names for comparison
       const currentDrugNames = fields.map(f => f.drug?.trim().toLowerCase());
-      object.forEach(prescription => {
+      prescriptions.forEach(prescription => {
         if (
           prescription &&
           typeof prescription.drug === 'string' &&
@@ -146,7 +147,7 @@ const AddPrescriptions = ({patient, patientId, appointment}: {patient: PatientTy
     if (
       hasFetched &&
       !isLoading &&
-      (object === null || (Array.isArray(object) && object.length === 0))
+      (!prescriptions || (Array.isArray(prescriptions) && prescriptions.length === 0))
     ) {
       setNoReturn(true);
     } else {
@@ -286,6 +287,8 @@ const AddPrescriptions = ({patient, patientId, appointment}: {patient: PatientTy
     }
     catch(err){
       console.log(err)
+    } finally {
+      setLoading(false)
     }
   }
 

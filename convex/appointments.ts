@@ -331,7 +331,7 @@ export const update = mutation({
       Object.entries(updates).filter(([_, v]) => v !== undefined)
     );
 
-    const result = await ctx.db.patch(appointmentId, filteredUpdates);
+    await ctx.db.patch(appointmentId, filteredUpdates);
 
     // Trigger portal notifications if patient has portal enabled
     if (currentAppointment) {
@@ -365,7 +365,7 @@ export const update = mutation({
       }
     }
 
-    return result;
+    return appointmentId;
   },
 });
 

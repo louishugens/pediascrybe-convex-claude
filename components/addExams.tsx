@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation'
 import { BeatLoader } from 'react-spinners';
 import { XCircleIcon } from '@heroicons/react/24/outline';
 import { formatDistanceToNow } from "date-fns"
-import PulseLoader from "react-spinners/PulseLoader"
+import { Spinner } from '@/components/ui/spinner';
 import { refresh } from '@/app/actions';
 import { experimental_useObject as useObject } from '@ai-sdk/react';
 import { examsSchema } from '@/app/api/ai/exams/schema';
@@ -38,21 +38,22 @@ const AddExams = ({patient, patientId, appointment}) => {
   const [noReturn, setNoReturn] = useState(false)
 
   // Subscription checks
-  const { isAllowed: canUseAI, reason: aiBlockReason, isLoading: checkingAccess } = useAIQueryAccess('ai_lab_proposals');
+  const { isAllowed: canUseAI, reason: aiBlockReason, isLoading: checkingAccess } = useAIQueryAccess('ai_lab_exam');
   const incrementAIQuery = useMutation(api.usage.incrementAIQuery);
   const { requireSubscription } = useSubscriptionGuard();
 
   const { object, submit, isLoading, stop } = useObject({
     api: '/api/ai/exams',
-    schema: z.array(examsSchema),
+    schema: z.object({ elements: z.array(examsSchema) }),
   });
 
   useEffect(() => {
-    if (object && Array.isArray(object) && object.length > 0) {
+    const exams = object?.elements;
+    if (exams && Array.isArray(exams) && exams.length > 0) {
       setNoReturn(false);
       // Get current exam names for comparison
       const currentExamNames = fields.map(f => (f as { exam?: string }).exam?.trim().toLowerCase()).filter(Boolean);
-      object.forEach(exam => {
+      exams.forEach(exam => {
         const examName = exam?.exam?.trim().toLowerCase();
         if (examName && !currentExamNames.includes(examName)) {
           prepend(exam); // Add new unique exams to the top
@@ -63,7 +64,7 @@ const AddExams = ({patient, patientId, appointment}) => {
     if (
       hasFetched &&
       !isLoading &&
-      (object === null || (Array.isArray(object) && object.length === 0))
+      (!exams || (Array.isArray(exams) && exams.length === 0))
     ) {
       setNoReturn(true);
     } else {
@@ -230,6 +231,8 @@ const AddExams = ({patient, patientId, appointment}) => {
     }
     catch(err){
       console.log(err)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -243,7 +246,7 @@ const AddExams = ({patient, patientId, appointment}) => {
         noReturn ? (
           <span className='font-light text-red-500'>No exam suggestions could be generated for this patient.</span>
         ) : isLoading || checkingAccess ? (
-          <span className=' font-light text-primary'> ScrybeGPT thinking <PulseLoader color={"hsl(var(--primary))"} size={5} aria-label="Loading Spinner" data-testid="loader"/></span>
+          <span className='font-light text-primary flex flex-row gap-2 items-center justify-start'><span>ScrybeGPT thinking </span><Spinner aria-label="Loading Spinner" data-testid="loader"/></span>
         ) : !canUseAI ? (
           <span className='font-light text-amber-600'>
             {aiBlockReason || 'AI features require a Pro subscription'}{' '}
@@ -276,14 +279,9 @@ const AddExams = ({patient, patientId, appointment}) => {
             {
               loading
               ?
-              <BeatLoader
-                color={color}
-                size={5}
-                aria-label="Loading Spinner"
-                data-testid="loader"
-              />
+              <span className='flex flex-row gap-2 items-center justify-center'><span>Saving exams </span><Spinner aria-label="Loading Spinner" data-testid="loader"/></span>
               :
-                "Send"}
+                "Save Exams"}
           </button>}
         </div>
       </form>
