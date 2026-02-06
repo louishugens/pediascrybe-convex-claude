@@ -9,10 +9,10 @@ import {
   CalendarDays,
   LayoutDashboard,
   Settings,
+  Video,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
 import {
@@ -26,35 +26,48 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 
-const data = {
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/user",
-      icon: LayoutDashboard,
-    },
-    {
-      title: "Patients",
-      url: "/user/patients",
-      icon: Users,
-    },
-    {
-      title: "Add Patient",
-      url: "/user/add-patient",
-      icon: UserPlus,
-    },
-    {
-      title: "Profile",
-      url: "/user/profile",
-      icon: User,
-    },
-    {
-      title: "Edit Profile",
-      url: "/user/edit-profile",
-      icon: PenSquare,
-    },
-  ],
-}
+const baseNavItems = [
+  {
+    title: "Dashboard",
+    url: "/user",
+    icon: LayoutDashboard,
+  },
+  {
+    title: "Patients",
+    url: "/user/patients",
+    icon: Users,
+  },
+  {
+    title: "Add Patient",
+    url: "/user/add-patient",
+    icon: UserPlus,
+  },
+  {
+    title: "Profile",
+    url: "/user/profile",
+    icon: User,
+  },
+  {
+    title: "Edit Profile",
+    url: "/user/edit-profile",
+    icon: PenSquare,
+  },
+]
+
+const telehealthNavItems = [
+  {
+    title: "Availability",
+    url: "/user/telehealth/availability",
+    icon: CalendarDays,
+    feature: "telehealth",
+  },
+  {
+    title: "Appointments",
+    url: "/user/telehealth/appointments",
+    icon: Video,
+    feature: "telehealth",
+  },
+]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
@@ -87,7 +100,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={baseNavItems} />
+        <NavMain items={telehealthNavItems} label="Telehealth" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser />
@@ -96,4 +110,3 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     </Sidebar>
   )
 }
-

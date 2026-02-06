@@ -5,6 +5,7 @@ import VerifyOTP from "./emails/verifyOTP";
 import PediascrybeWelcome from "./emails/welcome";
 import PortalInvitation from "./emails/portalInvitation";
 import PortalNotification from "./emails/portalNotification";
+import TelehealthNotification from "./emails/telehealthNotification";
 import { render } from "@react-email/components";
 import ResetPasswordEmail from "./emails/resetPassword";
 import { components } from "./_generated/api";
@@ -232,6 +233,81 @@ export const sendPortalNotificationAction = internalAction({
       childName: args.childName,
       doctorName: args.doctorName,
       notificationType: args.notificationType,
+      message: args.message,
+      portalUrl: args.portalUrl,
+    });
+  },
+});
+
+// ==================== Telehealth Emails ====================
+
+export const sendTelehealthNotificationEmail = async (
+  ctx: ActionCtx,
+  {
+    to,
+    parentName,
+    doctorName,
+    childName,
+    type,
+    message,
+    portalUrl,
+  }: {
+    to: string;
+    parentName?: string;
+    doctorName?: string;
+    childName: string;
+    type: "telehealth_confirmed" | "telehealth_rescheduled" | "telehealth_cancelled" | "telehealth_reminder";
+    message: string;
+    portalUrl: string;
+  },
+) => {
+  const SUBJECT_MAP = {
+    telehealth_confirmed: `Telehealth appointment confirmed for ${childName}`,
+    telehealth_rescheduled: `Telehealth appointment rescheduled for ${childName}`,
+    telehealth_cancelled: `Telehealth appointment cancelled for ${childName}`,
+    telehealth_reminder: `Telehealth appointment reminder for ${childName}`,
+  };
+
+  await resend.sendEmail(ctx, {
+    from: "Pediascrybe <info@email.pediascrybe.com>",
+    to,
+    subject: SUBJECT_MAP[type],
+    html: await render(
+      <TelehealthNotification
+        parentName={parentName}
+        doctorName={doctorName}
+        childName={childName}
+        type={type}
+        message={message}
+        portalUrl={portalUrl}
+      />
+    ),
+  });
+};
+
+// Internal action for scheduling telehealth notification email
+export const sendTelehealthNotificationAction = internalAction({
+  args: {
+    to: v.string(),
+    parentName: v.optional(v.string()),
+    doctorName: v.optional(v.string()),
+    childName: v.string(),
+    type: v.union(
+      v.literal("telehealth_confirmed"),
+      v.literal("telehealth_rescheduled"),
+      v.literal("telehealth_cancelled"),
+      v.literal("telehealth_reminder")
+    ),
+    message: v.string(),
+    portalUrl: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await sendTelehealthNotificationEmail(ctx, {
+      to: args.to,
+      parentName: args.parentName,
+      doctorName: args.doctorName,
+      childName: args.childName,
+      type: args.type,
       message: args.message,
       portalUrl: args.portalUrl,
     });

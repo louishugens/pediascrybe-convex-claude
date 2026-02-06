@@ -12,7 +12,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useSubscriptionGuard } from "@/hooks/use-subscription-guard";
-import { Sparkles, Users, FileText, Stethoscope, Pill, FlaskConical, ClipboardList } from "lucide-react";
+import { Sparkles, Users, FileText, Stethoscope, Pill, FlaskConical, ClipboardList, Video } from "lucide-react";
 
 export function SubscriptionDialog() {
   const router = useRouter();
@@ -34,7 +34,8 @@ export function SubscriptionDialog() {
     if (actionLower.includes("prescription")) return <Pill className="h-5 w-5" />;
     if (actionLower.includes("lab") || actionLower.includes("exam")) return <FlaskConical className="h-5 w-5" />;
     if (actionLower.includes("report")) return <ClipboardList className="h-5 w-5" />;
-    
+    if (actionLower.includes("telehealth") || actionLower.includes("video")) return <Video className="h-5 w-5" />;
+
     return <Sparkles className="h-5 w-5" />;
   };
 

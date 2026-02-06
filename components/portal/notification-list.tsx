@@ -11,30 +11,42 @@ import {
   Syringe,
   ScrollText,
   Check,
+  Video,
+  CalendarCheck,
+  CalendarX,
+  Bell,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-const NOTIFICATION_ICONS = {
+const NOTIFICATION_ICONS: Record<string, any> = {
   new_prescription: Pill,
   new_lab_exam: FlaskConical,
   appointment_summary: FileText,
   new_vaccine_record: Syringe,
   new_report: ScrollText,
-} as const
+  telehealth_confirmed: CalendarCheck,
+  telehealth_rescheduled: CalendarCheck,
+  telehealth_cancelled: CalendarX,
+  telehealth_reminder: Video,
+}
 
-const NOTIFICATION_COLORS = {
+const NOTIFICATION_COLORS: Record<string, string> = {
   new_prescription: "text-blue-500 bg-blue-500/10",
   new_lab_exam: "text-purple-500 bg-purple-500/10",
   appointment_summary: "text-green-500 bg-green-500/10",
   new_vaccine_record: "text-amber-500 bg-amber-500/10",
   new_report: "text-cyan-500 bg-cyan-500/10",
-} as const
+  telehealth_confirmed: "text-green-500 bg-green-500/10",
+  telehealth_rescheduled: "text-blue-500 bg-blue-500/10",
+  telehealth_cancelled: "text-red-500 bg-red-500/10",
+  telehealth_reminder: "text-indigo-500 bg-indigo-500/10",
+}
 
 interface Notification {
   _id: Id<"portalNotifications">
   patientId: Id<"patients">
-  type: keyof typeof NOTIFICATION_ICONS
+  type: string
   message: string
   isRead: boolean
   createdAt: number
@@ -79,8 +91,8 @@ export function NotificationList({ notifications }: NotificationListProps) {
 
       <div className="space-y-2">
         {notifications.map((notification) => {
-          const Icon = NOTIFICATION_ICONS[notification.type]
-          const colorClass = NOTIFICATION_COLORS[notification.type]
+          const Icon = NOTIFICATION_ICONS[notification.type] || Bell
+          const colorClass = NOTIFICATION_COLORS[notification.type] || "text-gray-500 bg-gray-500/10"
 
           return (
             <div

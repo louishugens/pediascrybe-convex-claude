@@ -7,6 +7,8 @@ import {
   Settings,
   Bell,
   Sparkles,
+  Video,
+  CalendarPlus,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -64,6 +66,19 @@ const navItems = [
     title: "Settings",
     url: "/portal/settings",
     icon: Settings,
+  },
+]
+
+const telehealthItems = [
+  {
+    title: "Book Appointment",
+    url: "/portal/telehealth/book",
+    icon: CalendarPlus,
+  },
+  {
+    title: "My Appointments",
+    url: "/portal/telehealth/appointments",
+    icon: Video,
   },
 ]
 
@@ -157,6 +172,29 @@ export function PortalSidebar({ ...props }: React.ComponentProps<typeof Sidebar>
                           {unreadCount > 99 ? "99+" : unreadCount}
                         </Badge>
                       ) : null}
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )
+            })}
+          </SidebarMenu>
+        </SidebarGroup>
+        {/* Telehealth Section */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Telehealth</SidebarGroupLabel>
+          <SidebarMenu>
+            {telehealthItems.map((item) => {
+              const isActive = pathname?.startsWith(item.url)
+              return (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    tooltip={item.title}
+                    isActive={isActive}
+                  >
+                    <Link href={item.url as any}>
+                      <item.icon />
+                      <span>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

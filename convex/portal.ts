@@ -95,6 +95,7 @@ export const getMyPatients = query({
 
         return {
           _id: patient._id,
+          doctorId: patient.doctorId,
           firstname: patient.firstname,
           lastname: patient.lastname,
           birthdate: patient.birthdate,
@@ -407,8 +408,9 @@ export const getNotifications = query({
       _id: Id<"portalNotifications">;
       _creationTime: number;
       patientId: Id<"patients">;
-      type: "new_prescription" | "new_lab_exam" | "appointment_summary" | "new_vaccine_record" | "new_report";
+      type: string;
       appointmentId?: Id<"appointments">;
+      telehealthAppointmentId?: Id<"telehealthAppointments">;
       message: string;
       isRead: boolean;
       createdAt: number;

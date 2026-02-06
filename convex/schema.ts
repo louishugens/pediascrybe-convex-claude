@@ -331,9 +331,14 @@ const portalNotifications = defineTable({
     v.literal("new_lab_exam"),
     v.literal("appointment_summary"),
     v.literal("new_vaccine_record"),
-    v.literal("new_report")
+    v.literal("new_report"),
+    v.literal("telehealth_confirmed"),
+    v.literal("telehealth_rescheduled"),
+    v.literal("telehealth_cancelled"),
+    v.literal("telehealth_reminder")
   ),
   appointmentId: v.optional(v.id("appointments")),
+  telehealthAppointmentId: v.optional(v.id("telehealthAppointments")),
   message: v.string(),
   isRead: v.boolean(),
   createdAt: v.number(),
@@ -456,6 +461,84 @@ const aiExplanations = defineTable({
   .index("by_contextHash", ["contextHash"])
   .index("by_patientId_type", ["patientId", "type"]);
 
+// ==================== Telehealth ====================
+
+// Doctor's weekly recurring schedule
+const telehealthAvailability = defineTable({
+  doctorId: v.id("doctors"),
+  dayOfWeek: v.number(), // 0=Sun ... 6=Sat
+  startTime: v.string(), // "09:00" (24h)
+  endTime: v.string(), // "17:00"
+  slotDurationMinutes: v.number(), // 30
+  isActive: v.boolean(),
+  createdAt: v.number(),
+})
+  .index("by_doctorId", ["doctorId"])
+  .index("by_doctorId_dayOfWeek", ["doctorId", "dayOfWeek"]);
+
+// Block specific dates (holidays, etc.)
+const telehealthExceptions = defineTable({
+  doctorId: v.id("doctors"),
+  date: v.string(), // "2026-03-15" (ISO date)
+  reason: v.optional(v.string()),
+  createdAt: v.number(),
+})
+  .index("by_doctorId", ["doctorId"]);
+
+// Scheduled video consultations
+const telehealthAppointments = defineTable({
+  doctorId: v.id("doctors"),
+  patientId: v.id("patients"),
+  bookedByAuthUserId: v.string(), // parent who booked
+
+  // Scheduling
+  date: v.string(), // "2026-03-15" (ISO date)
+  startTime: v.string(), // "14:00"
+  endTime: v.string(), // "14:30"
+  timezone: v.string(), // IANA tz of doctor
+
+  // Status
+  status: v.union(
+    v.literal("requested"),
+    v.literal("confirmed"),
+    v.literal("rescheduled"),
+    v.literal("completed"),
+    v.literal("cancelled"),
+    v.literal("no_show")
+  ),
+  motif: v.optional(v.string()),
+  cancelledBy: v.optional(v.union(v.literal("doctor"), v.literal("patient"))),
+  cancellationReason: v.optional(v.string()),
+
+  // Reschedule proposal (set when status=rescheduled)
+  proposedDate: v.optional(v.string()),
+  proposedStartTime: v.optional(v.string()),
+  proposedEndTime: v.optional(v.string()),
+
+  // Payment (off-platform, doctor marks)
+  paymentStatus: v.union(v.literal("pending"), v.literal("paid"), v.literal("waived")),
+  paymentMarkedAt: v.optional(v.number()),
+
+  // LiveKit session
+  roomName: v.optional(v.string()),
+  sessionStartedAt: v.optional(v.number()),
+  sessionEndedAt: v.optional(v.number()),
+  doctorJoinedAt: v.optional(v.number()),
+  patientJoinedAt: v.optional(v.number()),
+
+  // Doctor post-call notes
+  appointmentId: v.optional(v.id("appointments")),
+  notes: v.optional(v.string()),
+
+  createdAt: v.number(),
+  updatedAt: v.number(),
+})
+  .index("by_doctorId", ["doctorId"])
+  .index("by_patientId", ["patientId"])
+  .index("by_doctorId_date", ["doctorId", "date"])
+  .index("by_doctorId_status", ["doctorId", "status"])
+  .index("by_roomName", ["roomName"]);
+
 // ==================== Export Schema ====================
 
 export default defineSchema({
@@ -496,5 +579,9 @@ export default defineSchema({
   patientSubscriptions,
   patientUsage,
   aiExplanations,
+  // Telehealth
+  telehealthAvailability,
+  telehealthExceptions,
+  telehealthAppointments,
 });
 

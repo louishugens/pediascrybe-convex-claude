@@ -187,6 +187,34 @@ http.route({
   }),
 });
 
+// ==================== LiveKit Webhook ====================
+
+http.route({
+  path: "/livekit/webhook",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const body = await request.text();
+    const authHeader = request.headers.get("Authorization");
+
+    if (!authHeader) {
+      return new Response("Missing authorization", { status: 401 });
+    }
+
+    try {
+      // Delegate to Node action for verification (livekit-server-sdk needs Node runtime)
+      await ctx.runAction(internal.livekit.handleWebhook, {
+        body,
+        authHeader,
+      });
+    } catch (err) {
+      console.error("LiveKit webhook error:", err);
+      return new Response("Webhook processing failed", { status: 400 });
+    }
+
+    return new Response("OK", { status: 200 });
+  }),
+});
+
 // ==================== Public API Endpoints ====================
 
 // Allowed origins for CORS
