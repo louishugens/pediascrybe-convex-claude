@@ -92,44 +92,44 @@ export function SubscriptionBanner() {
 
   return (
     <div className="px-4 pt-4">
-      <Alert className="relative border-primary/50 bg-primary/5">
-        <Clock className="h-4 w-4" />
-        <AlertTitle className="flex items-center gap-2">
-          {trialEnded ? (
-            "Your trial has ended"
-          ) : (
-            <>
-              <Sparkles className="h-4 w-4 text-primary" />
-              {daysRemaining === 1 ? "1 day" : `${daysRemaining} days`} left in your trial
-            </>
-          )}
-        </AlertTitle>
-        <AlertDescription className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <span>
-            {trialEnded
-              ? "Subscribe now to continue using all features."
-              : "Subscribe now to ensure uninterrupted access to all features."}
-          </span>
-          <div className="flex items-center gap-2 shrink-0">
-            <Link href="/user/pricing">
-              <Button size="sm" variant="default">
-                View Plans
-              </Button>
-            </Link>
-            {!trialEnded && (
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 w-8 p-0"
-                onClick={handleDismiss}
-              >
-                <X className="h-4 w-4" />
-                <span className="sr-only">Dismiss</span>
-              </Button>
+      <div className="flex items-center justify-between gap-4 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5">
+        <div className="flex items-center gap-2 min-w-0">
+          <Clock className="h-4 w-4 text-primary shrink-0" />
+          <p className="text-sm font-medium truncate">
+            {trialEnded ? (
+              "Your trial has ended"
+            ) : (
+              <>
+                <Sparkles className="inline h-3.5 w-3.5 text-primary mr-1" />
+                {daysRemaining === 1 ? "1 day" : `${daysRemaining} days`} left in your trial
+              </>
             )}
-          </div>
-        </AlertDescription>
-      </Alert>
+            <span className="text-muted-foreground font-normal ml-1.5">
+              {trialEnded
+                ? "— Subscribe now to continue using all features."
+                : "— Subscribe now to ensure uninterrupted access to all features."}
+            </span>
+          </p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <Link href="/user/pricing">
+            <Button size="sm" className="h-7 text-xs">
+              Subscribe
+            </Button>
+          </Link>
+          {!trialEnded && (
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7"
+              onClick={handleDismiss}
+            >
+              <X className="h-3.5 w-3.5" />
+              <span className="sr-only">Dismiss</span>
+            </Button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
