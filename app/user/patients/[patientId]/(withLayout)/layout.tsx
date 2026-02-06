@@ -63,9 +63,9 @@ const Layout = async ({
         </ViewTransition>
       </div>
       
-      {/* Sidebar - fixed positioning to stay visible while scrolling */}
+      {/* Sidebar - sticky positioning to stay visible while scrolling */}
       <aside className="hidden lg:block w-[320px] shrink-0">
-        <div className="fixed w-[320px] top-20 space-y-4 max-h-[calc(100vh-6rem)] overflow-y-auto pr-4">
+        <div className="sticky top-20 space-y-4 max-h-[calc(100vh-6rem)] overflow-y-auto pr-4">
           <Suspense fallback={<SidebarSkeleton />}>
             <PatientSidebar params={params} />
           </Suspense>
