@@ -318,6 +318,7 @@ export const update = mutation({
     diastolic: v.optional(v.number()),
     exams: v.optional(v.any()),
     medication: v.optional(v.any()),
+    internalNotes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { appointmentId, ...updates } = args;

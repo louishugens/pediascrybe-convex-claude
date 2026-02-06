@@ -4,7 +4,7 @@ import Link from "next/link"
 import { format } from 'date-fns'
 import { useRouter } from "next/navigation";
 import { ArrowUturnLeftIcon, PencilIcon, TrashIcon, PrinterIcon} from '@heroicons/react/24/outline'
-import { FileIcon } from "lucide-react";
+import { FileIcon, EyeOff } from "lucide-react";
 import {BeatLoader} from 'react-spinners'
 import Image from "next/image";
 import { X } from "lucide-react";
@@ -46,6 +46,7 @@ interface Appointment {
   diastolic?: number | null;
   medication?: any;
   exams?: any;
+  internalNotes?: string | null;
   files: UploadedFile[];
   service: Service | null;
 }
@@ -161,6 +162,18 @@ const AppointmentPageComponent = ({appointment, patientId}: AppointmentPageCompo
           <p className="font-semibold mb-2">Other remarks</p>
           <p className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{appointment.otherRemarks}</p>
         </div>
+        {appointment.internalNotes && (
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2 mb-2">
+              <p className="font-semibold">Internal Notes</p>
+              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                <EyeOff className="h-3 w-3" />
+                Private
+              </span>
+            </div>
+            <p className="w-full h-40 bg-amber-50 border border-dashed border-amber-300 rounded-md p-2 mt-1 overflow-scroll">{appointment.internalNotes}</p>
+          </div>
+        )}
         <div className="flex flex-col">
           <p className="font-semibold mb-2">Prescription</p>
           {/* <div className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{Array.isArray(medications) && medications.map((medication, index) =>{

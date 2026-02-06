@@ -14,10 +14,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const { 
-      height, weight, head, motif, findings, otherRemarks, arm, sao2, 
-      temperature, pulse, respiratory, systolic, diastolic, 
-      appointmentId, serviceId, cost 
+    const {
+      height, weight, head, motif, findings, otherRemarks, arm, sao2,
+      temperature, pulse, respiratory, systolic, diastolic,
+      appointmentId, serviceId, cost, internalNotes
     } = await req.json();
 
     const appointment = await fetchAuthMutation(api.appointments.updateAppointment, {
@@ -37,6 +37,7 @@ export async function POST(req: Request) {
       respiratory: respiratory || undefined,
       systolic: systolic || undefined,
       diastolic: diastolic || undefined,
+      internalNotes: internalNotes || undefined,
     });
 
     if (!appointment) {

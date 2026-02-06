@@ -97,6 +97,8 @@ const appointments = defineTable({
   // Medical data
   exams: v.optional(v.any()),
   medication: v.optional(v.any()),
+  // Internal notes (private — never exposed to portal)
+  internalNotes: v.optional(v.string()),
   // Transaction
   transactionId: v.optional(v.string()),
   transactionDate: v.optional(v.number()),

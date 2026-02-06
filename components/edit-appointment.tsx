@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 import { Id } from "@/convex/_generated/dataModel"
 import { useSubscriptionGuard } from "@/hooks/use-subscription-guard"
@@ -48,6 +48,7 @@ const formSchema = z.object({
   motif: z.string().optional(),
   findings: z.string().optional(),
   otherRemarks: z.string().optional(),
+  internalNotes: z.string().optional(),
   serviceId: z.string().optional(),
   cost: z.coerce.number().min(0, "Cost can't be less than 0").nullable().optional(),
 })
@@ -83,6 +84,7 @@ const EditAppointment = ({ appointment, patientId, patient, services }: EditAppo
       motif: appointment.motif || "",
       findings: appointment.findings || "",
       otherRemarks: appointment.otherRemarks || "",
+      internalNotes: appointment.internalNotes || "",
       arm: appointment.arm || undefined,
       sao2: appointment.sao2 || undefined,
       temperature: appointment.temperature || undefined,
@@ -471,6 +473,12 @@ const EditAppointment = ({ appointment, patientId, patient, services }: EditAppo
                           {...field}
                         />
                       </FormControl>
+                      {patient.portalEnabled && (
+                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                          <Eye className="h-3 w-3" />
+                          Visible on portal
+                        </span>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -524,6 +532,12 @@ const EditAppointment = ({ appointment, patientId, patient, services }: EditAppo
                           onChange={field.onChange}
                         />
                       </FormControl>
+                      {patient.portalEnabled && (
+                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                          <Eye className="h-3 w-3" />
+                          Visible on portal
+                        </span>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -542,11 +556,40 @@ const EditAppointment = ({ appointment, patientId, patient, services }: EditAppo
                           {...field}
                         />
                       </FormControl>
+                      {patient.portalEnabled && (
+                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                          <Eye className="h-3 w-3" />
+                          Visible on portal
+                        </span>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
+
+              {/* Internal Notes — Private */}
+              <FormField
+                control={form.control}
+                name="internalNotes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Internal Notes</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Private notes (not visible to parents on the portal)"
+                        className="h-[120px] resize-none overflow-y-auto border-dashed"
+                        {...field}
+                      />
+                    </FormControl>
+                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                      <EyeOff className="h-3 w-3" />
+                      Private — not visible on portal
+                    </span>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <div className="flex justify-center pt-4">
                 <Button
