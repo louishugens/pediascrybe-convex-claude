@@ -9,19 +9,27 @@
  */
 
 import type * as ai from "../ai.js";
+import type * as appUsers from "../appUsers.js";
 import type * as appointments from "../appointments.js";
 import type * as auth from "../auth.js";
 import type * as charts from "../charts.js";
 import type * as doctors from "../doctors.js";
 import type * as email from "../email.js";
 import type * as emails_magicLink from "../emails/magicLink.js";
+import type * as emails_portalInvitation from "../emails/portalInvitation.js";
+import type * as emails_portalNotification from "../emails/portalNotification.js";
 import type * as emails_resetPassword from "../emails/resetPassword.js";
 import type * as emails_verifyEmail from "../emails/verifyEmail.js";
 import type * as emails_verifyOTP from "../emails/verifyOTP.js";
 import type * as emails_welcome from "../emails/welcome.js";
 import type * as files from "../files.js";
 import type * as http from "../http.js";
+import type * as invitations from "../invitations.js";
+import type * as patientSubscriptions from "../patientSubscriptions.js";
 import type * as patients from "../patients.js";
+import type * as portal from "../portal.js";
+import type * as portalAi from "../portalAi.js";
+import type * as portalNotifications from "../portalNotifications.js";
 import type * as receipts from "../receipts.js";
 import type * as reports from "../reports.js";
 import type * as seed from "../seed.js";
@@ -40,19 +48,27 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   ai: typeof ai;
+  appUsers: typeof appUsers;
   appointments: typeof appointments;
   auth: typeof auth;
   charts: typeof charts;
   doctors: typeof doctors;
   email: typeof email;
   "emails/magicLink": typeof emails_magicLink;
+  "emails/portalInvitation": typeof emails_portalInvitation;
+  "emails/portalNotification": typeof emails_portalNotification;
   "emails/resetPassword": typeof emails_resetPassword;
   "emails/verifyEmail": typeof emails_verifyEmail;
   "emails/verifyOTP": typeof emails_verifyOTP;
   "emails/welcome": typeof emails_welcome;
   files: typeof files;
   http: typeof http;
+  invitations: typeof invitations;
+  patientSubscriptions: typeof patientSubscriptions;
   patients: typeof patients;
+  portal: typeof portal;
+  portalAi: typeof portalAi;
+  portalNotifications: typeof portalNotifications;
   receipts: typeof receipts;
   reports: typeof reports;
   seed: typeof seed;

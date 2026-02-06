@@ -2,10 +2,13 @@
 
 import { motion } from 'motion/react';
 import Link from 'next/link';
-import { FileText, Shield, Receipt, ChevronRight, LucideIcon } from 'lucide-react';
+import { FileText, Shield, Receipt, ChevronRight, LucideIcon, UserPlus } from 'lucide-react';
+import { InviteDialog } from '@/components/portal/invite-dialog';
 
 interface QuickActionsProps {
   patientId: string;
+  patientName?: string;
+  patientEmail?: string;
 }
 
 interface QuickActionItemProps {
@@ -42,7 +45,7 @@ function QuickActionItem({ href, label, Icon, color }: QuickActionItemProps) {
   );
 }
 
-export default function QuickActions({ patientId }: QuickActionsProps) {
+export default function QuickActions({ patientId, patientName, patientEmail }: QuickActionsProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -53,25 +56,34 @@ export default function QuickActions({ patientId }: QuickActionsProps) {
       <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
         Quick Actions
       </h4>
-      
+
       <div className="space-y-2">
-        <QuickActionItem 
+        <QuickActionItem
           href={`/user/patients/${patientId}/reports`}
           label="Reports & Certificates"
           Icon={FileText}
           color="text-primary"
         />
-        <QuickActionItem 
+        <QuickActionItem
           href={`/user/patients/${patientId}/vaccines`}
           label="Vaccines"
           Icon={Shield}
           color="text-primary"
         />
-        <QuickActionItem 
+        <QuickActionItem
           href={`/user/patients/${patientId}/receipts`}
           label="Receipts"
           Icon={Receipt}
           color="text-amber-500"
+        />
+      </div>
+
+      {/* Portal Invitation */}
+      <div className="mt-3 pt-3 border-t border-border/50">
+        <InviteDialog
+          patientId={patientId as any}
+          patientEmail={patientEmail}
+          patientName={patientName || "this patient"}
         />
       </div>
     </motion.div>

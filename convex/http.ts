@@ -34,84 +34,150 @@ http.route({
       return new Response("Webhook signature verification failed", { status: 400 });
     }
     
+    // Helper: check if subscription belongs to a patient (vs doctor)
+    const isPatientSubscription = (sub: Stripe.Subscription): boolean => {
+      return sub.metadata?.userType === "patient";
+    };
+
     // Handle subscription events
     switch (event.type) {
       case "customer.subscription.created":
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
-        await ctx.runAction(internal.stripeWebhooks.handleSubscriptionCreated, {
-          subscription,
-        });
+
+        if (isPatientSubscription(subscription)) {
+          // Route to patient subscription handler
+          const sub = subscription as any;
+          await ctx.runMutation(internal.patientSubscriptions.syncSubscription, {
+            authUserId: subscription.metadata.authUserId,
+            stripeCustomerId: subscription.customer as string,
+            stripeSubscriptionId: subscription.id,
+            stripePriceId: subscription.items.data[0]?.price?.id || "",
+            status: subscription.status,
+            currentPeriodStart: sub.current_period_start ?? sub.currentPeriodStart,
+            currentPeriodEnd: sub.current_period_end ?? sub.currentPeriodEnd,
+            trialEnd: sub.trial_end ?? sub.trialEnd ?? undefined,
+          });
+        } else {
+          // Route to doctor subscription handler (existing)
+          await ctx.runAction(internal.stripeWebhooks.handleSubscriptionCreated, {
+            subscription,
+          });
+        }
         break;
       }
-      
+
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
-        await ctx.runAction(internal.stripeWebhooks.handleSubscriptionDeleted, {
-          subscription,
-        });
+
+        if (isPatientSubscription(subscription)) {
+          await ctx.runMutation(internal.patientSubscriptions.cancelSubscription, {
+            stripeSubscriptionId: subscription.id,
+          });
+        } else {
+          await ctx.runAction(internal.stripeWebhooks.handleSubscriptionDeleted, {
+            subscription,
+          });
+        }
         break;
       }
-      
+
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         if (session.mode === "subscription" && session.subscription) {
           console.log("[Webhook] Checkout completed, customer email:", session.customer_email);
           const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
-          await ctx.runAction(internal.stripeWebhooks.handleSubscriptionCreated, {
-            subscription,
-            customerEmail: session.customer_email || undefined, // Pass email for fallback lookup
-          });
+
+          if (isPatientSubscription(subscription) || session.metadata?.userType === "patient") {
+            // Patient checkout — sync patient subscription
+            const sub = subscription as any;
+            const authUserId = subscription.metadata?.authUserId || session.metadata?.authUserId;
+            if (authUserId) {
+              await ctx.runMutation(internal.patientSubscriptions.syncSubscription, {
+                authUserId,
+                stripeCustomerId: subscription.customer as string,
+                stripeSubscriptionId: subscription.id,
+                stripePriceId: subscription.items.data[0]?.price?.id || "",
+                status: subscription.status,
+                currentPeriodStart: sub.current_period_start ?? sub.currentPeriodStart,
+                currentPeriodEnd: sub.current_period_end ?? sub.currentPeriodEnd,
+                trialEnd: sub.trial_end ?? sub.trialEnd ?? undefined,
+              });
+            }
+          } else {
+            // Doctor checkout (existing)
+            await ctx.runAction(internal.stripeWebhooks.handleSubscriptionCreated, {
+              subscription,
+              customerEmail: session.customer_email || undefined,
+            });
+          }
         }
         break;
       }
-      
+
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice;
         console.log(`[Webhook] Payment succeeded for invoice ${invoice.id}, customer: ${invoice.customer}`);
-        
+
         // If this is a subscription invoice, ensure subscription is synced
         // Use type assertion to access subscription property
         const invoiceSubscription = (invoice as { subscription?: string | Stripe.Subscription | null }).subscription;
         if (invoiceSubscription) {
-          const subscriptionId = typeof invoiceSubscription === 'string' 
-            ? invoiceSubscription 
+          const subscriptionId = typeof invoiceSubscription === 'string'
+            ? invoiceSubscription
             : invoiceSubscription.id;
           const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-          
-          // Get customer email for fallback lookup
-          let customerEmail: string | null = null;
-          try {
-            const customer = await stripe.customers.retrieve(subscription.customer as string);
-            if (customer && !customer.deleted) {
-              customerEmail = customer.email || null;
+
+          if (isPatientSubscription(subscription)) {
+            const sub = subscription as any;
+            const authUserId = subscription.metadata?.authUserId;
+            if (authUserId) {
+              await ctx.runMutation(internal.patientSubscriptions.syncSubscription, {
+                authUserId,
+                stripeCustomerId: subscription.customer as string,
+                stripeSubscriptionId: subscription.id,
+                stripePriceId: subscription.items.data[0]?.price?.id || "",
+                status: subscription.status,
+                currentPeriodStart: sub.current_period_start ?? sub.currentPeriodStart,
+                currentPeriodEnd: sub.current_period_end ?? sub.currentPeriodEnd,
+                trialEnd: sub.trial_end ?? sub.trialEnd ?? undefined,
+              });
             }
-          } catch (e) {
-            console.error("[Webhook] Failed to fetch customer:", e);
+          } else {
+            // Get customer email for fallback lookup
+            let customerEmail: string | null = null;
+            try {
+              const customer = await stripe.customers.retrieve(subscription.customer as string);
+              if (customer && !customer.deleted) {
+                customerEmail = customer.email || null;
+              }
+            } catch (e) {
+              console.error("[Webhook] Failed to fetch customer:", e);
+            }
+
+            await ctx.runAction(internal.stripeWebhooks.handleSubscriptionCreated, {
+              subscription,
+              customerEmail: customerEmail || undefined,
+            });
           }
-          
-          await ctx.runAction(internal.stripeWebhooks.handleSubscriptionCreated, {
-            subscription,
-            customerEmail: customerEmail || undefined,
-          });
         }
         break;
       }
-      
+
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
         console.log(`Payment failed for invoice ${invoice.id}, customer: ${invoice.customer}`);
         // TODO: Send email notification to user about failed payment
         break;
       }
-      
+
       case "customer.subscription.trial_will_end": {
         const subscription = event.data.object as Stripe.Subscription;
         console.log(`Trial ending soon for subscription ${subscription.id}`);
         // TODO: Send email notification to user about trial ending
         break;
       }
-      
+
       default:
         // Log unhandled events for debugging
         console.log(`Unhandled webhook event type: ${event.type}`);

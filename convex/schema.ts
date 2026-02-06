@@ -45,6 +45,7 @@ const patients = defineTable({
   history: v.optional(v.string()),
   bloodtype: v.optional(v.string()),
   electrophoresis: v.optional(v.string()),
+  portalEnabled: v.optional(v.boolean()),
   isCompleted: v.boolean(),
   createdAt: v.number(),
   updatedAt: v.number(),
@@ -277,6 +278,66 @@ const subscriptions = defineTable({
   .index("by_doctorId", ["doctorId"])
   .index("by_tierName", ["tierName"]);
 
+// ==================== Patient Portal ====================
+
+// Patient invitations - doctor invites parent to portal
+const patientInvitations = defineTable({
+  doctorId: v.id("doctors"),
+  patientId: v.id("patients"),
+  email: v.string(),
+  token: v.string(),
+  status: v.union(v.literal("pending"), v.literal("accepted"), v.literal("expired"), v.literal("revoked")),
+  expiresAt: v.number(),
+  acceptedAt: v.optional(v.number()),
+  acceptedByAuthUserId: v.optional(v.string()),
+  createdAt: v.number(),
+})
+  .index("by_token", ["token"])
+  .index("by_email", ["email"])
+  .index("by_doctorId", ["doctorId"])
+  .index("by_patientId", ["patientId"]);
+
+// Patient accounts - links auth users to patient records (one parent can have multiple children)
+const patientAccounts = defineTable({
+  authUserId: v.string(),
+  patientId: v.id("patients"),
+  relationship: v.union(v.literal("parent"), v.literal("guardian")),
+  isPrimary: v.boolean(),
+  createdAt: v.number(),
+})
+  .index("by_authUserId", ["authUserId"])
+  .index("by_patientId", ["patientId"])
+  .index("by_authUserId_patientId", ["authUserId", "patientId"]);
+
+// Patient files - parent-uploaded files (separate from doctor's appointment files)
+const patientFiles = defineTable({
+  patientId: v.id("patients"),
+  uploadedByAuthUserId: v.string(),
+  url: v.string(),
+  name: v.string(),
+  fileType: v.union(v.literal("IMAGE"), v.literal("PDF")),
+  description: v.optional(v.string()),
+  createdAt: v.number(),
+})
+  .index("by_patientId", ["patientId"]);
+
+// Portal notifications - tracks notifications sent to parents
+const portalNotifications = defineTable({
+  patientId: v.id("patients"),
+  type: v.union(
+    v.literal("new_prescription"),
+    v.literal("new_lab_exam"),
+    v.literal("appointment_summary"),
+    v.literal("new_vaccine_record"),
+    v.literal("new_report")
+  ),
+  appointmentId: v.optional(v.id("appointments")),
+  message: v.string(),
+  isRead: v.boolean(),
+  createdAt: v.number(),
+})
+  .index("by_patientId", ["patientId"]);
+
 // ==================== App Users (Auth link) ====================
 
 const appUsers = defineTable({
@@ -340,6 +401,59 @@ const subscriptionTiers = defineTable({
   .index("by_sortOrder", ["sortOrder"])
   .index("by_stripePriceId", ["stripePriceId"]);
 
+// ==================== Patient Portal AI (Scrybe Assist) ====================
+
+// Patient subscriptions for Scrybe Assist ($4.99/mo premium)
+const patientSubscriptions = defineTable({
+  authUserId: v.string(),
+  stripeCustomerId: v.optional(v.string()),
+  stripeSubscriptionId: v.optional(v.string()),
+  stripePriceId: v.optional(v.string()),
+  plan: v.union(v.literal("free"), v.literal("premium")),
+  status: v.union(
+    v.literal("active"),
+    v.literal("trialing"),
+    v.literal("canceled"),
+    v.literal("incomplete")
+  ),
+  currentPeriodStart: v.optional(v.number()),
+  currentPeriodEnd: v.optional(v.number()),
+  trialEnd: v.optional(v.number()),
+  createdAt: v.number(),
+})
+  .index("by_authUserId", ["authUserId"])
+  .index("by_stripeCustomerId", ["stripeCustomerId"])
+  .index("by_stripeSubscriptionId", ["stripeSubscriptionId"]);
+
+// Patient AI usage tracking (free tier: 5/month)
+const patientUsage = defineTable({
+  authUserId: v.string(),
+  period: v.string(), // "2026-02"
+  aiExplanations: v.number(),
+  createdAt: v.number(),
+  updatedAt: v.number(),
+})
+  .index("by_authUserId", ["authUserId"])
+  .index("by_authUserId_period", ["authUserId", "period"]);
+
+// AI explanation cache (avoids repeated API calls)
+const aiExplanations = defineTable({
+  type: v.union(
+    v.literal("medication"),
+    v.literal("diagnostic"),
+    v.literal("lab_exam"),
+    v.literal("growth"),
+    v.literal("vaccination")
+  ),
+  contextHash: v.string(),
+  patientId: v.id("patients"),
+  appointmentId: v.optional(v.id("appointments")),
+  explanation: v.string(),
+  createdAt: v.number(),
+})
+  .index("by_contextHash", ["contextHash"])
+  .index("by_patientId_type", ["patientId", "type"]);
+
 // ==================== Export Schema ====================
 
 export default defineSchema({
@@ -371,5 +485,14 @@ export default defineSchema({
   // Usage & Subscription Tiers
   usage,
   subscriptionTiers,
+  // Patient Portal
+  patientInvitations,
+  patientAccounts,
+  patientFiles,
+  portalNotifications,
+  // Patient Portal AI (Scrybe Assist)
+  patientSubscriptions,
+  patientUsage,
+  aiExplanations,
 });
 

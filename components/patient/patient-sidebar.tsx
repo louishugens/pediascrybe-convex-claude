@@ -37,7 +37,11 @@ export default async function PatientSidebar({ params }: PatientSidebarProps) {
           records={complianceData.records}
         />
       )}
-      <QuickActions patientId={patientId} />
+      <QuickActions
+        patientId={patientId}
+        patientName={`${patient.firstname} ${patient.lastname}`}
+        patientEmail={patient.email}
+      />
       <ScrybeInput patientId={patientId} />
     </div>
   );

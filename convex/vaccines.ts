@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
 
 // ==================== Vaccins ====================
 
@@ -229,7 +230,17 @@ export const createRecord = mutation({
     site: v.string(),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert("vaccinationRecords", args);
+    const recordId = await ctx.db.insert("vaccinationRecords", args);
+
+    // Notify parent if portal is enabled
+    const patient = await ctx.db.get(args.patientId);
+    if (patient?.portalEnabled) {
+      await ctx.scheduler.runAfter(0, internal.portalNotifications.notifyParentOfVaccination, {
+        patientId: args.patientId,
+      });
+    }
+
+    return recordId;
   },
 });
 

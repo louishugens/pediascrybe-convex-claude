@@ -3,6 +3,8 @@ import VerifyEmail from "./emails/verifyEmail";
 import MagicLinkEmail from "./emails/magicLink";
 import VerifyOTP from "./emails/verifyOTP";
 import PediascrybeWelcome from "./emails/welcome";
+import PortalInvitation from "./emails/portalInvitation";
+import PortalNotification from "./emails/portalNotification";
 import { render } from "@react-email/components";
 import ResetPasswordEmail from "./emails/resetPassword";
 import { components } from "./_generated/api";
@@ -115,6 +117,123 @@ export const sendWelcomeEmailAction = internalAction({
     await sendWelcomeEmail(ctx, {
       to: args.to,
       userName: args.userName,
+    });
+  },
+});
+
+// Portal invitation email
+export const sendPortalInvitationEmail = async (
+  ctx: ActionCtx,
+  {
+    to,
+    doctorName,
+    childName,
+    inviteUrl,
+  }: {
+    to: string;
+    doctorName: string;
+    childName: string;
+    inviteUrl: string;
+  },
+) => {
+  await resend.sendEmail(ctx, {
+    from: "Pediascrybe <info@email.pediascrybe.com>",
+    to,
+    subject: `You're invited to view ${childName}'s health records`,
+    html: await render(<PortalInvitation doctorName={doctorName} childName={childName} inviteUrl={inviteUrl} />),
+  });
+};
+
+// Internal action for scheduling portal invitation email
+export const sendPortalInvitationAction = internalAction({
+  args: {
+    to: v.string(),
+    doctorName: v.string(),
+    childName: v.string(),
+    inviteUrl: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await sendPortalInvitationEmail(ctx, {
+      to: args.to,
+      doctorName: args.doctorName,
+      childName: args.childName,
+      inviteUrl: args.inviteUrl,
+    });
+  },
+});
+
+// Portal notification email
+export const sendPortalNotificationEmail = async (
+  ctx: ActionCtx,
+  {
+    to,
+    parentName,
+    childName,
+    doctorName,
+    notificationType,
+    message,
+    portalUrl,
+  }: {
+    to: string;
+    parentName?: string;
+    childName: string;
+    doctorName: string;
+    notificationType: "new_prescription" | "new_lab_exam" | "appointment_summary" | "new_vaccine_record" | "new_report";
+    message: string;
+    portalUrl: string;
+  },
+) => {
+  const SUBJECT_MAP = {
+    new_prescription: `New prescription for ${childName}`,
+    new_lab_exam: `New lab exam request for ${childName}`,
+    appointment_summary: `Appointment summary for ${childName}`,
+    new_vaccine_record: `Vaccination update for ${childName}`,
+    new_report: `New report for ${childName}`,
+  };
+
+  await resend.sendEmail(ctx, {
+    from: "Pediascrybe <info@email.pediascrybe.com>",
+    to,
+    subject: SUBJECT_MAP[notificationType],
+    html: await render(
+      <PortalNotification
+        parentName={parentName}
+        childName={childName}
+        doctorName={doctorName}
+        notificationType={notificationType}
+        message={message}
+        portalUrl={portalUrl}
+      />
+    ),
+  });
+};
+
+// Internal action for scheduling portal notification email
+export const sendPortalNotificationAction = internalAction({
+  args: {
+    to: v.string(),
+    parentName: v.optional(v.string()),
+    childName: v.string(),
+    doctorName: v.string(),
+    notificationType: v.union(
+      v.literal("new_prescription"),
+      v.literal("new_lab_exam"),
+      v.literal("appointment_summary"),
+      v.literal("new_vaccine_record"),
+      v.literal("new_report")
+    ),
+    message: v.string(),
+    portalUrl: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await sendPortalNotificationEmail(ctx, {
+      to: args.to,
+      parentName: args.parentName,
+      childName: args.childName,
+      doctorName: args.doctorName,
+      notificationType: args.notificationType,
+      message: args.message,
+      portalUrl: args.portalUrl,
     });
   },
 });

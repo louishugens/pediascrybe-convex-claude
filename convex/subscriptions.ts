@@ -26,6 +26,9 @@ const FEATURE_ACCESS: Record<string, string[]> = {
   advanced_analytics: ["pro", "premium"],
   email_chat_support: ["pro", "premium"],
 
+  // Pro+ portal features
+  patient_portal: ["pro", "premium"],
+
   // Premium only features (some coming soon)
   priority_support: ["premium"],
   telehealth: ["premium"], // Coming soon

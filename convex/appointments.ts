@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
 
 // Get all appointments for a doctor
 export const listByDoctor = query({
@@ -320,13 +321,50 @@ export const update = mutation({
   },
   handler: async (ctx, args) => {
     const { appointmentId, ...updates } = args;
-    
+
+    // Get current appointment state before update (for notification comparison)
+    const currentAppointment = await ctx.db.get(appointmentId);
+
     // Filter out undefined values
     const filteredUpdates = Object.fromEntries(
       Object.entries(updates).filter(([_, v]) => v !== undefined)
     );
-    
-    return await ctx.db.patch(appointmentId, filteredUpdates);
+
+    const result = await ctx.db.patch(appointmentId, filteredUpdates);
+
+    // Trigger portal notifications if patient has portal enabled
+    if (currentAppointment) {
+      const patient = await ctx.db.get(currentAppointment.patientId);
+      if (patient?.portalEnabled) {
+        const hasMedicationChange = args.medication !== undefined &&
+          JSON.stringify(args.medication) !== JSON.stringify(currentAppointment.medication);
+        const hasExamsChange = args.exams !== undefined &&
+          JSON.stringify(args.exams) !== JSON.stringify(currentAppointment.exams);
+        const hasFindingsChange = args.findings !== undefined &&
+          args.findings !== currentAppointment.findings;
+
+        if (hasMedicationChange) {
+          await ctx.scheduler.runAfter(0, internal.portalNotifications.notifyParentOfPrescription, {
+            patientId: currentAppointment.patientId,
+            appointmentId,
+          });
+        }
+        if (hasExamsChange) {
+          await ctx.scheduler.runAfter(0, internal.portalNotifications.notifyParentOfLabExam, {
+            patientId: currentAppointment.patientId,
+            appointmentId,
+          });
+        }
+        if (hasFindingsChange) {
+          await ctx.scheduler.runAfter(0, internal.portalNotifications.notifyParentOfAppointmentSummary, {
+            patientId: currentAppointment.patientId,
+            appointmentId,
+          });
+        }
+      }
+    }
+
+    return result;
   },
 });
 

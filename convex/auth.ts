@@ -54,18 +54,64 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
             });
           }
 
-          // Schedule Stripe customer creation
-          await ctx.scheduler.runAfter(0, internal.stripe.createStripeCustomer, {
-            authUserId: String(doc._id),
-            email: doc.email,
-            name: doc.name ?? undefined,
-          });
+          // If user is a patient, auto-accept pending invitations
+          if (doc.role === "patient") {
+            const pendingInvitations = await ctx.db
+              .query("patientInvitations")
+              .withIndex("by_email", (q) => q.eq("email", doc.email))
+              .collect();
 
-          // Schedule welcome email
-          await ctx.scheduler.runAfter(0, internal.email.sendWelcomeEmailAction, {
-            to: doc.email,
-            userName: doc.lastName ?? doc.firstName ?? doc.name?.split(" ").pop(),
-          });
+            for (const invitation of pendingInvitations) {
+              if (invitation.status === "pending" && invitation.expiresAt > now) {
+                // Check if link already exists
+                const existingLink = await ctx.db
+                  .query("patientAccounts")
+                  .withIndex("by_authUserId_patientId", (q) =>
+                    q.eq("authUserId", String(doc._id)).eq("patientId", invitation.patientId)
+                  )
+                  .first();
+
+                if (!existingLink) {
+                  const existingPatientLinks = await ctx.db
+                    .query("patientAccounts")
+                    .withIndex("by_patientId", (q) => q.eq("patientId", invitation.patientId))
+                    .collect();
+
+                  await ctx.db.insert("patientAccounts", {
+                    authUserId: String(doc._id),
+                    patientId: invitation.patientId,
+                    relationship: "parent",
+                    isPrimary: existingPatientLinks.length === 0,
+                    createdAt: now,
+                  });
+                }
+
+                // Mark invitation as accepted
+                await ctx.db.patch(invitation._id, {
+                  status: "accepted",
+                  acceptedAt: now,
+                  acceptedByAuthUserId: String(doc._id),
+                });
+              }
+            }
+          }
+
+          // Schedule Stripe customer creation (only for doctors)
+          if (doc.role === "doctor") {
+            await ctx.scheduler.runAfter(0, internal.stripe.createStripeCustomer, {
+              authUserId: String(doc._id),
+              email: doc.email,
+              name: doc.name ?? undefined,
+            });
+          }
+
+          // Schedule welcome email (only for doctors — patients get the invitation email)
+          if (doc.role === "doctor") {
+            await ctx.scheduler.runAfter(0, internal.email.sendWelcomeEmailAction, {
+              to: doc.email,
+              userName: doc.lastName ?? doc.firstName ?? doc.name?.split(" ").pop(),
+            });
+          }
         },
       },
     },

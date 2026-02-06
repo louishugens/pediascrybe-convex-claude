@@ -9,7 +9,7 @@ import PrintHead from './printHeader';
 
 
 
-const Print = ({appointment, doctor, patient, exams}) => {
+const Print = ({appointment, doctor, patient, exams, backUrl}: {appointment: any, doctor: any, patient: any, exams: boolean, backUrl?: string}) => {
   const string = exams ? "Tests" : "Prescriptions"
   const componentRef = useRef(null);
   const handlePrint = useReactToPrint({
@@ -105,7 +105,7 @@ const Print = ({appointment, doctor, patient, exams}) => {
       </div>
       <div className="flex flex-row justify-between pb-2 mt-6">
         <button onClick={() => handlePrint()} className="shadow bg-primary rounded-full py-2 px-4 text-primary-foreground text-sm">Print this out!</button>
-        <Link href={`/user/patients/${patient._id}/${appointment._id}`} className="px-4 py-2 rounded-full bg-muted text-primary text-sm">
+        <Link href={(backUrl || `/user/patients/${patient._id}/${appointment._id}`) as any} className="px-4 py-2 rounded-full bg-muted text-primary text-sm">
           Leave
         </Link>
       </div>

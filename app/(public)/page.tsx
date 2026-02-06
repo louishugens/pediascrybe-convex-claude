@@ -61,7 +61,13 @@ export default function Home() {
       setLoading(false)
       toast.success('Sign in successful')
       reset()
-      router.push('/user')
+      // Role-based redirect
+      const userRole = (data.user as any).role
+      if (userRole === 'patient') {
+        router.push('/portal')
+      } else {
+        router.push('/user')
+      }
     }
   }
 

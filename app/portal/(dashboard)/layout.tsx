@@ -1,5 +1,5 @@
 import { Suspense } from "react"
-import { AppSidebar } from "@/components/app-sidebar"
+import { PortalSidebar } from "@/components/portal/portal-sidebar"
 import {
   SidebarInset,
   SidebarProvider,
@@ -7,12 +7,8 @@ import {
 } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import { ClientAuthBoundary } from "@/lib/auth-client"
-import { BreadcrumbNav } from "@/components/breadcrumb-nav"
-import { SubscriptionGuardProvider } from "@/hooks/use-subscription-guard"
-import { SubscriptionDialog } from "@/components/subscription-dialog"
-import { SubscriptionBanner } from "@/components/subscription-banner"
-import { SubscriptionSync } from "@/components/subscription-sync"
-import { DoctorRoleGuard } from "@/components/doctor-role-guard"
+import { PortalBreadcrumbNav } from "@/components/portal/portal-breadcrumb-nav"
+import { PortalRoleGuard } from "@/components/portal/portal-role-guard"
 
 interface LayoutProps {
   children: React.ReactNode
@@ -29,7 +25,7 @@ function SidebarSkeleton() {
         </div>
       </div>
       <div className="flex-1 space-y-2 p-4">
-        {[...Array(5)].map((_, i) => (
+        {[...Array(4)].map((_, i) => (
           <div key={i} className="h-8 rounded bg-muted animate-pulse" />
         ))}
       </div>
@@ -46,35 +42,30 @@ function SidebarSkeleton() {
   )
 }
 
-const Layout = ({ children }: LayoutProps) => {
+const PortalLayout = ({ children }: LayoutProps) => {
   return (
     <Suspense fallback={<SidebarSkeleton />}>
       <ClientAuthBoundary>
-        <DoctorRoleGuard>
-        <SubscriptionGuardProvider>
+        <PortalRoleGuard>
           <SidebarProvider>
-            <AppSidebar />
+            <PortalSidebar />
             <SidebarInset>
-            <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-              <div className="flex items-center gap-2 px-4">
-                <SidebarTrigger className="-ml-1" />
-                <Separator orientation="vertical" className="mr-2 h-4 my-auto" />
-                <BreadcrumbNav />
+              <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+                <div className="flex items-center gap-2 px-4">
+                  <SidebarTrigger className="-ml-1" />
+                  <Separator orientation="vertical" className="mr-2 h-4 my-auto" />
+                  <PortalBreadcrumbNav />
+                </div>
+              </header>
+              <div className="flex-1 p-4 overflow-x-clip">
+                {children}
               </div>
-            </header>
-            <SubscriptionBanner />
-            <div className="flex-1 p-4 overflow-x-clip">
-              {children}
-            </div>
             </SidebarInset>
-            <SubscriptionDialog />
-            <SubscriptionSync />
           </SidebarProvider>
-        </SubscriptionGuardProvider>
-        </DoctorRoleGuard>
+        </PortalRoleGuard>
       </ClientAuthBoundary>
     </Suspense>
   )
 }
 
-export default Layout
+export default PortalLayout

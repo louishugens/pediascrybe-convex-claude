@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ExternalLink } from 'lucide-react';
 import DemographicsDialog from './demographics-dialog';
+import { InvitationStatusBadge } from '@/components/portal/invitation-status-badge';
 import { useState } from 'react';
 
 interface Patient {
@@ -75,6 +76,7 @@ export default function DemographicsPreview({ patient, patientId }: Demographics
               ⚠️ Allergies
             </Badge>
           )}
+          <InvitationStatusBadge patientId={patientId as any} />
         </div>
 
         {/* Quick Info */}
