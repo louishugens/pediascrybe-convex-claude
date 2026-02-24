@@ -13,6 +13,12 @@ import { SubscriptionDialog } from "@/components/subscription-dialog"
 import { SubscriptionBanner } from "@/components/subscription-banner"
 import { SubscriptionSync } from "@/components/subscription-sync"
 import { DoctorRoleGuard } from "@/components/doctor-role-guard"
+import { SyncStatusProvider } from "@/lib/offline/context/SyncStatusProvider"
+import { NetworkStatusBanner } from "@/components/offline/NetworkStatusBanner"
+import { OfflineCacheInitializer } from "@/components/offline/OfflineCacheInitializer"
+import { InstallPrompt } from "@/components/pwa/InstallPrompt"
+import { OfflineContentGuard } from "@/components/offline/OfflineContentGuard"
+import { OfflineRouteProvider } from "@/lib/offline/context/OfflineRouteContext"
 
 interface LayoutProps {
   children: React.ReactNode
@@ -51,10 +57,13 @@ const Layout = ({ children }: LayoutProps) => {
     <Suspense fallback={<SidebarSkeleton />}>
       <ClientAuthBoundary>
         <DoctorRoleGuard>
+        <SyncStatusProvider>
+          <OfflineCacheInitializer />
         <SubscriptionGuardProvider>
           <SidebarProvider>
             <AppSidebar />
             <SidebarInset>
+            <OfflineRouteProvider>
             <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
               <div className="flex items-center gap-2 px-4">
                 <SidebarTrigger className="-ml-1" />
@@ -62,15 +71,21 @@ const Layout = ({ children }: LayoutProps) => {
                 <BreadcrumbNav />
               </div>
             </header>
+            <InstallPrompt />
             <SubscriptionBanner />
+            <NetworkStatusBanner />
             <div className="flex-1 p-4 overflow-x-clip">
-              {children}
+              <OfflineContentGuard>
+                {children}
+              </OfflineContentGuard>
             </div>
+            </OfflineRouteProvider>
             </SidebarInset>
             <SubscriptionDialog />
             <SubscriptionSync />
           </SidebarProvider>
         </SubscriptionGuardProvider>
+        </SyncStatusProvider>
         </DoctorRoleGuard>
       </ClientAuthBoundary>
     </Suspense>

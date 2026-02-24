@@ -5,12 +5,12 @@ import { v } from "convex/values";
 export const seedChart = mutation({
   args: {
     chartId: v.string(),
-    p03: v.any(),
-    p15: v.any(),
-    p50: v.any(),
-    p85: v.any(),
-    p97: v.any(),
-    height: v.optional(v.any()),
+    p03: v.array(v.number()),
+    p15: v.array(v.number()),
+    p50: v.array(v.number()),
+    p85: v.array(v.number()),
+    p97: v.array(v.number()),
+    height: v.optional(v.array(v.number())),
   },
   handler: async (ctx, args) => {
     // Check if chart already exists

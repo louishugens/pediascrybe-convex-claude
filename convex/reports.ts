@@ -1,10 +1,12 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { verifyDoctorOwnsPatient, verifyDoctorOwnsAppointment } from "./authHelpers";
 
 // Get all reports for a patient
 export const listByPatient = query({
   args: { patientId: v.id("patients") },
   handler: async (ctx, args) => {
+    await verifyDoctorOwnsPatient(ctx, args.patientId);
     return await ctx.db
       .query("reports")
       .withIndex("by_patientId", (q) => q.eq("patientId", args.patientId))
@@ -19,7 +21,8 @@ export const getById = query({
   handler: async (ctx, args) => {
     const report = await ctx.db.get(args.reportId);
     if (!report) return null;
-    
+    if (report) await verifyDoctorOwnsPatient(ctx, report.patientId);
+
     const patient = await ctx.db.get(report.patientId);
     return { ...report, patient };
   },
@@ -33,6 +36,7 @@ export const create = mutation({
     content: v.string(),
   },
   handler: async (ctx, args) => {
+    await verifyDoctorOwnsPatient(ctx, args.patientId);
     return await ctx.db.insert("reports", {
       ...args,
       createdAt: Date.now(),
@@ -49,11 +53,15 @@ export const update = mutation({
   },
   handler: async (ctx, args) => {
     const { reportId, ...updates } = args;
-    
+
+    const report = await ctx.db.get(args.reportId);
+    if (!report) throw new Error("Report not found");
+    await verifyDoctorOwnsPatient(ctx, report.patientId);
+
     const filteredUpdates = Object.fromEntries(
       Object.entries(updates).filter(([_, v]) => v !== undefined)
     );
-    
+
     return await ctx.db.patch(reportId, filteredUpdates);
   },
 });
@@ -62,6 +70,9 @@ export const update = mutation({
 export const remove = mutation({
   args: { reportId: v.id("reports") },
   handler: async (ctx, args) => {
+    const report = await ctx.db.get(args.reportId);
+    if (!report) throw new Error("Report not found");
+    await verifyDoctorOwnsPatient(ctx, report.patientId);
     await ctx.db.delete(args.reportId);
   },
 });

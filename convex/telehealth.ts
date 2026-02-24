@@ -224,6 +224,25 @@ export const book = mutation({
       throw new Error("Not authorized to book for this patient");
     }
 
+    // Verify doctor has telehealth feature access (Premium tier)
+    const doctorSubscription = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_doctorId", (q) => q.eq("doctorId", args.doctorId))
+      .order("desc")
+      .first();
+
+    if (!doctorSubscription) {
+      throw new Error("Doctor does not have an active subscription");
+    }
+    const activeStatuses = ["trialing", "active"];
+    if (!activeStatuses.includes(doctorSubscription.status)) {
+      throw new Error("Doctor's subscription is not active");
+    }
+    const tierName = doctorSubscription.tierName || doctorSubscription.metadata?.tierName || "free";
+    if (tierName !== "premium") {
+      throw new Error("Telehealth requires a Premium subscription");
+    }
+
     // Validate the slot is still available
     const existing = await ctx.db
       .query("telehealthAppointments")
@@ -284,7 +303,11 @@ export const confirm = mutation({
       throw new Error("Can only confirm requested appointments");
     }
 
-    const roomName = `th-${args.id}`;
+    // Generate unpredictable room name to prevent enumeration
+    const randomBytes = new Uint8Array(16);
+    crypto.getRandomValues(randomBytes);
+    const randomSuffix = Array.from(randomBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+    const roomName = `th-${args.id}-${randomSuffix}`;
     const now = Date.now();
 
     await ctx.db.patch(args.id, {

@@ -1,6 +1,7 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
+import { getAuthenticatedDoctor, verifyDoctorOwnsPatient } from "./authHelpers";
 
 // ==================== Vaccins ====================
 
@@ -8,6 +9,9 @@ import { internal } from "./_generated/api";
 export const listByDoctor = query({
   args: { doctorId: v.id("doctors") },
   handler: async (ctx, args) => {
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== args.doctorId) throw new Error("Not authorized");
+
     const vaccins = await ctx.db
       .query("vaccins")
       .withIndex("by_doctorId", (q) => q.eq("doctorId", args.doctorId))
@@ -35,6 +39,9 @@ export const createVaccin = mutation({
     name: v.string(),
   },
   handler: async (ctx, args) => {
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== args.doctorId) throw new Error("Not authorized");
+
     return await ctx.db.insert("vaccins", args);
   },
 });
@@ -43,6 +50,11 @@ export const createVaccin = mutation({
 export const removeVaccin = mutation({
   args: { vaccinId: v.id("vaccins") },
   handler: async (ctx, args) => {
+    const vaccin = await ctx.db.get(args.vaccinId);
+    if (!vaccin) throw new Error("Vaccine not found");
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== vaccin.doctorId) throw new Error("Not authorized");
+
     // Delete associated doses
     const doses = await ctx.db
       .query("doses")
@@ -69,6 +81,9 @@ export const createVaccine = mutation({
     })),
   },
   handler: async (ctx, args) => {
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== args.doctorId) throw new Error("Not authorized");
+
     // Create the vaccine
     const vaccinId = await ctx.db.insert("vaccins", {
       doctorId: args.doctorId,
@@ -101,6 +116,11 @@ export const updateVaccine = mutation({
     })),
   },
   handler: async (ctx, args) => {
+    const vaccin = await ctx.db.get(args.vaccinId);
+    if (!vaccin) throw new Error("Vaccine not found");
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== vaccin.doctorId) throw new Error("Not authorized");
+
     // Update the vaccine name
     await ctx.db.patch(args.vaccinId, { name: args.name });
     
@@ -132,6 +152,11 @@ export const updateVaccine = mutation({
 export const deleteVaccine = mutation({
   args: { vaccinId: v.id("vaccins") },
   handler: async (ctx, args) => {
+    const vaccin = await ctx.db.get(args.vaccinId);
+    if (!vaccin) throw new Error("Vaccine not found");
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== vaccin.doctorId) throw new Error("Not authorized");
+
     // Check if there are any vaccination records using this vaccine
     const records = await ctx.db
       .query("vaccinationRecords")
@@ -167,6 +192,11 @@ export const createDose = mutation({
     maxAge: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    const vaccin = await ctx.db.get(args.vaccinId);
+    if (!vaccin) throw new Error("Vaccine not found");
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== vaccin.doctorId) throw new Error("Not authorized");
+
     return await ctx.db.insert("doses", args);
   },
 });
@@ -177,6 +207,8 @@ export const createDose = mutation({
 export const getPatientRecords = query({
   args: { patientId: v.id("patients") },
   handler: async (ctx, args) => {
+    await verifyDoctorOwnsPatient(ctx, args.patientId);
+
     const records = await ctx.db
       .query("vaccinationRecords")
       .withIndex("by_patientId", (q) => q.eq("patientId", args.patientId))
@@ -204,7 +236,8 @@ export const getRecord = query({
   handler: async (ctx, args) => {
     const record = await ctx.db.get(args.recordId);
     if (!record) return null;
-    
+    await verifyDoctorOwnsPatient(ctx, record.patientId);
+
     const [vaccin, dose] = await Promise.all([
       ctx.db.get(record.vaccinId),
       ctx.db.get(record.doseId),
@@ -230,6 +263,22 @@ export const createRecord = mutation({
     site: v.string(),
   },
   handler: async (ctx, args) => {
+    await verifyDoctorOwnsPatient(ctx, args.patientId);
+
+    // Input validation
+    if (args.manufacturer.length > 100) {
+      throw new Error("Manufacturer name too long");
+    }
+    if (args.lotNumber.length > 50) {
+      throw new Error("Lot number too long");
+    }
+    if (args.expiration < args.date) {
+      throw new Error("Vaccine expiration date cannot be before administration date");
+    }
+    if (args.dosage.length > 100) {
+      throw new Error("Dosage too long");
+    }
+
     const recordId = await ctx.db.insert("vaccinationRecords", args);
 
     // Notify parent if portal is enabled
@@ -258,8 +307,12 @@ export const updateRecord = mutation({
     site: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const record = await ctx.db.get(args.recordId);
+    if (!record) throw new Error("Record not found");
+    await verifyDoctorOwnsPatient(ctx, record.patientId);
+
     const { recordId, ...updates } = args;
-    
+
     const filteredUpdates = Object.fromEntries(
       Object.entries(updates).filter(([_, v]) => v !== undefined)
     );
@@ -272,6 +325,10 @@ export const updateRecord = mutation({
 export const removeRecord = mutation({
   args: { recordId: v.id("vaccinationRecords") },
   handler: async (ctx, args) => {
+    const record = await ctx.db.get(args.recordId);
+    if (!record) throw new Error("Record not found");
+    await verifyDoctorOwnsPatient(ctx, record.patientId);
+
     await ctx.db.delete(args.recordId);
   },
 });
@@ -282,6 +339,8 @@ export const removeRecord = mutation({
 export const getPatientVaccineCompliance = query({
   args: { patientId: v.id("patients") },
   handler: async (ctx, args) => {
+    await verifyDoctorOwnsPatient(ctx, args.patientId);
+
     const patient = await ctx.db.get(args.patientId);
     if (!patient) throw new Error("Patient not found");
 

@@ -10,7 +10,7 @@ export const storeDocument = internalMutation({
   args: {
     content: v.string(),
     embedding: v.array(v.float64()),
-    metadata: v.optional(v.any()),
+    metadata: v.optional(v.record(v.string(), v.string())),
   },
   handler: async (ctx, args): Promise<Id<"documents">> => {
     return await ctx.db.insert("documents", args);
@@ -148,7 +148,7 @@ export const indexPatientData = action({
   args: {
     patientId: v.id("patients"),
     content: v.string(),
-    metadata: v.optional(v.any()),
+    metadata: v.optional(v.record(v.string(), v.string())),
   },
   handler: async (ctx, args): Promise<void> => {
     // Generate embedding for content

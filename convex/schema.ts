@@ -21,7 +21,11 @@ const doctors = defineTable({
   isCompleted: v.boolean(),
   isDoctor: v.boolean(),
   isMedPro: v.boolean(),
-  availability: v.optional(v.any()),
+  availability: v.optional(v.array(v.object({
+    day: v.number(),
+    startTime: v.string(),
+    endTime: v.string(),
+  }))),
   createdAt: v.number(),
   updatedAt: v.number(),
 })
@@ -95,8 +99,15 @@ const appointments = defineTable({
   systolic: v.optional(v.number()),
   diastolic: v.optional(v.number()),
   // Medical data
-  exams: v.optional(v.any()),
-  medication: v.optional(v.any()),
+  exams: v.optional(v.array(v.object({
+    exam: v.string(),
+  }))),
+  medication: v.optional(v.array(v.object({
+    drug: v.string(),
+    count: v.number(),
+    unit: v.string(),
+    posology: v.string(),
+  }))),
   // Internal notes (private — never exposed to portal)
   internalNotes: v.optional(v.string()),
   // Transaction
@@ -129,7 +140,12 @@ const reports = defineTable({
 // Receipts table
 const receipts = defineTable({
   patientId: v.id("patients"),
-  services: v.optional(v.any()), // JSON array of service items
+  services: v.optional(v.array(v.object({
+    service: v.string(),
+    name: v.optional(v.string()),
+    quantity: v.optional(v.number()),
+    price: v.optional(v.number()),
+  }))),
   cost: v.optional(v.number()),
   currency: v.optional(v.string()),
   date: v.optional(v.number()),
@@ -198,12 +214,12 @@ const vaccinReferenceDoses = defineTable({
 
 const charts = defineTable({
   chartId: v.string(), // e.g., "wfa_boys_0_5", "hfa_girls_0_5"
-  p03: v.any(),
-  p15: v.any(),
-  p50: v.any(),
-  p85: v.any(),
-  p97: v.any(),
-  height: v.optional(v.any()),
+  p03: v.array(v.number()),
+  p15: v.array(v.number()),
+  p50: v.array(v.number()),
+  p85: v.array(v.number()),
+  p97: v.array(v.number()),
+  height: v.optional(v.array(v.number())),
 })
   .index("by_chartId", ["chartId"]);
 
@@ -211,7 +227,7 @@ const charts = defineTable({
 
 const documents = defineTable({
   content: v.string(),
-  metadata: v.optional(v.any()),
+  metadata: v.optional(v.record(v.string(), v.string())),
   embedding: v.array(v.float64()),
 })
   .vectorIndex("by_embedding", {
@@ -228,7 +244,7 @@ const products = defineTable({
   name: v.optional(v.string()),
   description: v.optional(v.string()),
   image: v.optional(v.string()),
-  metadata: v.optional(v.any()),
+  metadata: v.optional(v.record(v.string(), v.string())),
 })
   .index("by_stripeId", ["stripeId"]);
 
@@ -243,7 +259,7 @@ const prices = defineTable({
   interval: v.optional(v.union(v.literal("day"), v.literal("week"), v.literal("month"), v.literal("year"))),
   intervalCount: v.optional(v.number()),
   trialPeriodDays: v.optional(v.number()),
-  metadata: v.optional(v.any()),
+  metadata: v.optional(v.record(v.string(), v.string())),
 })
   .index("by_stripeId", ["stripeId"])
   .index("by_productId", ["productId"]);
@@ -266,7 +282,7 @@ const subscriptions = defineTable({
   ),
   quantity: v.optional(v.number()),
   cancelAtPeriodEnd: v.optional(v.boolean()),
-  metadata: v.optional(v.any()),
+  metadata: v.optional(v.record(v.string(), v.string())),
   created: v.number(),
   currentPeriodStart: v.number(),
   currentPeriodEnd: v.number(),
@@ -539,6 +555,54 @@ const telehealthAppointments = defineTable({
   .index("by_doctorId_status", ["doctorId", "status"])
   .index("by_roomName", ["roomName"]);
 
+// ==================== Audit Logging ====================
+
+const auditLogs = defineTable({
+  actorAuthUserId: v.string(), // Who performed the action
+  actorRole: v.union(v.literal("patient"), v.literal("doctor"), v.literal("admin"), v.literal("system")),
+  action: v.union(
+    // Patient data mutations
+    v.literal("patient.create"),
+    v.literal("patient.update"),
+    v.literal("patient.delete"),
+    // Appointment mutations
+    v.literal("appointment.create"),
+    v.literal("appointment.update"),
+    v.literal("appointment.delete"),
+    // Medical data mutations
+    v.literal("vaccine.create"),
+    v.literal("vaccine.update"),
+    v.literal("report.create"),
+    v.literal("report.update"),
+    v.literal("report.delete"),
+    v.literal("receipt.create"),
+    v.literal("receipt.update"),
+    v.literal("receipt.delete"),
+    v.literal("file.create"),
+    v.literal("file.delete"),
+    // Portal actions
+    v.literal("invitation.create"),
+    v.literal("invitation.accept"),
+    v.literal("portal.file_upload"),
+    // Telehealth actions
+    v.literal("telehealth.book"),
+    v.literal("telehealth.confirm"),
+    v.literal("telehealth.cancel"),
+    v.literal("telehealth.join"),
+    // Auth/admin actions
+    v.literal("subscription.change"),
+    v.literal("doctor.update")
+  ),
+  entityType: v.string(), // e.g., "patients", "appointments"
+  entityId: v.string(), // ID of the affected record
+  details: v.optional(v.string()), // JSON summary of what changed (no PHI)
+  timestamp: v.number(),
+})
+  .index("by_actorAuthUserId", ["actorAuthUserId"])
+  .index("by_entityType_entityId", ["entityType", "entityId"])
+  .index("by_action", ["action"])
+  .index("by_timestamp", ["timestamp"]);
+
 // ==================== Export Schema ====================
 
 export default defineSchema({
@@ -583,5 +647,7 @@ export default defineSchema({
   telehealthAvailability,
   telehealthExceptions,
   telehealthAppointments,
+  // Audit
+  auditLogs,
 });
 

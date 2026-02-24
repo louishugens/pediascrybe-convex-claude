@@ -15,9 +15,10 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Eye, EyeOff } from "lucide-react"
 import { Id } from "@/convex/_generated/dataModel"
 import { useSubscriptionGuard } from "@/hooks/use-subscription-guard"
+import { useOfflineMutation } from "@/lib/offline/hooks/useOfflineMutation"
 
 interface Service {
   _id: Id<"services">;
@@ -46,6 +47,7 @@ const formSchema = z.object({
   motif: z.string().optional(),
   findings: z.string().optional(),
   otherRemarks: z.string().optional(),
+  internalNotes: z.string().optional(),
   cost: z.coerce.number().min(0, "Cost can't be less than 0").nullable().optional(),
   serviceId: z.string().optional(),
 })
@@ -64,6 +66,18 @@ const AddAppointment = ({ doctorId, patientId, patient, services }: AddAppointme
   const [generating, setGenerating] = useState(false)
   const [suggestions, setSuggestions] = useState("")
   const [thinking, setThinking] = useState(false)
+  const { mutate: offlineMutate } = useOfflineMutation({
+    apiRoute: "/api/patients/addAppointment",
+    optimisticTable: "appointments",
+    entityType: "appointment",
+    buildOptimisticDoc: (payload) => ({
+      ...payload,
+      _id: `offline_${Date.now()}`,
+      startDate: Date.now(),
+      status: "offline",
+      _cachedAt: Date.now(),
+    }),
+  })
 
   const { complete, completion, isLoading } = useCompletion({
     api: "/api/ai/diagnostic",
@@ -90,6 +104,7 @@ const AddAppointment = ({ doctorId, patientId, patient, services }: AddAppointme
       diastolic: undefined,
       temperature: undefined,
       otherRemarks: "",
+      internalNotes: "",
       cost: undefined,
     },
   })
@@ -157,19 +172,16 @@ const AddAppointment = ({ doctorId, patientId, patient, services }: AddAppointme
         doctorId,
       }
 
-      console.log('body :>> ', body)
+      const result = await offlineMutate(body)
 
-      const response = await fetch("/api/patients/addAppointment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      })
-
-      const appointment = await response.json()
-      console.log("appointment :>> ", appointment)
-
-      refresh([`/user/patients/${patientId}`])
-      router.push(`/user/patients/${patientId}/${appointment._id}`)
+      if (result.offline) {
+        // Offline — go back to patient page with cached data
+        router.push(`/user/patients/${patientId}`)
+      } else if (result.success && result.data) {
+        const appointment = result.data as { _id: string }
+        refresh([`/user/patients/${patientId}`])
+        router.push(`/user/patients/${patientId}/${appointment._id}`)
+      }
     } catch (err) {
       console.log(err)
     } finally {
@@ -508,6 +520,12 @@ const AddAppointment = ({ doctorId, patientId, patient, services }: AddAppointme
                           {...field}
                         />
                       </FormControl>
+                      {patient.portalEnabled && (
+                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                          <Eye className="h-3 w-3" />
+                          Visible on portal
+                        </span>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -560,6 +578,12 @@ const AddAppointment = ({ doctorId, patientId, patient, services }: AddAppointme
                           {...field}
                         />
                       </FormControl>
+                      {patient.portalEnabled && (
+                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                          <Eye className="h-3 w-3" />
+                          Visible on portal
+                        </span>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -578,11 +602,40 @@ const AddAppointment = ({ doctorId, patientId, patient, services }: AddAppointme
                           {...field}
                         />
                       </FormControl>
+                      {patient.portalEnabled && (
+                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                          <Eye className="h-3 w-3" />
+                          Visible on portal
+                        </span>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
+
+              {/* Internal Notes — Private */}
+              <FormField
+                control={form.control}
+                name="internalNotes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Internal Notes</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Private notes (not visible to parents on the portal)"
+                        className="h-[120px] resize-none overflow-y-auto border-dashed"
+                        {...field}
+                      />
+                    </FormControl>
+                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                      <EyeOff className="h-3 w-3" />
+                      Private — not visible on portal
+                    </span>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <div className="flex justify-center pt-4">
                 <Button

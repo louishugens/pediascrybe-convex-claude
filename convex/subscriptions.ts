@@ -420,7 +420,7 @@ export const upsertSubscription = internalMutation({
     status: v.string(),
     quantity: v.optional(v.number()),
     cancelAtPeriodEnd: v.optional(v.boolean()),
-    metadata: v.optional(v.any()),
+    metadata: v.optional(v.record(v.string(), v.string())),
     created: v.number(),
     currentPeriodStart: v.number(),
     currentPeriodEnd: v.number(),
@@ -438,7 +438,7 @@ export const upsertSubscription = internalMutation({
       .first();
 
     if (!appUser) {
-      console.error("No app user found for Stripe customer:", args.stripeCustomerId);
+      console.error("No app user found for Stripe customer");
       return;
     }
 
@@ -448,7 +448,7 @@ export const upsertSubscription = internalMutation({
       .first();
 
     if (!doctor) {
-      console.error("No doctor found for auth user:", appUser.authUserId);
+      console.error("No doctor found for auth user");
       return;
     }
 

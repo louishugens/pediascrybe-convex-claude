@@ -1,10 +1,12 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { verifyDoctorOwnsPatient, verifyDoctorOwnsAppointment } from "./authHelpers";
 
 // Get all receipts for a patient
 export const listByPatient = query({
   args: { patientId: v.id("patients") },
   handler: async (ctx, args) => {
+    await verifyDoctorOwnsPatient(ctx, args.patientId);
     return await ctx.db
       .query("receipts")
       .withIndex("by_patientId", (q) => q.eq("patientId", args.patientId))
@@ -19,7 +21,8 @@ export const getById = query({
   handler: async (ctx, args) => {
     const receipt = await ctx.db.get(args.receiptId);
     if (!receipt) return null;
-    
+    if (receipt) await verifyDoctorOwnsPatient(ctx, receipt.patientId);
+
     const patient = await ctx.db.get(receipt.patientId);
     return { ...receipt, patient };
   },
@@ -29,12 +32,18 @@ export const getById = query({
 export const create = mutation({
   args: {
     patientId: v.id("patients"),
-    services: v.optional(v.any()),
+    services: v.optional(v.array(v.object({
+      service: v.string(),
+      name: v.optional(v.string()),
+      quantity: v.optional(v.number()),
+      price: v.optional(v.number()),
+    }))),
     cost: v.optional(v.number()),
     currency: v.optional(v.string()),
     date: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    await verifyDoctorOwnsPatient(ctx, args.patientId);
     return await ctx.db.insert("receipts", {
       ...args,
       createdAt: Date.now(),
@@ -46,18 +55,27 @@ export const create = mutation({
 export const update = mutation({
   args: {
     receiptId: v.id("receipts"),
-    services: v.optional(v.any()),
+    services: v.optional(v.array(v.object({
+      service: v.string(),
+      name: v.optional(v.string()),
+      quantity: v.optional(v.number()),
+      price: v.optional(v.number()),
+    }))),
     cost: v.optional(v.number()),
     currency: v.optional(v.string()),
     date: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const { receiptId, ...updates } = args;
-    
+
+    const receipt = await ctx.db.get(args.receiptId);
+    if (!receipt) throw new Error("Receipt not found");
+    await verifyDoctorOwnsPatient(ctx, receipt.patientId);
+
     const filteredUpdates = Object.fromEntries(
       Object.entries(updates).filter(([_, v]) => v !== undefined)
     );
-    
+
     return await ctx.db.patch(receiptId, filteredUpdates);
   },
 });
@@ -66,6 +84,9 @@ export const update = mutation({
 export const remove = mutation({
   args: { receiptId: v.id("receipts") },
   handler: async (ctx, args) => {
+    const receipt = await ctx.db.get(args.receiptId);
+    if (!receipt) throw new Error("Receipt not found");
+    await verifyDoctorOwnsPatient(ctx, receipt.patientId);
     await ctx.db.delete(args.receiptId);
   },
 });

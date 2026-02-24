@@ -1,11 +1,61 @@
 import { Redis } from '@upstash/redis';
-import { createHash } from 'crypto';
+import { createHmac, createCipheriv, createDecipheriv, randomBytes } from 'crypto';
 
 /**
  * Redis client for AI response caching.
  * Uses existing Upstash Redis configuration from environment.
  */
 const redis = Redis.fromEnv();
+
+// Secret for HMAC cache keys — falls back to a dev key if not set
+const CACHE_KEY_SECRET = process.env.CACHE_KEY_SECRET || 'pediascrybe-dev-cache-key-secret';
+
+// Secret for encrypting cached values — falls back to a dev key if not set
+const CACHE_ENCRYPTION_KEY = process.env.CACHE_ENCRYPTION_KEY || 'pediascrybe-dev-encrypt-key!!'; // Must be 32 bytes for AES-256
+
+/**
+ * Get a 32-byte key for AES-256 encryption.
+ */
+function getEncryptionKey(): Buffer {
+  // Derive a consistent 32-byte key from the secret
+  const hmac = createHmac('sha256', 'encryption-key-derivation');
+  hmac.update(CACHE_ENCRYPTION_KEY);
+  return hmac.digest();
+}
+
+/**
+ * Encrypt a string value using AES-256-GCM.
+ */
+function encrypt(plaintext: string): string {
+  const key = getEncryptionKey();
+  const iv = randomBytes(12); // 96-bit IV for GCM
+  const cipher = createCipheriv('aes-256-gcm', key, iv);
+
+  let encrypted = cipher.update(plaintext, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  const authTag = cipher.getAuthTag().toString('hex');
+
+  // Format: iv:authTag:ciphertext
+  return `${iv.toString('hex')}:${authTag}:${encrypted}`;
+}
+
+/**
+ * Decrypt a string value encrypted with AES-256-GCM.
+ */
+function decrypt(encryptedData: string): string {
+  const key = getEncryptionKey();
+  const [ivHex, authTagHex, ciphertext] = encryptedData.split(':');
+
+  const iv = Buffer.from(ivHex, 'hex');
+  const authTag = Buffer.from(authTagHex, 'hex');
+  const decipher = createDecipheriv('aes-256-gcm', key, iv);
+  decipher.setAuthTag(authTag);
+
+  let decrypted = decipher.update(ciphertext, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
+
+  return decrypted;
+}
 
 /**
  * Cache configuration options.
@@ -21,21 +71,7 @@ export interface CacheOptions {
 
 /**
  * Get cached value or generate and cache new value.
- *
- * @param cacheKey - Unique key for this cached item
- * @param generator - Async function to generate value if not cached
- * @param options - Cache configuration
- * @returns Cached or newly generated value
- *
- * @example
- * const suggestions = await getCachedOrGenerate(
- *   `exams:${patientId}:${appointmentId}`,
- *   async () => {
- *     const result = await streamObject({ ... });
- *     return result.object;
- *   },
- *   { ttlSeconds: 3600 }
- * );
+ * Values are encrypted at rest in Redis using AES-256-GCM.
  */
 export async function getCachedOrGenerate<T>(
   cacheKey: string,
@@ -51,49 +87,32 @@ export async function getCachedOrGenerate<T>(
   const fullKey = `${keyPrefix}:${cacheKey}`;
 
   try {
-    // Try to get from cache
-    const cached = await redis.get<T>(fullKey);
+    const cached = await redis.get<string>(fullKey);
     if (cached !== null) {
-      console.log(`[AI Cache] Hit: ${fullKey}`);
-      return cached;
+      const decrypted = decrypt(cached);
+      return JSON.parse(decrypted) as T;
     }
   } catch (error) {
-    // Log cache read error but continue to generate
-    console.warn(`[AI Cache] Read error for ${fullKey}:`, error);
+    console.warn(`[AI Cache] Read error`, error);
   }
 
-  // Generate new value
-  console.log(`[AI Cache] Miss: ${fullKey}`);
   const result = await generator();
 
   try {
-    // Cache the result
-    await redis.set(fullKey, result, { ex: ttlSeconds });
-    console.log(`[AI Cache] Stored: ${fullKey} (TTL: ${ttlSeconds}s)`);
+    const encrypted = encrypt(JSON.stringify(result));
+    await redis.set(fullKey, encrypted, { ex: ttlSeconds });
   } catch (error) {
-    // Log cache write error but return result anyway
-    console.warn(`[AI Cache] Write error for ${fullKey}:`, error);
+    console.warn(`[AI Cache] Write error`, error);
   }
 
   return result;
 }
 
 /**
- * Generate a deterministic cache key from inputs.
+ * Generate a deterministic cache key from inputs using HMAC-SHA256.
  *
- * Creates a short hash from the input object for use as a cache key.
- * Order of keys doesn't matter - the hash is stable.
- *
- * @param inputs - Object containing values to hash
- * @returns 16-character hex string suitable for cache keys
- *
- * @example
- * const key = hashInputs({
- *   patientId: '123',
- *   symptoms: ['fever', 'cough'],
- *   language: 'en',
- * });
- * // Returns something like: 'a1b2c3d4e5f6g7h8'
+ * Uses HMAC instead of plain MD5 to prevent cache key enumeration
+ * and hide input data from the key itself.
  */
 export function hashInputs(inputs: Record<string, unknown>): string {
   // Sort keys for deterministic ordering
@@ -107,8 +126,10 @@ export function hashInputs(inputs: Record<string, unknown>): string {
       {} as Record<string, unknown>
     );
 
-  // Create MD5 hash (fast, no security needed for cache keys)
-  const hash = createHash('md5').update(JSON.stringify(sorted)).digest('hex');
+  // Create HMAC-SHA256 hash (secure, prevents key enumeration)
+  const hmac = createHmac('sha256', CACHE_KEY_SECRET);
+  hmac.update(JSON.stringify(sorted));
+  const hash = hmac.digest('hex');
 
   // Return first 16 characters for brevity
   return hash.slice(0, 16);
@@ -116,9 +137,6 @@ export function hashInputs(inputs: Record<string, unknown>): string {
 
 /**
  * Invalidate a cached value.
- *
- * @param cacheKey - Key to invalidate
- * @param keyPrefix - Optional prefix (default: 'ai')
  */
 export async function invalidateCache(
   cacheKey: string,
@@ -127,17 +145,13 @@ export async function invalidateCache(
   const fullKey = `${keyPrefix}:${cacheKey}`;
   try {
     await redis.del(fullKey);
-    console.log(`[AI Cache] Invalidated: ${fullKey}`);
   } catch (error) {
-    console.warn(`[AI Cache] Invalidation error for ${fullKey}:`, error);
+    console.warn(`[AI Cache] Invalidation error`, error);
   }
 }
 
 /**
  * Invalidate all cached values matching a pattern.
- *
- * @param pattern - Glob pattern to match (e.g., 'exams:patient123:*')
- * @param keyPrefix - Optional prefix (default: 'ai')
  */
 export async function invalidateCachePattern(
   pattern: string,
@@ -145,32 +159,17 @@ export async function invalidateCachePattern(
 ): Promise<void> {
   const fullPattern = `${keyPrefix}:${pattern}`;
   try {
-    // Note: SCAN is more efficient for large keyspaces
     const keys = await redis.keys(fullPattern);
     if (keys.length > 0) {
       await redis.del(...keys);
-      console.log(
-        `[AI Cache] Invalidated ${keys.length} keys matching: ${fullPattern}`
-      );
     }
   } catch (error) {
-    console.warn(
-      `[AI Cache] Pattern invalidation error for ${fullPattern}:`,
-      error
-    );
+    console.warn(`[AI Cache] Pattern invalidation error`, error);
   }
 }
 
 /**
  * Create a cache key builder for a specific use case.
- *
- * @param prefix - Prefix for all keys (e.g., 'exams', 'prescriptions')
- * @returns Function that builds cache keys from inputs
- *
- * @example
- * const examsCacheKey = createCacheKeyBuilder('exams');
- * const key = examsCacheKey({ patientId: '123', appointmentId: '456' });
- * // Returns: 'exams:a1b2c3d4e5f6g7h8'
  */
 export function createCacheKeyBuilder(prefix: string) {
   return (inputs: Record<string, unknown>): string => {

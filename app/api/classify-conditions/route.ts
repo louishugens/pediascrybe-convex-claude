@@ -6,6 +6,7 @@ import {
   hashInputs,
   handleAIError,
 } from '@/lib/ai';
+import { isAuthenticated } from '@/lib/auth-server';
 
 // Define the element schema for the conditions array
 const conditionElementSchema = z.object({
@@ -17,6 +18,11 @@ export const maxDuration = 45;
 
 export async function POST(req: Request) {
   try {
+    const authenticated = await isAuthenticated();
+    if (!authenticated) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+    }
+
     const { diagnoses } = await req.json();
 
     // Generate cache key from diagnoses

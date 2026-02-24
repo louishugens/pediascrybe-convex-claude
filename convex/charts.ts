@@ -16,6 +16,14 @@ export const listAllCharts = query({
   },
 });
 
+// Get all charts with full data (for offline caching)
+export const getAll = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("charts").collect();
+  },
+});
+
 // Get chart reference data by chart type
 export const getReferenceData = query({
   args: { 

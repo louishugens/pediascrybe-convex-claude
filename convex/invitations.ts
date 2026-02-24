@@ -4,12 +4,14 @@ import { internal } from "./_generated/api";
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
-// Generate a cryptographically random token
+// Generate a cryptographically secure random token
 function generateToken(): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const randomValues = new Uint8Array(48);
+  crypto.getRandomValues(randomValues);
   let token = "";
   for (let i = 0; i < 48; i++) {
-    token += chars.charAt(Math.floor(Math.random() * chars.length));
+    token += chars.charAt(randomValues[i] % chars.length);
   }
   return token;
 }
@@ -35,6 +37,26 @@ export const createInvitation = mutation({
     const patient = await ctx.db.get(args.patientId);
     if (!patient || patient.doctorId !== doctor._id) {
       throw new Error("Patient not found");
+    }
+
+    // Verify doctor has patient_portal feature access
+    const subscription = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_doctorId", (q) => q.eq("doctorId", doctor._id))
+      .order("desc")
+      .first();
+
+    if (!subscription) {
+      throw new Error("No active subscription found");
+    }
+    const activeStatuses = ["trialing", "active"];
+    if (!activeStatuses.includes(subscription.status)) {
+      throw new Error("Subscription is not active");
+    }
+    const tierName = subscription.tierName || subscription.metadata?.tierName || "free";
+    // patient_portal requires Pro or Premium
+    if (!["pro", "premium"].includes(tierName)) {
+      throw new Error("Patient portal requires a Pro or Premium subscription");
     }
 
     // Check for existing pending invitation for same email + patient
@@ -143,6 +165,11 @@ export const acceptInvitation = mutation({
     if (invitation.status !== "pending") throw new Error(`Invitation has been ${invitation.status}`);
     if (invitation.expiresAt < Date.now()) throw new Error("Invitation has expired");
 
+    // Verify the accepting user's email matches the invitation
+    if (identity.email && invitation.email.toLowerCase() !== identity.email.toLowerCase()) {
+      throw new Error("This invitation was sent to a different email address");
+    }
+
     const now = Date.now();
 
     // Check if this patient account link already exists
@@ -221,6 +248,26 @@ export const listByPatient = query({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
+
+    // Verify the requesting user is the patient's doctor
+    const doctor = await ctx.db
+      .query("doctors")
+      .withIndex("by_authUserId", (q) => q.eq("authUserId", identity.subject))
+      .first();
+
+    if (doctor) {
+      const patient = await ctx.db.get(args.patientId);
+      if (!patient || patient.doctorId !== doctor._id) return [];
+    } else {
+      // For portal users, verify via patientAccounts
+      const link = await ctx.db
+        .query("patientAccounts")
+        .withIndex("by_authUserId_patientId", (q) =>
+          q.eq("authUserId", identity.subject).eq("patientId", args.patientId)
+        )
+        .first();
+      if (!link) return [];
+    }
 
     const invitations = await ctx.db
       .query("patientInvitations")

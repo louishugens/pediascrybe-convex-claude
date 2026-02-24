@@ -265,7 +265,7 @@ export const syncMySubscription = action({
       tierName = subscription.metadata?.tierName || null;
     }
 
-    console.log("Syncing subscription:", subscription.id, "priceId:", currentPriceId, "resolvedTier:", tierName);
+    // Subscription sync in progress
 
     // Sync to our database
     await ctx.runMutation(internal.stripeWebhooks.syncSubscription, {
@@ -352,7 +352,7 @@ export const syncSubscriptionByEmail = action({
       tierName = subscription.metadata?.tierName || null;
     }
 
-    console.log("Syncing subscription:", subscription.id, "priceId:", currentPriceId, "resolvedTier:", tierName);
+    // Subscription sync in progress
 
     // Sync to our database
     await ctx.runMutation(internal.stripeWebhooks.syncSubscription, {

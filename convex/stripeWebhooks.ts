@@ -41,17 +41,14 @@ export const handleSubscriptionCreated = internalAction({
   },
   handler: async (ctx, args) => {
     const subscription = args.subscription as Stripe.Subscription;
-    console.log("[Webhook] Subscription created:", subscription.id);
-    
     // Get tier from metadata (no external API call)
     const tierFromMetadata = getTierFromSubscriptionMetadata(subscription);
-    
+
     // Get customer email - use passed email or fetch from Stripe
     let customerEmail = args.customerEmail || null;
     if (!customerEmail) {
       customerEmail = await getCustomerEmail(subscription.customer as string);
     }
-    console.log("[Webhook] Customer email:", customerEmail);
     
     // Sync to our subscriptions table
     // Use type assertion to access properties (Stripe types vary by version)
@@ -84,7 +81,7 @@ export const handleSubscriptionUpdated = internalAction({
   },
   handler: async (ctx, args) => {
     const subscription = args.subscription as Stripe.Subscription;
-    console.log("[Webhook] Subscription updated:", subscription.id);
+    // Subscription updated event
     
     // Get tier from metadata (no external API call)
     const tierFromMetadata = getTierFromSubscriptionMetadata(subscription);
@@ -163,7 +160,7 @@ export const syncSubscription = internalMutation({
 
     // FALLBACK: If not found by stripeCustomerId, try by email
     if (!appUser && args.customerEmail) {
-      console.log("[syncSubscription] Customer not found by ID, trying email:", args.customerEmail);
+      console.log("[syncSubscription] Customer not found by stripeCustomerId, trying email fallback");
       appUser = await ctx.db
         .query("appUsers")
         .withIndex("by_email", (q) => q.eq("email", args.customerEmail!))
@@ -172,12 +169,12 @@ export const syncSubscription = internalMutation({
       // Link the stripeCustomerId for future lookups
       if (appUser) {
         await ctx.db.patch(appUser._id, { stripeCustomerId: args.stripeCustomerId });
-        console.log("[syncSubscription] Linked stripeCustomerId", args.stripeCustomerId, "to appUser", appUser._id);
+        // stripeCustomerId linked to appUser
       }
     }
 
     if (!appUser) {
-      console.error("[syncSubscription] No app user found for Stripe customer:", args.stripeCustomerId, "or email:", args.customerEmail);
+      console.error("[syncSubscription] No app user found for Stripe customer");
       return;
     }
 
@@ -248,12 +245,13 @@ export const syncSubscription = internalMutation({
       resolvedTierName = tier?.name || null;
     }
     
-    // Only fall back to passed tierName if price lookup fails
-    if (!resolvedTierName) {
-      resolvedTierName = args.tierName;
+    // Do NOT fall back to metadata tierName — it can be spoofed via webhook forgery.
+    // If price lookup fails, log a warning but leave tierName null (will use "starter" default).
+    if (!resolvedTierName && args.stripePriceId) {
+      console.error("[syncSubscription] Price ID not found in subscriptionTiers");
     }
 
-    console.log("Syncing subscription:", args.stripeId, "priceId:", args.stripePriceId, "resolvedTier:", resolvedTierName);
+    // Syncing subscription
 
     // Check if subscription exists
     const existing = await ctx.db

@@ -1,11 +1,14 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
+import { getAuthenticatedDoctor, verifyDoctorOwnsAppointment, verifyDoctorOwnsPatient } from "./authHelpers";
 
 // Get all appointments for a doctor
 export const listByDoctor = query({
   args: { doctorId: v.id("doctors") },
   handler: async (ctx, args) => {
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== args.doctorId) throw new Error("Not authorized");
     return await ctx.db
       .query("appointments")
       .withIndex("by_doctorId", (q) => q.eq("doctorId", args.doctorId))
@@ -18,6 +21,7 @@ export const listByDoctor = query({
 export const listByPatient = query({
   args: { patientId: v.id("patients") },
   handler: async (ctx, args) => {
+    await verifyDoctorOwnsPatient(ctx, args.patientId);
     return await ctx.db
       .query("appointments")
       .withIndex("by_patientId", (q) => q.eq("patientId", args.patientId))
@@ -30,6 +34,8 @@ export const listByPatient = query({
 export const listRecent = query({
   args: { doctorId: v.id("doctors") },
   handler: async (ctx, args) => {
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== args.doctorId) throw new Error("Not authorized");
     const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
     
     const appointments = await ctx.db
@@ -46,6 +52,8 @@ export const listRecent = query({
 export const listToday = query({
   args: { doctorId: v.id("doctors") },
   handler: async (ctx, args) => {
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== args.doctorId) throw new Error("Not authorized");
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
     const endOfDay = startOfDay + (24 * 60 * 60 * 1000) - 1;
@@ -65,9 +73,10 @@ export const listToday = query({
 export const getById = query({
   args: { appointmentId: v.id("appointments") },
   handler: async (ctx, args) => {
+    await verifyDoctorOwnsAppointment(ctx, args.appointmentId);
     const appointment = await ctx.db.get(args.appointmentId);
     if (!appointment) return null;
-    
+
     const [patient, service, files] = await Promise.all([
       ctx.db.get(appointment.patientId),
       appointment.serviceId ? ctx.db.get(appointment.serviceId) : null,
@@ -85,10 +94,12 @@ export const getById = query({
 export const getTodayRevenue = query({
   args: { doctorId: v.id("doctors") },
   handler: async (ctx, args) => {
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== args.doctorId) throw new Error("Not authorized");
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
     const endOfDay = startOfDay + (24 * 60 * 60 * 1000) - 1;
-    
+
     const appointments = await ctx.db
       .query("appointments")
       .withIndex("by_doctorId_startDate", (q) => q.eq("doctorId", args.doctorId))
@@ -114,6 +125,8 @@ export const getTodayRevenue = query({
 export const getMonthlyRevenue = query({
   args: { doctorId: v.id("doctors") },
   handler: async (ctx, args) => {
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== args.doctorId) throw new Error("Not authorized");
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
     
@@ -141,10 +154,12 @@ export const getMonthlyRevenue = query({
 export const getTodayPatientCount = query({
   args: { doctorId: v.id("doctors") },
   handler: async (ctx, args) => {
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== args.doctorId) throw new Error("Not authorized");
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
     const endOfDay = startOfDay + (24 * 60 * 60 * 1000) - 1;
-    
+
     const appointments = await ctx.db
       .query("appointments")
       .withIndex("by_doctorId_startDate", (q) => q.eq("doctorId", args.doctorId))
@@ -161,11 +176,13 @@ export const getTodayPatientCount = query({
 
 // Get daily transactions for a specific date
 export const getDailyTransactions = query({
-  args: { 
+  args: {
     doctorId: v.id("doctors"),
     date: v.number(), // Unix timestamp for the date
   },
   handler: async (ctx, args) => {
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== args.doctorId) throw new Error("Not authorized");
     const dateObj = new Date(args.date);
     const startOfDay = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()).getTime();
     const endOfDay = startOfDay + (24 * 60 * 60 * 1000) - 1;
@@ -205,11 +222,13 @@ export const getDailyTransactions = query({
 
 // Get daily revenue data for charts
 export const getDailyRevenueData = query({
-  args: { 
+  args: {
     doctorId: v.id("doctors"),
     yearToDate: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== args.doctorId) throw new Error("Not authorized");
     const now = new Date();
     const startDate = args.yearToDate !== false
       ? new Date(now.getFullYear(), 0, 1).getTime()
@@ -287,6 +306,33 @@ export const create = mutation({
     diastolic: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== args.doctorId) throw new Error("Not authorized");
+
+    // Validate cost is non-negative
+    if (args.cost !== undefined && args.cost < 0) {
+      throw new Error("Cost cannot be negative");
+    }
+    // Validate vital signs ranges
+    if (args.temperature !== undefined && (args.temperature < 30 || args.temperature > 45)) {
+      throw new Error("Temperature out of valid range (30-45°C)");
+    }
+    if (args.pulse !== undefined && (args.pulse < 20 || args.pulse > 300)) {
+      throw new Error("Pulse out of valid range");
+    }
+    if (args.sao2 !== undefined && (args.sao2 < 0 || args.sao2 > 100)) {
+      throw new Error("SpO2 out of valid range (0-100%)");
+    }
+    if (args.systolic !== undefined && (args.systolic < 30 || args.systolic > 300)) {
+      throw new Error("Systolic blood pressure out of valid range");
+    }
+    if (args.diastolic !== undefined && (args.diastolic < 20 || args.diastolic > 200)) {
+      throw new Error("Diastolic blood pressure out of valid range");
+    }
+    if (args.respiratory !== undefined && (args.respiratory < 5 || args.respiratory > 80)) {
+      throw new Error("Respiratory rate out of valid range");
+    }
+
     return await ctx.db.insert("appointments", {
       ...args,
       startDate: Date.now(),
@@ -316,11 +362,44 @@ export const update = mutation({
     respiratory: v.optional(v.number()),
     systolic: v.optional(v.number()),
     diastolic: v.optional(v.number()),
-    exams: v.optional(v.any()),
-    medication: v.optional(v.any()),
+    exams: v.optional(v.array(v.object({
+      exam: v.string(),
+    }))),
+    medication: v.optional(v.array(v.object({
+      drug: v.string(),
+      count: v.number(),
+      unit: v.string(),
+      posology: v.string(),
+    }))),
     internalNotes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    await verifyDoctorOwnsAppointment(ctx, args.appointmentId);
+
+    // Validate cost is non-negative
+    if (args.cost !== undefined && args.cost < 0) {
+      throw new Error("Cost cannot be negative");
+    }
+    // Validate vital signs ranges
+    if (args.temperature !== undefined && (args.temperature < 30 || args.temperature > 45)) {
+      throw new Error("Temperature out of valid range (30-45°C)");
+    }
+    if (args.pulse !== undefined && (args.pulse < 20 || args.pulse > 300)) {
+      throw new Error("Pulse out of valid range");
+    }
+    if (args.sao2 !== undefined && (args.sao2 < 0 || args.sao2 > 100)) {
+      throw new Error("SpO2 out of valid range (0-100%)");
+    }
+    if (args.systolic !== undefined && (args.systolic < 30 || args.systolic > 300)) {
+      throw new Error("Systolic blood pressure out of valid range");
+    }
+    if (args.diastolic !== undefined && (args.diastolic < 20 || args.diastolic > 200)) {
+      throw new Error("Diastolic blood pressure out of valid range");
+    }
+    if (args.respiratory !== undefined && (args.respiratory < 5 || args.respiratory > 80)) {
+      throw new Error("Respiratory rate out of valid range");
+    }
+
     const { appointmentId, ...updates } = args;
 
     // Get current appointment state before update (for notification comparison)
@@ -373,6 +452,7 @@ export const update = mutation({
 export const remove = mutation({
   args: { appointmentId: v.id("appointments") },
   handler: async (ctx, args) => {
+    await verifyDoctorOwnsAppointment(ctx, args.appointmentId);
     // Delete related files first
     const files = await ctx.db
       .query("files")
@@ -384,6 +464,26 @@ export const remove = mutation({
     }
     
     await ctx.db.delete(args.appointmentId);
+  },
+});
+
+// Get version info for conflict detection (offline sync)
+export const getVersionInfo = query({
+  args: { appointmentId: v.id("appointments") },
+  handler: async (ctx, args) => {
+    await verifyDoctorOwnsAppointment(ctx, args.appointmentId);
+    const appointment = await ctx.db.get(args.appointmentId);
+    if (!appointment) return null;
+
+    // Create a hash of the current state for conflict detection
+    const { _id, _creationTime, ...fields } = appointment;
+    const versionHash = JSON.stringify(fields);
+
+    return {
+      _id: appointment._id,
+      versionHash,
+      fields,
+    };
   },
 });
 

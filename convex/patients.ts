@@ -1,10 +1,13 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { getAuthenticatedDoctor, verifyDoctorOwnsPatient } from "./authHelpers";
 
 // Get all patients for a doctor
 export const list = query({
   args: { doctorId: v.id("doctors") },
   handler: async (ctx, args) => {
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== args.doctorId) throw new Error("Not authorized");
     return await ctx.db
       .query("patients")
       .withIndex("by_doctorId", (q) => q.eq("doctorId", args.doctorId))
@@ -20,6 +23,8 @@ export const listWithSearch = query({
     search: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== args.doctorId) throw new Error("Not authorized");
     if (args.search && args.search.length > 0) {
       // Use search index for text search
       const searchResults = await ctx.db
@@ -65,6 +70,8 @@ export const listWithSearch = query({
 export const listRecent = query({
   args: { doctorId: v.id("doctors") },
   handler: async (ctx, args) => {
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== args.doctorId) throw new Error("Not authorized");
     const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
     
     const patients = await ctx.db
@@ -81,6 +88,7 @@ export const listRecent = query({
 export const getById = query({
   args: { patientId: v.id("patients") },
   handler: async (ctx, args) => {
+    await verifyDoctorOwnsPatient(ctx, args.patientId);
     return await ctx.db.get(args.patientId);
   },
 });
@@ -89,6 +97,7 @@ export const getById = query({
 export const getWithAppointments = query({
   args: { patientId: v.id("patients") },
   handler: async (ctx, args) => {
+    await verifyDoctorOwnsPatient(ctx, args.patientId);
     const patient = await ctx.db.get(args.patientId);
     if (!patient) return null;
     
@@ -106,6 +115,8 @@ export const getWithAppointments = query({
 export const count = query({
   args: { doctorId: v.id("doctors") },
   handler: async (ctx, args) => {
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== args.doctorId) throw new Error("Not authorized");
     const patients = await ctx.db
       .query("patients")
       .withIndex("by_doctorId", (q) => q.eq("doctorId", args.doctorId))
@@ -133,10 +144,17 @@ export const create = mutation({
     electrophoresis: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    // Get doctor to find their auth user ID
-    const doctor = await ctx.db.get(args.doctorId);
-    if (!doctor) {
-      throw new Error("Doctor not found");
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== args.doctorId) throw new Error("Not authorized");
+
+    // Validate birthdate is reasonable
+    const now = Date.now();
+    if (args.birthdate > now) {
+      throw new Error("Birthdate cannot be in the future");
+    }
+    const maxAge = 150 * 365 * 24 * 60 * 60 * 1000; // ~150 years
+    if (args.birthdate < now - maxAge) {
+      throw new Error("Birthdate is too far in the past");
     }
 
     // Get current patient count
@@ -180,12 +198,12 @@ export const create = mutation({
       );
     }
 
-    const now = Date.now();
+    const createdAt = Date.now();
     return await ctx.db.insert("patients", {
       ...args,
       isCompleted: false,
-      createdAt: now,
-      updatedAt: now,
+      createdAt,
+      updatedAt: createdAt,
     });
   },
 });
@@ -210,6 +228,7 @@ export const update = mutation({
     isCompleted: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    await verifyDoctorOwnsPatient(ctx, args.patientId);
     const { patientId, ...updates } = args;
     
     // Filter out undefined values
@@ -228,11 +247,13 @@ export const update = mutation({
 export const getPatientsWithVaccinationRecords = query({
   args: { doctorId: v.id("doctors") },
   handler: async (ctx, args) => {
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== args.doctorId) throw new Error("Not authorized");
     const patients = await ctx.db
       .query("patients")
       .withIndex("by_doctorId", (q) => q.eq("doctorId", args.doctorId))
       .collect();
-    
+
     // Get vaccination records for each patient
     const patientsWithRecords = await Promise.all(
       patients.map(async (patient) => {
@@ -252,6 +273,7 @@ export const getPatientsWithVaccinationRecords = query({
 export const remove = mutation({
   args: { patientId: v.id("patients") },
   handler: async (ctx, args) => {
+    await verifyDoctorOwnsPatient(ctx, args.patientId);
     // Delete related records first
     const appointments = await ctx.db
       .query("appointments")

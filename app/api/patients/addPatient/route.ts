@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     });
 
     if (patient) {
-      console.log('patient :>> ', patient)
+      // Patient created successfully
       return new Response(JSON.stringify(patient), {
         status: 200,
         headers: { 'Content-Type': 'application/json' }

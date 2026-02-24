@@ -1,28 +1,29 @@
 import { convertToModelMessages, createUIMessageStreamResponse, UIMessage } from 'ai';
 import { start } from 'workflow/api';
 import { medicalChatWorkflow } from '@/app/workflows/medical-chat/workflow';
+import { isAuthenticated } from '@/lib/auth-server';
+import { aiRateLimit, checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 // Allow streaming responses up to 60 seconds
 export const maxDuration = 60;
 
-/**
- * Medical Chat API Route using Vercel Workflow
- *
- * This route uses a durable workflow for the chat functionality, providing:
- * - No timeout limits (workflow steps are durable)
- * - Automatic retries on failures
- * - Resumable streams for disconnections
- * - Full observability via `npx workflow web`
- *
- * The workflow:
- * 1. Fetches patient context (durable step with retries)
- * 2. Creates a DurableAgent with medical tools
- * 3. Streams the response (resumable)
- */
 export async function POST(req: Request, props: { params: Promise<{ patientId: string }>}) {
+  const authenticated = await isAuthenticated();
+  if (!authenticated) {
+    return new Response(
+      JSON.stringify({ error: 'Not authenticated' }),
+      { status: 401, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // Rate limit
+  const ip = await getClientIp();
+  const rateLimitResponse = await checkRateLimit(aiRateLimit, ip);
+  if (rateLimitResponse) return rateLimitResponse;
+
   const params = await props.params;
   const patientId = params.patientId;
-  
+
   const { messages }: { messages: UIMessage[] } = await req.json();
   
   // Convert UI messages to model messages for the workflow

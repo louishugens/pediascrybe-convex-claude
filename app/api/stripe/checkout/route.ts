@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { ConvexHttpClient } from 'convex/browser';
 import { checkBotId } from 'botid/server';
 import { api } from '@/convex/_generated/api';
+import { isAuthenticated, fetchAuthQuery } from '@/lib/auth-server';
 
 // Lazy initialization to avoid errors when env vars are not set
 function getStripe() {
@@ -30,8 +31,17 @@ export async function POST(request: NextRequest) {
     const stripe = getStripe();
     const convex = getConvex();
 
+    const authenticated = await isAuthenticated();
+    if (!authenticated) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
-    const { tierName, customerId, successUrl, cancelUrl } = body;
+    const { tierName, successUrl, cancelUrl } = body;
+
+    // Look up customerId from the authenticated user (never trust client)
+    const appUser = await fetchAuthQuery(api.appUsers.getCurrentAppUser);
+    const customerId = appUser?.stripeCustomerId || null;
 
     if (!tierName) {
       return NextResponse.json(

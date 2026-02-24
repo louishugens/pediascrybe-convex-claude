@@ -85,7 +85,7 @@ http.route({
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         if (session.mode === "subscription" && session.subscription) {
-          console.log("[Webhook] Checkout completed, customer email:", session.customer_email);
+          // Checkout completed — syncing subscription
           const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
 
           if (isPatientSubscription(subscription) || session.metadata?.userType === "patient") {
@@ -117,7 +117,7 @@ http.route({
 
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice;
-        console.log(`[Webhook] Payment succeeded for invoice ${invoice.id}, customer: ${invoice.customer}`);
+        // Payment succeeded — syncing subscription
 
         // If this is a subscription invoice, ensure subscription is synced
         // Use type assertion to access subscription property
@@ -166,14 +166,14 @@ http.route({
 
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
-        console.log(`Payment failed for invoice ${invoice.id}, customer: ${invoice.customer}`);
+        console.log(`[Webhook] Payment failed for invoice ${invoice.id}`);
         // TODO: Send email notification to user about failed payment
         break;
       }
 
       case "customer.subscription.trial_will_end": {
         const subscription = event.data.object as Stripe.Subscription;
-        console.log(`Trial ending soon for subscription ${subscription.id}`);
+        console.log(`[Webhook] Trial ending soon for subscription ${subscription.id}`);
         // TODO: Send email notification to user about trial ending
         break;
       }

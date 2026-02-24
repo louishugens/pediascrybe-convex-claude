@@ -5,6 +5,8 @@ import {
   handleAIError,
   hashInputs,
 } from '@/lib/ai';
+import { isAuthenticated } from '@/lib/auth-server';
+import { aiRateLimit, checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import { Redis } from '@upstash/redis';
 
 const redis = Redis.fromEnv();
@@ -26,6 +28,19 @@ async function collectStream(stream: ReadableStream<Uint8Array>): Promise<string
 
 export async function POST(req: Request) {
   try {
+    const authenticated = await isAuthenticated();
+    if (!authenticated) {
+      return new Response(
+        JSON.stringify({ error: { statusCode: 401, message: 'Not authenticated' } }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Rate limit
+    const ip = await getClientIp();
+    const rateLimitResponse = await checkRateLimit(aiRateLimit, ip);
+    if (rateLimitResponse) return rateLimitResponse;
+
     const { patient, appointment } = await req.json();
 
     const cacheKey = `ai:v2:prescriptions:${hashInputs({ patient, appointment })}`;
@@ -34,7 +49,7 @@ export async function POST(req: Request) {
     try {
       const cached = await redis.get<string>(cacheKey);
       if (cached !== null) {
-        console.log(`[AI Cache] Hit: ${cacheKey}`);
+        console.log(`[AI Cache] Hit`);
         return new Response(typeof cached === 'string' ? cached : JSON.stringify(cached), {
           status: 200,
           headers: { 'Content-Type': 'text/plain; charset=utf-8' },
@@ -44,7 +59,7 @@ export async function POST(req: Request) {
       console.warn(`[AI Cache] Read error:`, error);
     }
 
-    console.log(`[AI Cache] Miss: ${cacheKey}`);
+    console.log(`[AI Cache] Miss`);
 
     const { model, providerOptions } = getModelWithFallbacks('balanced');
 
@@ -82,7 +97,7 @@ export async function POST(req: Request) {
     collectStream(cacheStream).then(async (text) => {
       try {
         await redis.set(cacheKey, text, { ex: 3600 });
-        console.log(`[AI Cache] Stored: ${cacheKey} (TTL: 3600s)`);
+        console.log(`[AI Cache] Stored (TTL: 3600s)`);
       } catch (error) {
         console.warn(`[AI Cache] Write error:`, error);
       }

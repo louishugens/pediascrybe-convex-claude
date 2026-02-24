@@ -231,6 +231,11 @@ export const addSlot = mutation({
     if (args.slotDurationMinutes < 15 || args.slotDurationMinutes > 120) {
       throw new Error("Slot duration must be between 15 and 120 minutes");
     }
+    // Validate time format (HH:MM)
+    const timeRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
+    if (!timeRegex.test(args.startTime) || !timeRegex.test(args.endTime)) {
+      throw new Error("Invalid time format. Use HH:MM (24-hour)");
+    }
     if (timeToMinutes(args.startTime) >= timeToMinutes(args.endTime)) {
       throw new Error("Start time must be before end time");
     }

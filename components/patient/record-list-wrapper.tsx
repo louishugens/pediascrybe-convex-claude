@@ -6,8 +6,8 @@ import { format } from 'date-fns';
 import { Eye, Pencil, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Id } from '@/convex/_generated/dataModel';
-import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import { useOfflineQuery } from '@/lib/offline/hooks/useOfflineQuery';
 import DeleteAppointmentButton from './delete-appointment-button';
 
 interface RecordListWrapperProps {
@@ -31,9 +31,15 @@ const itemVariants = {
 };
 
 export default function RecordListWrapper({ patientId }: RecordListWrapperProps) {
-  const appointments = useQuery(api.appointments.getPatientAppointments, { 
-    patientId: patientId as Id<"patients"> 
-  });
+  const appointments = useOfflineQuery(
+    api.appointments.getPatientAppointments,
+    { patientId: patientId as Id<"patients"> },
+    {
+      table: "appointments",
+      indexedDbFilter: (item) => item.patientId === patientId,
+      indexedDbSort: (a, b) => b.startDate - a.startDate,
+    }
+  );
 
   return (
     <motion.div

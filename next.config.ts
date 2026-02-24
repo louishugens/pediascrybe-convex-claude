@@ -41,9 +41,24 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // Global security headers
+        source: "/(.*)",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-XSS-Protection", value: "1; mode=block" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(self), microphone=(self), geolocation=()" },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=31536000; includeSubDomains",
+          },
+        ],
+      },
+      {
         source: "/ingest/:path*",
         headers: [
-          { key: "Access-Control-Allow-Origin", value: "*" },
+          { key: "Access-Control-Allow-Origin", value: "https://app.pediascrybe.com" },
           { key: "Access-Control-Allow-Methods", value: "GET, POST, OPTIONS" },
           { key: "Access-Control-Allow-Headers", value: "Content-Type" },
         ],
@@ -53,6 +68,8 @@ const nextConfig: NextConfig = {
 
   // Required to support PostHog trailing slash API requests
   skipTrailingSlashRedirect: true,
+  // Required for @serwist/turbopack service worker bundling
+  serverExternalPackages: ["esbuild", "esbuild-wasm"],
 }
 
 export default withWorkflow(withBotId(nextConfig))

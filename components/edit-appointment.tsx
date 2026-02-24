@@ -18,6 +18,7 @@ import { ArrowLeft, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 import { Id } from "@/convex/_generated/dataModel"
 import { useSubscriptionGuard } from "@/hooks/use-subscription-guard"
+import { useOfflineMutation } from "@/lib/offline/hooks/useOfflineMutation"
 
 interface Service {
   _id: Id<"services">;
@@ -70,6 +71,16 @@ const EditAppointment = ({ appointment, patientId, patient, services }: EditAppo
 
   const router = useRouter()
   const { requireSubscription } = useSubscriptionGuard()
+  const { mutate: offlineMutate } = useOfflineMutation({
+    apiRoute: "/api/patients/updateAppointment",
+    optimisticTable: "appointments",
+    entityType: "appointment",
+    buildOptimisticDoc: (payload) => ({
+      ...appointment,
+      ...payload,
+      _cachedAt: Date.now(),
+    }),
+  })
 
   const { complete, completion, isLoading } = useCompletion({
     api: '/api/ai/diagnostic',
@@ -160,17 +171,15 @@ const EditAppointment = ({ appointment, patientId, patient, services }: EditAppo
         appointmentId: appointment._id,
       }
 
-      await fetch("/api/patients/updateAppointment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      })
+      const result = await offlineMutate(body)
 
-      refresh([
-        `/user/patients/${appointment.patientId}/`,
-        `/user/patients/${appointment.patientId}/${appointment._id}`,
-        `/user/patients/${appointment.patientId}/${appointment._id}/edit-appointment`,
-      ])
+      if (!result.offline) {
+        refresh([
+          `/user/patients/${appointment.patientId}/`,
+          `/user/patients/${appointment.patientId}/${appointment._id}`,
+          `/user/patients/${appointment.patientId}/${appointment._id}/edit-appointment`,
+        ])
+      }
 
       router.push(`/user/patients/${patientId}/${appointment._id}`)
     } catch (err) {

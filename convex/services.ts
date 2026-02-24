@@ -1,10 +1,14 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { getAuthenticatedDoctor } from "./authHelpers";
 
 // Get all services for a doctor
 export const list = query({
   args: { doctorId: v.id("doctors") },
   handler: async (ctx, args) => {
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== args.doctorId) throw new Error("Not authorized");
+
     return await ctx.db
       .query("services")
       .withIndex("by_doctorId", (q) => q.eq("doctorId", args.doctorId))
@@ -16,7 +20,11 @@ export const list = query({
 export const getById = query({
   args: { serviceId: v.id("services") },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.serviceId);
+    const service = await ctx.db.get(args.serviceId);
+    if (!service) return null;
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== service.doctorId) throw new Error("Not authorized");
+    return service;
   },
 });
 
@@ -24,6 +32,9 @@ export const getById = query({
 export const getPrimaryCurrency = query({
   args: { doctorId: v.id("doctors") },
   handler: async (ctx, args) => {
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== args.doctorId) throw new Error("Not authorized");
+
     const service = await ctx.db
       .query("services")
       .withIndex("by_doctorId", (q) => q.eq("doctorId", args.doctorId))
@@ -43,6 +54,9 @@ export const create = mutation({
     type: v.union(v.literal("clinical"), v.literal("documentation")),
   },
   handler: async (ctx, args) => {
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== args.doctorId) throw new Error("Not authorized");
+
     const now = Date.now();
     return await ctx.db.insert("services", {
       ...args,
@@ -62,8 +76,13 @@ export const update = mutation({
     type: v.optional(v.union(v.literal("clinical"), v.literal("documentation"))),
   },
   handler: async (ctx, args) => {
+    const service = await ctx.db.get(args.serviceId);
+    if (!service) throw new Error("Service not found");
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== service.doctorId) throw new Error("Not authorized");
+
     const { serviceId, ...updates } = args;
-    
+
     // Filter out undefined values
     const filteredUpdates = Object.fromEntries(
       Object.entries(updates).filter(([_, v]) => v !== undefined)
@@ -80,6 +99,11 @@ export const update = mutation({
 export const remove = mutation({
   args: { serviceId: v.id("services") },
   handler: async (ctx, args) => {
+    const service = await ctx.db.get(args.serviceId);
+    if (!service) throw new Error("Service not found");
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== service.doctorId) throw new Error("Not authorized");
+
     await ctx.db.delete(args.serviceId);
   },
 });

@@ -1,10 +1,13 @@
 "use client"
 
 import { usePathname } from "next/navigation"
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { useQuery } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
+import { useOfflineRoute } from "@/lib/offline/context/OfflineRouteContext"
+import { useNetworkStatus } from "@/lib/offline/hooks/useNetworkStatus"
+import { offlineDb } from "@/lib/offline/db"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -66,9 +69,6 @@ function getBreadcrumbs(pathname: string): BreadcrumbData[] {
         !["add-patient", "edit-patient"].includes(segment)
       
       // Check if this is an appointment ID - only if the previous segment is a patient ID
-      // (i.e., the segment before that was "patients")
-      // This ensures we only treat the first unknown ID after a patient as an appointment ID,
-      // not IDs that come after routes like "reports", "receipts", etc.
       const knownPatientSubroutes = [
         "charts", "vaccines", "reports", "receipts", "scrybegpt",
         "add-record", "edit-patient", "hfa", "wfa", "bfa", "hcfa", "wfl",
@@ -135,35 +135,78 @@ function DynamicBreadcrumbItem({
   crumb: BreadcrumbData
   isLast: boolean
 }) {
+  const { isOnline } = useNetworkStatus()
+  const offlineCtx = useOfflineRoute()
+  const [cachedLabel, setCachedLabel] = useState<string | null>(null)
+
   // Fetch patient name if this is a patient ID breadcrumb
+  // Skip all queries when offline — fall back to IndexedDB below
   const patient = useQuery(
     api.patients.getById,
-    crumb.patientId ? { patientId: crumb.patientId as Id<"patients"> } : "skip"
+    isOnline && crumb.patientId ? { patientId: crumb.patientId as Id<"patients"> } : "skip"
   )
 
   // Fetch appointment info if this is an appointment ID breadcrumb
   const appointment = useQuery(
     api.appointments.getById,
-    crumb.appointmentId ? { appointmentId: crumb.appointmentId as Id<"appointments"> } : "skip"
+    isOnline && crumb.appointmentId ? { appointmentId: crumb.appointmentId as Id<"appointments"> } : "skip"
   )
 
   // Fetch report info if this is a report ID breadcrumb
   const report = useQuery(
     api.reports.getById,
-    crumb.reportId ? { reportId: crumb.reportId as Id<"reports"> } : "skip"
+    isOnline && crumb.reportId ? { reportId: crumb.reportId as Id<"reports"> } : "skip"
   )
 
   // Fetch receipt info if this is a receipt ID breadcrumb
   const receipt = useQuery(
     api.receipts.getById,
-    crumb.receiptId ? { receiptId: crumb.receiptId as Id<"receipts"> } : "skip"
+    isOnline && crumb.receiptId ? { receiptId: crumb.receiptId as Id<"receipts"> } : "skip"
   )
 
   // Fetch telehealth appointment info (doctor sees patient name)
   const telehealthApt = useQuery(
     api.telehealth.getById,
-    crumb.telehealthAppointmentId ? { id: crumb.telehealthAppointmentId as Id<"telehealthAppointments"> } : "skip"
+    isOnline && crumb.telehealthAppointmentId ? { id: crumb.telehealthAppointmentId as Id<"telehealthAppointments"> } : "skip"
   )
+
+  // Offline: fall back to IndexedDB for labels
+  useEffect(() => {
+    if (isOnline) {
+      setCachedLabel(null)
+      return
+    }
+
+    const loadFromCache = async () => {
+      try {
+        if (crumb.patientId) {
+          const p = await offlineDb.patients.get(crumb.patientId)
+          if (p) setCachedLabel(`${p.firstname} ${p.lastname}`)
+        } else if (crumb.appointmentId) {
+          const apt = await offlineDb.appointments.get(crumb.appointmentId)
+          if (apt) {
+            const date = new Date(apt.startDate)
+            let serviceName = "Record"
+            if (apt.serviceId) {
+              const svc = await offlineDb.services.get(apt.serviceId)
+              if (svc) serviceName = svc.name
+            }
+            setCachedLabel(
+              `${serviceName} - ${date.toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })}`
+            )
+          }
+        }
+      } catch {
+        // Ignore cache errors
+      }
+    }
+
+    loadFromCache()
+  }, [isOnline, crumb.patientId, crumb.appointmentId])
 
   // Determine the display label
   let displayLabel = crumb.label
@@ -197,18 +240,37 @@ function DynamicBreadcrumbItem({
   } else if (crumb.telehealthAppointmentId && telehealthApt) {
     // Doctor sees patient name
     displayLabel = telehealthApt.patientName
+  } else if (cachedLabel) {
+    // Offline fallback from IndexedDB
+    displayLabel = cachedLabel
+  }
+
+  // When offline, use the offline router for navigation
+  const handleClick = (e: React.MouseEvent) => {
+    if (offlineCtx?.isOfflineRouting) {
+      e.preventDefault()
+      offlineCtx.navigate(crumb.href)
+    }
   }
 
   if (isLast) {
     return <BreadcrumbPage>{displayLabel}</BreadcrumbPage>
   }
 
-  return <BreadcrumbLink href={crumb.href}>{displayLabel}</BreadcrumbLink>
+  return (
+    <BreadcrumbLink href={crumb.href} onClick={handleClick}>
+      {displayLabel}
+    </BreadcrumbLink>
+  )
 }
 
 export function BreadcrumbNav() {
   const pathname = usePathname()
-  const breadcrumbs = getBreadcrumbs(pathname)
+  const offlineCtx = useOfflineRoute()
+  
+  // Use the effective route (offline route when offline, real pathname when online)
+  const effectivePath = offlineCtx?.effectiveRoute ?? pathname
+  const breadcrumbs = getBreadcrumbs(effectivePath)
 
   return (
     <Breadcrumb>

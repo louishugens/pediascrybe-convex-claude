@@ -11,7 +11,9 @@
 import type * as ai from "../ai.js";
 import type * as appUsers from "../appUsers.js";
 import type * as appointments from "../appointments.js";
+import type * as auditLog from "../auditLog.js";
 import type * as auth from "../auth.js";
+import type * as authHelpers from "../authHelpers.js";
 import type * as charts from "../charts.js";
 import type * as doctors from "../doctors.js";
 import type * as email from "../email.js";
@@ -55,7 +57,9 @@ declare const fullApi: ApiFromModules<{
   ai: typeof ai;
   appUsers: typeof appUsers;
   appointments: typeof appointments;
+  auditLog: typeof auditLog;
   auth: typeof auth;
+  authHelpers: typeof authHelpers;
   charts: typeof charts;
   doctors: typeof doctors;
   email: typeof email;

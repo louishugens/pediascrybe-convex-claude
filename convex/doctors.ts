@@ -1,10 +1,14 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { getAuthenticatedDoctor } from "./authHelpers";
 
 // Get doctor by auth user ID
 export const getByAuthUserId = query({
   args: { authUserId: v.string() },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
     return await ctx.db
       .query("doctors")
       .withIndex("by_authUserId", (q) => q.eq("authUserId", args.authUserId))
@@ -16,6 +20,9 @@ export const getByAuthUserId = query({
 export const getById = query({
   args: { doctorId: v.id("doctors") },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
     return await ctx.db.get(args.doctorId);
   },
 });
@@ -77,12 +84,19 @@ export const update = mutation({
     experience: v.optional(v.number()),
     cost: v.optional(v.number()),
     duration: v.optional(v.number()),
-    availability: v.optional(v.any()),
+    availability: v.optional(v.array(v.object({
+      day: v.number(),
+      startTime: v.string(),
+      endTime: v.string(),
+    }))),
     isCompleted: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    const doctor = await getAuthenticatedDoctor(ctx);
+    if (doctor._id !== args.doctorId) throw new Error("Not authorized");
+
     const { doctorId, ...updates } = args;
-    
+
     // Filter out undefined values
     const filteredUpdates = Object.fromEntries(
       Object.entries(updates).filter(([_, v]) => v !== undefined)
