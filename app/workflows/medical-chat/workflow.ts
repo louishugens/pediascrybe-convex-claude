@@ -36,7 +36,8 @@ import { getPatientContext } from "./steps/patient";
  */
 export async function medicalChatWorkflow(
   patientId: string,
-  messages: ModelMessage[]
+  messages: ModelMessage[],
+  patientWithAppointments: any
 ) {
   "use workflow";
 
@@ -44,9 +45,9 @@ export async function medicalChatWorkflow(
   // This stream is persistent and can be read at any time
   const writable = getWritable<UIMessageChunk>();
 
-  // Step 1: Fetch patient context (durable step)
-  // This step automatically retries on database failures
-  const { systemPrompt, patientData, appointments } = await getPatientContext(patientId);
+  // Step 1: Format patient context (durable step)
+  // Patient data is pre-fetched in the route handler (auth context) and passed in.
+  const { systemPrompt, patientData, appointments } = await getPatientContext(patientWithAppointments);
 
   console.log('[Workflow] Patient data loaded:', {
     patientId,

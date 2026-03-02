@@ -9,10 +9,6 @@
  * // Returns formatted system prompt with patient data
  */
 
-import { differenceInDays } from 'date-fns';
-import { fetchAuthQuery } from '@/lib/auth-server';
-import { api } from '@/convex/_generated/api';
-import type { Id } from '@/convex/_generated/dataModel';
 
 /**
  * Helper to omit PII fields from patient data.
@@ -26,17 +22,20 @@ function omitPII<T extends Record<string, any>>(obj: T, keys: string[]): Partial
 }
 
 /**
- * Durable step to fetch patient context.
+ * Durable step to format patient context.
  *
  * This function is marked with "use step" which makes it durable:
  * - Automatically retries on transient failures (up to 3 times)
  * - Appears as a discrete step in observability
  * - Runs in a separate worker process in production
  *
- * @param patientId - The ID of the patient to fetch
+ * Patient data is pre-fetched in the API route handler (where auth context is
+ * available) and passed in directly to avoid auth failures inside durable steps.
+ *
+ * @param patient - Pre-fetched patient record with appointments
  * @returns Formatted system prompt with patient data
  */
-export async function getPatientContext(patientId: string): Promise<{
+export async function getPatientContext(patient: any): Promise<{
   systemPrompt: string;
   patientData: any;
   appointments: any[];
@@ -44,13 +43,8 @@ export async function getPatientContext(patientId: string): Promise<{
 }> {
   "use step";
 
-  // Fetch patient data from Convex database
-  const patient = await fetchAuthQuery(api.patients.getPatientWithAppointments, {
-    patientId: patientId as Id<"patients">
-  });
-
   if (!patient) {
-    throw new Error(`Patient with ID ${patientId} not found`);
+    throw new Error('Patient data is missing');
   }
 
   // Extract appointments and growth data
