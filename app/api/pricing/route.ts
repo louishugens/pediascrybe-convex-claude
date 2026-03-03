@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { fetchQuery } from "convex/nextjs";
+import { unstable_cache } from "next/cache";
 import { api } from "@/convex/_generated/api";
 
 // Allowed origins for CORS
@@ -23,11 +24,17 @@ function getCorsHeaders(origin: string | null) {
   };
 }
 
+const getCachedTiers = unstable_cache(
+  () => fetchQuery(api.stripe.getSubscriptionTiers),
+  ["pricing-tiers"],
+  { revalidate: 3600 }
+);
+
 export async function GET(request: Request) {
   const origin = request.headers.get("Origin");
-  
+
   try {
-    const tiers = await fetchQuery(api.stripe.getSubscriptionTiers);
+    const tiers = await getCachedTiers();
     
     return NextResponse.json(
       { tiers },
