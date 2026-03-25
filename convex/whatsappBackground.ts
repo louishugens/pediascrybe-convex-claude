@@ -21,6 +21,7 @@ import {
   generateLabExamPdf,
   generateReceiptPdf,
   generatePatientSummaryPdf,
+  generateGrowthChartPdf,
 } from "./whatsappPdf";
 
 /**
@@ -518,6 +519,121 @@ export const sendPatientSummaryPdf = internalAction({
       await sendTextMessage(
         args.phoneNumber,
         "Sorry, I couldn't generate the patient summary PDF. Please try again."
+      );
+    }
+  },
+});
+
+/**
+ * Generate and send a WHO growth chart PDF via WhatsApp.
+ */
+export const sendGrowthChartPdf = internalAction({
+  args: {
+    doctorId: v.id("doctors"),
+    patientId: v.id("patients"),
+    chartType: v.string(), // "wfa", "hfa", "hcfa", "bfa"
+    phoneNumber: v.string(),
+  },
+  handler: async (ctx, args) => {
+    try {
+      const doctor = await ctx.runQuery(internal.whatsappData.getDoctorById, {
+        doctorId: args.doctorId,
+      });
+      if (!doctor) throw new Error("Doctor not found");
+
+      const growthData = await ctx.runQuery(
+        internal.whatsappData.getPatientGrowthData,
+        { doctorId: args.doctorId, patientId: args.patientId }
+      );
+
+      if (!growthData || growthData.dataPoints.length === 0) {
+        await sendTextMessage(
+          args.phoneNumber,
+          "No growth measurements recorded for this patient."
+        );
+        return;
+      }
+
+      // Determine chart ID from type + sex
+      const chartIdMap: Record<string, { male: string; female: string }> = {
+        wfa: { male: "bwfa", female: "gwfa" },
+        hfa: { male: "bhfa", female: "ghfa" },
+        hcfa: { male: "bhcfa", female: "ghcfa" },
+        bfa: { male: "bbfa", female: "gbfa" },
+      };
+
+      const sexMap = chartIdMap[args.chartType];
+      if (!sexMap) {
+        await sendTextMessage(
+          args.phoneNumber,
+          `Unknown chart type: ${args.chartType}. Available: wfa (weight), hfa (height), hcfa (head), bfa (BMI).`
+        );
+        return;
+      }
+
+      const chartId = growthData.sex === "female" ? sexMap.female : sexMap.male;
+
+      const referenceData = await ctx.runQuery(
+        internal.whatsappData.getChartReferenceData,
+        { chartId }
+      );
+
+      if (!referenceData) {
+        await sendTextMessage(
+          args.phoneNumber,
+          `No WHO reference data found for chart ${args.chartType}. This chart may not be available.`
+        );
+        return;
+      }
+
+      const pdfBuffer = generateGrowthChartPdf(
+        {
+          firstname: doctor.firstname,
+          lastname: doctor.lastname,
+          spec: doctor.spec,
+          phone: doctor.phone,
+          email: doctor.email,
+          address: doctor.address,
+        },
+        {
+          firstname: growthData.patientName.split(" ")[0],
+          lastname: growthData.patientName.split(" ").slice(1).join(" "),
+          sex: growthData.sex,
+          birthdate: growthData.birthdate,
+        },
+        args.chartType,
+        referenceData,
+        growthData.dataPoints
+      );
+
+      const blob = new Blob([pdfBuffer], { type: "application/pdf" });
+      const storageId = await ctx.storage.store(blob);
+      const url = await ctx.storage.getUrl(storageId);
+
+      if (!url) throw new Error("Failed to get storage URL");
+
+      const chartLabels: Record<string, string> = {
+        wfa: "Weight for Age",
+        hfa: "Height for Age",
+        hcfa: "Head Circumference for Age",
+        bfa: "BMI for Age",
+      };
+
+      const name = growthData.patientName.replace(" ", "_");
+      const filename = `${chartLabels[args.chartType] || args.chartType}_${name}.pdf`;
+      await sendDocumentMessage(
+        args.phoneNumber,
+        url,
+        filename,
+        `${chartLabels[args.chartType]} — ${growthData.patientName}`
+      );
+
+      console.log(`[Background] Sent growth chart PDF (${args.chartType}) for ${args.patientId}`);
+    } catch (error: any) {
+      console.error("[Background] Growth chart PDF error:", error);
+      await sendTextMessage(
+        args.phoneNumber,
+        "Sorry, I couldn't generate the growth chart PDF. Please try again."
       );
     }
   },

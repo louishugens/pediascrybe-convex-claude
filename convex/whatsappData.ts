@@ -48,6 +48,30 @@ function getPercentilePosition(
   return "above 97th percentile";
 }
 
+/**
+ * Get WHO chart reference data for a chart type + sex.
+ * Used by growth chart PDF generator.
+ */
+export const getChartReferenceData = internalQuery({
+  args: {
+    chartId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const chart = await ctx.db
+      .query("charts")
+      .withIndex("by_chartId", (q) => q.eq("chartId", args.chartId))
+      .first();
+    if (!chart) return null;
+    return {
+      p03: chart.p03,
+      p15: chart.p15,
+      p50: chart.p50,
+      p85: chart.p85,
+      p97: chart.p97,
+    };
+  },
+});
+
 // ==================== Utility Queries ====================
 
 /**

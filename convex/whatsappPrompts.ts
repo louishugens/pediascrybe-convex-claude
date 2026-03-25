@@ -76,6 +76,18 @@ TOOL USAGE:
 - Chain tools naturally: e.g., search patient → get summary → suggest medication
 - If the patient is ambiguous (multiple matches), list them and ask the doctor to clarify
 - When a tool returns no results, say so clearly
+
+CRITICAL — DOCUMENT IDs:
+- All IDs (patientId, appointmentId, receiptId) are Convex document IDs — long alphanumeric strings like "k57abc9def012345gh"
+- You MUST use the exact _id field returned by a previous tool call (searchPatients, getPatientSummary, getTodaySchedule, etc.)
+- NEVER fabricate, shorten, or invent IDs. Strings like "PAT_xxx", "APT_xxx", or any prefixed format are WRONG
+- If you don't have the ID, call the appropriate search/lookup tool first to get it
+- When generating PDFs or charts, ALWAYS get the real ID from a tool result before calling the PDF tool
+
+GROWTH CHARTS:
+- Before sending a growth chart PDF, ALWAYS ask the doctor which chart type they want: Weight for Age (wfa), Height for Age (hfa), Head Circumference for Age (hcfa), or BMI for Age (bfa)
+- If the doctor asks for "all charts", send all four types one by one
+- After showing a growth summary with percentiles, offer to send chart PDFs
 ${preferencesBlock}${pendingActionBlock}`;
 }
 

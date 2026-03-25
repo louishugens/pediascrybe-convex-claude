@@ -16,6 +16,16 @@ type ToolContext = {
   phoneNumber: string;
 };
 
+/**
+ * Validate a Convex ID looks correct (not a model-fabricated one).
+ * Convex IDs are base64-like strings, typically starting with a letter
+ * and containing alphanumeric chars, not short prefixed strings like "PAT_xxx".
+ */
+function isValidConvexId(id: string): boolean {
+  // Convex IDs are typically 20+ chars and don't contain underscores after a prefix
+  return id.length >= 15 && !id.match(/^[A-Z]+_/);
+}
+
 export function createBackgroundTools({ ctx, doctorId, phoneNumber }: ToolContext) {
   return {
     generateFullReport: tool({
@@ -25,6 +35,9 @@ export function createBackgroundTools({ ctx, doctorId, phoneNumber }: ToolContex
         patientId: z.string().describe("The patient's ID"),
       }),
       execute: async ({ patientId }) => {
+        if (!isValidConvexId(patientId)) {
+          return { type: "error", message: `Invalid patient ID "${patientId}". Use the exact _id from a previous tool result.` };
+        }
         await ctx.scheduler.runAfter(
           0,
           internal.whatsappBackground.generateFullReport,
@@ -90,6 +103,9 @@ export function createBackgroundTools({ ctx, doctorId, phoneNumber }: ToolContex
         appointmentId: z.string().describe("The appointment ID that contains the prescription"),
       }),
       execute: async ({ appointmentId }) => {
+        if (!isValidConvexId(appointmentId)) {
+          return { type: "error", message: `Invalid appointment ID "${appointmentId}". Use the exact _id from a previous tool result.` };
+        }
         await ctx.scheduler.runAfter(
           0,
           internal.whatsappBackground.sendPrescriptionPdf,
@@ -110,9 +126,12 @@ export function createBackgroundTools({ ctx, doctorId, phoneNumber }: ToolContex
       description:
         "Generate and send a lab exam order as a PDF document via WhatsApp. Use when the doctor asks for lab exam PDF.",
       inputSchema: z.object({
-        appointmentId: z.string().describe("The appointment ID that contains the lab exams"),
+        appointmentId: z.string().describe("The exact Convex appointment ID from a previous tool result"),
       }),
       execute: async ({ appointmentId }) => {
+        if (!isValidConvexId(appointmentId)) {
+          return { type: "error", message: `Invalid appointment ID "${appointmentId}". Use the exact _id from a previous tool result.` };
+        }
         await ctx.scheduler.runAfter(
           0,
           internal.whatsappBackground.sendLabExamPdf,
@@ -133,9 +152,12 @@ export function createBackgroundTools({ ctx, doctorId, phoneNumber }: ToolContex
       description:
         "Generate and send a receipt/invoice as a PDF document via WhatsApp. Use when the doctor asks for a receipt PDF.",
       inputSchema: z.object({
-        receiptId: z.string().describe("The receipt ID"),
+        receiptId: z.string().describe("The exact Convex receipt ID from a previous tool result"),
       }),
       execute: async ({ receiptId }) => {
+        if (!isValidConvexId(receiptId)) {
+          return { type: "error", message: `Invalid receipt ID "${receiptId}". Use the exact _id from a previous tool result.` };
+        }
         await ctx.scheduler.runAfter(
           0,
           internal.whatsappBackground.sendReceiptPdf,
@@ -156,9 +178,12 @@ export function createBackgroundTools({ ctx, doctorId, phoneNumber }: ToolContex
       description:
         "Generate and send a patient summary as a PDF document via WhatsApp. Use when the doctor asks for a patient summary PDF, e.g., 'send me a PDF summary of Jean' or 'patient file for Marie'.",
       inputSchema: z.object({
-        patientId: z.string().describe("The patient's ID"),
+        patientId: z.string().describe("The exact Convex patient ID from a previous tool result"),
       }),
       execute: async ({ patientId }) => {
+        if (!isValidConvexId(patientId)) {
+          return { type: "error", message: `Invalid patient ID "${patientId}". Use the exact _id from a previous tool result.` };
+        }
         await ctx.scheduler.runAfter(
           0,
           internal.whatsappBackground.sendPatientSummaryPdf,
@@ -171,6 +196,58 @@ export function createBackgroundTools({ ctx, doctorId, phoneNumber }: ToolContex
         return {
           type: "background_job",
           message: "Generating the patient summary PDF... I'll send it in a moment.",
+        };
+      },
+    }),
+
+    sendGrowthChartPdf: tool({
+      description:
+        "Generate and send a WHO growth chart as a PDF document via WhatsApp. IMPORTANT: Before calling this, you MUST ask which chart type the doctor wants. Available types: wfa (Weight for Age), hfa (Height for Age), hcfa (Head Circumference for Age), bfa (BMI for Age). You can send multiple charts if the doctor asks for 'all charts'. IMPORTANT: The patientId must be the exact Convex document ID from a previous tool result (e.g. from searchPatients or getPatientSummary), not a made-up ID.",
+      inputSchema: z.object({
+        patientId: z.string().describe("The exact Convex patient ID from a previous tool result"),
+        chartType: z
+          .string()
+          .describe(
+            "Chart type: 'wfa' (Weight for Age), 'hfa' (Height for Age), 'hcfa' (Head Circumference for Age), 'bfa' (BMI for Age)"
+          ),
+      }),
+      execute: async ({ patientId, chartType }) => {
+        if (!isValidConvexId(patientId)) {
+          return {
+            type: "error",
+            message: `Invalid patient ID "${patientId}". Use the exact _id from searchPatients or getPatientSummary results.`,
+          };
+        }
+
+        const validTypes = ["wfa", "hfa", "hcfa", "bfa"];
+        if (!validTypes.includes(chartType)) {
+          return {
+            type: "error",
+            message: `Invalid chart type "${chartType}". Use one of: wfa, hfa, hcfa, bfa.`,
+          };
+        }
+
+        await ctx.scheduler.runAfter(
+          0,
+          internal.whatsappBackground.sendGrowthChartPdf,
+          {
+            doctorId,
+            patientId: patientId as Id<"patients">,
+            chartType,
+            phoneNumber,
+          }
+        );
+
+        const chartLabels: Record<string, string> = {
+          wfa: "Weight for Age",
+          hfa: "Height for Age",
+          hcfa: "Head Circumference for Age",
+          bfa: "BMI for Age",
+        };
+
+        return {
+          type: "background_job",
+          message: `Generating the ${chartLabels[chartType] || chartType} chart... I'll send it in a moment.`,
         };
       },
     }),

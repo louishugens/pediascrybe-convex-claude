@@ -113,13 +113,7 @@ export const processMessage = internalAction({
 
       // 9. Run the agent with timeout handling and metrics
       const agentStartTime = Date.now();
-      const primaryModel = process.env.AI_PRIMARY_PROVIDER || "openai";
-      const modelMap: Record<string, string> = {
-        openai: "openai/gpt-5-mini",
-        anthropic: "anthropic/claude-sonnet-4",
-        google: "google/gemini-2.0-flash",
-      };
-      const modelId = modelMap[primaryModel] || "openai/gpt-5-mini";
+      const modelId = process.env.AI_MODEL_ID || "anthropic/claude-sonnet-4-6";
 
       const result = await generateText({
         model: gateway(modelId),

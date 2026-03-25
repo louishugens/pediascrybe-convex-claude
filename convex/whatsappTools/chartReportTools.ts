@@ -20,7 +20,7 @@ export function createChartReportTools({ ctx, doctorId }: ToolContext) {
   return {
     generateGrowthSummary: tool({
       description:
-        "Generate a text summary of a patient's growth data with WHO percentile analysis. Use when the doctor asks about growth, percentiles, or weight/height trends. Always provide the percentile positions — even with a single measurement.",
+        "Generate a text summary of a patient's growth data with WHO percentile analysis. Use when the doctor asks about growth, percentiles, or weight/height trends. Always provide the percentile positions — even with a single measurement. After providing the summary, offer to send growth chart PDFs (wfa, hfa, hcfa, bfa) — ask which chart(s) the doctor wants.",
       inputSchema: z.object({
         patientId: z.string().describe("The patient's ID"),
       }),
