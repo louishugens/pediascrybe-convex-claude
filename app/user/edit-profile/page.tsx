@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Suspense, ViewTransition } from "react";
 import GenericFormSkeleton from "@/components/skeletons/generic-form-skeleton";
 import { getCurrentDoctor } from "@/lib/convex-data";
+import { headers } from "next/headers";
 
 const EditProfile = async () => {
   return (
@@ -23,7 +24,11 @@ async function EditProfileContainer() {
     redirect('/');
   }
 
+  // Detect timezone from Vercel geolocation header (IP-based)
+  const headersList = await headers();
+  const detectedTimezone = headersList.get("x-vercel-ip-timezone") || undefined;
+
   return (
-    <EditDoctor doctor={doctor} />
+    <EditDoctor doctor={doctor} detectedTimezone={detectedTimezone} />
   )
 }

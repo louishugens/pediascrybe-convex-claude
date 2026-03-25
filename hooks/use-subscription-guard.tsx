@@ -26,6 +26,7 @@ const FEATURE_ACCESS: Record<string, string[]> = {
   priority_support: ["premium"],
   telehealth: ["premium"],
   staff_accounts: ["premium"],
+  whatsapp_scrybegpt: [ "premium"],
 };
 
 interface SubscriptionGuardContextType {
@@ -51,6 +52,8 @@ export function SubscriptionGuardProvider({ children }: { children: ReactNode })
   const hasActiveSubscription =
     subscription?.status === "active" ||
     subscription?.status === "trialing";
+
+  console.log("subscription", subscription);
 
   const tierName = hasActiveSubscription ? (subscription?.tier || null) : null;
 

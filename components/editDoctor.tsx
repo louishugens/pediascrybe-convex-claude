@@ -10,7 +10,7 @@ import { refresh } from '@/app/actions';
 import toast from 'react-hot-toast';
 
 
-const EditDoctor = ({doctor}) => {
+const EditDoctor = ({doctor, detectedTimezone}: {doctor: any, detectedTimezone?: string}) => {
   const schema = yup.object({
     firstname: yup.string().required("Please enter your first name"),
     lastname:  yup.string().required("Please enter your last name"),
@@ -18,6 +18,7 @@ const EditDoctor = ({doctor}) => {
     phone: yup.string().required("Please enter your last name"),
     spec: yup.string().required("Please enter your specialty"),
     address:yup.string(),
+    timezone: yup.string(),
   }).required();
   
   let [color, setColor] = useState("#ffffff")
@@ -35,6 +36,7 @@ const EditDoctor = ({doctor}) => {
       phone: doctor.phone || '',
       spec: doctor.spec || '',
       address: doctor.address || '',
+      timezone: doctor.timezone || detectedTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
     },
     resolver: yupResolver(schema)
   });
@@ -46,8 +48,8 @@ const EditDoctor = ({doctor}) => {
     setLoading(true)
  
     try {
-      const {firstname, lastname, email, phone, spec, address} = values
-      const body = {firstname, lastname, email, phone, spec, address, id: doctor._id}
+      const {firstname, lastname, email, phone, spec, address, timezone} = values
+      const body = {firstname, lastname, email, phone, spec, address, timezone, id: doctor._id}
       
       const res = await fetch('/api/doctor/edit', {
         method: 'POST',
@@ -140,6 +142,61 @@ const EditDoctor = ({doctor}) => {
               {...register('address')}
             />
             <p className='px-4 pt-1 text-sm text-red-600'>{errors.address?.message?.toString()}</p>
+          </label>
+          <label className="flex flex-col mb-4 h-16">
+            <span className="font-medium">Timezone</span>
+            <select
+              className="placeholder:italic placeholder:text-sm bg-white shadow-md rounded-full py-2 px-4 border-none"
+              {...register('timezone')}
+            >
+              <optgroup label="Americas">
+                <option value="America/Port-au-Prince">Haiti (Port-au-Prince)</option>
+                <option value="America/New_York">US Eastern (New York)</option>
+                <option value="America/Chicago">US Central (Chicago)</option>
+                <option value="America/Denver">US Mountain (Denver)</option>
+                <option value="America/Los_Angeles">US Pacific (Los Angeles)</option>
+                <option value="America/Mexico_City">Mexico (Mexico City)</option>
+                <option value="America/Bogota">Colombia (Bogota)</option>
+                <option value="America/Lima">Peru (Lima)</option>
+                <option value="America/Santiago">Chile (Santiago)</option>
+                <option value="America/Argentina/Buenos_Aires">Argentina (Buenos Aires)</option>
+                <option value="America/Sao_Paulo">Brazil (São Paulo)</option>
+                <option value="America/Santo_Domingo">Dominican Republic (Santo Domingo)</option>
+                <option value="America/Jamaica">Jamaica (Kingston)</option>
+                <option value="America/Havana">Cuba (Havana)</option>
+                <option value="America/Martinique">Martinique</option>
+                <option value="America/Guadeloupe">Guadeloupe</option>
+              </optgroup>
+              <optgroup label="Africa">
+                <option value="Africa/Lagos">Nigeria (Lagos) / WAT</option>
+                <option value="Africa/Accra">Ghana (Accra) / GMT</option>
+                <option value="Africa/Nairobi">Kenya (Nairobi) / EAT</option>
+                <option value="Africa/Johannesburg">South Africa (Johannesburg)</option>
+                <option value="Africa/Cairo">Egypt (Cairo)</option>
+                <option value="Africa/Casablanca">Morocco (Casablanca)</option>
+                <option value="Africa/Dakar">Senegal (Dakar)</option>
+                <option value="Africa/Abidjan">Ivory Coast (Abidjan)</option>
+                <option value="Africa/Douala">Cameroon (Douala)</option>
+                <option value="Africa/Kinshasa">DR Congo (Kinshasa)</option>
+                <option value="Africa/Addis_Ababa">Ethiopia (Addis Ababa)</option>
+                <option value="Africa/Dar_es_Salaam">Tanzania (Dar es Salaam)</option>
+                <option value="Africa/Kampala">Uganda (Kampala)</option>
+                <option value="Africa/Kigali">Rwanda (Kigali)</option>
+              </optgroup>
+              <optgroup label="Europe">
+                <option value="Europe/Paris">France (Paris)</option>
+                <option value="Europe/London">UK (London)</option>
+                <option value="Europe/Brussels">Belgium (Brussels)</option>
+                <option value="Europe/Zurich">Switzerland (Zurich)</option>
+                <option value="Europe/Berlin">Germany (Berlin)</option>
+              </optgroup>
+              <optgroup label="Other">
+                <option value="Asia/Dubai">UAE (Dubai)</option>
+                <option value="Asia/Kolkata">India (Kolkata)</option>
+                <option value="Pacific/Honolulu">Hawaii (Honolulu)</option>
+              </optgroup>
+            </select>
+            <p className='px-4 pt-1 text-sm text-red-600'>{errors.timezone?.message?.toString()}</p>
           </label>
         </div>
 

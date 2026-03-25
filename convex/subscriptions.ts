@@ -29,6 +29,9 @@ const FEATURE_ACCESS: Record<string, string[]> = {
   // Pro+ portal features
   patient_portal: ["pro", "premium"],
 
+  // Pro+ WhatsApp ScrybeGPT
+  whatsapp_scrybegpt: ["pro", "premium"],
+
   // Premium only features (some coming soon)
   priority_support: ["premium"],
   telehealth: ["premium"], // Coming soon

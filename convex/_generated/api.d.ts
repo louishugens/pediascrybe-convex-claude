@@ -15,6 +15,7 @@ import type * as auditLog from "../auditLog.js";
 import type * as auth from "../auth.js";
 import type * as authHelpers from "../authHelpers.js";
 import type * as charts from "../charts.js";
+import type * as crons from "../crons.js";
 import type * as doctors from "../doctors.js";
 import type * as email from "../email.js";
 import type * as emails_magicLink from "../emails/magicLink.js";
@@ -44,8 +45,29 @@ import type * as subscriptions from "../subscriptions.js";
 import type * as telehealth from "../telehealth.js";
 import type * as telehealthAvailability from "../telehealthAvailability.js";
 import type * as telehealthNotifications from "../telehealthNotifications.js";
+import type * as timezone from "../timezone.js";
 import type * as usage from "../usage.js";
 import type * as vaccines from "../vaccines.js";
+import type * as whatsapp from "../whatsapp.js";
+import type * as whatsappAgent from "../whatsappAgent.js";
+import type * as whatsappBackground from "../whatsappBackground.js";
+import type * as whatsappClient from "../whatsappClient.js";
+import type * as whatsappCron from "../whatsappCron.js";
+import type * as whatsappData from "../whatsappData.js";
+import type * as whatsappDecisionLog from "../whatsappDecisionLog.js";
+import type * as whatsappDecisionLogActions from "../whatsappDecisionLogActions.js";
+import type * as whatsappFormat from "../whatsappFormat.js";
+import type * as whatsappLinks from "../whatsappLinks.js";
+import type * as whatsappPdf from "../whatsappPdf.js";
+import type * as whatsappPreferences from "../whatsappPreferences.js";
+import type * as whatsappPrompts from "../whatsappPrompts.js";
+import type * as whatsappTools_backgroundTools from "../whatsappTools/backgroundTools.js";
+import type * as whatsappTools_chartReportTools from "../whatsappTools/chartReportTools.js";
+import type * as whatsappTools_clinicalSafety from "../whatsappTools/clinicalSafety.js";
+import type * as whatsappTools_medicalTools from "../whatsappTools/medicalTools.js";
+import type * as whatsappTools_patientTools from "../whatsappTools/patientTools.js";
+import type * as whatsappTools_scheduleTools from "../whatsappTools/scheduleTools.js";
+import type * as whatsappTools_writeTools from "../whatsappTools/writeTools.js";
 
 import type {
   ApiFromModules,
@@ -61,6 +83,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   authHelpers: typeof authHelpers;
   charts: typeof charts;
+  crons: typeof crons;
   doctors: typeof doctors;
   email: typeof email;
   "emails/magicLink": typeof emails_magicLink;
@@ -90,8 +113,29 @@ declare const fullApi: ApiFromModules<{
   telehealth: typeof telehealth;
   telehealthAvailability: typeof telehealthAvailability;
   telehealthNotifications: typeof telehealthNotifications;
+  timezone: typeof timezone;
   usage: typeof usage;
   vaccines: typeof vaccines;
+  whatsapp: typeof whatsapp;
+  whatsappAgent: typeof whatsappAgent;
+  whatsappBackground: typeof whatsappBackground;
+  whatsappClient: typeof whatsappClient;
+  whatsappCron: typeof whatsappCron;
+  whatsappData: typeof whatsappData;
+  whatsappDecisionLog: typeof whatsappDecisionLog;
+  whatsappDecisionLogActions: typeof whatsappDecisionLogActions;
+  whatsappFormat: typeof whatsappFormat;
+  whatsappLinks: typeof whatsappLinks;
+  whatsappPdf: typeof whatsappPdf;
+  whatsappPreferences: typeof whatsappPreferences;
+  whatsappPrompts: typeof whatsappPrompts;
+  "whatsappTools/backgroundTools": typeof whatsappTools_backgroundTools;
+  "whatsappTools/chartReportTools": typeof whatsappTools_chartReportTools;
+  "whatsappTools/clinicalSafety": typeof whatsappTools_clinicalSafety;
+  "whatsappTools/medicalTools": typeof whatsappTools_medicalTools;
+  "whatsappTools/patientTools": typeof whatsappTools_patientTools;
+  "whatsappTools/scheduleTools": typeof whatsappTools_scheduleTools;
+  "whatsappTools/writeTools": typeof whatsappTools_writeTools;
 }>;
 
 /**

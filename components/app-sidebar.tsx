@@ -10,6 +10,8 @@ import {
   LayoutDashboard,
   Settings,
   Video,
+  MessageCircle,
+  Sparkles,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -51,6 +53,20 @@ const baseNavItems = [
     title: "Edit Profile",
     url: "/user/edit-profile",
     icon: PenSquare,
+  },
+]
+
+const scrybegptNavItems = [
+  {
+    title: "Chat",
+    url: "/user/scrybegpt",
+    icon: Sparkles,
+  },
+  {
+    title: "WhatsApp",
+    url: "/user/settings/whatsapp",
+    icon: MessageCircle,
+    feature: "whatsapp_scrybegpt",
   },
 ]
 
@@ -101,6 +117,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={baseNavItems} />
+        <NavMain items={scrybegptNavItems} label="ScrybeGPT" />
         <NavMain items={telehealthNavItems} label="Telehealth" />
       </SidebarContent>
       <SidebarFooter>

@@ -17,6 +17,7 @@ const doctors = defineTable({
   experience: v.optional(v.number()),
   cost: v.optional(v.number()),
   duration: v.optional(v.number()),
+  timezone: v.optional(v.string()), // IANA timezone e.g. "America/Port-au-Prince", "Africa/Lagos"
   isActive: v.boolean(),
   isCompleted: v.boolean(),
   isDoctor: v.boolean(),
@@ -555,6 +556,99 @@ const telehealthAppointments = defineTable({
   .index("by_doctorId_status", ["doctorId", "status"])
   .index("by_roomName", ["roomName"]);
 
+// ==================== WhatsApp ScrybeGPT ====================
+
+// Maps WhatsApp numbers to doctor accounts
+const whatsappLinks = defineTable({
+  doctorId: v.id("doctors"),
+  phoneNumber: v.optional(v.string()), // E.164 format, set after QR scan
+  whatsappId: v.optional(v.string()), // WhatsApp user ID from webhook
+  status: v.union(v.literal("pending"), v.literal("active"), v.literal("revoked")),
+  linkToken: v.string(), // Unique token embedded in QR code
+  linkTokenExpiresAt: v.number(), // Token expiry (10 min)
+  linkedAt: v.optional(v.number()),
+  createdAt: v.number(),
+})
+  .index("by_phoneNumber", ["phoneNumber"])
+  .index("by_whatsappId", ["whatsappId"])
+  .index("by_doctorId", ["doctorId"])
+  .index("by_linkToken", ["linkToken"]);
+
+// Conversation history
+const whatsappMessages = defineTable({
+  doctorId: v.id("doctors"),
+  whatsappMessageId: v.string(), // Meta's msg ID (dedup)
+  role: v.union(v.literal("user"), v.literal("assistant")),
+  content: v.string(),
+  toolCalls: v.optional(v.string()), // JSON array of tool calls made
+  patientId: v.optional(v.id("patients")),
+  createdAt: v.number(),
+})
+  .index("by_doctorId", ["doctorId"])
+  .index("by_doctorId_createdAt", ["doctorId", "createdAt"])
+  .index("by_whatsappMessageId", ["whatsappMessageId"]);
+
+// Clinical proposals + write operations awaiting doctor review
+const whatsappPendingActions = defineTable({
+  doctorId: v.id("doctors"),
+  action: v.string(), // "diagnostic" | "medication" | "labExam" | "createPatient" | etc.
+  patientId: v.optional(v.id("patients")),
+  appointmentId: v.optional(v.id("appointments")),
+  proposedData: v.string(), // JSON
+  preview: v.string(), // Human-readable summary
+  status: v.union(
+    v.literal("pending"),
+    v.literal("confirmed"),
+    v.literal("edited"),
+    v.literal("cancelled"),
+    v.literal("expired")
+  ),
+  editHistory: v.optional(v.string()), // JSON array of edit instructions
+  resultEntityId: v.optional(v.string()), // ID of created/updated record
+  linkedActionId: v.optional(v.id("whatsappPendingActions")), // Chain: diagnostic -> medication -> labs
+  expiresAt: v.number(), // Auto-expire after 10 min
+  createdAt: v.number(),
+})
+  .index("by_doctorId_status", ["doctorId", "status"])
+  .index("by_doctorId_createdAt", ["doctorId", "createdAt"]);
+
+// Doctor preference learning from clinical edits
+const doctorPreferences = defineTable({
+  doctorId: v.id("doctors"),
+  category: v.string(), // "dosing" | "drug_choice" | "lab_preference" | "general"
+  condition: v.optional(v.string()), // "otitis_media" | "anemia" | null
+  rule: v.string(), // Compact rule text
+  confidence: v.number(), // 0-1
+  sourceCount: v.number(), // How many interactions confirmed this
+  lastUsedAt: v.number(),
+  createdAt: v.number(),
+})
+  .index("by_doctorId", ["doctorId"])
+  .index("by_doctorId_condition", ["doctorId", "condition"])
+  .index("by_doctorId_confidence", ["doctorId", "confidence"]);
+
+// Clinical decision audit log + embeddings for RAG
+const clinicalDecisionLog = defineTable({
+  doctorId: v.id("doctors"),
+  patientId: v.id("patients"),
+  appointmentId: v.optional(v.id("appointments")),
+  decisionType: v.string(), // "diagnostic" | "medication" | "labExam"
+  proposed: v.string(), // JSON
+  final: v.string(), // JSON
+  edits: v.optional(v.string()), // JSON
+  outcome: v.string(), // "approved" | "edited" | "rejected"
+  embedding: v.optional(v.array(v.float64())),
+  conditionTags: v.array(v.string()),
+  createdAt: v.number(),
+})
+  .index("by_doctorId", ["doctorId"])
+  .index("by_doctorId_decisionType", ["doctorId", "decisionType"])
+  .vectorIndex("by_embedding", {
+    vectorField: "embedding",
+    dimensions: 1536,
+    filterFields: ["doctorId"],
+  });
+
 // ==================== Audit Logging ====================
 
 const auditLogs = defineTable({
@@ -647,6 +741,12 @@ export default defineSchema({
   telehealthAvailability,
   telehealthExceptions,
   telehealthAppointments,
+  // WhatsApp ScrybeGPT
+  whatsappLinks,
+  whatsappMessages,
+  whatsappPendingActions,
+  doctorPreferences,
+  clinicalDecisionLog,
   // Audit
   auditLogs,
 });

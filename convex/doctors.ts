@@ -84,6 +84,7 @@ export const update = mutation({
     experience: v.optional(v.number()),
     cost: v.optional(v.number()),
     duration: v.optional(v.number()),
+    timezone: v.optional(v.string()),
     availability: v.optional(v.array(v.object({
       day: v.number(),
       startTime: v.string(),

@@ -14,7 +14,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { firstname, lastname, email, phone, spec, address, id } = await req.json();
+    const { firstname, lastname, email, phone, spec, address, timezone, id } = await req.json();
 
     await fetchAuthMutation(api.doctors.updateDoctor, {
       doctorId: id,
@@ -24,6 +24,7 @@ export async function POST(req: Request) {
       phone: phone || undefined,
       spec: spec || undefined,
       address: address || undefined,
+      timezone: timezone || undefined,
     });
 
     return new Response(JSON.stringify({ success: true }), {

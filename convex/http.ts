@@ -215,6 +215,52 @@ http.route({
   }),
 });
 
+// ==================== WhatsApp Webhook (Kapso) ====================
+
+http.route({
+  path: "/whatsapp/webhook",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const body = await request.text();
+    // Kapso uses x-webhook-signature
+    const signature = request.headers.get("x-webhook-signature") ||
+      request.headers.get("x-hub-signature-256") ||
+      request.headers.get("x-hub-signature");
+
+    try {
+      await ctx.runAction(internal.whatsapp.handleIncomingWebhook, {
+        body,
+        signature: signature || undefined,
+      });
+    } catch (err) {
+      console.error("WhatsApp webhook error:", err);
+      return new Response("Webhook processing failed", { status: 500 });
+    }
+
+    return new Response("OK", { status: 200 });
+  }),
+});
+
+// WhatsApp webhook verification (GET — required by Meta Cloud API, optional for Kapso)
+http.route({
+  path: "/whatsapp/webhook",
+  method: "GET",
+  handler: httpAction(async (ctx, request) => {
+    const url = new URL(request.url);
+    const mode = url.searchParams.get("hub.mode");
+    const token = url.searchParams.get("hub.verify_token");
+    const challenge = url.searchParams.get("hub.challenge");
+
+    const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN;
+
+    if (mode === "subscribe" && token === verifyToken) {
+      return new Response(challenge || "", { status: 200 });
+    }
+
+    return new Response("Forbidden", { status: 403 });
+  }),
+});
+
 // ==================== Public API Endpoints ====================
 
 // Allowed origins for CORS
