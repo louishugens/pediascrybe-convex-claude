@@ -2,8 +2,12 @@
 
 import { motion } from 'motion/react';
 import Link from 'next/link';
-import { FileText, Shield, Receipt, ChevronRight, LucideIcon, UserPlus } from 'lucide-react';
+import { FileText, Shield, Receipt, ChevronRight, LucideIcon, UserPlus, FlaskConical, Pill } from 'lucide-react';
 import { InviteDialog } from '@/components/portal/invite-dialog';
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { Id } from '@/convex/_generated/dataModel';
+import { Badge } from '@/components/ui/badge';
 
 interface QuickActionsProps {
   patientId: string;
@@ -16,9 +20,10 @@ interface QuickActionItemProps {
   label: string;
   Icon: LucideIcon;
   color: string;
+  badge?: React.ReactNode;
 }
 
-function QuickActionItem({ href, label, Icon, color }: QuickActionItemProps) {
+function QuickActionItem({ href, label, Icon, color, badge }: QuickActionItemProps) {
   return (
     <motion.div
       initial={{ opacity: 0, x: -10 }}
@@ -38,6 +43,7 @@ function QuickActionItem({ href, label, Icon, color }: QuickActionItemProps) {
           <span className="flex-1 text-sm font-medium text-foreground">
             {label}
           </span>
+          {badge}
           <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
         </motion.div>
       </Link>
@@ -46,6 +52,15 @@ function QuickActionItem({ href, label, Icon, color }: QuickActionItemProps) {
 }
 
 export default function QuickActions({ patientId, patientName, patientEmail }: QuickActionsProps) {
+  const pid = patientId as Id<'patients'>;
+  const activeScripts = useQuery(api.appointments.listActivePrescriptionsByPatient, { patientId: pid });
+  const labs = useQuery(api.appointments.listLabOrdersByPatient, { patientId: pid });
+
+  const pendingLabsCount = (labs ?? []).filter(
+    (o) => o.status === "ordered" || o.status === "collected" || o.status === "resulted",
+  ).length;
+  const activeScriptsCount = activeScripts?.length ?? 0;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -69,6 +84,28 @@ export default function QuickActions({ patientId, patientName, patientEmail }: Q
           label="Vaccines"
           Icon={Shield}
           color="text-primary"
+        />
+        <QuickActionItem
+          href={`/user/patients/${patientId}/labs`}
+          label="Labs"
+          Icon={FlaskConical}
+          color="text-primary"
+          badge={
+            pendingLabsCount > 0 ? (
+              <Badge variant="secondary" className="text-[10px]">{pendingLabsCount} pending</Badge>
+            ) : undefined
+          }
+        />
+        <QuickActionItem
+          href={`/user/patients/${patientId}/prescriptions`}
+          label="Prescriptions"
+          Icon={Pill}
+          color="text-primary"
+          badge={
+            activeScriptsCount > 0 ? (
+              <Badge variant="secondary" className="text-[10px]">{activeScriptsCount} active</Badge>
+            ) : undefined
+          }
         />
         <QuickActionItem
           href={`/user/patients/${patientId}/receipts`}

@@ -1,4 +1,4 @@
-import { mutation } from "./_generated/server";
+import { internalMutation, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
 // Seed chart reference data
@@ -141,55 +141,79 @@ export const seedSubscriptionTiers = mutation({
 
     const tiers = [
       {
-        name: "starter",
-        displayName: "Starter",
-        description: "Perfect for new pediatricians and low-volume practices",
-        stripePriceId: "price_starter_placeholder", // Replace with real Stripe price ID
+        name: "essentials",
+        displayName: "Essentials",
+        description: "For pediatricians starting their digital practice",
+        stripeMonthlyPriceId: "price_essentials_monthly_placeholder",
+        stripeAnnualPriceId: "price_essentials_annual_placeholder",
         priceAmountCents: 2900, // $29/month
+        annualPriceAmountCents: 28800, // $288/year ($24/mo equiv)
+        isCustom: false,
         limits: {
           patientCount: 100,
-          recordCount: 200,
-          scrybegptMessages: 50,
-          aiPrescription: 20,
-          aiLabExam: 20,
-          aiDiagnostic: 20,
-          aiReport: 0, // Not available in Starter
+          recordCount: 50,
+          aiCredits: 50,
+          whatsappTrial: 10,
+          whatsappMessages: 0,
+          fileStorageMB: 500,
+          services: 5,
+          staffSeats: 0,
+          auditRetentionDays: 30,
+          telehealthMinutes: 0,
+          telehealthOverageRate: 0,
+          patientPortal: false,
+          telehealth: false,
+          dashboardTier: "basic" as const,
+          growthCharts: "all" as const,
         },
         features: [
           "emr",
-          "basic_growth_charts",
+          "all_growth_charts",
           "billing_receipts",
           "multi_currency",
           "scrybegpt",
           "ai_diagnostic",
           "ai_prescription",
           "ai_lab_exam",
+          "ai_report",
+          "patient_specific_ai",
           "basic_analytics",
           "pdf_export",
           "email_support",
+          "whatsapp_scrybegpt",
         ],
         trialPeriodDays: 7,
         sortOrder: 0,
         isPopular: false,
       },
       {
-        name: "pro",
-        displayName: "Pro",
-        description: "For established pediatricians with full AI support",
-        stripePriceId: "price_pro_placeholder", // Replace with real Stripe price ID
-        priceAmountCents: 4900, // $49/month
+        name: "professional",
+        displayName: "Professional",
+        description: "For established solo practitioners",
+        stripeMonthlyPriceId: "price_professional_monthly_placeholder",
+        stripeAnnualPriceId: "price_professional_annual_placeholder",
+        priceAmountCents: 5900, // $59/month
+        annualPriceAmountCents: 58800, // $588/year ($49/mo equiv)
+        isCustom: false,
         limits: {
           patientCount: 500,
-          recordCount: 1000,
-          scrybegptMessages: 300,
-          aiPrescription: 100,
-          aiLabExam: 100,
-          aiDiagnostic: 100,
-          aiReport: 50,
+          recordCount: 250,
+          aiCredits: 300,
+          whatsappTrial: 0,
+          whatsappMessages: 300,
+          fileStorageMB: 2048,
+          services: 50,
+          staffSeats: 0,
+          auditRetentionDays: 90,
+          telehealthMinutes: 0,
+          telehealthOverageRate: 0,
+          patientPortal: true,
+          telehealth: false,
+          dashboardTier: "standard" as const,
+          growthCharts: "all" as const,
         },
         features: [
           "emr",
-          "basic_growth_charts",
           "all_growth_charts",
           "vaccination_management",
           "billing_receipts",
@@ -199,32 +223,45 @@ export const seedSubscriptionTiers = mutation({
           "ai_prescription",
           "ai_lab_exam",
           "ai_report",
+          "patient_specific_ai",
           "advanced_analytics",
           "pdf_export",
           "email_chat_support",
+          "patient_portal",
+          "whatsapp_scrybegpt",
         ],
         trialPeriodDays: 7,
         sortOrder: 1,
         isPopular: true,
       },
       {
-        name: "premium",
-        displayName: "Premium",
-        description: "For high-volume practitioners preparing for growth",
-        stripePriceId: "price_premium_placeholder", // Replace with real Stripe price ID
-        priceAmountCents: 9900, // $99/month
+        name: "complete",
+        displayName: "Complete",
+        description: "For high-volume practices and clinics",
+        stripeMonthlyPriceId: "price_complete_monthly_placeholder",
+        stripeAnnualPriceId: "price_complete_annual_placeholder",
+        priceAmountCents: 11900, // $119/month
+        annualPriceAmountCents: 118800, // $1,188/year ($99/mo equiv)
+        isCustom: false,
         limits: {
-          patientCount: -1, // unlimited
-          recordCount: -1, // unlimited
-          scrybegptMessages: -1, // unlimited
-          aiPrescription: -1, // unlimited
-          aiLabExam: -1, // unlimited
-          aiDiagnostic: -1, // unlimited
-          aiReport: -1, // unlimited
+          patientCount: 1500,
+          recordCount: 750,
+          aiCredits: 900,
+          whatsappTrial: 0,
+          whatsappMessages: 900,
+          fileStorageMB: 10240,
+          services: 200,
+          staffSeats: 3,
+          auditRetentionDays: 365,
+          telehealthMinutes: 120,
+          telehealthOverageRate: 0.08,
+          patientPortal: true,
+          telehealth: true,
+          dashboardTier: "full" as const,
+          growthCharts: "all" as const,
         },
         features: [
           "emr",
-          "basic_growth_charts",
           "all_growth_charts",
           "vaccination_management",
           "billing_receipts",
@@ -234,14 +271,67 @@ export const seedSubscriptionTiers = mutation({
           "ai_prescription",
           "ai_lab_exam",
           "ai_report",
+          "patient_specific_ai",
           "advanced_analytics",
           "pdf_export",
           "priority_support",
-          "telehealth", // Coming soon
-          "staff_accounts", // Coming soon
+          "telehealth",
+          "staff_accounts",
+          "patient_portal",
+          "whatsapp_scrybegpt",
         ],
         trialPeriodDays: 7,
         sortOrder: 2,
+        isPopular: false,
+      },
+      {
+        name: "institution",
+        displayName: "Institution",
+        description: "For hospitals, NGOs, and health systems",
+        stripeMonthlyPriceId: "", // No checkout — contact sales
+        stripeAnnualPriceId: undefined,
+        priceAmountCents: 0,
+        annualPriceAmountCents: undefined,
+        isCustom: true,
+        limits: {
+          patientCount: 999999,
+          recordCount: 999999,
+          aiCredits: 999999,
+          whatsappTrial: 0,
+          whatsappMessages: 999999,
+          fileStorageMB: 999999,
+          services: 999999,
+          staffSeats: 999,
+          auditRetentionDays: 3650,
+          telehealthMinutes: 999999,
+          telehealthOverageRate: 0,
+          patientPortal: true,
+          telehealth: true,
+          dashboardTier: "full" as const,
+          growthCharts: "all" as const,
+        },
+        features: [
+          "emr",
+          "all_growth_charts",
+          "vaccination_management",
+          "billing_receipts",
+          "multi_currency",
+          "scrybegpt",
+          "ai_diagnostic",
+          "ai_prescription",
+          "ai_lab_exam",
+          "ai_report",
+          "patient_specific_ai",
+          "advanced_analytics",
+          "pdf_export",
+          "priority_support",
+          "telehealth",
+          "staff_accounts",
+          "patient_portal",
+          "whatsapp_scrybegpt",
+        ],
+        trialPeriodDays: 0,
+        sortOrder: 3,
         isPopular: false,
       },
     ];
@@ -249,19 +339,20 @@ export const seedSubscriptionTiers = mutation({
     const results: Array<{ name: string; action: string; id: any }> = [];
 
     for (const tier of tiers) {
-      // Check if tier already exists
       const existing = await ctx.db
         .query("subscriptionTiers")
         .withIndex("by_name", (q) => q.eq("name", tier.name))
         .first();
 
       if (existing) {
-        // Update existing tier
         await ctx.db.patch(existing._id, {
           displayName: tier.displayName,
           description: tier.description,
-          stripePriceId: tier.stripePriceId,
+          stripeMonthlyPriceId: tier.stripeMonthlyPriceId,
+          stripeAnnualPriceId: tier.stripeAnnualPriceId,
           priceAmountCents: tier.priceAmountCents,
+          annualPriceAmountCents: tier.annualPriceAmountCents,
+          isCustom: tier.isCustom,
           limits: tier.limits,
           features: tier.features,
           trialPeriodDays: tier.trialPeriodDays,
@@ -270,7 +361,6 @@ export const seedSubscriptionTiers = mutation({
         });
         results.push({ name: tier.name, action: "updated", id: existing._id });
       } else {
-        // Create new tier
         const id = await ctx.db.insert("subscriptionTiers", {
           ...tier,
           createdAt: now,
@@ -283,11 +373,12 @@ export const seedSubscriptionTiers = mutation({
   },
 });
 
-// Update subscription tier with real Stripe price ID (after running seedStripeProducts)
-export const updateTierStripePriceId = mutation({
+// Update subscription tier with real Stripe price IDs (after running seedStripeProducts)
+export const updateTierStripePriceIds = mutation({
   args: {
     tierName: v.string(),
-    stripePriceId: v.string(),
+    stripeMonthlyPriceId: v.string(),
+    stripeAnnualPriceId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const tier = await ctx.db
@@ -300,10 +391,64 @@ export const updateTierStripePriceId = mutation({
     }
 
     await ctx.db.patch(tier._id, {
-      stripePriceId: args.stripePriceId,
+      stripeMonthlyPriceId: args.stripeMonthlyPriceId,
+      stripeAnnualPriceId: args.stripeAnnualPriceId,
     });
 
     return { success: true, tierId: tier._id };
   },
 });
 
+// Wipe every row from subscription-adjacent tables. Used by the pre-launch
+// reset flow in `resetPricing.resetAndSeed` — not safe to run in production
+// once real doctors have subscribed.
+export const wipeSubscriptionTables = internalMutation({
+  args: {},
+  handler: async (ctx): Promise<Record<string, number>> => {
+    const tables = [
+      "subscriptionTiers",
+      "subscriptions",
+      "usage",
+      "patientSubscriptions",
+      "patientUsage",
+      "prices",
+      "products",
+    ] as const;
+
+    const counts: Record<string, number> = {};
+    for (const table of tables) {
+      const rows = await ctx.db.query(table).collect();
+      for (const row of rows) {
+        await ctx.db.delete(row._id);
+      }
+      counts[table] = rows.length;
+    }
+    return counts;
+  },
+});
+
+// Internal version of updateTierStripePriceIds — called by seedStripeProducts action
+export const updateTierStripePriceIdsInternal = internalMutation({
+  args: {
+    tierName: v.string(),
+    stripeMonthlyPriceId: v.string(),
+    stripeAnnualPriceId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const tier = await ctx.db
+      .query("subscriptionTiers")
+      .withIndex("by_name", (q) => q.eq("name", args.tierName))
+      .first();
+
+    if (!tier) {
+      throw new Error(`Tier "${args.tierName}" not found`);
+    }
+
+    await ctx.db.patch(tier._id, {
+      stripeMonthlyPriceId: args.stripeMonthlyPriceId,
+      stripeAnnualPriceId: args.stripeAnnualPriceId,
+    });
+
+    return { success: true, tierId: tier._id };
+  },
+});

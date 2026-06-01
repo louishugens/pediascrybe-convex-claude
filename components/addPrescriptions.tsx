@@ -7,23 +7,33 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation'
 import { BeatLoader } from 'react-spinners';
 import { XCircleIcon } from '@heroicons/react/24/outline';
-import { formatDistanceToNow } from "date-fns"
+import { formatDistanceToNow, format } from "date-fns"
 import PulseLoader from "react-spinners/PulseLoader"
 import  * as z from "zod"
 import { refresh } from '@/app/actions';
 import { experimental_useObject as useObject } from '@ai-sdk/react';
 import { prescriptionsSchema } from '@/app/api/ai/prescriptions/schema';
-import { useMutation } from 'convex/react';
+import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useAIQueryAccess, useSubscriptionCheck } from '@/components/subscription-guard';
 import { UpgradeModal } from '@/components/upgrade-modal';
 import { useSubscriptionGuard } from '@/hooks/use-subscription-guard';
 import { ArrowLeft, PlusIcon } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
-import { Doc } from '@/convex/_generated/dataModel';
+import { Doc, Id } from '@/convex/_generated/dataModel';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 type PatientType = Doc<"patients">;
-type AppointmentType = Doc<"appointments">;
+type AppointmentType = Doc<"appointments"> & {
+  prescriptions?: Doc<"prescriptions">[];
+  labOrders?: Doc<"labOrders">[];
+};
 
 
 export const formSchema = z.object({
@@ -48,15 +58,31 @@ export const formSchema = z.object({
 });
 
 
-const AddPrescriptions = ({patient, patientId, appointment}: {patient: PatientType, patientId: string, appointment: AppointmentType}) => {
+const AddPrescriptions = ({patient, patientId, appointment}: {patient: PatientType, patientId: string, appointment?: AppointmentType}) => {
   const [loading, setLoading] = useState(false)
   const [noReturn, setNoReturn] = useState(false)
   const [hasFetched, setHasFetched] = useState(false)
   const [color, setColor] = useState('#ffffff')
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const router = useRouter()
+  const isStandalone = !appointment
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | undefined>(undefined)
+  const patientAppointments = useQuery(
+    api.appointments.listByPatient,
+    isStandalone ? { patientId: patientId as Id<'patients'> } : 'skip',
+  )
+  const selectedAppointment = isStandalone
+    ? patientAppointments?.find((a) => a._id === selectedAppointmentId)
+    : appointment
   const [prescriptions, setPrescriptions] = useState(
-    Array.isArray(appointment.medication) ? appointment.medication : []
+    appointment && Array.isArray(appointment.prescriptions)
+      ? appointment.prescriptions.map((p) => ({
+          drug: p.drug,
+          count: p.count,
+          unit: p.unit,
+          posology: p.posology,
+        }))
+      : []
   )
   // const [thinking, setThinking] = useState(false)
   let [generating, setGenerating] = useState(false)
@@ -89,27 +115,30 @@ const AddPrescriptions = ({patient, patientId, appointment}: {patient: PatientTy
       console.error('Failed to increment AI usage:', error);
     }
 
+    const ctxAppt = selectedAppointment;
     const body = {
       patient:{
-        age: formatDistanceToNow(new Date(patient.birthdate)), 
-        gender: patient.sex, 
-        allergies: patient.allergies, 
-        history: patient.history
-      }, 
-      appointment: {
-        motif: appointment.motif,
-        findings: appointment.findings,
-        height: appointment.height,
-        weight: appointment.weight,
-        headCircumference: appointment.head,
-        armCircumference: appointment.arm,
-        sao2: appointment.sao2,
-        temperature: appointment.temperature,
-        pulse: appointment.pulse,
-        respiratory: appointment.respiratory,
-        systolic: appointment.systolic,
-        diastolic: appointment.diastolic,
-      }
+        age: formatDistanceToNow(new Date(patient.birthdate)),
+        gender: patient.sex,
+        allergies: patient.allergies,
+        history: patient.history,
+      },
+      appointment: ctxAppt
+        ? {
+            motif: ctxAppt.motif,
+            findings: ctxAppt.findings,
+            height: ctxAppt.height,
+            weight: ctxAppt.weight,
+            headCircumference: ctxAppt.head,
+            armCircumference: ctxAppt.arm,
+            sao2: ctxAppt.sao2,
+            temperature: ctxAppt.temperature,
+            pulse: ctxAppt.pulse,
+            respiratory: ctxAppt.respiratory,
+            systolic: ctxAppt.systolic,
+            diastolic: ctxAppt.diastolic,
+          }
+        : undefined,
     }
     submit(body)
   };
@@ -271,7 +300,14 @@ const AddPrescriptions = ({patient, patientId, appointment}: {patient: PatientTy
     try{
       const {prescriptions } = values
 
-      const body = {medication: prescriptions, appointmentId: appointment._id}
+      const effectiveAppointmentId = appointment?._id ?? selectedAppointmentId ?? undefined
+      const body: Record<string, unknown> = { prescriptions }
+      if (effectiveAppointmentId) {
+        body.appointmentId = effectiveAppointmentId
+      } else {
+        body.patientId = patientId
+      }
+
       const myuser = await fetch('/api/patients/addPrescriptions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -279,10 +315,13 @@ const AddPrescriptions = ({patient, patientId, appointment}: {patient: PatientTy
       })
       const newuser = await myuser.json()
 
-
-      refresh([`/user/patients/${patientId}/${appointment._id}`, `/user/patients/${patientId}/${appointment._id}/add-prescription`])
-
-      router.push(`/user/patients/${patientId}/${appointment._id}`)
+      if (effectiveAppointmentId) {
+        refresh([`/user/patients/${patientId}/${effectiveAppointmentId}`, `/user/patients/${patientId}/${effectiveAppointmentId}/add-prescription`])
+        router.push(`/user/patients/${patientId}/${effectiveAppointmentId}`)
+      } else {
+        refresh([`/user/patients/${patientId}/prescriptions`])
+        router.push(`/user/patients/${patientId}/prescriptions`)
+      }
 
     }
     catch(err){
@@ -296,7 +335,11 @@ const AddPrescriptions = ({patient, patientId, appointment}: {patient: PatientTy
 
 
   const handleBack = () => {
-    router.push(`/user/patients/${patientId}/${appointment._id}`);
+    if (appointment?._id) {
+      router.push(`/user/patients/${patientId}/${appointment._id}`);
+    } else {
+      router.push(`/user/patients/${patientId}/prescriptions`);
+    }
   };
 
   return (
@@ -313,6 +356,30 @@ const AddPrescriptions = ({patient, patientId, appointment}: {patient: PatientTy
           Return
         </button>
       </div>
+      {isStandalone && (
+        <div className="mt-2">
+          <label className="flex flex-col gap-2">
+            <span className="font-medium text-sm">Attach to consultation (optional)</span>
+            <Select
+              value={selectedAppointmentId ?? 'none'}
+              onValueChange={(v) => setSelectedAppointmentId(v === 'none' ? undefined : v)}
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Standalone (no consultation)</SelectItem>
+                {(patientAppointments ?? []).map((a) => (
+                  <SelectItem key={a._id} value={a._id}>
+                    {format(new Date(a.startDate), 'MMM d, yyyy')}
+                    {a.motif ? ` · ${a.motif}` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </label>
+        </div>
+      )}
       <form className='mt-4' onSubmit={handleSubmit(onSubmit)}>
       {
         noReturn ? (

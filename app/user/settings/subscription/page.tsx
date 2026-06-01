@@ -24,15 +24,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { BuyCreditPacksDialog } from '@/components/billing/buy-credit-packs-dialog';
 
 export default function SubscriptionSettingsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoadingPortal, setIsLoadingPortal] = useState(false);
+  const [buyPacksOpen, setBuyPacksOpen] = useState(false);
 
   const subscriptionDetails = useQuery(api.subscriptions.getCurrentSubscriptionDetails);
   const usageWithLimits = useQuery(api.usage.getUsageWithLimits);
   const stripeCustomerId = useQuery(api.stripe.getStripeCustomerId);
+  const tiers = useQuery(api.stripe.getSubscriptionTiers);
   const createPortalSession = useAction(api.stripe.createPortalSession);
 
   // Check for success message from checkout
@@ -60,11 +63,13 @@ export default function SubscriptionSettingsPage() {
 
   const getTierIcon = (tierName: string) => {
     switch (tierName) {
-      case 'starter':
+      case 'essentials':
         return <Zap className="w-5 h-5" />;
-      case 'pro':
+      case 'professional':
         return <Sparkles className="w-5 h-5" />;
-      case 'premium':
+      case 'complete':
+        return <Crown className="w-5 h-5" />;
+      case 'institution':
         return <Crown className="w-5 h-5" />;
       default:
         return <Zap className="w-5 h-5" />;
@@ -73,12 +78,14 @@ export default function SubscriptionSettingsPage() {
 
   const getTierColor = (tierName: string) => {
     switch (tierName) {
-      case 'starter':
+      case 'essentials':
         return 'bg-blue-100 text-blue-600';
-      case 'pro':
+      case 'professional':
         return 'bg-primary/10 text-primary';
-      case 'premium':
+      case 'complete':
         return 'bg-amber-100 text-amber-600';
+      case 'institution':
+        return 'bg-purple-100 text-purple-600';
       default:
         return 'bg-muted text-muted-foreground';
     }
@@ -163,11 +170,22 @@ export default function SubscriptionSettingsPage() {
                   <p className="text-sm text-muted-foreground">
                     Choose a plan that fits your practice. All plans include a 7-day free trial.
                   </p>
-                  <div className="mt-3 flex gap-4 text-sm">
-                    <span className="text-blue-600 font-medium">Starter $29/mo</span>
-                    <span className="text-violet-600 font-medium">Pro $49/mo</span>
-                    <span className="text-amber-600 font-medium">Premium $99/mo</span>
-                  </div>
+                  {tiers && (
+                    <div className="mt-3 flex gap-4 text-sm">
+                      {tiers.filter(t => !t.isCustom).map((tier) => {
+                        const colors: Record<string, string> = {
+                          essentials: 'text-blue-600',
+                          professional: 'text-violet-600',
+                          complete: 'text-amber-600',
+                        };
+                        return (
+                          <span key={tier._id} className={`${colors[tier.name] || 'text-foreground'} font-medium`}>
+                            {tier.displayName} ${Math.round(tier.priceAmountCents / 100)}/mo
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
                 <Button asChild>
                   <Link href="/user/pricing">
@@ -258,20 +276,20 @@ export default function SubscriptionSettingsPage() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-foreground font-medium">Patients</span>
                     <span className="text-muted-foreground">
-                      {usageWithLimits.usage.patientCount} / {usageWithLimits.limits.patientCount === -1 ? '∞' : usageWithLimits.limits.patientCount}
+                      {usageWithLimits.usage.patientCount} / {usageWithLimits.limits.patientCount}
                     </span>
                   </div>
-                  <Progress 
-                    value={usageWithLimits.limits.patientCount === -1 ? 0 : usageWithLimits.percentUsed.patientCount} 
+                  <Progress
+                    value={usageWithLimits.percentUsed.patientCount}
                     className={cn(
                       "h-2",
                       usageWithLimits.percentUsed.patientCount >= 90 && "bg-red-100"
                     )}
                   />
-                  {usageWithLimits.percentUsed.patientCount >= 80 && usageWithLimits.limits.patientCount !== -1 && (
+                  {usageWithLimits.percentUsed.patientCount >= 80 && (
                     <p className="text-xs text-amber-600 flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" />
-                      {usageWithLimits.percentUsed.patientCount >= 100 
+                      {usageWithLimits.percentUsed.patientCount >= 100
                         ? 'Limit reached. Upgrade for more patients.'
                         : 'Approaching limit. Consider upgrading.'}
                     </p>
@@ -282,48 +300,60 @@ export default function SubscriptionSettingsPage() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-foreground font-medium">Records</span>
                     <span className="text-muted-foreground">
-                      {usageWithLimits.usage.recordCount} / {usageWithLimits.limits.recordCount === -1 ? '∞' : usageWithLimits.limits.recordCount}
+                      {usageWithLimits.usage.recordCount} / {usageWithLimits.limits.recordCount}
                     </span>
                   </div>
-                  <Progress 
-                    value={usageWithLimits.limits.recordCount === -1 ? 0 : usageWithLimits.percentUsed.recordCount} 
+                  <Progress
+                    value={usageWithLimits.percentUsed.recordCount}
                     className={cn(
                       "h-2",
                       usageWithLimits.percentUsed.recordCount >= 90 && "bg-red-100"
                     )}
                   />
-                  {usageWithLimits.percentUsed.recordCount >= 80 && usageWithLimits.limits.recordCount !== -1 && (
+                  {usageWithLimits.percentUsed.recordCount >= 80 && (
                     <p className="text-xs text-amber-600 flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" />
-                      {usageWithLimits.percentUsed.recordCount >= 100 
+                      {usageWithLimits.percentUsed.recordCount >= 100
                         ? 'Limit reached. Upgrade for more records.'
                         : 'Approaching limit. Consider upgrading.'}
                     </p>
                   )}
                 </div>
-                {/* ScrybeGPT Messages */}
+                {/* AI Credits */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-foreground font-medium">ScrybeGPT Messages</span>
+                    <span className="text-foreground font-medium">AI Credits</span>
                     <span className="text-muted-foreground">
-                      {usageWithLimits.usage.scrybegptMessages} / {usageWithLimits.limits.scrybegptMessages === -1 ? '∞' : usageWithLimits.limits.scrybegptMessages}
+                      {usageWithLimits.usage.aiCreditsUsed} / {usageWithLimits.limits.aiCredits}
+                      {usageWithLimits.usage.packCreditsRemaining > 0 && (
+                        <span className="ml-1 text-primary">+{usageWithLimits.usage.packCreditsRemaining} pack</span>
+                      )}
                     </span>
                   </div>
-                  <Progress 
-                    value={usageWithLimits.limits.scrybegptMessages === -1 ? 0 : usageWithLimits.percentUsed.scrybegptMessages} 
+                  <Progress
+                    value={usageWithLimits.percentUsed.aiCredits}
                     className={cn(
                       "h-2",
-                      usageWithLimits.percentUsed.scrybegptMessages >= 90 && "bg-red-100"
+                      usageWithLimits.percentUsed.aiCredits >= 90 && "bg-red-100"
                     )}
                   />
-                  {usageWithLimits.percentUsed.scrybegptMessages >= 80 && usageWithLimits.limits.scrybegptMessages !== -1 && (
+                  {usageWithLimits.percentUsed.aiCredits >= 80 && (
                     <p className="text-xs text-amber-600 flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" />
-                      {usageWithLimits.percentUsed.scrybegptMessages >= 100 
-                        ? 'Limit reached. Upgrade for more messages.'
-                        : 'Approaching limit. Consider upgrading.'}
+                      {usageWithLimits.percentUsed.aiCredits >= 100
+                        ? 'Credits exhausted. Buy a credit pack or upgrade.'
+                        : 'Low on credits. Consider buying a pack or upgrading.'}
                     </p>
                   )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full mt-2"
+                    onClick={() => setBuyPacksOpen(true)}
+                  >
+                    <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                    Buy credit pack
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -342,25 +372,28 @@ export default function SubscriptionSettingsPage() {
                 <div className="p-4 rounded-lg bg-muted/50">
                   <p className="text-sm text-muted-foreground">Patients</p>
                   <p className="text-2xl font-bold text-foreground">
-                    {subscriptionDetails.limits.patientCount === -1 ? '∞' : (subscriptionDetails.limits.patientCount ?? 0).toLocaleString()}
+                    {(subscriptionDetails.limits.patientCount ?? 0).toLocaleString()}
                   </p>
                 </div>
                 <div className="p-4 rounded-lg bg-muted/50">
-                  <p className="text-sm text-muted-foreground">Records</p>
+                  <p className="text-sm text-muted-foreground">Records/mo</p>
                   <p className="text-2xl font-bold text-foreground">
-                    {subscriptionDetails.limits.recordCount === -1 ? '∞' : (subscriptionDetails.limits.recordCount ?? 0).toLocaleString()}
+                    {(subscriptionDetails.limits.recordCount ?? 0).toLocaleString()}
                   </p>
                 </div>
                 <div className="p-4 rounded-lg bg-muted/50">
-                  <p className="text-sm text-muted-foreground">ScrybeGPT/mo</p>
+                  <p className="text-sm text-muted-foreground">AI Credits/mo</p>
                   <p className="text-2xl font-bold text-foreground">
-                    {subscriptionDetails.limits.scrybegptMessages === -1 ? '∞' : (subscriptionDetails.limits.scrybegptMessages ?? 0)}
+                    {(subscriptionDetails.limits as any).aiCredits ?? 0}
                   </p>
                 </div>
                 <div className="p-4 rounded-lg bg-muted/50">
-                  <p className="text-sm text-muted-foreground">AI Reports/mo</p>
+                  <p className="text-sm text-muted-foreground">Storage</p>
                   <p className="text-2xl font-bold text-foreground">
-                    {subscriptionDetails.limits.aiReport === -1 ? '∞' : (subscriptionDetails.limits.aiReport ?? 0)}
+                    {(() => {
+                      const mb = (subscriptionDetails.limits as any).fileStorageMB ?? 0;
+                      return mb >= 1024 ? `${(mb / 1024).toFixed(0)} GB` : `${mb} MB`;
+                    })()}
                   </p>
                 </div>
               </div>
@@ -389,8 +422,8 @@ export default function SubscriptionSettingsPage() {
             </CardContent>
           </Card>
 
-          {/* Upgrade Prompt for non-premium users */}
-          {subscriptionDetails.tier !== 'premium' && (
+          {/* Upgrade Prompt for non-complete users */}
+          {subscriptionDetails.tier !== 'complete' && subscriptionDetails.tier !== 'institution' && (
             <Card className="border-primary/20 bg-primary/5">
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between gap-4">
@@ -400,12 +433,12 @@ export default function SubscriptionSettingsPage() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-foreground">
-                        {subscriptionDetails.tier === 'starter' ? 'Upgrade to Pro or Premium' : 'Upgrade to Premium'}
+                        {subscriptionDetails.tier === 'essentials' ? 'Upgrade to Professional or Complete' : 'Upgrade to Complete'}
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        {subscriptionDetails.tier === 'starter' 
-                          ? 'Get AI diagnostic suggestions, vaccination management, and more'
-                          : 'Get unlimited AI queries and priority support'}
+                        {subscriptionDetails.tier === 'essentials'
+                          ? 'Get more AI credits, patient portal, telehealth, and advanced analytics'
+                          : 'Get max credits, 1500 patients, 10GB storage, and priority support'}
                       </p>
                     </div>
                   </div>
@@ -421,6 +454,7 @@ export default function SubscriptionSettingsPage() {
           )}
         </>
       )}
+      <BuyCreditPacksDialog open={buyPacksOpen} onOpenChange={setBuyPacksOpen} />
     </div>
   );
 }

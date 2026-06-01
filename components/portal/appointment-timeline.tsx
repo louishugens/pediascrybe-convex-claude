@@ -10,8 +10,8 @@ interface Appointment {
   startDate: number
   motif?: string
   findings?: string
-  medication?: any
-  exams?: any
+  prescriptions?: Array<unknown>
+  labOrders?: Array<unknown>
 }
 
 interface AppointmentTimelineProps {
@@ -69,13 +69,13 @@ export function AppointmentTimeline({ appointments, patientId }: AppointmentTime
                       </p>
                     )}
                     <div className="flex gap-2 mt-1.5">
-                      {apt.medication && (
+                      {apt.prescriptions && apt.prescriptions.length > 0 && (
                         <Badge variant="secondary" className="text-xs gap-1">
                           <Pill className="h-3 w-3" />
                           Prescription
                         </Badge>
                       )}
-                      {apt.exams && (
+                      {apt.labOrders && apt.labOrders.length > 0 && (
                         <Badge variant="secondary" className="text-xs gap-1">
                           <FlaskConical className="h-3 w-3" />
                           Lab Exams

@@ -3,6 +3,9 @@ import type {
   CachedDoctor,
   CachedPatient,
   CachedAppointment,
+  CachedPrescription,
+  CachedLabOrder,
+  CachedLabResult,
   CachedVaccin,
   CachedDose,
   CachedVaccinationRecord,
@@ -18,6 +21,9 @@ class PediascrybeOfflineDB extends Dexie {
   doctors!: EntityTable<CachedDoctor, "_id">;
   patients!: EntityTable<CachedPatient, "_id">;
   appointments!: EntityTable<CachedAppointment, "_id">;
+  prescriptions!: EntityTable<CachedPrescription, "_id">;
+  labOrders!: EntityTable<CachedLabOrder, "_id">;
+  labResults!: EntityTable<CachedLabResult, "_id">;
   vaccins!: EntityTable<CachedVaccin, "_id">;
   doses!: EntityTable<CachedDose, "_id">;
   vaccinationRecords!: EntityTable<CachedVaccinationRecord, "_id">;
@@ -46,6 +52,13 @@ class PediascrybeOfflineDB extends Dexie {
       // Sync infrastructure
       syncQueue: "++id, status, createdAt",
       queryCache: "queryKey, doctorId, lastUpdated",
+    });
+
+    // v2 — standalone prescriptions/labOrders/labResults stores.
+    this.version(2).stores({
+      prescriptions: "_id, doctorId, patientId, appointmentId, status, createdAt",
+      labOrders: "_id, doctorId, patientId, appointmentId, status, orderedAt",
+      labResults: "_id, labOrderId, patientId, enteredAt",
     });
   }
 }

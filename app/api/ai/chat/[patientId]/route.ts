@@ -1,7 +1,7 @@
 import { convertToModelMessages, createUIMessageStreamResponse, UIMessage } from 'ai';
 import { start } from 'workflow/api';
 import { medicalChatWorkflow } from '@/app/workflows/medical-chat/workflow';
-import { isAuthenticated, fetchAuthQuery } from '@/lib/auth-server';
+import { isAuthenticated, fetchAuthQuery, fetchAuthMutation } from '@/lib/auth-server';
 import { aiRateLimit, checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
@@ -39,6 +39,19 @@ export async function POST(req: Request, props: { params: Promise<{ patientId: s
       JSON.stringify({ error: 'Patient not found' }),
       { status: 404, headers: { 'Content-Type': 'application/json' } }
     );
+  }
+
+  // Deduct 1 AI credit before running the workflow
+  try {
+    await fetchAuthMutation(api.usage.deductAICredits, { feature: "patient_chat" });
+  } catch (err: any) {
+    if (err?.message?.includes("NO_CREDITS")) {
+      return new Response(
+        JSON.stringify({ error: "Out of AI credits. Buy a credit pack or upgrade your plan." }),
+        { status: 402, headers: { "Content-Type": "application/json" } }
+      );
+    }
+    throw err;
   }
 
   const { messages }: { messages: UIMessage[] } = await req.json();

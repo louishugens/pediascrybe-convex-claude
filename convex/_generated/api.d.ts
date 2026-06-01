@@ -9,12 +9,15 @@
  */
 
 import type * as ai from "../ai.js";
+import type * as aiPacks from "../aiPacks.js";
 import type * as appUsers from "../appUsers.js";
 import type * as appointments from "../appointments.js";
 import type * as auditLog from "../auditLog.js";
 import type * as auth from "../auth.js";
 import type * as authHelpers from "../authHelpers.js";
+import type * as billingCrons from "../billingCrons.js";
 import type * as charts from "../charts.js";
+import type * as cleanupDuplicateDoctors from "../cleanupDuplicateDoctors.js";
 import type * as crons from "../crons.js";
 import type * as doctors from "../doctors.js";
 import type * as email from "../email.js";
@@ -30,13 +33,16 @@ import type * as files from "../files.js";
 import type * as http from "../http.js";
 import type * as invitations from "../invitations.js";
 import type * as livekit from "../livekit.js";
+import type * as migrateEmbeddedClinical from "../migrateEmbeddedClinical.js";
 import type * as patientSubscriptions from "../patientSubscriptions.js";
 import type * as patients from "../patients.js";
 import type * as portal from "../portal.js";
 import type * as portalAi from "../portalAi.js";
 import type * as portalNotifications from "../portalNotifications.js";
 import type * as receipts from "../receipts.js";
+import type * as reparentPatients from "../reparentPatients.js";
 import type * as reports from "../reports.js";
+import type * as resetPricing from "../resetPricing.js";
 import type * as seed from "../seed.js";
 import type * as services from "../services.js";
 import type * as stripe from "../stripe.js";
@@ -77,12 +83,15 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   ai: typeof ai;
+  aiPacks: typeof aiPacks;
   appUsers: typeof appUsers;
   appointments: typeof appointments;
   auditLog: typeof auditLog;
   auth: typeof auth;
   authHelpers: typeof authHelpers;
+  billingCrons: typeof billingCrons;
   charts: typeof charts;
+  cleanupDuplicateDoctors: typeof cleanupDuplicateDoctors;
   crons: typeof crons;
   doctors: typeof doctors;
   email: typeof email;
@@ -98,13 +107,16 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   invitations: typeof invitations;
   livekit: typeof livekit;
+  migrateEmbeddedClinical: typeof migrateEmbeddedClinical;
   patientSubscriptions: typeof patientSubscriptions;
   patients: typeof patients;
   portal: typeof portal;
   portalAi: typeof portalAi;
   portalNotifications: typeof portalNotifications;
   receipts: typeof receipts;
+  reparentPatients: typeof reparentPatients;
   reports: typeof reports;
+  resetPricing: typeof resetPricing;
   seed: typeof seed;
   services: typeof services;
   stripe: typeof stripe;

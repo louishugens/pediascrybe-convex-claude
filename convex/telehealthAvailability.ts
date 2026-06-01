@@ -33,8 +33,8 @@ async function verifyTelehealthAccess(ctx: QueryCtx | MutationCtx, doctorId: Id<
   }
 
   const tierName = subscription.tierName || subscription.metadata?.tierName || "free";
-  if (tierName !== "premium") {
-    throw new Error("Telehealth requires a Premium subscription");
+  if (!["professional", "complete", "institution"].includes(tierName)) {
+    throw new Error("Telehealth requires a Professional or Complete subscription");
   }
 }
 

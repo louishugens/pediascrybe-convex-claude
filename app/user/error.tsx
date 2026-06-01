@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { WifiOff, RefreshCw } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { WifiOff, RefreshCw, AlertTriangle, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export default function Error({
@@ -12,6 +13,7 @@ export default function Error({
   reset: () => void
 }) {
   const [isOffline, setIsOffline] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     setIsOffline(!navigator.onLine)
@@ -37,41 +39,52 @@ export default function Error({
 
   if (isOffline) {
     return (
-      <div className="flex flex-col items-center justify-center w-full h-full gap-4 py-12">
-        <div className="flex items-center justify-center h-12 w-12 rounded-full bg-amber-100">
-          <WifiOff className="h-6 w-6 text-amber-600" />
+      <div className="flex items-center justify-center w-full min-h-[60vh]">
+        <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-8 max-w-sm w-full text-center space-y-4">
+          <div className="flex items-center justify-center h-12 w-12 rounded-full bg-amber-100 dark:bg-amber-950/30 mx-auto">
+            <WifiOff className="h-6 w-6 text-amber-600" />
+          </div>
+          <div>
+            <h2 className="font-semibold text-lg text-foreground">You&apos;re offline</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Data will reload automatically when your connection is restored.
+            </p>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => reset()} className="rounded-full">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Retry
+          </Button>
         </div>
-        <h2 className="font-semibold text-lg">You&apos;re offline</h2>
-        <p className="text-sm text-muted-foreground text-center max-w-md">
-          Data will reload automatically when your connection is restored.
-        </p>
-        <Button variant="outline" size="sm" onClick={() => reset()}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Retry
-        </Button>
       </div>
     )
   }
 
   return (
-    <div className='flex flex-col justify-center w-full h-full gap-8'>
-      <h2 className='font-bold text-red-600 text-2xl'>Unexpected Issue Detected</h2>
-      <p className='text-muted-foreground'>
-        Our system detected an issue while processing your request. While this is uncommon, rest assured our team is equipped to resolve it.
-      </p>
-      <p className='font-medium'>Recommended Actions:</p>
-      <ul className='text-muted-foreground'>
-        <li className='ml-2'>-Refresh the page to restart the process</li>
-        <li className='ml-2'>-Log out and log back in to reset your session</li>
-        <li className='ml-2'>-For immediate assistance, <a className='text-primary' href='mailto:admin@pediascrybe.com'>Contact Our Expert Support Team</a></li>
-      </ul>
-      <p className='font-medium'>Or you can click below.</p>
-      <button
-        className='bg-primary text-white px-8 py-2 w-fit rounded-full cursor-pointer'
-        onClick={() => reset()}
-      >
-        Try again
-      </button>
+    <div className="flex items-center justify-center w-full min-h-[60vh]">
+      <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-8 max-w-md w-full text-center space-y-5">
+        <div className="flex items-center justify-center h-12 w-12 rounded-full bg-destructive/10 mx-auto">
+          <AlertTriangle className="h-6 w-6 text-destructive" />
+        </div>
+        <div>
+          <h2 className="font-semibold text-lg text-foreground">Something went wrong</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            An unexpected error occurred. Try refreshing or go back to the dashboard.
+          </p>
+        </div>
+        <div className="flex items-center justify-center gap-3">
+          <Button variant="outline" size="sm" onClick={() => router.push('/user')} className="rounded-full">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Dashboard
+          </Button>
+          <Button size="sm" onClick={() => reset()} className="rounded-full">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Try again
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          If this keeps happening, <a className="text-primary hover:underline" href="mailto:admin@pediascrybe.com">contact support</a>.
+        </p>
+      </div>
     </div>
   )
 }

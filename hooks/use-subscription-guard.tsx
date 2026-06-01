@@ -5,28 +5,32 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
 // Mirror of FEATURE_ACCESS from convex/subscriptions.ts (client-side check)
+const ALL_PAID = ["essentials", "professional", "complete", "institution"];
+const PROF_UP = ["professional", "complete", "institution"];
+const COMPLETE_UP = ["complete", "institution"];
+
 const FEATURE_ACCESS: Record<string, string[]> = {
-  emr: ["starter", "pro", "premium"],
-  basic_growth_charts: ["starter", "pro", "premium"],
-  billing_receipts: ["starter", "pro", "premium"],
-  multi_currency: ["starter", "pro", "premium"],
-  scrybegpt: ["starter", "pro", "premium"],
-  ai_diagnostic: ["starter", "pro", "premium"],
-  ai_prescription: ["starter", "pro", "premium"],
-  ai_lab_exam: ["starter", "pro", "premium"],
-  basic_analytics: ["starter", "pro", "premium"],
-  pdf_export: ["starter", "pro", "premium"],
-  email_support: ["starter", "pro", "premium"],
-  vaccination_management: ["pro", "premium"],
-  all_growth_charts: ["pro", "premium"],
-  ai_report: ["pro", "premium"],
-  advanced_analytics: ["pro", "premium"],
-  email_chat_support: ["pro", "premium"],
-  patient_portal: ["pro", "premium"],
-  priority_support: ["premium"],
-  telehealth: ["premium"],
-  staff_accounts: ["premium"],
-  whatsapp_scrybegpt: [ "premium"],
+  emr: ALL_PAID,
+  all_growth_charts: ALL_PAID,
+  billing_receipts: ALL_PAID,
+  multi_currency: ALL_PAID,
+  scrybegpt: ALL_PAID,
+  patient_specific_ai: ALL_PAID,
+  ai_diagnostic: ALL_PAID,
+  ai_prescription: ALL_PAID,
+  ai_lab_exam: ALL_PAID,
+  vaccination_management: ALL_PAID,
+  basic_analytics: ALL_PAID,
+  pdf_export: ALL_PAID,
+  email_support: ALL_PAID,
+  whatsapp_scrybegpt: ALL_PAID, // essentials has trial limit
+  ai_report: PROF_UP,
+  advanced_analytics: PROF_UP,
+  email_chat_support: PROF_UP,
+  patient_portal: PROF_UP,
+  telehealth: PROF_UP,
+  priority_support: COMPLETE_UP,
+  staff_accounts: COMPLETE_UP,
 };
 
 interface SubscriptionGuardContextType {
@@ -85,7 +89,7 @@ export function SubscriptionGuardProvider({ children }: { children: ReactNode })
     // Check if the current tier has access to this feature
     const allowedTiers = FEATURE_ACCESS[feature];
     if (!allowedTiers || !tierName || !allowedTiers.includes(tierName)) {
-      const minTier = allowedTiers?.[0] || "Premium";
+      const minTier = allowedTiers?.[0] || "Professional";
       setBlockedAction(`${actionName} (requires ${minTier.charAt(0).toUpperCase() + minTier.slice(1)}+ plan)`);
       setDialogOpen(true);
       return false;

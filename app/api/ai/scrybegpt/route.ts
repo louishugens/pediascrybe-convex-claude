@@ -35,6 +35,19 @@ export async function POST(req: Request) {
     });
   }
 
+  // Deduct AI credits BEFORE calling the model
+  try {
+    await fetchAuthMutation(api.usage.deductAICredits, { feature: "scrybegpt" });
+  } catch (err: any) {
+    if (err?.message?.includes("NO_CREDITS")) {
+      return new Response(
+        JSON.stringify({ error: "Out of AI credits. Buy a credit pack or upgrade your plan." }),
+        { status: 402, headers: { "Content-Type": "application/json" } }
+      );
+    }
+    throw err;
+  }
+
   const doctorId = doctor._id as Id<"doctors">;
   const doctorName = `Dr. ${doctor.lastname}`;
   const doctorTimezone = (doctor as any).timezone as string | undefined;

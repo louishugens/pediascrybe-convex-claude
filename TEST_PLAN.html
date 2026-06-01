@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pediascrybe — Test Plan & Progress</title>
+<style>
+  :root {
+    --bg: #0f1419;
+    --panel: #1a2129;
+    --panel-2: #222b35;
+    --border: #2d3845;
+    --text: #e6edf3;
+    --muted: #8b98a5;
+    --accent: #4c9eeb;
+    --pass: #2ea043;
+    --fail: #e5534b;
+    --blocked: #d29922;
+    --na: #6e7681;
+    --pending: #3d4754;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5; font-size: 14px;
+  }
+  header {
+    position: sticky; top: 0; z-index: 10;
+    background: linear-gradient(180deg, #16202b, #131a22);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px; backdrop-filter: blur(6px);
+  }
+  header h1 { margin: 0 0 4px; font-size: 20px; }
+  header .sub { color: var(--muted); font-size: 12px; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
+  .bar-outer { height: 10px; background: var(--panel-2); border-radius: 6px; overflow: hidden; margin-top: 10px; }
+  .bar-inner { height: 100%; background: linear-gradient(90deg, var(--pass), #3fb950); width: 0%; transition: width .3s; }
+  .stats { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; font-size: 12px; }
+  .stat { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .dot.pass { background: var(--pass); } .dot.fail { background: var(--fail); }
+  .dot.blocked { background: var(--blocked); } .dot.na { background: var(--na); }
+  .dot.pending { background: var(--pending); }
+  .toolbar { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  button.tool {
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
+    padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;
+  }
+  button.tool:hover { border-color: var(--accent); }
+  section.group { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; margin: 18px 0; overflow: hidden; }
+  .group-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px; cursor: pointer; user-select: none; background: var(--panel-2);
+  }
+  .group-head:hover { background: #283340; }
+  .group-head h2 { margin: 0; font-size: 15px; }
+  .group-head .meta { color: var(--muted); font-size: 12px; }
+  .group-note { padding: 10px 18px; color: var(--muted); font-size: 12px; border-bottom: 1px solid var(--border); background: #161d25; }
+  .group-body { display: block; }
+  .group.collapsed .group-body { display: none; }
+  .test {
+    display: grid; grid-template-columns: 1fr 150px; gap: 12px;
+    padding: 14px 18px; border-bottom: 1px solid var(--border); align-items: start;
+  }
+  .test:last-child { border-bottom: none; }
+  .test .title { font-weight: 600; }
+  .test .expected { color: var(--muted); font-size: 12.5px; margin-top: 3px; }
+  .test .auto {
+    margin-top: 8px; font-size: 12px; padding: 6px 10px; border-radius: 6px;
+    background: #11212c; border-left: 3px solid var(--accent); color: #bcd5e6;
+  }
+  .test .auto.pass { border-left-color: var(--pass); }
+  .test .auto.fail { border-left-color: var(--fail); }
+  .controls { display: flex; flex-direction: column; gap: 6px; }
+  select.status {
+    width: 100%; background: var(--panel-2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px; padding: 6px; font-size: 12px;
+  }
+  select.status.pass { border-color: var(--pass); color: #6fdc8c; }
+  select.status.fail { border-color: var(--fail); color: #ff8b82; }
+  select.status.blocked { border-color: var(--blocked); color: #e3b341; }
+  select.status.na { border-color: var(--na); }
+  textarea.notes {
+    width: 100%; background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px; font-size: 11px; resize: vertical; min-height: 28px; font-family: inherit;
+  }
+  .priority { display:inline-block; font-size:10px; padding:1px 7px; border-radius:10px; margin-left:8px; vertical-align: middle; }
+  .priority.p1 { background:#3a1416; color:#ff8b82; border:1px solid #5c2125; }
+  .priority.p2 { background:#3a2e0f; color:#e3b341; border:1px solid #5c4a1f; }
+  code { background:#0c1218; padding:1px 5px; border-radius:4px; font-size:12px; color:#9ecbff; }
+  a { color: var(--accent); }
+  .legend { font-size: 11px; color: var(--muted); margin-top: 6px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🩺 Pediascrybe — Test Plan &amp; Progress</h1>
+  <div class="sub">Generated 2026-05-25 · Tracks recent lab/dedup changes (Part A) + full-app regression (Part B). Progress saved in your browser.</div>
+  <div class="bar-outer"><div class="bar-inner" id="bar"></div></div>
+  <div class="stats" id="stats"></div>
+  <div class="toolbar">
+    <button class="tool" onclick="expandAll(true)">Expand all</button>
+    <button class="tool" onclick="expandAll(false)">Collapse all</button>
+    <button class="tool" onclick="exportJSON()">Export results (JSON)</button>
+    <button class="tool" onclick="resetAll()">Reset progress</button>
+  </div>
+  <div class="legend">Statuses: ⬜ Pending · ✅ Pass · ❌ Fail · ⛔ Blocked · ➖ N/A &nbsp;|&nbsp; <span class="priority p1">P1</span> critical path &nbsp; <span class="priority p2">P2</span> important</div>
+</header>
+<div class="wrap" id="root"></div>
+
+<script>
+// ---- Test data -------------------------------------------------------------
+const DATA = [
+  {
+    id: "auto", title: "🤖 Automated checks already run", open: true,
+    note: "Run by Claude on 2026-05-25 against the dev deployment. These are recorded results, not manual steps.",
+    tests: [
+      { id:"auto-dedup", title:"Duplicate-doctor cleanup", p:1,
+        expected:"Exactly 1 doctor row for louishugens@gmail.com after cleanupDuplicateDoctors:run.",
+        auto:{s:"pass", t:"PASS — cleanupDuplicateDoctors:run deleted 5 stale rows, kept jn721…g2fa. devVerify:doctorDedup → count: 1."} },
+      { id:"auto-reparent", title:"Re-parented data intact", p:1,
+        expected:"Patients/appointments/labOrders/Rx/vaccines all attached to active doctor.",
+        auto:{s:"pass", t:"PASS — labCounts: 18 labOrders on active doctor (14 ordered, 3 resulted, 1 reviewed)."} },
+      { id:"auto-worklist", title:"getLabWorklist grouping logic", p:1,
+        expected:"Active orders exclude cancelled/reviewed; grouped Patient → Visit → Exam.",
+        auto:{s:"pass", t:"PASS — devVerify:worklist → 17 active (1 reviewed excluded), 1 patient → 2 visits, exams nested correctly."} },
+      { id:"auto-results", title:"labResults linkage", p:2,
+        expected:"labResults rows correctly linked to their resulted orders.",
+        auto:{s:"pass", t:"PASS — 3 labResults, all linked to the 3 'resulted' HbA1c orders."} },
+      { id:"auto-tsc", title:"TypeScript typecheck", p:1,
+        expected:"tsc --noEmit clean across the app.",
+        auto:{s:"pass", t:"PASS — tsc --noEmit exited 0, no errors."} },
+      { id:"auto-build", title:"Production build (next build)", p:1,
+        expected:"npm run build compiles with no errors.",
+        auto:{s:"pass", t:"PASS — npm run build exited 0; all routes compiled (static / PPR / dynamic)."} },
+      { id:"auto-lint", title:"ESLint", p:2,
+        expected:"npm run lint runs.",
+        auto:{s:"fail", t:"CONFIG ISSUE — ESLint v9 needs eslint.config.js; project has none, so `eslint .` errors out. Pre-existing tooling gap, not a code defect. Recommend adding a flat config or using Next's lint."} },
+      { id:"auto-e2e-home", title:"E2E: login page renders (Playwright)", p:1,
+        expected:"Home renders sign-in form, no hard console errors.",
+        auto:{s:"pass", t:"PASS — Playwright public spec green."} },
+      { id:"auto-e2e-invalid", title:"E2E: invalid login rejected", p:1,
+        expected:"Bad credentials stay on login, no /user redirect.",
+        auto:{s:"pass", t:"PASS — no redirect on wrong password."} },
+      { id:"auto-e2e-pricing", title:"E2E: pricing + signup pages render", p:2,
+        expected:"Both return <400 and render.",
+        auto:{s:"pass", t:"PASS — both render."} },
+      { id:"auto-e2e-gate", title:"E2E: unauthenticated /user is gated", p:1,
+        expected:"/user shows the login form, not the dashboard.",
+        auto:{s:"pass", t:"PASS — guard renders sign-in form in place of dashboard (no data leak)."} },
+      { id:"auto-e2e-doctor", title:"E2E: authenticated doctor flows", p:1,
+        expected:"Dashboard, patients list, lab worklist render + interact.",
+        auto:{s:"pass", t:"PASS — logged in as doctor (session saved), then all 5 specs green: dashboard loads, patients list renders (re-parented patients visible), lab worklist renders + interactive, patient group with orders shown. (e2e/doctor.spec.ts)"} },
+      { id:"auto-bug-reset", title:"🐛 BUG FOUND & FIXED — password reset 404", p:1,
+        expected:"Forgot-password request should send a reset email.",
+        auto:{s:"pass", t:"FIXED — app called authClient.forgetPassword() → POST /forget-password, which 404s in Better Auth 1.4.9 (route renamed). Changed app/(public)/reset/page.jsx to authClient.requestPasswordReset() → POST /request-password-reset. Verified via browser: success UI shows, no 4xx, email sends. Regression test: e2e/reset.public.spec.ts."} },
+    ]
+  },
+  {
+    id:"A1", title:"A1 · Duplicate-doctor fix & data integrity",
+    tests: [
+      { id:"a1-1", title:"Single doctor row", p:1, expected:"npx convex data doctors → exactly 1 row for your email." },
+      { id:"a1-2", title:"Patients visible", p:1, expected:"Login → /user/patients shows all 3 patients." },
+      { id:"a1-3", title:"Child records present", p:1, expected:"Each patient shows appointments, lab orders, prescriptions, vaccines." },
+      { id:"a1-4", title:"No duplication on re-login", p:1, expected:"Sign up a new doctor, log out, log back in → still 1 doctor row (auth.ts onCreate relinks by email)." },
+    ]
+  },
+  {
+    id:"A2", title:"A2 · Lab worklist page (/user/labs)",
+    tests: [
+      { id:"a2-1", title:"Worklist renders grouped", p:1, expected:"Patients with pending orders; orders grouped by visit." },
+      { id:"a2-2", title:"Co-ordered exams share a visit", p:2, expected:"Exams ordered together appear under one visit group (shared appointmentId)." },
+      { id:"a2-3", title:"Auto-expand", p:2, expected:"Cards with a Stat order or awaiting-review results auto-expand; others collapsed." },
+      { id:"a2-4", title:"Search filters live", p:2, expected:"Typing a patient name filters the list." },
+      { id:"a2-5", title:"Filter chips", p:2, expected:"All / Stat only / Awaiting review update counts and visible groups." },
+      { id:"a2-6", title:"Sort", p:2, expected:"priority / oldest / newest reorders as labeled." },
+      { id:"a2-7", title:"Open visit link", p:2, expected:"Navigates to /user/patients/[patientId]/[appointmentId]." },
+      { id:"a2-8", title:"Mark all collected", p:2, expected:"Orders advance ordered → collected; UI reflects it." },
+      { id:"a2-9", title:"Standalone orders have no Upload", p:2, expected:"No-appointment groups show but hide the Upload button (needs appointmentId)." },
+    ]
+  },
+  {
+    id:"A3", title:"A3 · Manual result entry (commitLabResultsBatch)",
+    tests: [
+      { id:"a3-1", title:"Batch dialog lists exams", p:1, expected:"\"Enter results\" opens a dialog with each ordered exam + value rows." },
+      { id:"a3-2", title:"Partial save", p:1, expected:"Only filled rows create labResults; matched orders advance to resulted." },
+      { id:"a3-3", title:"Multi-value single exam", p:2, expected:"Several values save under one order." },
+      { id:"a3-4", title:"Results render with flags", p:2, expected:"Value / unit / reference range / abnormal-flag badge display in the chart." },
+      { id:"a3-5", title:"Parent notified", p:2, expected:"Portal gets a lab-result notification (one per affected patient)." },
+      { id:"a3-6", title:"Ownership guard", p:1, expected:"Entering a result for a patient you don't own is rejected (verifyDoctorOwnsPatient/LabOrder)." },
+    ]
+  },
+  {
+    id:"A4", title:"A4 · AI lab-result extraction (/api/ai/extract-lab-results)", open:true,
+    note:"Highest-risk new feature. AI output must be reviewed by a human before commit.",
+    tests: [
+      { id:"a4-1", title:"PDF extraction", p:1, expected:"Upload PDF → extracting phase → review table populated (name/value/unit/range/flag), editable." },
+      { id:"a4-2", title:"Image extraction", p:1, expected:"Photo of a printed result extracts the same way." },
+      { id:"a4-3", title:"Order matching", p:1, expected:"Recognized exams auto-match existing orders; unmatched show \"Create new order\"." },
+      { id:"a4-4", title:"Edit + confirm", p:1, expected:"Edits persist; new orders auto-created for unmatched exams." },
+      { id:"a4-5", title:"Original file stored", p:2, expected:"Uploaded file persisted via labResults.fileId; visible in chart; status → resulted." },
+      { id:"a4-6", title:"Garbage input handled", p:2, expected:"Non-lab PDF returns empty/sensible result, no crash; user can discard." },
+      { id:"a4-7", title:"File size cap", p:2, expected:"File > 8MB rejected by UploadThing (labResultFile)." },
+      { id:"a4-8", title:"NO_CREDITS surfaced", p:1, expected:"With credits drained, upload shows a clean error, not a 500." },
+      { id:"a4-9", title:"Rate limit + botid", p:2, expected:"aiRateLimit enforced; botid doesn't block legit dev use." },
+      { id:"a4-10", title:"Credits deducted", p:2, expected:"deductAICredits({feature:'lab_exam'}) charges weight 2." },
+    ]
+  },
+  {
+    id:"B1", title:"B1 · Auth & onboarding",
+    tests: [
+      { id:"b1-1", title:"Doctor signup + verification", p:1, expected:"Signup → verification email → profile completion (/user/edit-profile, /user/profile)." },
+      { id:"b1-2", title:"Login / logout / session", p:1, expected:"Sessions persist; logout clears." },
+      { id:"b1-3", title:"Role guards", p:1, expected:"Portal user can't reach /user/*; doctor can't reach /portal/* as patient." },
+      { id:"b1-4", title:"Error boundary", p:2, expected:"/user/test-error renders app/user/error.tsx." },
+    ]
+  },
+  {
+    id:"B2", title:"B2 · Patients & appointments (core EMR)",
+    tests: [
+      { id:"b2-1", title:"Add / edit / list patient", p:1, expected:"/user/add-patient, edit, /user/patients list all work." },
+      { id:"b2-2", title:"Patient detail", p:1, expected:"Demographics, charts, tabs render." },
+      { id:"b2-3", title:"Appointment CRUD", p:1, expected:"Create / edit / delete; detail page renders." },
+      { id:"b2-4", title:"Add exams / Rx / recommendation", p:1, expected:"From within a visit, all add flows persist." },
+      { id:"b2-5", title:"Vaccines", p:2, expected:"Add record, view, print, references work." },
+      { id:"b2-6", title:"Reports & receipts", p:2, expected:"Create / edit / view / delete for both." },
+    ]
+  },
+  {
+    id:"B3", title:"B3 · Growth charts",
+    tests: [
+      { id:"b3-1", title:"Chart rendering", p:2, expected:"WFL/WFA/HFA/HCFA/BFA plot patient data." },
+      { id:"b3-2", title:"Print variants", p:2, expected:"print-* charts (0–2, 5–19 ranges) render cleanly." },
+      { id:"b3-3", title:"Reference API", p:2, expected:"/api/charts/reference returns correct curves." },
+    ]
+  },
+  {
+    id:"B4", title:"B4 · Printing",
+    tests: [
+      { id:"b4-1", title:"Appointment / exam / Rx prints", p:2, expected:"Doctor + portal print views render, no clipping." },
+      { id:"b4-2", title:"Vaccine & chart prints", p:2, expected:"Layouts intact." },
+    ]
+  },
+  {
+    id:"B5", title:"B5 · AI features (credit-gated)",
+    tests: [
+      { id:"b5-1", title:"ScrybeGPT general + per-patient", p:1, expected:"/user/scrybegpt and /user/patients/[id]/scrybegpt respond." },
+      { id:"b5-2", title:"chat / diagnostic / exams / Rx / report", p:1, expected:"Each AI route returns sensible output." },
+      { id:"b5-3", title:"classify-conditions / completion", p:2, expected:"Both work." },
+      { id:"b5-4", title:"Gating + rate limit + botid", p:1, expected:"Works with credits; clean NO_CREDITS at zero; rate-limited; botid OK." },
+    ]
+  },
+  {
+    id:"B6", title:"B6 · Patient portal (/portal/*)",
+    tests: [
+      { id:"b6-1", title:"Invite → signup → auto-accept", p:1, expected:"Doctor invites parent → email → /portal/signup → invitation auto-accepted." },
+      { id:"b6-2", title:"Join flow", p:2, expected:"/portal/join works." },
+      { id:"b6-3", title:"Child pages", p:1, expected:"Children list, detail, growth, labs, medications, vaccines, uploads render." },
+      { id:"b6-4", title:"Portal appointment + prints", p:2, expected:"Detail + print-exams / print-prescription render." },
+      { id:"b6-5", title:"Notifications", p:2, expected:"Populated from appointment/vaccine/lab events." },
+    ]
+  },
+  {
+    id:"B7", title:"B7 · Telehealth",
+    tests: [
+      { id:"b7-1", title:"Availability + exceptions", p:2, expected:"Doctor sets availability (/user/telehealth/availability)." },
+      { id:"b7-2", title:"Booking", p:2, expected:"Parent books (/portal/telehealth/book), appears in appointments." },
+      { id:"b7-3", title:"LiveKit call", p:2, expected:"Both sides join the call room." },
+      { id:"b7-4", title:"Webhook + notifications", p:2, expected:"/livekit/webhook processes events; notifications fire." },
+    ]
+  },
+  {
+    id:"B8", title:"B8 · Billing & subscriptions",
+    tests: [
+      { id:"b8-1", title:"Pricing pages", p:2, expected:"Public + /user/pricing load (Redis-cached API)." },
+      { id:"b8-2", title:"Stripe checkout", p:1, expected:"/api/stripe/checkout → success → tier reflected." },
+      { id:"b8-3", title:"Customer portal", p:2, expected:"/api/stripe/portal opens." },
+      { id:"b8-4", title:"Webhooks update state", p:1, expected:"Stripe webhooks change subscription state." },
+      { id:"b8-5", title:"Feature gating", p:1, expected:"Free tier blocked from Pro/Premium (patient_portal, telehealth) with upgrade modal." },
+      { id:"b8-6", title:"AI credit packs", p:2, expected:"Purchase + balance reflected (aiPacks, usage). Transactions page loads." },
+    ]
+  },
+  {
+    id:"B9", title:"B9 · WhatsApp / ScrybeGPT integration",
+    tests: [
+      { id:"b9-1", title:"Link number", p:2, expected:"/user/settings/whatsapp links a number." },
+      { id:"b9-2", title:"Inbound → agent reply", p:1, expected:"Message → agent responds; pending-action confirm flow works." },
+      { id:"b9-3", title:"Charts/PDF gen", p:2, expected:"WhatsApp chart & PDF generation works (recent fix)." },
+      { id:"b9-4", title:"Decision log", p:2, expected:"Decisions recorded." },
+    ]
+  },
+  {
+    id:"B10", title:"B10 · Offline / PWA",
+    tests: [
+      { id:"b10-1", title:"Install", p:2, expected:"Install prompt appears; app installs." },
+      { id:"b10-2", title:"Offline reads", p:1, expected:"Offline: cached appointments/patients load; offline auth via cached appUser." },
+      { id:"b10-3", title:"Sync on reconnect", p:1, expected:"Offline change → reconnect → queue flushes; conflict dialog resolves." },
+      { id:"b10-4", title:"Network banner", p:2, expected:"Toggles correctly online/offline." },
+    ]
+  },
+  {
+    id:"B11", title:"B11 · File uploads",
+    tests: [
+      { id:"b11-1", title:"Upload types", p:2, expected:"Appointment file (image/pdf/video), profile document upload." },
+      { id:"b11-2", title:"Storage cap", p:2, expected:"files.create enforces the cap." },
+      { id:"b11-3", title:"Delete file", p:2, expected:"Deletion works." },
+    ]
+  },
+  {
+    id:"B12", title:"B12 · Cron / background jobs",
+    tests: [
+      { id:"b12-1", title:"Crons registered", p:2, expected:"crons.ts / billingCrons.ts / whatsappCron.ts show in Convex dashboard → Schedules." },
+      { id:"b12-2", title:"Billing rollover", p:2, expected:"Period rollover resets usage counters." },
+    ]
+  },
+  {
+    id:"X", title:"Cross-cutting",
+    tests: [
+      { id:"x-1", title:"No console errors / 500s", p:1, expected:"No unhandled errors during any flow." },
+      { id:"x-2", title:"Multi-tenancy isolation", p:1, expected:"Doctor A never sees Doctor B's patients/orders/results." },
+      { id:"x-3", title:"Responsive", p:2, expected:"Labs worklist, patient detail, portal work on mobile widths." },
+      { id:"x-4", title:"Build & typecheck", p:1, expected:"npm run build passes; tsc --noEmit clean." },
+    ]
+  },
+];
+
+// ---- Rendering -------------------------------------------------------------
+const STORE = "pediascrybe_testplan_v1";
+const STATUSES = ["pending","pass","fail","blocked","na"];
+const LABEL = { pending:"⬜ Pending", pass:"✅ Pass", fail:"❌ Fail", blocked:"⛔ Blocked", na:"➖ N/A" };
+let state = JSON.parse(localStorage.getItem(STORE) || "{}");
+
+function save(){ localStorage.setItem(STORE, JSON.stringify(state)); }
+function get(id){ return state[id] || {}; }
+
+function render(){
+  const root = document.getElementById("root");
+  root.innerHTML = "";
+  for (const g of DATA){
+    const sec = document.createElement("section");
+    sec.className = "group" + (g.open ? "" : " collapsed");
+    const counts = g.tests.reduce((a,t)=>{ const s=(get(t.id).status)||(t.auto?t.auto.s:"pending"); a[s]=(a[s]||0)+1; return a; }, {});
+    const done = (counts.pass||0)+(counts.na||0);
+    sec.innerHTML = `
+      <div class="group-head" onclick="this.parentElement.classList.toggle('collapsed')">
+        <h2>${g.title}</h2>
+        <span class="meta">${done}/${g.tests.length} done${counts.fail?` · <span style="color:var(--fail)">${counts.fail} fail</span>`:""}${counts.blocked?` · <span style="color:var(--blocked)">${counts.blocked} blocked</span>`:""}</span>
+      </div>
+      ${g.note?`<div class="group-note">${g.note}</div>`:""}
+      <div class="group-body"></div>`;
+    const body = sec.querySelector(".group-body");
+    for (const t of g.tests){
+      const cur = get(t.id);
+      const status = cur.status || (t.auto ? t.auto.s : "pending");
+      const row = document.createElement("div");
+      row.className = "test";
+      row.innerHTML = `
+        <div>
+          <div class="title">${t.title}${t.p?`<span class="priority p${t.p}">P${t.p}</span>`:""}</div>
+          <div class="expected">${t.expected}</div>
+          ${t.auto?`<div class="auto ${t.auto.s}">${t.auto.t}</div>`:""}
+        </div>
+        <div class="controls">
+          <select class="status ${status}" data-id="${t.id}">
+            ${STATUSES.map(s=>`<option value="${s}" ${s===status?"selected":""}>${LABEL[s]}</option>`).join("")}
+          </select>
+          <textarea class="notes" data-id="${t.id}" placeholder="notes…">${cur.notes||""}</textarea>
+        </div>`;
+      body.appendChild(row);
+    }
+    root.appendChild(sec);
+  }
+  bind();
+  updateStats();
+}
+
+function bind(){
+  document.querySelectorAll("select.status").forEach(el=>{
+    el.onchange = e=>{ const id=e.target.dataset.id; state[id]={...get(id), status:e.target.value}; save(); render(); };
+  });
+  document.querySelectorAll("textarea.notes").forEach(el=>{
+    el.onblur = e=>{ const id=e.target.dataset.id; state[id]={...get(id), notes:e.target.value}; save(); };
+  });
+}
+
+function updateStats(){
+  const all = DATA.flatMap(g=>g.tests);
+  const c = { pass:0, fail:0, blocked:0, na:0, pending:0 };
+  for (const t of all){ const s = (get(t.id).status)||(t.auto?t.auto.s:"pending"); c[s]=(c[s]||0)+1; }
+  const total = all.length;
+  const done = c.pass + c.na;
+  document.getElementById("bar").style.width = (100*done/total).toFixed(1)+"%";
+  document.getElementById("stats").innerHTML = `
+    <span class="stat"><span class="dot pass"></span>${c.pass} pass</span>
+    <span class="stat"><span class="dot fail"></span>${c.fail} fail</span>
+    <span class="stat"><span class="dot blocked"></span>${c.blocked} blocked</span>
+    <span class="stat"><span class="dot na"></span>${c.na} n/a</span>
+    <span class="stat"><span class="dot pending"></span>${c.pending} pending</span>
+    <span class="stat" style="color:var(--muted)">· ${done}/${total} complete</span>`;
+}
+
+function expandAll(open){ document.querySelectorAll("section.group").forEach(s=>s.classList.toggle("collapsed", !open)); }
+function resetAll(){ if(confirm("Clear all recorded statuses and notes?")){ state={}; save(); render(); } }
+function exportJSON(){
+  const out = DATA.map(g=>({ group:g.title, tests:g.tests.map(t=>({ id:t.id, title:t.title, status:(get(t.id).status)||(t.auto?t.auto.s:"pending"), notes:get(t.id).notes||"" })) }));
+  const blob = new Blob([JSON.stringify(out,null,2)],{type:"application/json"});
+  const a = document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="pediascrybe-test-results.json"; a.click();
+}
+render();
+</script>
+</body>
+</html>

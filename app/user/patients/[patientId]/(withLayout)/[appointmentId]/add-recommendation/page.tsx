@@ -20,7 +20,6 @@ const AddRecommendationPage = async (props: { params: Params }) => {
 export default AddRecommendationPage
 
 async function AddRecommendationContainer({ params }: { params: Params }) {
-  'use cache'
   const { patientId, appointmentId } = await params;
 
   const appointment = await fetchAuthQuery(api.appointments.getAppointment, { 

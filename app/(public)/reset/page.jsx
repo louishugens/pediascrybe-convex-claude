@@ -31,7 +31,7 @@ export default function ResetPage() {
   const handleReset = async (values) => {
     setLoading(true)
     
-    const { error } = await authClient.forgetPassword({
+    const { error } = await authClient.requestPasswordReset({
       email: values.email,
       redirectTo: `${window.location.origin}/reset/password`,
     })

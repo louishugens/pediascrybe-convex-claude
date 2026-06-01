@@ -94,7 +94,7 @@ function Chart({patient, type, title, ylabel, xlabel, formatted, name, reference
           Export
         </Link>
       </div>
-      <ResponsiveContainer height={550}>
+      <ResponsiveContainer height={550} minWidth={0}>
         <LineChart
           margin={{
             top: 5,

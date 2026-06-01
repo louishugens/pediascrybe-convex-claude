@@ -22,7 +22,7 @@ const AUTO_MERGE_FIELDS = new Set([
 
 // Fields requiring manual resolution
 const MANUAL_FIELDS = new Set([
-  "findings", "medication", "exams", "recommendation", "internalNotes",
+  "findings", "prescriptions", "labOrders", "recommendation", "internalNotes",
 ]);
 
 interface SyncConflictDialogProps {

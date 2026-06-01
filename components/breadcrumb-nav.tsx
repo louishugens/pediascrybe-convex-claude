@@ -70,8 +70,9 @@ function getBreadcrumbs(pathname: string): BreadcrumbData[] {
       
       // Check if this is an appointment ID - only if the previous segment is a patient ID
       const knownPatientSubroutes = [
-        "charts", "vaccines", "reports", "receipts", "scrybegpt",
-        "add-record", "edit-patient", "hfa", "wfa", "bfa", "hcfa", "wfl",
+        "charts", "vaccines", "reports", "receipts", "scrybegpt", "labs", "prescriptions",
+        "add-record", "edit-patient", "add-exams", "add-prescription",
+        "hfa", "wfa", "bfa", "hcfa", "wfl",
         "hfa5To19", "bfa5To19", "wfl0To2"
       ]
       const isAppointmentId = i >= 2 && 

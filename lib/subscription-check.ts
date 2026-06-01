@@ -4,9 +4,9 @@ import { isAuthenticated } from '@/lib/auth-server';
 // Note: AI features (diagnostic, prescription, lab) are available to ALL tiers with quotas
 // Quota enforcement happens in Convex - only tier-restricted features listed here
 const FEATURE_TIERS: Record<string, string[]> = {
-  ai_report_generation: ['pro', 'premium'],
-  vaccination_management: ['pro', 'premium'],
-  all_growth_charts: ['pro', 'premium'],
+  ai_report_generation: ['professional', 'complete', 'institution'],
+  vaccination_management: ['essentials', 'professional', 'complete', 'institution'],
+  all_growth_charts: ['essentials', 'professional', 'complete', 'institution'],
 };
 
 export interface SubscriptionCheckResult {
@@ -68,7 +68,7 @@ export async function checkAIQueryLimit(): Promise<SubscriptionCheckResult> {
     }
 
     // Return allowed - actual enforcement happens in Convex
-    return { allowed: true, remainingQueries: -1 };
+    return { allowed: true, remainingQueries: 0 };
   } catch (error) {
     console.error('AI query limit check error:', error);
     return {

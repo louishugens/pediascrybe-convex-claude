@@ -23,6 +23,7 @@ interface Patient {
   firstname?: string;
   lastname?: string;
   birthdate?: number;
+  birthWeight?: number;
   sex?: string;
   allergies?: string;
   bloodtype?: string;
@@ -111,6 +112,7 @@ export default function DemographicsDialog({
                   </h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4 pl-6">
+                  <InfoItem label="Birth Weight" value={typeof patient.birthWeight === "number" ? `${patient.birthWeight} g` : undefined} />
                   <InfoItem label="Blood Type" value={patient.bloodtype} />
                   <InfoItem label="Electrophoresis" value={patient.electrophoresis} />
                   <div className="col-span-2">

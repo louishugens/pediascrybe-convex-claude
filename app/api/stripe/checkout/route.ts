@@ -37,11 +37,17 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { tierName, successUrl, cancelUrl } = body;
+    const { tierName, billingInterval, successUrl, cancelUrl } = body as {
+      tierName: string;
+      billingInterval?: "month" | "year";
+      successUrl?: string;
+      cancelUrl?: string;
+    };
+    const interval: "month" | "year" = billingInterval === "year" ? "year" : "month";
 
     // Look up customerId from the authenticated user (never trust client)
     const appUser = await fetchAuthQuery(api.appUsers.getCurrentAppUser);
-    const customerId = appUser?.stripeCustomerId || null;
+    let customerId = appUser?.stripeCustomerId || null;
 
     if (!tierName) {
       return NextResponse.json(
@@ -52,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     // Get tier from Convex
     const tier = await convex.query(api.stripe.getTierByName, { name: tierName });
-    
+
     if (!tier) {
       return NextResponse.json(
         { error: 'Invalid tier' },
@@ -60,9 +66,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get the price ID
-    const priceId = tier.stripePriceId;
-    
+    if (tier.isCustom) {
+      return NextResponse.json(
+        { error: 'Institution tier requires contacting sales' },
+        { status: 400 }
+      );
+    }
+
+    // Pick the price for the requested interval
+    const priceId = interval === "year" ? tier.stripeAnnualPriceId : tier.stripeMonthlyPriceId;
+
     if (!priceId || priceId.includes('placeholder')) {
       return NextResponse.json(
         { error: 'Pricing not configured. Please contact support.' },
@@ -70,34 +83,45 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if customer already has an active subscription
+    // Check if customer already has an active subscription. If the stored
+    // customer no longer exists in this Stripe account (e.g. migrated/old data),
+    // drop it and fall through to create a fresh one instead of 500ing.
     if (customerId) {
-      const existingSubscriptions = await stripe.subscriptions.list({
-        customer: customerId,
-        status: 'active',
-        limit: 1,
-      });
-      
-      const trialingSubscriptions = await stripe.subscriptions.list({
-        customer: customerId,
-        status: 'trialing',
-        limit: 1,
-      });
-      
-      const hasActiveSubscription = existingSubscriptions.data.length > 0 || trialingSubscriptions.data.length > 0;
-      
-      if (hasActiveSubscription) {
-        // For existing subscribers, redirect to Customer Portal for upgrades/downgrades
-        const portalSession = await stripe.billingPortal.sessions.create({
+      try {
+        const existingSubscriptions = await stripe.subscriptions.list({
           customer: customerId,
-          return_url: successUrl || `${process.env.SITE_URL}/user/settings/subscription`,
+          status: 'active',
+          limit: 1,
         });
-        
-        return NextResponse.json({
-          url: portalSession.url,
-          isPortalRedirect: true,
-          message: 'Redirecting to billing portal to manage your subscription',
+
+        const trialingSubscriptions = await stripe.subscriptions.list({
+          customer: customerId,
+          status: 'trialing',
+          limit: 1,
         });
+
+        const hasActiveSubscription = existingSubscriptions.data.length > 0 || trialingSubscriptions.data.length > 0;
+
+        if (hasActiveSubscription) {
+          // For existing subscribers, redirect to Customer Portal for upgrades/downgrades
+          const portalSession = await stripe.billingPortal.sessions.create({
+            customer: customerId,
+            return_url: successUrl || `${process.env.SITE_URL}/user/settings/subscription`,
+          });
+
+          return NextResponse.json({
+            url: portalSession.url,
+            isPortalRedirect: true,
+            message: 'Redirecting to billing portal to manage your subscription',
+          });
+        }
+      } catch (err) {
+        if ((err as Stripe.errors.StripeError)?.code === 'resource_missing') {
+          console.warn('Stored stripeCustomerId no longer exists in Stripe; creating a new customer:', customerId);
+          customerId = null;
+        } else {
+          throw err;
+        }
       }
     }
 
@@ -117,20 +141,21 @@ export async function POST(request: NextRequest) {
         trial_period_days: tier.trialPeriodDays,
         metadata: {
           tierName: tier.name,
+          billingInterval: interval,
         },
       },
       metadata: {
         tierName: tier.name,
+        billingInterval: interval,
       },
       allow_promotion_codes: true,
     };
 
-    // Add customer if provided
+    // Reuse the existing customer if we have a valid one. In `subscription` mode
+    // Stripe creates the customer automatically, so we must NOT set
+    // `customer_creation` (that's only valid in `payment` mode and 500s otherwise).
     if (customerId) {
       sessionParams.customer = customerId;
-    } else {
-      // Allow customer creation during checkout
-      sessionParams.customer_creation = 'always';
     }
 
     // Create the checkout session
@@ -158,28 +183,20 @@ export async function GET() {
     const tiers = await convex.query(api.stripe.getSubscriptionTiers);
 
     // Map to pricing info
-    const pricing = tiers.map((tier: { 
-      name: string; 
-      displayName: string; 
-      description: string; 
-      priceAmountCents: number;
-      limits: { 
-        patientCount: number; 
-        recordCount: number; 
-        scrybegptMessages: number;
-        aiPrescription: number;
-        aiLabExam: number;
-        aiDiagnostic: number;
-        aiReport: number;
-      }; 
-      features: string[]; 
-      isPopular: boolean 
-    }) => ({
+    const pricing = tiers.map((tier) => ({
       name: tier.name,
       displayName: tier.displayName,
       description: tier.description,
       priceAmountCents: tier.priceAmountCents,
-      priceDisplay: `$${(tier.priceAmountCents / 100).toFixed(0)}/mo`,
+      annualPriceAmountCents: tier.annualPriceAmountCents,
+      priceDisplay: tier.isCustom
+        ? "Contact Sales"
+        : `$${(tier.priceAmountCents / 100).toFixed(0)}/mo`,
+      annualPriceDisplay:
+        tier.annualPriceAmountCents && !tier.isCustom
+          ? `$${(tier.annualPriceAmountCents / 100).toFixed(0)}/yr`
+          : null,
+      isCustom: tier.isCustom ?? false,
       limits: tier.limits,
       features: tier.features,
       isPopular: tier.isPopular,

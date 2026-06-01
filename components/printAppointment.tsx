@@ -10,31 +10,23 @@ import { Button } from './ui/button'
 import { PrinterIcon } from 'lucide-react'
 
 interface PrintProps {
-  appointment: Doc<"appointments"> | null
+  appointment: (Doc<"appointments"> & {
+    prescriptions?: Doc<"prescriptions">[]
+    labOrders?: Doc<"labOrders">[]
+  }) | null
   doctor: Doc<"doctors"> | null
   patient: Doc<"patients"> | null
 }
 
 const Print = ({appointment, doctor, patient}: PrintProps) => {
   const componentRef = useRef<HTMLDivElement>(null)
-  const handlePrint = useReactToPrint({ 
+  const handlePrint = useReactToPrint({
     contentRef: componentRef,
     documentTitle: `appointment_${patient?.firstname}_${patient?.lastname}_${appointment?.startDate ? format(appointment.startDate, 'yyy-MM-dd') : ''}`
   })
 
-  interface Medication{
-    drug: string
-    posology: string
-    count: number
-    unit: string
-  }
-  
-  interface Exam{
-    exam: string
-  }
-
-  const medication = appointment?.medication as unknown as Medication[]
-  const exams = appointment?.exams as unknown as Exam[]
+  const medication = appointment?.prescriptions ?? []
+  const exams = appointment?.labOrders ?? []
 
   return (
     <div className="">
@@ -106,7 +98,7 @@ ref={componentRef}>
                 <p className="font-semibold">Lab exams</p>
                 <ul className="w-full h-auto px-2 pt-0 pb-2 mt-1 overflow-scroll">
                   {exams?.map((exam, index) =>(
-                    <li key={index}>-{exam.exam}</li>
+                    <li key={index}>-{exam.examName}</li>
                   ))}
                 </ul>
               </div>

@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { PatientListClient } from '@/components/patientList'
 import { Suspense } from "react";
 import Search from "@/components/search";
@@ -7,6 +6,7 @@ import { ViewTransition } from "react"
 import { preloadAuthQuery, fetchAuthQuery } from "@/lib/auth-server"
 import { api } from "@/convex/_generated/api"
 import { redirect } from "next/navigation"
+import { AddPatientButton } from "@/components/patient/add-patient-button"
 
 function PatientSkeleton() {
   return (
@@ -61,12 +61,7 @@ export default async function Patients({ searchParams }: PatientsProps) {
     <div className='h-full mb-8 pb-4'>
       <div className="flex flex-row w-full justify-between">
         <p className='font-bold text-foreground'><span className='text-primary'>Patient list</span></p>
-        <Link 
-          className='self-end px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm hover:bg-primary/80 transition-colors' 
-          href={`/user/add-patient`}
-        >
-          Add Patient
-        </Link>
+        <AddPatientButton />
       </div>
       <ViewTransition>
         <div className='flex w-full justify-center'>

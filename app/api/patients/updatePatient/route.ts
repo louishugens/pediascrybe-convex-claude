@@ -14,9 +14,9 @@ export async function POST(req: Request) {
       );
     }
 
-    const { 
-      firstname, lastname, email, birthdate, mothername, sex, religion, 
-      phone, id, allergies, history, bloodtype, electrophoresis 
+    const {
+      firstname, lastname, email, birthdate, birthWeight, mothername, sex, religion,
+      phone, id, allergies, history, bloodtype, electrophoresis
     } = await req.json();
 
     const patient = await fetchAuthMutation(api.patients.updatePatient, {
@@ -25,6 +25,7 @@ export async function POST(req: Request) {
       lastname: lastname || undefined,
       email: email || undefined,
       birthdate: birthdate ? new Date(birthdate).getTime() : undefined,
+      birthWeight: typeof birthWeight === "number" && Number.isFinite(birthWeight) ? birthWeight : undefined,
       mothername: mothername || undefined,
       sex: sex || undefined,
       religion: religion || undefined,

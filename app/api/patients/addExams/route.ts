@@ -14,11 +14,40 @@ export async function POST(req: Request) {
       );
     }
 
-    const { exams, appointmentId } = await req.json();
+    const { exams, appointmentId, patientId } = await req.json();
+
+    // Translate the form's {exam} shape to the new labOrders {examName} shape.
+    const labOrders = Array.isArray(exams)
+      ? exams.map((e: { exam?: string; examName?: string; clinicalContext?: string; urgency?: "routine" | "urgent" | "stat"; notes?: string }) => ({
+          examName: e.examName ?? e.exam ?? "",
+          clinicalContext: e.clinicalContext,
+          urgency: e.urgency,
+          notes: e.notes,
+        }))
+      : [];
+
+    // Standalone path: no appointmentId means "create labs for this patient,
+    // optionally attached to an appointment we'll pick later". Requires patientId.
+    if (!appointmentId) {
+      if (!patientId) {
+        return new Response(
+          JSON.stringify({ error: { statusCode: 400, message: 'patientId required when appointmentId is omitted' } }),
+          { status: 400, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+      const result = await fetchAuthMutation(api.appointments.createLabOrdersForPatient, {
+        patientId,
+        items: labOrders,
+      });
+      return new Response(JSON.stringify(result), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
 
     const appointment = await fetchAuthMutation(api.appointments.updateAppointment, {
       appointmentId,
-      exams,
+      labOrders,
     });
 
     if (appointment) {

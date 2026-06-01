@@ -44,8 +44,19 @@ interface Appointment {
   respiratory?: number | null;
   systolic?: number | null;
   diastolic?: number | null;
-  medication?: any;
-  exams?: any;
+  prescriptions?: Array<{
+    _id: Id<"prescriptions">;
+    drug: string;
+    count: number;
+    unit: string;
+    posology: string;
+    status?: string;
+  }>;
+  labOrders?: Array<{
+    _id: Id<"labOrders">;
+    examName: string;
+    status?: string;
+  }>;
   internalNotes?: string | null;
   files: UploadedFile[];
   service: Service | null;
@@ -56,16 +67,6 @@ interface AppointmentPageComponentProps {
   patientId: string
 }
 
-interface Medication{
-  drug: string
-  posology: string
-  count: number
-  unit: string
-}
-
-interface Exam{
-  exam: string
-}
 
 const AppointmentPageComponent = ({appointment, patientId}: AppointmentPageComponentProps) => {
   const [loading, setLoading] = useState(false)
@@ -93,10 +94,8 @@ const AppointmentPageComponent = ({appointment, patientId}: AppointmentPageCompo
     }
   }
 
-  console.log('appointment :>> ', appointment)
-
-  const medications = appointment.medication as unknown as Medication[]
-  const exams = appointment.exams as unknown as Exam[]
+  const medications = appointment.prescriptions ?? []
+  const exams = appointment.labOrders ?? []
 
   return (
     <div className='py-4'>
@@ -204,7 +203,7 @@ const AppointmentPageComponent = ({appointment, patientId}: AppointmentPageCompo
         <div className="flex flex-col">
           <p className="font-semibold mb-2">Lab exams</p>
           <ul className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">{exams?.map((exam, index) =>(
-            <li key={index}>-{exam.exam}</li>
+            <li key={index}>-{exam.examName}</li>
           ))}</ul>
           <div className="mt-1 flex flex-row justify-between">
             {/* <Link href={`/user/patients/${patientId}/${appointmentId}/add-exams`} className='self-end mt-2 shadow bg-blue-500 rounded-full py-2 px-4 text-white '>

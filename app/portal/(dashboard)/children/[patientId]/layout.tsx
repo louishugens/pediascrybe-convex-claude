@@ -13,6 +13,8 @@ import {
   Syringe,
   TrendingUp,
   Upload,
+  Pill,
+  FlaskConical,
 } from "lucide-react"
 
 interface LayoutProps {
@@ -22,6 +24,8 @@ interface LayoutProps {
 const navItems = [
   { label: "Overview", href: "", icon: User },
   { label: "Appointments", href: "/appointments", icon: Calendar },
+  { label: "Medications", href: "/medications", icon: Pill },
+  { label: "Labs", href: "/labs", icon: FlaskConical },
   { label: "Vaccines", href: "/vaccines", icon: Syringe },
   { label: "Growth", href: "/growth", icon: TrendingUp },
   { label: "Uploads", href: "/uploads", icon: Upload },

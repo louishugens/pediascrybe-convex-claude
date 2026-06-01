@@ -7,17 +7,25 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { useRouter } from 'next/navigation'
 import { BeatLoader } from 'react-spinners';
 import { XCircleIcon } from '@heroicons/react/24/outline';
-import { formatDistanceToNow } from "date-fns"
+import { formatDistanceToNow, format } from "date-fns"
 import { Spinner } from '@/components/ui/spinner';
 import { refresh } from '@/app/actions';
 import { experimental_useObject as useObject } from '@ai-sdk/react';
 import { examsSchema } from '@/app/api/ai/exams/schema';
 import { z } from 'zod';
-import { useMutation } from 'convex/react';
+import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useAIQueryAccess } from '@/components/subscription-guard';
 import { UpgradeModal } from '@/components/upgrade-modal';
 import { useSubscriptionGuard } from '@/hooks/use-subscription-guard';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import type { Id } from '@/convex/_generated/dataModel';
 
 const ExamsSchema =  Yup.object({
   exams: Yup.array().of(
@@ -26,13 +34,27 @@ const ExamsSchema =  Yup.object({
   })).required('Please add at least one exam').min(1, 'Please add at least one exam')
 }).required();
 
-const AddExams = ({patient, patientId, appointment}) => {
+const AddExams = ({patient, patientId, appointment}: { patient: any; patientId: string; appointment?: any }) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [color, setColor] = useState('#ffffff')
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const router = useRouter()
-  const [exams, setExams] = useState(appointment.exams || [{exam: null}])
+  // Standalone mode: no preset appointment — show the picker, default to "none".
+  const isStandalone = !appointment
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | undefined>(undefined)
+  const patientAppointments = useQuery(
+    api.appointments.listByPatient,
+    isStandalone ? { patientId: patientId as Id<'patients'> } : 'skip',
+  )
+  const selectedAppointment = isStandalone
+    ? patientAppointments?.find((a) => a._id === selectedAppointmentId)
+    : appointment
+  const [exams, setExams] = useState(
+    appointment && Array.isArray(appointment.labOrders) && appointment.labOrders.length > 0
+      ? appointment.labOrders.map((o: { examName: string }) => ({ exam: o.examName }))
+      : [{ exam: null }]
+  )
   const [thinking, setThinking] = useState(false)
   const [hasFetched, setHasFetched] = useState(false)
   const [noReturn, setNoReturn] = useState(false)
@@ -89,27 +111,30 @@ const AddExams = ({patient, patientId, appointment}) => {
       console.error('Failed to increment AI usage:', error);
     }
 
+      const ctxAppt = selectedAppointment;
       const body = {
         patient: {
-          age: formatDistanceToNow(new Date(patient.birthdate)), 
-          gender: patient.sex, 
-          allergies: patient.allergies, 
-          history: patient.history
-        }, 
-        appointment: {
-          motif: appointment.motif,
-          findings: appointment.findings,
-          height: appointment.height,
-          weight: appointment.weight,
-          headCircumference: appointment.head,
-          armCircumference: appointment.arm,
-          sao2: appointment.sao2,
-          temperature: appointment.temperature,
-          pulse: appointment.pulse,
-          respiratory: appointment.respiratory,
-          systolic: appointment.systolic,
-          diastolic: appointment.diastolic,
-        }
+          age: formatDistanceToNow(new Date(patient.birthdate)),
+          gender: patient.sex,
+          allergies: patient.allergies,
+          history: patient.history,
+        },
+        appointment: ctxAppt
+          ? {
+              motif: ctxAppt.motif,
+              findings: ctxAppt.findings,
+              height: ctxAppt.height,
+              weight: ctxAppt.weight,
+              headCircumference: ctxAppt.head,
+              armCircumference: ctxAppt.arm,
+              sao2: ctxAppt.sao2,
+              temperature: ctxAppt.temperature,
+              pulse: ctxAppt.pulse,
+              respiratory: ctxAppt.respiratory,
+              systolic: ctxAppt.systolic,
+              diastolic: ctxAppt.diastolic,
+            }
+          : undefined,
       }
       submit(body)
 
@@ -214,9 +239,16 @@ const AddExams = ({patient, patientId, appointment}) => {
  
     try{
       const {exams } = values
-      // console.log('exams :>> ', exams.length);
 
-      const body = {exams, appointmentId: appointment._id}
+      // Pick the effective appointment: preset (in-visit) or user-picked (standalone).
+      const effectiveAppointmentId = appointment?._id ?? selectedAppointmentId ?? undefined
+      const body: Record<string, unknown> = { exams }
+      if (effectiveAppointmentId) {
+        body.appointmentId = effectiveAppointmentId
+      } else {
+        body.patientId = patientId
+      }
+
       const myuser = await fetch('/api/patients/addExams', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -224,9 +256,13 @@ const AddExams = ({patient, patientId, appointment}) => {
       })
       const newuser = await myuser.json()
 
-      refresh([`/user/patients/${patientId}/${appointment._id}`, `/user/patients/${appointment.patientId}/${appointment._id}/add-exams`])
-
-      router.push(`/user/patients/${patientId}/${appointment._id}`)
+      if (effectiveAppointmentId) {
+        refresh([`/user/patients/${patientId}/${effectiveAppointmentId}`, `/user/patients/${patientId}/${effectiveAppointmentId}/add-exams`])
+        router.push(`/user/patients/${patientId}/${effectiveAppointmentId}`)
+      } else {
+        refresh([`/user/patients/${patientId}/labs`])
+        router.push(`/user/patients/${patientId}/labs`)
+      }
 
     }
     catch(err){
@@ -241,6 +277,30 @@ const AddExams = ({patient, patientId, appointment}) => {
     <div className="pb-4">
     <div className="w-full h-auto shadow-md rounded-lg p-4 bg-slate-50 mt-4 text-sm">
       <p>Add exams </p>
+      {isStandalone && (
+        <div className="mt-4">
+          <label className="flex flex-col gap-2">
+            <span className="font-medium text-sm">Attach to consultation (optional)</span>
+            <Select
+              value={selectedAppointmentId ?? 'none'}
+              onValueChange={(v) => setSelectedAppointmentId(v === 'none' ? undefined : v)}
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Standalone (no consultation)</SelectItem>
+                {(patientAppointments ?? []).map((a) => (
+                  <SelectItem key={a._id} value={a._id}>
+                    {format(new Date(a.startDate), 'MMM d, yyyy')}
+                    {a.motif ? ` · ${a.motif}` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </label>
+        </div>
+      )}
       <form className='mt-4' onSubmit={handleSubmit(onSubmit)}>
       {
         noReturn ? (

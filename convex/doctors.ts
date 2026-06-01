@@ -57,6 +57,27 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
+
+    // Reuse an existing doctor row if one already exists for this auth user or email.
+    // Prevents the duplicate-doctors bug that orphans a user's patients on re-signup.
+    const existingByAuth = await ctx.db
+      .query("doctors")
+      .withIndex("by_authUserId", (q) => q.eq("authUserId", args.authUserId))
+      .first();
+    if (existingByAuth) {
+      await ctx.db.patch(existingByAuth._id, { ...args, updatedAt: now });
+      return existingByAuth._id;
+    }
+
+    const existingByEmail = await ctx.db
+      .query("doctors")
+      .withIndex("by_email", (q) => q.eq("email", args.email))
+      .first();
+    if (existingByEmail) {
+      await ctx.db.patch(existingByEmail._id, { ...args, updatedAt: now });
+      return existingByEmail._id;
+    }
+
     return await ctx.db.insert("doctors", {
       ...args,
       isActive: true,

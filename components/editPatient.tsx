@@ -57,6 +57,7 @@ const EditPatient = ({patient, doctorId}) => {
       z.literal('')
     ]).optional(),
     birthdate: z.date({ message: "Please enter patient's birth date" }),
+    birthWeight: z.number().positive("Birth weight must be positive").max(10000, "Birth weight looks too high").optional(),
     mothername: z.string().optional(),
     sex: z.string().min(1, { message: "Please select patient's sex" }),
     religion: z.string().optional(),
@@ -78,6 +79,7 @@ const EditPatient = ({patient, doctorId}) => {
       email: patient.email || "",
       phone: patient.phone || "",
       birthdate: new Date(patient.birthdate) || undefined,
+      birthWeight: typeof patient.birthWeight === "number" ? patient.birthWeight : undefined,
       mothername: patient.mothername || "",
       sex: patient.sex || "",
       religion: patient.religion || "",
@@ -102,8 +104,8 @@ const EditPatient = ({patient, doctorId}) => {
     setLoading(true)
  
     try{
-      const {firstname, lastname, email, birthdate, mothername, sex, religion, phone, allergies, history, bloodtype, electrophoresis} = values
-      const body = {firstname, lastname, email, birthdate, mothername, sex, religion, phone, id: patient._id, allergies, history, bloodtype, electrophoresis}
+      const {firstname, lastname, email, birthdate, birthWeight, mothername, sex, religion, phone, allergies, history, bloodtype, electrophoresis} = values
+      const body = {firstname, lastname, email, birthdate, birthWeight, mothername, sex, religion, phone, id: patient._id, allergies, history, bloodtype, electrophoresis}
       await fetch('/api/patients/updatePatient', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -288,6 +290,33 @@ const EditPatient = ({patient, doctorId}) => {
                         />
                       </PopoverContent>
                     </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="birthWeight"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Birth Weight (g)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        inputMode="numeric"
+                        min={0}
+                        step="any"
+                        placeholder="e.g. 3200"
+                        value={field.value ?? ""}
+                        onChange={(e) => {
+                          const n = e.target.valueAsNumber;
+                          field.onChange(e.target.value === "" || Number.isNaN(n) ? undefined : n);
+                        }}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

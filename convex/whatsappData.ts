@@ -194,6 +194,37 @@ export const getPatientSummary = internalQuery({
     const age = calculateAge(patient.birthdate);
     const lastAppt = appointments[0];
 
+    // Hydrate prescriptions and lab orders for the recent appointments in parallel.
+    const enrichedAppointments = await Promise.all(
+      appointments.map(async (a) => {
+        const [prescriptions, labOrders] = await Promise.all([
+          ctx.db
+            .query("prescriptions")
+            .withIndex("by_appointmentId", (q) => q.eq("appointmentId", a._id))
+            .collect(),
+          ctx.db
+            .query("labOrders")
+            .withIndex("by_appointmentId", (q) => q.eq("appointmentId", a._id))
+            .collect(),
+        ]);
+        return {
+          _id: a._id,
+          date: a.startDate,
+          motif: a.motif,
+          findings: a.findings,
+          recommendation: a.recommendation,
+          medication: prescriptions
+            .sort((x, y) => x.createdAt - y.createdAt)
+            .map((p) => ({ drug: p.drug, count: p.count, unit: p.unit, posology: p.posology })),
+          exams: labOrders
+            .sort((x, y) => x.createdAt - y.createdAt)
+            .map((o) => ({ exam: o.examName })),
+        };
+      }),
+    );
+
+    const lastMedication = enrichedAppointments[0]?.medication ?? null;
+
     return {
       _id: patient._id,
       firstname: patient.firstname,
@@ -218,16 +249,8 @@ export const getPatientSummary = internalQuery({
             sao2: lastAppt.sao2,
           }
         : null,
-      lastMedication: lastAppt?.medication || null,
-      recentAppointments: appointments.map((a) => ({
-        _id: a._id,
-        date: a.startDate,
-        motif: a.motif,
-        findings: a.findings,
-        recommendation: a.recommendation,
-        medication: a.medication,
-        exams: a.exams,
-      })),
+      lastMedication,
+      recentAppointments: enrichedAppointments,
       vaccinationCount: vaccinations.length,
     };
   },
@@ -257,24 +280,40 @@ export const getPatientAppointments = internalQuery({
       )
       .collect();
 
-    return appointments
-      .filter((a) => {
-        if (args.startDate && a.startDate < args.startDate) return false;
-        if (args.endDate && a.startDate > args.endDate) return false;
-        return true;
-      })
-      .map((a) => ({
+    const filtered = appointments.filter((a) => {
+      if (args.startDate && a.startDate < args.startDate) return false;
+      if (args.endDate && a.startDate > args.endDate) return false;
+      return true;
+    });
+
+    return await Promise.all(filtered.map(async (a) => {
+      const [prescriptions, labOrders] = await Promise.all([
+        ctx.db
+          .query("prescriptions")
+          .withIndex("by_appointmentId", (q) => q.eq("appointmentId", a._id))
+          .collect(),
+        ctx.db
+          .query("labOrders")
+          .withIndex("by_appointmentId", (q) => q.eq("appointmentId", a._id))
+          .collect(),
+      ]);
+      return {
         _id: a._id,
         date: a.startDate,
         motif: a.motif,
         findings: a.findings,
         recommendation: a.recommendation,
-        medication: a.medication,
-        exams: a.exams,
+        medication: prescriptions
+          .sort((x, y) => x.createdAt - y.createdAt)
+          .map((p) => ({ drug: p.drug, count: p.count, unit: p.unit, posology: p.posology })),
+        exams: labOrders
+          .sort((x, y) => x.createdAt - y.createdAt)
+          .map((o) => ({ exam: o.examName })),
         weight: a.weight,
         height: a.height,
         status: a.status,
-      }));
+      };
+    }));
   },
 });
 
@@ -851,18 +890,15 @@ export const updatePendingAction = internalMutation({
 // ==================== Usage (Internal, by doctorId) ====================
 
 /**
- * Increment ScrybeGPT usage by doctorId (no auth context needed).
+ * Deduct WhatsApp cost (1 credit for Pro/Complete) or increment trial counter
+ * (Essentials). Credit deduction fills from the included pool first, then pack.
  */
 export const incrementUsageByDoctorId = internalMutation({
   args: {
     doctorId: v.id("doctors"),
-    field: v.union(
-      v.literal("scrybegptMessages"),
-      v.literal("aiPrescription"),
-      v.literal("aiLabExam"),
-      v.literal("aiDiagnostic"),
-      v.literal("aiReport")
-    ),
+    // Unified: always deducts 1 AI credit for non-trial tiers. Trial tiers
+    // (essentials) increment whatsappTrialUsed instead — handled by the
+    // whatsapp handler via incrementWhatsappCounter.
   },
   handler: async (ctx, args) => {
     const period = getCurrentPeriod();
@@ -877,18 +913,20 @@ export const incrementUsageByDoctorId = internalMutation({
 
     if (usage) {
       await ctx.db.patch(usage._id, {
-        [args.field]: ((usage as any)[args.field] || 0) + 1,
+        aiCreditsUsed: (usage.aiCreditsUsed || 0) + 1,
+        whatsappMessagesUsed: (usage.whatsappMessagesUsed || 0) + 1,
         updatedAt: now,
       });
     } else {
       await ctx.db.insert("usage", {
         doctorId: args.doctorId,
         period,
-        scrybegptMessages: args.field === "scrybegptMessages" ? 1 : 0,
-        aiPrescription: args.field === "aiPrescription" ? 1 : 0,
-        aiLabExam: args.field === "aiLabExam" ? 1 : 0,
-        aiDiagnostic: args.field === "aiDiagnostic" ? 1 : 0,
-        aiReport: args.field === "aiReport" ? 1 : 0,
+        aiCreditsUsed: 1,
+        packCreditsRemaining: 0,
+        whatsappTrialUsed: 0,
+        whatsappMessagesUsed: 1,
+        telehealthMinutesUsed: 0,
+        storageUsedBytes: 0,
         createdAt: now,
         updatedAt: now,
       });
@@ -897,7 +935,8 @@ export const incrementUsageByDoctorId = internalMutation({
 });
 
 /**
- * Check if doctor has remaining ScrybeGPT quota.
+ * Check if the doctor has enough AI credits for a WhatsApp message (1 credit)
+ * AND hasn't exceeded the per-tier WhatsApp sub-cap.
  */
 export const checkQuotaByDoctorId = internalQuery({
   args: { doctorId: v.id("doctors") },
@@ -911,9 +950,6 @@ export const checkQuotaByDoctorId = internalQuery({
       )
       .first();
 
-    const currentUsage = usage?.scrybegptMessages || 0;
-
-    // Get subscription tier limits
     const subscription = await ctx.db
       .query("subscriptions")
       .withIndex("by_doctorId", (q) => q.eq("doctorId", args.doctorId))
@@ -938,24 +974,53 @@ export const checkQuotaByDoctorId = internalQuery({
       return { allowed: false, reason: "Tier not found", remaining: 0 };
     }
 
-    const limit = tier.limits.scrybegptMessages;
-    if (limit === -1) return { allowed: true, remaining: -1 }; // Unlimited
+    // Essentials: 10-message WhatsApp trial
+    if (tierName === "essentials") {
+      const trialUsed = usage?.whatsappTrialUsed || 0;
+      const trialLimit = tier.limits.whatsappTrial;
+      const trialRemaining = Math.max(0, trialLimit - trialUsed);
+      if (trialRemaining <= 0) {
+        return {
+          allowed: false,
+          reason: `You've used your ${trialLimit} free WhatsApp messages this month. Upgrade to Professional for more.`,
+          remaining: 0,
+        };
+      }
+      return { allowed: true, remaining: trialRemaining };
+    }
 
-    const remaining = Math.max(0, limit - currentUsage);
-    if (remaining <= 0) {
+    // Pro/Complete: enforce WhatsApp sub-cap AND AI credit balance
+    const messagesUsed = usage?.whatsappMessagesUsed || 0;
+    const messageCap = tier.limits.whatsappMessages;
+    const messageRemaining = Math.max(0, messageCap - messagesUsed);
+    if (messageRemaining <= 0) {
       return {
         allowed: false,
-        reason: `Monthly ScrybeGPT limit reached (${limit}). Upgrade for more.`,
+        reason: `Monthly WhatsApp limit reached (${messageCap}). Upgrade for more.`,
         remaining: 0,
       };
     }
 
-    return { allowed: true, remaining };
+    const creditsUsed = usage?.aiCreditsUsed || 0;
+    const packBalance = usage?.packCreditsRemaining || 0;
+    const creditLimit = tier.limits.aiCredits;
+    const creditsAvailable = Math.max(0, creditLimit - creditsUsed) + packBalance;
+    if (creditsAvailable < 1) {
+      return {
+        allowed: false,
+        reason: "Out of AI credits. Buy a credit pack or upgrade your plan.",
+        remaining: 0,
+      };
+    }
+
+    return { allowed: true, remaining: Math.min(messageRemaining, creditsAvailable) };
   },
 });
 
 /**
  * Check if doctor has access to WhatsApp feature based on subscription tier.
+ * All paid tiers can access WhatsApp; Essentials uses a trial counter, the
+ * others deduct from the AI credit pool.
  */
 export const checkFeatureAccess = internalQuery({
   args: { doctorId: v.id("doctors") },
@@ -970,10 +1035,8 @@ export const checkFeatureAccess = internalQuery({
       return { hasAccess: false, reason: "No active subscription" };
     }
 
-    // Determine tier name from multiple sources (matching main app logic)
     let tierName = subscription.tierName || subscription.metadata?.tierName;
 
-    // Fallback: check appUser.plan via doctor's authUserId
     if (!tierName) {
       const doctor = await ctx.db.get(args.doctorId);
       if (doctor?.authUserId) {
@@ -987,10 +1050,11 @@ export const checkFeatureAccess = internalQuery({
       }
     }
 
-    if (!tierName || !["pro", "premium"].includes(tierName.toLowerCase())) {
+    const allowedTiers = ["essentials", "professional", "complete", "institution"];
+    if (!tierName || !allowedTiers.includes(tierName.toLowerCase())) {
       return {
         hasAccess: false,
-        reason: "WhatsApp ScrybeGPT requires a Pro or Premium subscription. Upgrade at pediascrybe.com/pricing",
+        reason: "WhatsApp ScrybeGPT requires an active subscription. Upgrade at pediascrybe.com/pricing",
       };
     }
 
@@ -1017,6 +1081,20 @@ export const getAppointmentForPdf = internalQuery({
       throw new Error("Patient not found or access denied");
     }
 
+    const [prescriptions, labOrders] = await Promise.all([
+      ctx.db
+        .query("prescriptions")
+        .withIndex("by_appointmentId", (q) => q.eq("appointmentId", appt._id))
+        .collect(),
+      ctx.db
+        .query("labOrders")
+        .withIndex("by_appointmentId", (q) => q.eq("appointmentId", appt._id))
+        .collect(),
+    ]);
+
+    const sortedPrescriptions = prescriptions.sort((a, b) => a.createdAt - b.createdAt);
+    const sortedLabOrders = labOrders.sort((a, b) => a.createdAt - b.createdAt);
+
     return {
       appointment: {
         _id: appt._id,
@@ -1024,8 +1102,19 @@ export const getAppointmentForPdf = internalQuery({
         motif: appt.motif,
         findings: appt.findings,
         recommendation: appt.recommendation,
-        medication: appt.medication || [],
-        exams: appt.exams || [],
+        // Translated to legacy shape for the existing PDF generators.
+        medication: sortedPrescriptions.map((p) => ({
+          drug: p.drug,
+          count: p.count,
+          unit: p.unit,
+          posology: p.posology,
+        })),
+        exams: sortedLabOrders.map((o) => ({
+          exam: o.examName,
+          urgency: o.urgency,
+        })),
+        prescriptions: sortedPrescriptions,
+        labOrders: sortedLabOrders,
         weight: appt.weight,
         height: appt.height,
         status: appt.status,
@@ -1228,32 +1317,59 @@ export const executeWriteAction = internalMutation({
       case "diagnostic":
       case "medication":
       case "labExam": {
-        // Clinical proposals are saved to the appointment's medical fields
+        // Clinical proposals get persisted as rows in the standalone tables.
         if (action.appointmentId) {
           const appt = await ctx.db.get(action.appointmentId);
           if (!appt || appt.doctorId !== args.doctorId) throw new Error("Appointment not found");
 
           if (action.action === "medication" && data.medications) {
-            const existingMeds = appt.medication || [];
-            const newMeds = data.medications.map((m: any) => ({
-              drug: m.drug || m.name,
-              count: m.count || 1,
-              unit: m.unit || m.dose || "",
-              posology: m.posology || `${m.frequency || ""} ${m.duration || ""}`.trim(),
-            }));
-            await ctx.db.patch(action.appointmentId, {
-              medication: [...existingMeds, ...newMeds],
+            const insertedIds: Id<"prescriptions">[] = [];
+            for (const m of data.medications) {
+              const id = await ctx.db.insert("prescriptions", {
+                doctorId: args.doctorId,
+                patientId: appt.patientId,
+                appointmentId: action.appointmentId,
+                drug: m.drug || m.name,
+                count: m.count || 1,
+                unit: m.unit || m.dose || "",
+                posology: m.posology || `${m.frequency || ""} ${m.duration || ""}`.trim(),
+                dose: m.dose,
+                route: m.route,
+                status: "active",
+                createdAt: now,
+                updatedAt: now,
+              });
+              insertedIds.push(id);
+            }
+            await ctx.db.patch(args.actionId, {
+              status: "confirmed",
+              resultEntityId: insertedIds[0],
             });
+            return { success: true, message: `${action.action} saved to appointment record.`, entityId: insertedIds[0] };
           }
 
           if (action.action === "labExam" && data.exams) {
-            const existingExams = appt.exams || [];
-            const newExams = data.exams.map((e: any) => ({
-              exam: e.name || e.exam,
-            }));
-            await ctx.db.patch(action.appointmentId, {
-              exams: [...existingExams, ...newExams],
+            const insertedIds: Id<"labOrders">[] = [];
+            for (const e of data.exams) {
+              const id = await ctx.db.insert("labOrders", {
+                doctorId: args.doctorId,
+                patientId: appt.patientId,
+                appointmentId: action.appointmentId,
+                examName: e.name || e.exam,
+                clinicalContext: e.clinicalContext,
+                urgency: e.urgency,
+                status: "ordered",
+                orderedAt: now,
+                createdAt: now,
+                updatedAt: now,
+              });
+              insertedIds.push(id);
+            }
+            await ctx.db.patch(args.actionId, {
+              status: "confirmed",
+              resultEntityId: insertedIds[0],
             });
+            return { success: true, message: `${action.action} saved to appointment record.`, entityId: insertedIds[0] };
           }
 
           if (action.action === "diagnostic" && data.diagnoses) {

@@ -153,28 +153,39 @@ export const getPatientAppointments = query({
       .order("desc")
       .collect();
 
-    // Return appointments without financial data
-    return appointments.map((apt) => ({
-      _id: apt._id,
-      startDate: apt.startDate,
-      endDate: apt.endDate,
-      motif: apt.motif,
-      findings: apt.findings,
-      recommendation: apt.recommendation,
-      otherRemarks: apt.otherRemarks,
-      height: apt.height,
-      weight: apt.weight,
-      head: apt.head,
-      arm: apt.arm,
-      thorax: apt.thorax,
-      sao2: apt.sao2,
-      temperature: apt.temperature,
-      pulse: apt.pulse,
-      respiratory: apt.respiratory,
-      systolic: apt.systolic,
-      diastolic: apt.diastolic,
-      exams: apt.exams,
-      medication: apt.medication,
+    return await Promise.all(appointments.map(async (apt) => {
+      const [prescriptions, labOrders] = await Promise.all([
+        ctx.db
+          .query("prescriptions")
+          .withIndex("by_appointmentId", (q) => q.eq("appointmentId", apt._id))
+          .collect(),
+        ctx.db
+          .query("labOrders")
+          .withIndex("by_appointmentId", (q) => q.eq("appointmentId", apt._id))
+          .collect(),
+      ]);
+      return {
+        _id: apt._id,
+        startDate: apt.startDate,
+        endDate: apt.endDate,
+        motif: apt.motif,
+        findings: apt.findings,
+        recommendation: apt.recommendation,
+        otherRemarks: apt.otherRemarks,
+        height: apt.height,
+        weight: apt.weight,
+        head: apt.head,
+        arm: apt.arm,
+        thorax: apt.thorax,
+        sao2: apt.sao2,
+        temperature: apt.temperature,
+        pulse: apt.pulse,
+        respiratory: apt.respiratory,
+        systolic: apt.systolic,
+        diastolic: apt.diastolic,
+        prescriptions: prescriptions.sort((a, b) => a.createdAt - b.createdAt),
+        labOrders: labOrders.sort((a, b) => a.createdAt - b.createdAt),
+      };
     }));
   },
 });
@@ -227,10 +238,20 @@ export const getAppointmentDetail = query({
       throw new Error("Appointment not found");
     }
 
-    const files = await ctx.db
-      .query("files")
-      .withIndex("by_appointmentId", (q) => q.eq("appointmentId", args.appointmentId))
-      .collect();
+    const [files, prescriptions, labOrders] = await Promise.all([
+      ctx.db
+        .query("files")
+        .withIndex("by_appointmentId", (q) => q.eq("appointmentId", args.appointmentId))
+        .collect(),
+      ctx.db
+        .query("prescriptions")
+        .withIndex("by_appointmentId", (q) => q.eq("appointmentId", args.appointmentId))
+        .collect(),
+      ctx.db
+        .query("labOrders")
+        .withIndex("by_appointmentId", (q) => q.eq("appointmentId", args.appointmentId))
+        .collect(),
+    ]);
 
     // Return without financial data
     return {
@@ -252,8 +273,8 @@ export const getAppointmentDetail = query({
       respiratory: appointment.respiratory,
       systolic: appointment.systolic,
       diastolic: appointment.diastolic,
-      exams: appointment.exams,
-      medication: appointment.medication,
+      prescriptions: prescriptions.sort((a, b) => a.createdAt - b.createdAt),
+      labOrders: labOrders.sort((a, b) => a.createdAt - b.createdAt),
       files,
     };
   },
@@ -384,6 +405,93 @@ export const getPatientDoctor = query({
   },
 });
 
+// Get active medications for a child (across all visits)
+export const getActiveMedications = query({
+  args: { patientId: v.id("patients") },
+  handler: async (ctx, args) => {
+    await verifyPatientAccess(ctx, args.patientId);
+
+    const prescriptions = await ctx.db
+      .query("prescriptions")
+      .withIndex("by_patientId_status", (q) =>
+        q.eq("patientId", args.patientId).eq("status", "active"),
+      )
+      .order("desc")
+      .collect();
+
+    const patient = await ctx.db.get(args.patientId);
+    const doctor = patient ? await ctx.db.get(patient.doctorId) : null;
+    const doctorName = doctor
+      ? `${doctor.title ? doctor.title + " " : ""}${doctor.firstname} ${doctor.lastname}`
+      : "Your doctor";
+
+    return prescriptions.map((rx) => ({
+      _id: rx._id,
+      drug: rx.drug,
+      count: rx.count,
+      unit: rx.unit,
+      posology: rx.posology,
+      dose: rx.dose,
+      route: rx.route,
+      startDate: rx.startDate,
+      endDate: rx.endDate,
+      refillsRemaining: rx.refillsRemaining,
+      notes: rx.notes,
+      appointmentId: rx.appointmentId,
+      doctorName,
+      createdAt: rx.createdAt,
+    }));
+  },
+});
+
+// Get full prescription history for a child
+export const getPrescriptionHistory = query({
+  args: { patientId: v.id("patients") },
+  handler: async (ctx, args) => {
+    await verifyPatientAccess(ctx, args.patientId);
+    return await ctx.db
+      .query("prescriptions")
+      .withIndex("by_patientId", (q) => q.eq("patientId", args.patientId))
+      .order("desc")
+      .collect();
+  },
+});
+
+// Get lab orders + results for a child, split into pending and resulted
+export const getLabsOverview = query({
+  args: { patientId: v.id("patients") },
+  handler: async (ctx, args) => {
+    await verifyPatientAccess(ctx, args.patientId);
+
+    const orders = await ctx.db
+      .query("labOrders")
+      .withIndex("by_patientId", (q) => q.eq("patientId", args.patientId))
+      .order("desc")
+      .collect();
+
+    const ordersWithResults = await Promise.all(
+      orders.map(async (order) => {
+        const results = await ctx.db
+          .query("labResults")
+          .withIndex("by_labOrderId", (q) => q.eq("labOrderId", order._id))
+          .order("desc")
+          .collect();
+        return { ...order, results };
+      }),
+    );
+
+    return {
+      pending: ordersWithResults.filter(
+        (o) => o.status === "ordered" || o.status === "collected",
+      ),
+      resulted: ordersWithResults.filter(
+        (o) => o.status === "resulted" || o.status === "reviewed",
+      ),
+      cancelled: ordersWithResults.filter((o) => o.status === "cancelled"),
+    };
+  },
+});
+
 // Get parent-uploaded files for a patient
 export const getPatientFiles = query({
   args: { patientId: v.id("patients") },
@@ -411,6 +519,8 @@ export const getNotifications = query({
       type: string;
       appointmentId?: Id<"appointments">;
       telehealthAppointmentId?: Id<"telehealthAppointments">;
+      prescriptionId?: Id<"prescriptions">;
+      labOrderId?: Id<"labOrders">;
       message: string;
       isRead: boolean;
       createdAt: number;

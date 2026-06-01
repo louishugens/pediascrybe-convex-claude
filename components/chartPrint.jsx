@@ -46,7 +46,7 @@ function Chart({sex, type, title, ylabel, xlabel, formatted, name}) {
       <div className="flex flex-col justify-center w-full items-center">
         <p className="text-slate-900 text-sm ">{title}</p>
       </div>
-      <ResponsiveContainer>
+      <ResponsiveContainer minWidth={0}>
         <LineChart>
           <XAxis dataKey="category" type="category" allowDuplicatedCategory={false} label={{value: xlabel, position: "insideBottom", offset: -5}} tick={{fontSize: 12}} />
           <YAxis dataKey="value" label={{ value: ylabel, angle: -90, position: 'insideLeft'}} tick={{fontSize: 12}} />

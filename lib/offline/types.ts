@@ -64,6 +64,7 @@ export interface CachedPatient extends CachedDocument {
   email?: string;
   phone?: string;
   birthdate: number;
+  birthWeight?: number;
   sex?: "male" | "female";
   mothername?: string;
   profession?: string;
@@ -103,8 +104,6 @@ export interface CachedAppointment extends CachedDocument {
   respiratory?: number;
   systolic?: number;
   diastolic?: number;
-  exams?: unknown;
-  medication?: unknown;
   internalNotes?: string;
   transactionId?: string;
   transactionDate?: number;
@@ -161,6 +160,60 @@ export interface CachedChart extends CachedDocument {
   p85: unknown;
   p97: unknown;
   height?: unknown;
+}
+
+export interface CachedPrescription extends CachedDocument {
+  _id: string;
+  doctorId: string;
+  patientId: string;
+  appointmentId?: string;
+  drug: string;
+  count: number;
+  unit: string;
+  posology: string;
+  dose?: string;
+  route?: string;
+  startDate?: number;
+  endDate?: number;
+  refillsRemaining?: number;
+  status: "active" | "completed" | "discontinued" | "cancelled";
+  discontinuedReason?: string;
+  renewedFromId?: string;
+  notes?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface CachedLabOrder extends CachedDocument {
+  _id: string;
+  doctorId: string;
+  patientId: string;
+  appointmentId?: string;
+  examName: string;
+  clinicalContext?: string;
+  urgency?: "routine" | "urgent" | "stat";
+  status: "ordered" | "collected" | "resulted" | "reviewed" | "cancelled";
+  orderedAt?: number;
+  collectedAt?: number;
+  resultedAt?: number;
+  reviewedAt?: number;
+  notes?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface CachedLabResult extends CachedDocument {
+  _id: string;
+  labOrderId: string;
+  patientId: string;
+  value: string;
+  unit?: string;
+  referenceRange?: string;
+  abnormalFlag?: "normal" | "low" | "high" | "critical";
+  fileId?: string;
+  enteredBy: "doctor" | "lab_import" | "portal_upload";
+  enteredAt: number;
+  notes?: string;
 }
 
 export interface CachedFile extends CachedDocument {

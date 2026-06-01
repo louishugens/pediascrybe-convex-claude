@@ -169,10 +169,9 @@ export const processMessage = internalAction({
             : undefined,
       });
 
-      // 12. Increment usage
+      // 12. Deduct WhatsApp cost (1 credit + whatsappMessagesUsed sub-cap)
       await ctx.runMutation(internal.whatsappData.incrementUsageByDoctorId, {
         doctorId,
-        field: "scrybegptMessages",
       });
     } catch (error: any) {
       console.error("[WhatsApp Agent] Error processing message:", error);

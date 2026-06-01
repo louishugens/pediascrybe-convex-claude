@@ -3,6 +3,7 @@ import GenderDistributionContainer from "@/components/dashboard/charts/GenderDis
 import ImmunizationStatusContainer from "@/components/dashboard/charts/ImmunizationStatusContainer";
 import CommonConditionsContainer from "@/components/dashboard/charts/CommonConditionsContainer";
 import DailyRevenueContainer from "@/components/dashboard/charts/DailyRevenueContainer";
+import { DashboardChartGate } from "@/components/dashboard/dashboard-chart-gate";
 import Greeter from "@/components/greeter";
 import TotalPatientStat from "@/components/dashboard/stats/totalPatientStat";
 import TotalRecordStat from "@/components/dashboard/stats/totalRecordStat";
@@ -10,6 +11,7 @@ import RecentRecordStat from "@/components/dashboard/stats/recentRecordStat";
 import TodayRevenueStat from "@/components/dashboard/stats/todayRevenueStat";
 import MonthlyRevenueStat from "@/components/dashboard/stats/monthlyRevenueStat";
 import TodayPatientsStat from "@/components/dashboard/stats/todayPatientsStat";
+import LabAttentionStat from "@/components/dashboard/stats/labAttentionStat";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Receipt } from "lucide-react";
@@ -32,7 +34,9 @@ export default async function Page() {
       </div> 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <TodayRevenueStat />
-        <MonthlyRevenueStat />
+        <DashboardChartGate required="standard" title="Monthly revenue">
+          <MonthlyRevenueStat />
+        </DashboardChartGate>
         <TodayPatientsStat />
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4">
@@ -41,13 +45,22 @@ export default async function Page() {
         <RecentRecordStat />
       </div>
       <div className="mt-4">
+        <LabAttentionStat />
+      </div>
+      <div className="mt-4">
         <DailyRevenueContainer />
       </div>
       <div className="grid gap-4 grid-cols-1 lg:grid-cols-2 mt-4">
         <AgeDistributionContainer />
-        <GenderDistributionContainer />
-        <ImmunizationStatusContainer />
-        <CommonConditionsContainer />
+        <DashboardChartGate required="standard" title="Gender distribution">
+          <GenderDistributionContainer />
+        </DashboardChartGate>
+        <DashboardChartGate required="standard" title="Immunization status">
+          <ImmunizationStatusContainer />
+        </DashboardChartGate>
+        <DashboardChartGate required="full" title="Common conditions">
+          <CommonConditionsContainer />
+        </DashboardChartGate>
       </div>
     </div>
   );

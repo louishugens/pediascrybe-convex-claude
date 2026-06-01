@@ -49,25 +49,25 @@ const REASON_CONFIG: Record<UpgradeReason, {
     icon: <Lock className="w-6 h-6" />,
     title: 'Feature Locked',
     description: (featureName) => `${featureName || 'This feature'} is not available on your current plan. Upgrade to unlock it.`,
-    recommendedTier: 'pro',
+    recommendedTier: 'professional',
   },
   patient_limit: {
     icon: <AlertTriangle className="w-6 h-6" />,
     title: 'Patient Limit Reached',
     description: (_, currentCount, limit) => `You've reached your limit of ${limit} active patients. Upgrade to add more patients to your practice.`,
-    recommendedTier: 'pro',
+    recommendedTier: 'professional',
   },
   ai_query_limit: {
     icon: <TrendingUp className="w-6 h-6" />,
     title: 'AI Query Limit Reached',
     description: (_, currentCount, limit) => `You've used all ${limit} AI queries for this month. Upgrade for more queries or wait until next month.`,
-    recommendedTier: 'pro',
+    recommendedTier: 'professional',
   },
   document_limit: {
     icon: <TrendingUp className="w-6 h-6" />,
     title: 'Document Limit Reached',
     description: (_, currentCount, limit) => `You've reached your monthly document generation limit of ${limit}. Upgrade for more capacity.`,
-    recommendedTier: 'pro',
+    recommendedTier: 'professional',
   },
 };
 
@@ -87,11 +87,13 @@ export function UpgradeModal({
 
   const getTierIcon = (tierName: string) => {
     switch (tierName) {
-      case 'starter':
+      case 'essentials':
         return <Zap className="w-5 h-5" />;
-      case 'pro':
+      case 'professional':
         return <Sparkles className="w-5 h-5" />;
-      case 'premium':
+      case 'complete':
+        return <Crown className="w-5 h-5" />;
+      case 'institution':
         return <Crown className="w-5 h-5" />;
       default:
         return <Zap className="w-5 h-5" />;
@@ -100,20 +102,23 @@ export function UpgradeModal({
 
   const getTierColor = (tierName: string) => {
     switch (tierName) {
-      case 'starter':
+      case 'essentials':
         return 'bg-blue-100 text-blue-600 border-blue-200';
-      case 'pro':
+      case 'professional':
         return 'bg-primary/10 text-primary border-primary/20';
-      case 'premium':
+      case 'complete':
         return 'bg-amber-100 text-amber-600 border-amber-200';
+      case 'institution':
+        return 'bg-purple-100 text-purple-600 border-purple-200';
       default:
         return 'bg-muted text-muted-foreground border-muted';
     }
   };
 
-  // Filter tiers that are higher than current
+  // Filter tiers that are higher than current (exclude institution — contact sales only)
   const availableUpgrades = tiers?.filter((tier) => {
-    const tierOrder = ['free', 'starter', 'pro', 'premium'];
+    if (tier.name === 'institution') return false;
+    const tierOrder = ['free', 'essentials', 'professional', 'complete'];
     return tierOrder.indexOf(tier.name) > tierOrder.indexOf(currentTierName);
   }) || [];
 
@@ -168,11 +173,11 @@ export function UpgradeModal({
                         <p className="text-sm text-muted-foreground">{tier.description}</p>
                         <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
                           <span>
-                            {tier.limits.patientCount === -1 ? 'Unlimited' : tier.limits.patientCount} patients
+                            {tier.limits.patientCount.toLocaleString()} patients
                           </span>
                           <span>•</span>
                           <span>
-                            {tier.limits.scrybegptMessages === -1 ? 'Unlimited' : tier.limits.scrybegptMessages} ScrybeGPT/mo
+                            {(tier.limits as any).aiCredits} AI credits/mo
                           </span>
                         </div>
                       </div>

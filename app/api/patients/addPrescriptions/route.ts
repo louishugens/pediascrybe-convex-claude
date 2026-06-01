@@ -14,11 +14,28 @@ export async function POST(req: Request) {
       );
     }
 
-    const { medication, appointmentId } = await req.json();
+    const { prescriptions, appointmentId, patientId } = await req.json();
+
+    if (!appointmentId) {
+      if (!patientId) {
+        return new Response(
+          JSON.stringify({ error: { statusCode: 400, message: 'patientId required when appointmentId is omitted' } }),
+          { status: 400, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+      const result = await fetchAuthMutation(api.appointments.createPrescriptionsForPatient, {
+        patientId,
+        items: prescriptions,
+      });
+      return new Response(JSON.stringify(result), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
 
     const appointment = await fetchAuthMutation(api.appointments.updateAppointment, {
       appointmentId,
-      medication,
+      prescriptions,
     });
 
     if (appointment) {

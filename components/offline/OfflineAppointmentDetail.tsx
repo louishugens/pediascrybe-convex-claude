@@ -13,19 +13,10 @@ import type {
   CachedPatient,
   CachedService,
   CachedFile,
+  CachedPrescription,
+  CachedLabOrder,
 } from '@/lib/offline/types'
 import AppointmentPageSkeleton from '@/components/appointment-page-skeleton'
-
-interface Medication {
-  drug: string
-  posology: string
-  count: number
-  unit: string
-}
-
-interface Exam {
-  exam: string
-}
 
 interface OfflineAppointmentDetailProps {
   patientId: string
@@ -42,12 +33,14 @@ export function OfflineAppointmentDetail({
   const [patient, setPatient] = useState<CachedPatient | null>(null)
   const [service, setService] = useState<CachedService | null>(null)
   const [files, setFiles] = useState<CachedFile[]>([])
+  const [prescriptions, setPrescriptions] = useState<CachedPrescription[]>([])
+  const [labOrders, setLabOrders] = useState<CachedLabOrder[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [apt, pat, cachedFiles] = await Promise.all([
+        const [apt, pat, cachedFiles, cachedRx, cachedLabs] = await Promise.all([
           offlineDb.appointments.get(appointmentId),
           offlineDb.patients.get(patientId),
           offlineDb.files
@@ -55,11 +48,23 @@ export function OfflineAppointmentDetail({
             .equals(appointmentId)
             .toArray()
             .catch(() => [] as CachedFile[]),
+          offlineDb.prescriptions
+            .where('appointmentId')
+            .equals(appointmentId)
+            .toArray()
+            .catch(() => [] as CachedPrescription[]),
+          offlineDb.labOrders
+            .where('appointmentId')
+            .equals(appointmentId)
+            .toArray()
+            .catch(() => [] as CachedLabOrder[]),
         ])
 
         setAppointment(apt ?? null)
         setPatient(pat ?? null)
         setFiles(cachedFiles)
+        setPrescriptions(cachedRx.sort((a, b) => a.createdAt - b.createdAt))
+        setLabOrders(cachedLabs.sort((a, b) => a.createdAt - b.createdAt))
 
         // Look up service if the appointment has a serviceId
         if (apt?.serviceId) {
@@ -85,8 +90,8 @@ export function OfflineAppointmentDetail({
     )
   }
 
-  const medications = appointment.medication as unknown as Medication[] | undefined
-  const exams = appointment.exams as unknown as Exam[] | undefined
+  const medications = prescriptions
+  const exams = labOrders
 
   return (
     <div className="py-4">
@@ -248,7 +253,7 @@ export function OfflineAppointmentDetail({
             <p className="font-semibold mb-2">Lab exams</p>
             <ul className="w-full h-40 bg-slate-100 border border-slate-200 rounded-md p-2 mt-1 overflow-scroll">
               {exams?.map((exam, index) => (
-                <li key={index}>-{exam.exam}</li>
+                <li key={index}>-{exam.examName}</li>
               ))}
             </ul>
             <div className="mt-1 flex flex-row justify-between">

@@ -6,7 +6,8 @@ import {
   hashInputs,
   handleAIError,
 } from '@/lib/ai';
-import { isAuthenticated } from '@/lib/auth-server';
+import { isAuthenticated, fetchAuthMutation } from '@/lib/auth-server';
+import { api } from '@/convex/_generated/api';
 
 // Define the element schema for the conditions array
 const conditionElementSchema = z.object({
@@ -28,10 +29,20 @@ export async function POST(req: Request) {
     // Generate cache key from diagnoses
     const cacheKey = `conditions:${hashInputs({ diagnoses })}`;
 
-    // Use cached result or generate new one
+    // Use cached result or generate new one — credits deducted only on cache miss
     const conditions = await getCachedOrGenerate(
       cacheKey,
       async () => {
+        // Deduct 1 AI credit BEFORE calling the model (cache hits skip this callback)
+        try {
+          await fetchAuthMutation(api.usage.deductAICredits, { feature: "classify" });
+        } catch (err: any) {
+          if (err?.message?.includes("NO_CREDITS")) {
+            throw new Error("NO_CREDITS");
+          }
+          throw err;
+        }
+
         // Get fast tier model with fallbacks
         const { model, providerOptions } = getModelWithFallbacks('fast');
 
@@ -55,7 +66,13 @@ export async function POST(req: Request) {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.message === "NO_CREDITS" || error?.message?.includes("NO_CREDITS")) {
+      return new Response(
+        JSON.stringify({ error: { statusCode: 402, message: "Out of AI credits. Buy a credit pack or upgrade your plan." } }),
+        { status: 402, headers: { "Content-Type": "application/json" } }
+      );
+    }
     console.error('Error classifying conditions:', error);
     return handleAIError(error);
   }

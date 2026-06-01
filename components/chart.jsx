@@ -90,7 +90,7 @@ function Chart({patient, type, title, ylabel, xlabel, formatted, name}) {
         </Link>
       </div>
       {/* <div className="pb"> */}
-      <ResponsiveContainer height={500} >
+      <ResponsiveContainer height={500} minWidth={0}>
         <LineChart width={900} height={500}>
           <XAxis dataKey="category" type="category" height={55} allowDuplicatedCategory={false} label={{value: xlabel, position: "insideBottom"}} tick={{fontSize: 12}} />
           <YAxis dataKey="value" label={{ value: ylabel, angle: -90, position: 'insideLeft'}} tick={{fontSize: 12}} />

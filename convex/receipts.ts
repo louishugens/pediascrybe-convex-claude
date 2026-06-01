@@ -1,6 +1,27 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, MutationCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { verifyDoctorOwnsPatient, verifyDoctorOwnsAppointment } from "./authHelpers";
+import { Id } from "./_generated/dataModel";
+
+// Essentials tier can only view/print receipts — not manually create or edit.
+// Receipts still flow in automatically via appointment sync. Other tiers pass.
+async function assertCanManageReceipts(ctx: MutationCtx, patientId: Id<"patients">) {
+  const patient = await ctx.db.get(patientId);
+  if (!patient) return;
+
+  const subscription = await ctx.db
+    .query("subscriptions")
+    .withIndex("by_doctorId", (q) => q.eq("doctorId", patient.doctorId))
+    .order("desc")
+    .first();
+
+  const tierName = subscription?.tierName || subscription?.metadata?.tierName;
+  if (tierName === "essentials") {
+    throw new Error(
+      "RECEIPT_TIER_LOCKED:Manual receipt management is available on Professional and above. Upgrade to create or edit receipts.",
+    );
+  }
+}
 
 // Get all receipts for a patient
 export const listByPatient = query({
@@ -44,6 +65,7 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     await verifyDoctorOwnsPatient(ctx, args.patientId);
+    await assertCanManageReceipts(ctx, args.patientId);
     return await ctx.db.insert("receipts", {
       ...args,
       createdAt: Date.now(),
@@ -71,6 +93,7 @@ export const update = mutation({
     const receipt = await ctx.db.get(args.receiptId);
     if (!receipt) throw new Error("Receipt not found");
     await verifyDoctorOwnsPatient(ctx, receipt.patientId);
+    await assertCanManageReceipts(ctx, receipt.patientId);
 
     const filteredUpdates = Object.fromEntries(
       Object.entries(updates).filter(([_, v]) => v !== undefined)
@@ -87,6 +110,7 @@ export const remove = mutation({
     const receipt = await ctx.db.get(args.receiptId);
     if (!receipt) throw new Error("Receipt not found");
     await verifyDoctorOwnsPatient(ctx, receipt.patientId);
+    await assertCanManageReceipts(ctx, receipt.patientId);
     await ctx.db.delete(args.receiptId);
   },
 });

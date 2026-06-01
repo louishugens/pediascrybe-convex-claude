@@ -5,7 +5,14 @@ import { Printer } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface PrescriptionPrintViewProps {
-  medication: any
+  prescriptions: Array<{
+    drug: string
+    count?: number
+    unit?: string
+    posology?: string
+    dose?: string
+    route?: string
+  }>
   patientName: string
   doctorName: string
   doctorSpec?: string
@@ -15,7 +22,7 @@ interface PrescriptionPrintViewProps {
 }
 
 export function PrescriptionPrintView({
-  medication,
+  prescriptions,
   patientName,
   doctorName,
   doctorSpec,
@@ -23,18 +30,13 @@ export function PrescriptionPrintView({
   doctorAddress,
   date,
 }: PrescriptionPrintViewProps) {
-  if (!medication) return null
+  if (!prescriptions || prescriptions.length === 0) return null
 
   const handlePrint = () => {
     window.print()
   }
 
-  // Parse medication (could be string or array of objects)
-  const medications = typeof medication === "string"
-    ? [{ name: medication }]
-    : Array.isArray(medication)
-      ? medication
-      : [medication]
+  const medications = prescriptions
 
   return (
     <div>
@@ -71,13 +73,15 @@ export function PrescriptionPrintView({
         <div className="space-y-3">
           <h4 className="font-semibold text-primary">Rx</h4>
           <div className="space-y-3">
-            {medications.map((med: any, index: number) => (
+            {medications.map((med, index) => (
               <div key={index} className="pl-4 border-l-2 border-primary/30 space-y-0.5">
-                <p className="font-medium">{med.name || med.medication || String(med)}</p>
-                {med.dosage && <p className="text-sm text-muted-foreground">Dosage: {med.dosage}</p>}
-                {med.frequency && <p className="text-sm text-muted-foreground">Frequency: {med.frequency}</p>}
-                {med.duration && <p className="text-sm text-muted-foreground">Duration: {med.duration}</p>}
-                {med.instructions && <p className="text-sm text-muted-foreground">Instructions: {med.instructions}</p>}
+                <p className="font-medium">
+                  {med.drug}
+                  {med.count ? `, ${med.count} ${med.unit ?? "flacon"}` : ""}
+                </p>
+                {med.dose && <p className="text-sm text-muted-foreground">Dose: {med.dose}</p>}
+                {med.route && <p className="text-sm text-muted-foreground">Route: {med.route}</p>}
+                {med.posology && <p className="text-sm text-muted-foreground">{med.posology}</p>}
               </div>
             ))}
           </div>

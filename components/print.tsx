@@ -55,16 +55,16 @@ const Print = ({appointment, doctor, patient, exams, backUrl}: {appointment: any
             <div className="grow">
               <div className="my-8">
                 {
-                  exams 
-                  ? 
-                    appointment.exams?.map((exam, index) =>(
-                      <p key={index} className="font-bold">-{exam.exam}</p>
+                  exams
+                  ?
+                    appointment.labOrders?.map((order, index) =>(
+                      <p key={index} className="font-bold">-{order.examName}</p>
                     ))
-                  : 
-                    appointment.medication?.map((medication, index) =>(
+                  :
+                    appointment.prescriptions?.map((rx, index) =>(
                       <div key={index}>
-                        <p className="font-bold">-{medication.drug}, <span className="italic font-normal">{medication.count} {medication.unit ? medication.unit : 'flacon'}</span></p>
-                        <p>{medication.posology}</p>
+                        <p className="font-bold">-{rx.drug}, <span className="italic font-normal">{rx.count} {rx.unit ? rx.unit : 'flacon'}</span></p>
+                        <p>{rx.posology}</p>
                       </div>
                     ))
                 }

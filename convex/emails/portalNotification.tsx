@@ -17,7 +17,14 @@ interface PortalNotificationProps {
   parentName?: string;
   childName: string;
   doctorName: string;
-  notificationType: "new_prescription" | "new_lab_exam" | "appointment_summary" | "new_vaccine_record" | "new_report";
+  notificationType:
+    | "new_prescription"
+    | "new_lab_exam"
+    | "appointment_summary"
+    | "new_vaccine_record"
+    | "new_report"
+    | "prescription_discontinued"
+    | "lab_result_available";
   message: string;
   portalUrl: string;
 }
@@ -47,6 +54,16 @@ const NOTIFICATION_CONFIG = {
     subject: "New Report Available",
     previewText: "A new report has been created",
     heading: "New Report",
+  },
+  prescription_discontinued: {
+    subject: "Medication Discontinued",
+    previewText: "A medication has been discontinued",
+    heading: "Medication Discontinued",
+  },
+  lab_result_available: {
+    subject: "Lab Results Available",
+    previewText: "New lab results are available",
+    heading: "Lab Results Available",
   },
 };
 

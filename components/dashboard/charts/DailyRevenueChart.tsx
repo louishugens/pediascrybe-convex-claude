@@ -91,7 +91,7 @@ export function DailyRevenueChart({ data }: DailyRevenueChartProps) {
       </CardHeader>
       <CardContent>
         {hasData ? (
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={300} minWidth={0}>
             <LineChart data={formattedData}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis 

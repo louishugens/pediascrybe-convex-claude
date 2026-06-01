@@ -195,15 +195,42 @@ export const syncSubscription = internalMutation({
       .withIndex("by_stripeId", (q) => q.eq("stripeId", args.stripePriceId))
       .first();
 
-    // If no price, try to create one from subscription tier
-    if (!price && args.stripePriceId) {
+    // Resolve tier from price ID (checks both monthly and annual indexes) and
+    // determine the billing interval from the tier row.
+    let resolvedTierName: string | null = null;
+    let billingInterval: "month" | "year" | undefined;
+    if (args.stripePriceId) {
+      const monthlyMatch = await ctx.db
+        .query("subscriptionTiers")
+        .withIndex("by_stripeMonthlyPriceId", (q) =>
+          q.eq("stripeMonthlyPriceId", args.stripePriceId)
+        )
+        .first();
+      if (monthlyMatch) {
+        resolvedTierName = monthlyMatch.name;
+        billingInterval = "month";
+      } else {
+        const annualMatch = await ctx.db
+          .query("subscriptionTiers")
+          .withIndex("by_stripeAnnualPriceId", (q) =>
+            q.eq("stripeAnnualPriceId", args.stripePriceId)
+          )
+          .first();
+        if (annualMatch) {
+          resolvedTierName = annualMatch.name;
+          billingInterval = "year";
+        }
+      }
+    }
+
+    // If no price row exists yet, create one from the tier
+    if (!price && args.stripePriceId && resolvedTierName) {
       const tier = await ctx.db
         .query("subscriptionTiers")
-        .withIndex("by_stripePriceId", (q) => q.eq("stripePriceId", args.stripePriceId))
+        .withIndex("by_name", (q) => q.eq("name", resolvedTierName!))
         .first();
 
       if (tier) {
-        // Find or create product
         let product = await ctx.db
           .query("products")
           .filter((q) => q.eq(q.field("name"), tier.displayName))
@@ -221,13 +248,14 @@ export const syncSubscription = internalMutation({
         }
 
         if (product) {
+          const isAnnual = tier.stripeAnnualPriceId === args.stripePriceId;
           const priceId = await ctx.db.insert("prices", {
             stripeId: args.stripePriceId,
             productId: product._id,
             active: true,
             currency: "usd",
-            unitAmount: tier.priceAmountCents,
-            interval: "month",
+            unitAmount: isAnnual ? tier.annualPriceAmountCents : tier.priceAmountCents,
+            interval: isAnnual ? "year" : "month",
             intervalCount: 1,
           });
           price = await ctx.db.get(priceId);
@@ -235,18 +263,7 @@ export const syncSubscription = internalMutation({
       }
     }
 
-    // ALWAYS look up tier from price ID first (handles upgrades/downgrades correctly)
-    let resolvedTierName: string | null = null;
-    if (args.stripePriceId) {
-      const tier = await ctx.db
-        .query("subscriptionTiers")
-        .withIndex("by_stripePriceId", (q) => q.eq("stripePriceId", args.stripePriceId))
-        .first();
-      resolvedTierName = tier?.name || null;
-    }
-    
     // Do NOT fall back to metadata tierName — it can be spoofed via webhook forgery.
-    // If price lookup fails, log a warning but leave tierName null (will use "starter" default).
     if (!resolvedTierName && args.stripePriceId) {
       console.error("[syncSubscription] Price ID not found in subscriptionTiers");
     }
@@ -268,6 +285,7 @@ export const syncSubscription = internalMutation({
       status: args.status as "trialing" | "active" | "canceled" | "incomplete" | "incomplete_expired" | "past_due" | "unpaid" | "paused",
       quantity: args.quantity,
       cancelAtPeriodEnd: args.cancelAtPeriodEnd,
+      billingInterval,
       metadata: resolvedTierName ? { tierName: resolvedTierName } : undefined,
       created: args.created,
       currentPeriodStart: args.currentPeriodStart,
@@ -287,9 +305,11 @@ export const syncSubscription = internalMutation({
       console.log("Created subscription:", newId);
     }
 
-    // Update app user's plan
-    const planName = resolvedTierName || "starter";
-    await ctx.db.patch(appUser._id, { plan: planName });
+    // Update app user's plan. If tier can't be resolved, leave plan unchanged
+    // rather than defaulting to a specific tier name.
+    if (resolvedTierName) {
+      await ctx.db.patch(appUser._id, { plan: resolvedTierName });
+    }
   },
 });
 

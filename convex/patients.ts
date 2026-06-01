@@ -93,21 +93,39 @@ export const getById = query({
   },
 });
 
-// Get patient with appointments
+// Get patient with appointments (each enriched with its prescriptions and lab orders)
 export const getWithAppointments = query({
   args: { patientId: v.id("patients") },
   handler: async (ctx, args) => {
     await verifyDoctorOwnsPatient(ctx, args.patientId);
     const patient = await ctx.db.get(args.patientId);
     if (!patient) return null;
-    
+
     const appointments = await ctx.db
       .query("appointments")
       .withIndex("by_patientId_startDate", (q) => q.eq("patientId", args.patientId))
       .order("desc")
       .take(10);
-    
-    return { ...patient, appointments };
+
+    const enriched = await Promise.all(appointments.map(async (apt) => {
+      const [prescriptions, labOrders] = await Promise.all([
+        ctx.db
+          .query("prescriptions")
+          .withIndex("by_appointmentId", (q) => q.eq("appointmentId", apt._id))
+          .collect(),
+        ctx.db
+          .query("labOrders")
+          .withIndex("by_appointmentId", (q) => q.eq("appointmentId", apt._id))
+          .collect(),
+      ]);
+      return {
+        ...apt,
+        prescriptions: prescriptions.sort((a, b) => a.createdAt - b.createdAt),
+        labOrders: labOrders.sort((a, b) => a.createdAt - b.createdAt),
+      };
+    }));
+
+    return { ...patient, appointments: enriched };
   },
 });
 
@@ -132,6 +150,7 @@ export const create = mutation({
     firstname: v.string(),
     lastname: v.string(),
     birthdate: v.number(),
+    birthWeight: v.optional(v.number()),
     email: v.optional(v.string()),
     phone: v.optional(v.string()),
     sex: v.optional(v.union(v.literal("male"), v.literal("female"))),
@@ -191,8 +210,7 @@ export const create = mutation({
       }
     }
 
-    // Check limit (-1 means unlimited)
-    if (patientLimit !== -1 && currentCount >= patientLimit) {
+    if (currentCount >= patientLimit) {
       throw new Error(
         `Patient limit reached (${patientLimit}). Please upgrade your subscription to add more patients.`
       );
@@ -215,6 +233,7 @@ export const update = mutation({
     firstname: v.optional(v.string()),
     lastname: v.optional(v.string()),
     birthdate: v.optional(v.number()),
+    birthWeight: v.optional(v.number()),
     email: v.optional(v.string()),
     phone: v.optional(v.string()),
     sex: v.optional(v.union(v.literal("male"), v.literal("female"))),

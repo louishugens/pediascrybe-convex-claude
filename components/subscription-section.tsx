@@ -29,6 +29,7 @@ export function SubscriptionSection() {
   const subscriptionDetails = useQuery(api.subscriptions.getCurrentSubscriptionDetails);
   const usageWithLimits = useQuery(api.usage.getUsageWithLimits);
   const stripeCustomerId = useQuery(api.stripe.getStripeCustomerId);
+  const tiers = useQuery(api.stripe.getSubscriptionTiers);
   const createPortalSession = useAction(api.stripe.createPortalSession);
 
   const handleManageSubscription = async () => {
@@ -53,11 +54,13 @@ export function SubscriptionSection() {
 
   const getTierIcon = (tierName: string) => {
     switch (tierName) {
-      case 'starter':
+      case 'essentials':
         return <Zap className="w-5 h-5" />;
-      case 'pro':
+      case 'professional':
         return <Sparkles className="w-5 h-5" />;
-      case 'premium':
+      case 'complete':
+        return <Crown className="w-5 h-5" />;
+      case 'institution':
         return <Crown className="w-5 h-5" />;
       default:
         return <Zap className="w-5 h-5" />;
@@ -66,12 +69,14 @@ export function SubscriptionSection() {
 
   const getTierColor = (tierName: string) => {
     switch (tierName) {
-      case 'starter':
+      case 'essentials':
         return 'bg-blue-100 text-blue-600';
-      case 'pro':
+      case 'professional':
         return 'bg-violet-100 text-violet-600';
-      case 'premium':
+      case 'complete':
         return 'bg-amber-100 text-amber-600';
+      case 'institution':
+        return 'bg-purple-100 text-purple-600';
       default:
         return 'bg-slate-100 text-slate-600';
     }
@@ -147,22 +152,30 @@ export function SubscriptionSection() {
                   </Link>
                 </Button>
               </div>
-              {/* Plan highlights */}
-              <div className="mt-4 pt-4 border-t grid grid-cols-3 gap-2 text-center">
-                <div className="p-2 rounded bg-blue-50">
-                  <p className="text-sm font-bold text-blue-600">$29</p>
-                  <p className="text-xs text-slate-500">Starter</p>
-                </div>
-                <div className="p-2 rounded bg-violet-50 ring-1 ring-violet-200">
-                  <p className="text-sm font-bold text-violet-600">$49</p>
-                  <p className="text-xs text-slate-500">Pro</p>
-                </div>
-                <div className="p-2 rounded bg-amber-50">
-                  <p className="text-sm font-bold text-amber-600">$99</p>
-                  <p className="text-xs text-slate-500">Premium</p>
-                </div>
-              </div>
-              <p className="text-xs text-slate-400 mt-2 text-center">7-day free trial on all plans</p>
+              {/* Plan highlights — pulled from subscriptionTiers */}
+              {tiers && tiers.filter(t => !t.isCustom).length > 0 && (
+                <>
+                  <div className="mt-4 pt-4 border-t grid grid-cols-3 gap-2 text-center">
+                    {tiers.filter(t => !t.isCustom).map((tier) => {
+                      const colors: Record<string, { bg: string; text: string; ring?: string }> = {
+                        essentials: { bg: 'bg-blue-50', text: 'text-blue-600' },
+                        professional: { bg: 'bg-violet-50', text: 'text-violet-600', ring: 'ring-1 ring-violet-200' },
+                        complete: { bg: 'bg-amber-50', text: 'text-amber-600' },
+                      };
+                      const color = colors[tier.name] || { bg: 'bg-slate-50', text: 'text-slate-600' };
+                      return (
+                        <div key={tier._id} className={`p-2 rounded ${color.bg} ${color.ring || ''}`}>
+                          <p className={`text-sm font-bold ${color.text}`}>
+                            ${Math.round(tier.priceAmountCents / 100)}
+                          </p>
+                          <p className="text-xs text-slate-500">{tier.displayName}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-2 text-center">7-day free trial on all plans</p>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -209,11 +222,11 @@ export function SubscriptionSection() {
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-slate-600">Patients</span>
                   <span className="text-slate-500">
-                    {usageWithLimits.usage.patientCount} / {usageWithLimits.limits.patientCount === -1 ? '∞' : usageWithLimits.limits.patientCount}
+                    {usageWithLimits.usage.patientCount} / {usageWithLimits.limits.patientCount}
                   </span>
                 </div>
-                <Progress 
-                  value={usageWithLimits.limits.patientCount === -1 ? 0 : usageWithLimits.percentUsed.patientCount} 
+                <Progress
+                  value={usageWithLimits.percentUsed.patientCount}
                   className={cn(
                     "h-1.5",
                     usageWithLimits.percentUsed.patientCount >= 90 && "[&>div]:bg-red-500"
@@ -225,43 +238,40 @@ export function SubscriptionSection() {
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-slate-600">Records</span>
                   <span className="text-slate-500">
-                    {usageWithLimits.usage.recordCount} / {usageWithLimits.limits.recordCount === -1 ? '∞' : usageWithLimits.limits.recordCount}
+                    {usageWithLimits.usage.recordCount} / {usageWithLimits.limits.recordCount}
                   </span>
                 </div>
-                <Progress 
-                  value={usageWithLimits.limits.recordCount === -1 ? 0 : usageWithLimits.percentUsed.recordCount} 
+                <Progress
+                  value={usageWithLimits.percentUsed.recordCount}
                   className={cn(
                     "h-1.5",
                     usageWithLimits.percentUsed.recordCount >= 90 && "[&>div]:bg-red-500"
                   )}
                 />
-                {usageWithLimits.percentUsed.recordCount >= 80 && usageWithLimits.limits.recordCount !== -1 && (
-                  <p className="text-xs text-amber-600 flex items-center gap-1 pt-1">
-                    <AlertCircle className="w-3 h-3" />
-                    Approaching usage limits
-                  </p>
-                )}
               </div>
 
-              {/* ScrybeGPT Progress */}
+              {/* AI Credits Progress */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-600">ScrybeGPT Messages</span>
+                  <span className="text-slate-600">AI Credits</span>
                   <span className="text-slate-500">
-                    {usageWithLimits.usage.scrybegptMessages} / {usageWithLimits.limits.scrybegptMessages === -1 ? '∞' : usageWithLimits.limits.scrybegptMessages}
+                    {usageWithLimits.usage.aiCreditsUsed} / {usageWithLimits.limits.aiCredits}
+                    {usageWithLimits.usage.packCreditsRemaining > 0 && (
+                      <span className="ml-1 text-primary">+{usageWithLimits.usage.packCreditsRemaining}</span>
+                    )}
                   </span>
                 </div>
-                <Progress 
-                  value={usageWithLimits.limits.scrybegptMessages === -1 ? 0 : usageWithLimits.percentUsed.scrybegptMessages} 
+                <Progress
+                  value={usageWithLimits.percentUsed.aiCredits}
                   className={cn(
                     "h-1.5",
-                    usageWithLimits.percentUsed.scrybegptMessages >= 90 && "[&>div]:bg-red-500"
+                    usageWithLimits.percentUsed.aiCredits >= 90 && "[&>div]:bg-red-500"
                   )}
                 />
               </div>
 
               {/* Warning if approaching limits */}
-              {(usageWithLimits.percentUsed.patientCount >= 80 || usageWithLimits.percentUsed.scrybegptMessages >= 80) && (
+              {(usageWithLimits.percentUsed.patientCount >= 80 || usageWithLimits.percentUsed.aiCredits >= 80) && (
                 <p className="text-xs text-amber-600 flex items-center gap-1 pt-1">
                   <AlertCircle className="w-3 h-3" />
                   Approaching usage limits
@@ -287,7 +297,7 @@ export function SubscriptionSection() {
               Manage Billing
               <ExternalLink className="w-3 h-3 ml-1" />
             </Button>
-            {subscriptionDetails.tier !== 'premium' && (
+            {subscriptionDetails.tier !== 'complete' && subscriptionDetails.tier !== 'institution' && (
               <Button asChild size="sm" variant="default" className="flex-1">
                 <Link href="/user/pricing">
                   Upgrade

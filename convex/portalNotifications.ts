@@ -12,11 +12,22 @@ async function notifyParents(
     type,
     message,
     appointmentId,
+    prescriptionId,
+    labOrderId,
   }: {
     patientId: Id<"patients">;
-    type: "new_prescription" | "new_lab_exam" | "appointment_summary" | "new_vaccine_record" | "new_report";
+    type:
+      | "new_prescription"
+      | "new_lab_exam"
+      | "appointment_summary"
+      | "new_vaccine_record"
+      | "new_report"
+      | "prescription_discontinued"
+      | "lab_result_available";
     message: string;
     appointmentId?: Id<"appointments">;
+    prescriptionId?: Id<"prescriptions">;
+    labOrderId?: Id<"labOrders">;
   }
 ) {
   const patient = await ctx.db.get(patientId);
@@ -27,6 +38,8 @@ async function notifyParents(
     patientId,
     type,
     appointmentId,
+    prescriptionId,
+    labOrderId,
     message,
     isRead: false,
     createdAt: Date.now(),
@@ -73,7 +86,8 @@ async function notifyParents(
 export const notifyParentOfPrescription = internalMutation({
   args: {
     patientId: v.id("patients"),
-    appointmentId: v.id("appointments"),
+    appointmentId: v.optional(v.id("appointments")),
+    prescriptionId: v.optional(v.id("prescriptions")),
   },
   handler: async (ctx, args) => {
     const patient = await ctx.db.get(args.patientId);
@@ -84,6 +98,30 @@ export const notifyParentOfPrescription = internalMutation({
       type: "new_prescription",
       message: `A new prescription has been added for ${childName}. You can view and print it from the Parent Portal.`,
       appointmentId: args.appointmentId,
+      prescriptionId: args.prescriptionId,
+    });
+  },
+});
+
+// Called when a doctor discontinues a prescription
+export const notifyParentOfPrescriptionDiscontinued = internalMutation({
+  args: {
+    patientId: v.id("patients"),
+    prescriptionId: v.id("prescriptions"),
+  },
+  handler: async (ctx, args) => {
+    const [patient, prescription] = await Promise.all([
+      ctx.db.get(args.patientId),
+      ctx.db.get(args.prescriptionId),
+    ]);
+    const childName = patient ? `${patient.firstname} ${patient.lastname}` : "your child";
+    const drug = prescription?.drug ?? "a medication";
+
+    await notifyParents(ctx, {
+      patientId: args.patientId,
+      type: "prescription_discontinued",
+      message: `${drug} has been discontinued for ${childName}. View the full medication list in the Parent Portal.`,
+      prescriptionId: args.prescriptionId,
     });
   },
 });
@@ -92,7 +130,8 @@ export const notifyParentOfPrescription = internalMutation({
 export const notifyParentOfLabExam = internalMutation({
   args: {
     patientId: v.id("patients"),
-    appointmentId: v.id("appointments"),
+    appointmentId: v.optional(v.id("appointments")),
+    labOrderId: v.optional(v.id("labOrders")),
   },
   handler: async (ctx, args) => {
     const patient = await ctx.db.get(args.patientId);
@@ -103,6 +142,30 @@ export const notifyParentOfLabExam = internalMutation({
       type: "new_lab_exam",
       message: `A new lab exam has been requested for ${childName}. You can view and print the lab request from the Parent Portal.`,
       appointmentId: args.appointmentId,
+      labOrderId: args.labOrderId,
+    });
+  },
+});
+
+// Called when a lab result becomes available
+export const notifyParentOfLabResult = internalMutation({
+  args: {
+    patientId: v.id("patients"),
+    labOrderId: v.id("labOrders"),
+  },
+  handler: async (ctx, args) => {
+    const [patient, labOrder] = await Promise.all([
+      ctx.db.get(args.patientId),
+      ctx.db.get(args.labOrderId),
+    ]);
+    const childName = patient ? `${patient.firstname} ${patient.lastname}` : "your child";
+    const examName = labOrder?.examName ?? "a lab";
+
+    await notifyParents(ctx, {
+      patientId: args.patientId,
+      type: "lab_result_available",
+      message: `Results are available for ${examName} for ${childName}. View them in the Parent Portal.`,
+      labOrderId: args.labOrderId,
     });
   },
 });

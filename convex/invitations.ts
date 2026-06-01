@@ -54,9 +54,9 @@ export const createInvitation = mutation({
       throw new Error("Subscription is not active");
     }
     const tierName = subscription.tierName || subscription.metadata?.tierName || "free";
-    // patient_portal requires Pro or Premium
-    if (!["pro", "premium"].includes(tierName)) {
-      throw new Error("Patient portal requires a Pro or Premium subscription");
+    // patient_portal requires Professional, Complete, or Institution
+    if (!["professional", "complete", "institution"].includes(tierName)) {
+      throw new Error("Patient portal requires a Professional or Complete subscription");
     }
 
     // Check for existing pending invitation for same email + patient

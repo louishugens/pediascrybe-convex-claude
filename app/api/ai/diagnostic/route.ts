@@ -1,6 +1,7 @@
 import { streamText } from 'ai';
 import { checkBotId } from 'botid/server';
-import { isAuthenticated } from '@/lib/auth-server';
+import { isAuthenticated, fetchAuthMutation } from '@/lib/auth-server';
+import { api } from '@/convex/_generated/api';
 import { aiRateLimit, checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import { getModelWithFallbacks, handleAIError } from '@/lib/ai';
 
@@ -27,6 +28,19 @@ export async function POST(req: Request) {
   }
 
   const { prompt }: { prompt: string } = await req.json();
+
+  // Deduct 2 AI credits BEFORE calling the model
+  try {
+    await fetchAuthMutation(api.usage.deductAICredits, { feature: "diagnostic" });
+  } catch (err: any) {
+    if (err?.message?.includes("NO_CREDITS")) {
+      return new Response(
+        JSON.stringify({ error: { statusCode: 402, message: "Out of AI credits. Buy a credit pack or upgrade your plan." } }),
+        { status: 402, headers: { "Content-Type": "application/json" } }
+      );
+    }
+    throw err;
+  }
 
   // Get model with fallbacks and retry middleware
   const { model, providerOptions } = getModelWithFallbacks('balanced');

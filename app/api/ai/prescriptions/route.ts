@@ -5,7 +5,8 @@ import {
   handleAIError,
   hashInputs,
 } from '@/lib/ai';
-import { isAuthenticated } from '@/lib/auth-server';
+import { isAuthenticated, fetchAuthMutation } from '@/lib/auth-server';
+import { api } from '@/convex/_generated/api';
 import { aiRateLimit, checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import { Redis } from '@upstash/redis';
 
@@ -60,6 +61,19 @@ export async function POST(req: Request) {
     }
 
     console.log(`[AI Cache] Miss`);
+
+    // Deduct 2 AI credits (cache hits already returned above — no charge)
+    try {
+      await fetchAuthMutation(api.usage.deductAICredits, { feature: "prescription" });
+    } catch (err: any) {
+      if (err?.message?.includes("NO_CREDITS")) {
+        return new Response(
+          JSON.stringify({ error: { statusCode: 402, message: "Out of AI credits. Buy a credit pack or upgrade your plan." } }),
+          { status: 402, headers: { "Content-Type": "application/json" } }
+        );
+      }
+      throw err;
+    }
 
     const { model, providerOptions } = getModelWithFallbacks('balanced');
 

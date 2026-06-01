@@ -16,7 +16,7 @@ export default async function PatientSidebar({ params }: PatientSidebarProps) {
   const [patient, complianceData] = await Promise.all([
     fetchAuthQuery(api.patients.getPatient, {
       patientId: patientId as Id<"patients">
-    }),
+    }).catch(() => null),
     fetchAuthQuery(api.vaccines.getPatientVaccineCompliance, {
       patientId: patientId as Id<"patients">
     }).catch(() => null),

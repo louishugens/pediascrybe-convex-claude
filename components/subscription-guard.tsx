@@ -30,7 +30,7 @@ interface SubscriptionGuardProps {
  */
 export function SubscriptionGuard({
   feature,
-  requiredTier = 'Pro',
+  requiredTier = 'Professional',
   children,
   fallback,
   showLockedOverlay = true,

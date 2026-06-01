@@ -1,8 +1,9 @@
 'use client'
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Check, X, Sparkles, Zap, Crown, ArrowRight } from 'lucide-react';
+import { Check, X, Sparkles, Zap, Crown, ArrowRight, Building2, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
@@ -11,13 +12,15 @@ import { cn } from '@/lib/utils';
 // Feature display configuration
 const FEATURE_LABELS: Record<string, { label: string; description?: string }> = {
   emr: { label: 'Patient Management (EMR)', description: 'Full electronic medical records' },
-  basic_growth_charts: { label: 'Basic Growth Charts (3 types)', description: 'Weight, height, and BMI charts' },
-  all_growth_charts: { label: 'All WHO Growth Charts (9 types)', description: 'Complete WHO growth standards' },
+  all_growth_charts: { label: 'WHO Growth Charts (All types)', description: 'Complete WHO growth standards' },
   vaccination_management: { label: 'Vaccination Management', description: 'Immunization schedules & tracking' },
-  ai_diagnostic_suggestions: { label: 'AI Diagnostic Suggestions', description: 'Smart differential diagnosis' },
-  ai_prescription_recommendations: { label: 'AI Prescription Recommendations', description: 'Weight-based dosing suggestions' },
-  ai_lab_proposals: { label: 'AI Lab Exam Proposals', description: 'Pediatric-specific lab recommendations' },
-  ai_report_generation: { label: 'AI Report Generation', description: 'Automated clinical documentation' },
+  scrybegpt: { label: 'ScrybeGPT AI Chat', description: 'General pediatric AI assistant' },
+  ai_diagnostic: { label: 'AI Diagnostic Suggestions', description: 'Smart differential diagnosis' },
+  ai_prescription: { label: 'AI Prescription Recommendations', description: 'Weight-based dosing suggestions' },
+  ai_lab_exam: { label: 'AI Lab Exam Proposals', description: 'Pediatric-specific lab recommendations' },
+  ai_report: { label: 'AI Report Generation', description: 'Automated clinical documentation' },
+  patient_specific_ai: { label: 'Patient-Specific AI Chat', description: 'AI with patient context' },
+  whatsapp_scrybegpt: { label: 'WhatsApp AI Assistant', description: 'ScrybeGPT via WhatsApp' },
   billing_receipts: { label: 'Basic Billing & Receipts' },
   multi_currency: { label: 'Multi-Currency Support' },
   basic_templates: { label: 'Basic Document Templates' },
@@ -32,6 +35,7 @@ const FEATURE_LABELS: Record<string, { label: string; description?: string }> = 
   email_support: { label: 'Email Support (48hr response)' },
   email_chat_support: { label: 'Email + Chat Support (24hr response)' },
   priority_support: { label: '24/7 Priority Support + Phone' },
+  staff_accounts: { label: 'Staff Accounts', description: 'Add staff members to your practice' },
 
 };
 
@@ -39,20 +43,23 @@ const FEATURE_LABELS: Record<string, { label: string; description?: string }> = 
 const COMPARISON_FEATURES = [
   // Quotas
   { key: 'patients', label: 'Patient Count' },
-  { key: 'records', label: 'Record Count' },
-  { key: 'scrybegpt', label: 'ScrybeGPT Messages' },
+  { key: 'records', label: 'Monthly Records' },
+  { key: 'ai_credits', label: 'AI Credits / Month' },
+  { key: 'whatsapp', label: 'WhatsApp Messages' },
+  { key: 'storage', label: 'File Storage' },
+  { key: 'services', label: 'Service Catalog' },
   // Core Features
   { key: 'emr', label: 'Patient Management (EMR)' },
-  { key: 'basic_growth_charts', label: 'WHO Growth Charts (Basic - 3 types)' },
   { key: 'all_growth_charts', label: 'WHO Growth Charts (All 9 types)' },
   { key: 'vaccination_management', label: 'Vaccination Management' },
   { key: 'billing_receipts', label: 'Basic Billing & Receipts' },
   { key: 'multi_currency', label: 'Multi-Currency Support' },
-  // AI Features (quota-based)
-  { key: 'ai_diagnostic', label: 'AI Diagnostic Suggestions' },
-  { key: 'ai_prescription', label: 'AI Prescription Recommendations' },
-  { key: 'ai_lab_exam', label: 'AI Lab Exam Proposals' },
-  { key: 'ai_report', label: 'AI Report Generation' },
+  // AI
+  { key: 'ai_diagnostic', label: 'AI Diagnostic / Prescription / Lab (2 credits each)' },
+  { key: 'ai_report', label: 'AI Report Generation (5 credits each)' },
+  // Portal / Telehealth
+  { key: 'patient_portal', label: 'Patient Portal' },
+  { key: 'telehealth', label: 'Telehealth Minutes' },
   // Analytics & Support
   { key: 'analytics', label: 'Analytics Dashboard' },
   { key: 'support', label: 'Priority Support' },
@@ -67,53 +74,83 @@ function formatPrice(cents: number): string {
 export default function PricingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+  const [interval, setInterval] = useState<'month' | 'year'>('month');
+
   const tiers = useQuery(api.stripe.getSubscriptionTiers);
 
   // Check for subscription canceled message
   const subscriptionCanceled = searchParams.get('subscription') === 'canceled';
 
   const handleSelectPlan = (tierName: string) => {
-    router.push(`/signup?plan=${tierName}`);
+    router.push(`/signup?plan=${tierName}&interval=${interval}`);
   };
 
   const getTierIcon = (tierName: string) => {
     switch (tierName) {
-      case 'starter':
+      case 'essentials':
         return <Zap className="w-6 h-6" />;
-      case 'pro':
+      case 'professional':
         return <Sparkles className="w-6 h-6" />;
-      case 'premium':
+      case 'complete':
         return <Crown className="w-6 h-6" />;
+      case 'institution':
+        return <Building2 className="w-6 h-6" />;
       default:
         return <Zap className="w-6 h-6" />;
     }
   };
 
-  const getFeatureValue = (tier: typeof tiers extends (infer T)[] | undefined ? T : never, featureKey: string): string | boolean => {
+  // Resolve displayed price based on selected billing interval
+  const getDisplayPrice = (tier: NonNullable<typeof tiers>[number]) => {
+    if ((tier as any).isCustom) return { label: 'Custom', sub: 'Contact sales' };
+    if (interval === 'year') {
+      const annual = (tier as any).annualPriceAmountCents ?? 0;
+      const perMonth = annual ? Math.round(annual / 12 / 100) : 0;
+      return {
+        label: `$${perMonth}`,
+        sub: `/month · billed annually ($${Math.round(annual / 100)}/yr)`,
+      };
+    }
+    return {
+      label: `$${Math.round(tier.priceAmountCents / 100)}`,
+      sub: '/month',
+    };
+  };
+
+  const getFeatureValue = (
+    tier: NonNullable<typeof tiers>[number],
+    featureKey: string
+  ): string | boolean => {
     if (!tier) return false;
-    
+
     switch (featureKey) {
-      // Quota-based limits
       case 'patients':
-        return tier.limits.patientCount === -1 ? 'Unlimited' : `${tier.limits.patientCount.toLocaleString()}`;
+        return `${tier.limits.patientCount.toLocaleString()}`;
       case 'records':
-        return tier.limits.recordCount === -1 ? 'Unlimited' : `${tier.limits.recordCount.toLocaleString()}`;
-      case 'scrybegpt':
-        return tier.limits.scrybegptMessages === -1 ? 'Unlimited' : `${tier.limits.scrybegptMessages}/mo`;
-      // AI features with quotas
-      case 'ai_prescription':
-        return tier.limits.aiPrescription === -1 ? 'Unlimited' : tier.limits.aiPrescription === 0 ? false : `${tier.limits.aiPrescription}/mo`;
-      case 'ai_lab_exam':
-        return tier.limits.aiLabExam === -1 ? 'Unlimited' : tier.limits.aiLabExam === 0 ? false : `${tier.limits.aiLabExam}/mo`;
+        return `${tier.limits.recordCount.toLocaleString()}/mo`;
+      case 'ai_credits':
+        return `${tier.limits.aiCredits}/mo`;
+      case 'whatsapp': {
+        if (tier.limits.whatsappTrial > 0) return `${tier.limits.whatsappTrial} trial/mo`;
+        if (tier.limits.whatsappMessages > 0) return `${tier.limits.whatsappMessages}/mo`;
+        return false;
+      }
+      case 'storage':
+        return `${(tier.limits.fileStorageMB / 1024).toFixed(1)} GB`;
+      case 'services':
+        return `${tier.limits.services}`;
       case 'ai_diagnostic':
-        return tier.limits.aiDiagnostic === -1 ? 'Unlimited' : tier.limits.aiDiagnostic === 0 ? false : `${tier.limits.aiDiagnostic}/mo`;
       case 'ai_report':
-        return tier.limits.aiReport === -1 ? 'Unlimited' : tier.limits.aiReport === 0 ? false : `${tier.limits.aiReport}/mo`;
-      // Analytics - show tier-specific value
+        return tier.features.includes(featureKey) || tier.limits.aiCredits > 0;
+      case 'patient_portal':
+        return tier.limits.patientPortal;
+      case 'telehealth':
+        return tier.limits.telehealth ? `${tier.limits.telehealthMinutes} min/mo` : false;
       case 'analytics':
-        return tier.features.includes('advanced_analytics') ? 'Advanced' : 'Basic';
-      // Support - show tier-specific value
+        if (tier.features.includes('advanced_analytics')) return 'Advanced';
+        if (tier.limits.dashboardTier === 'full') return 'Full';
+        if (tier.limits.dashboardTier === 'standard') return 'Standard';
+        return 'Basic';
       case 'support':
         if (tier.features.includes('priority_support')) return '24/7 + Phone';
         if (tier.features.includes('email_chat_support')) return 'Email + Chat';
@@ -130,6 +167,9 @@ export default function PricingPage() {
       </div>
     );
   }
+
+  // Hide institution tier for now (isCustom)
+  const activeTiers = tiers.filter(t => !t.isCustom);
 
   return (
     <div className="min-h-screen bg-background">
@@ -149,7 +189,7 @@ export default function PricingPage() {
             </div>
           )}
 
-          <div className="text-center max-w-3xl mx-auto mb-12">
+          <div className="text-center max-w-3xl mx-auto mb-8">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
               Simple, transparent pricing
             </h1>
@@ -158,9 +198,43 @@ export default function PricingPage() {
             </p>
           </div>
 
+          {/* Billing interval toggle */}
+          <div className="flex items-center justify-center mb-10">
+            <div className="inline-flex items-center rounded-full border bg-white p-1 shadow-sm">
+              <button
+                onClick={() => setInterval('month')}
+                className={cn(
+                  'px-4 py-1.5 text-sm font-medium rounded-full transition-all',
+                  interval === 'month'
+                    ? 'bg-primary text-white shadow'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setInterval('year')}
+                className={cn(
+                  'px-4 py-1.5 text-sm font-medium rounded-full transition-all',
+                  interval === 'year'
+                    ? 'bg-primary text-white shadow'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                Annual
+                <span className={cn(
+                  "ml-1.5 text-[10px] font-semibold uppercase tracking-wide",
+                  interval === 'year' ? 'text-amber-300' : 'text-amber-600'
+                )}>
+                  Save 17%
+                </span>
+              </button>
+            </div>
+          </div>
+
           {/* Pricing Cards */}
-          <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {tiers.map((tier) => (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+            {activeTiers.map((tier) => (
               <div
                 key={tier._id}
                 className={cn(
@@ -179,9 +253,10 @@ export default function PricingPage() {
                   <div className="flex items-center gap-3 mb-4">
                     <div className={cn(
                       "w-12 h-12 rounded-xl flex items-center justify-center",
-                      tier.name === 'starter' && "bg-blue-100 text-blue-600",
-                      tier.name === 'pro' && "bg-primary/10 text-primary",
-                      tier.name === 'premium' && "bg-amber-100 text-amber-600"
+                      tier.name === 'essentials' && "bg-blue-100 text-blue-600",
+                      tier.name === 'professional' && "bg-primary/10 text-primary",
+                      tier.name === 'complete' && "bg-amber-100 text-amber-600",
+                      tier.name === 'institution' && "bg-purple-100 text-purple-600"
                     )}>
                       {getTierIcon(tier.name)}
                     </div>
@@ -195,47 +270,69 @@ export default function PricingPage() {
                   <div className="mb-6">
                     <div className="flex items-baseline gap-1">
                       <span className="text-4xl font-bold text-foreground">
-                        {formatPrice(tier.priceAmountCents)}
+                        {getDisplayPrice(tier).label}
                       </span>
-                      <span className="text-muted-foreground">/month</span>
+                      <span className="text-muted-foreground text-xs">
+                        {getDisplayPrice(tier).sub}
+                      </span>
                     </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      7-day free trial included
-                    </p>
+                    {!(tier as any).isCustom && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        7-day free trial included
+                      </p>
+                    )}
                   </div>
 
                   {/* Limits Summary */}
                   <div className="space-y-2 mb-6 pb-6 border-b">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Patients</span>
-                      <span className="font-medium">
-                        {tier.limits.patientCount === -1 ? 'Unlimited' : tier.limits.patientCount.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Records</span>
-                      <span className="font-medium">
-                        {tier.limits.recordCount === -1 ? 'Unlimited' : tier.limits.recordCount.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">ScrybeGPT Messages</span>
-                      <span className="font-medium">
-                        {tier.limits.scrybegptMessages === -1 ? 'Unlimited' : `${tier.limits.scrybegptMessages}/mo`}
-                      </span>
-                    </div>
+                    {(() => {
+                      const isCustom = (tier as any).isCustom;
+                      const fmt = (n: number) =>
+                        isCustom ? 'Custom' : n.toLocaleString();
+                      return (
+                        <>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Patients</span>
+                            <span className="font-medium">{fmt(tier.limits.patientCount)}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Monthly Records</span>
+                            <span className="font-medium">{fmt(tier.limits.recordCount)}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">AI Credits / month</span>
+                            <span className="font-medium">{fmt(tier.limits.aiCredits)}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">File Storage</span>
+                            <span className="font-medium">
+                              {isCustom ? 'Custom' : `${(tier.limits.fileStorageMB / 1024).toFixed(1)} GB`}
+                            </span>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
 
                   {/* CTA Button */}
-                  <Button
-                    onClick={() => handleSelectPlan(tier.name)}
-                    className="w-full"
-                    variant={tier.isPopular ? "default" : "outline"}
-                    size="lg"
-                  >
-                    Start Free Trial
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
+                  {(tier as any).isCustom ? (
+                    <Button className="w-full" variant="outline" size="lg" asChild>
+                      <Link href="/contact">
+                        Contact Sales
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Link>
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => handleSelectPlan(tier.name)}
+                      className="w-full"
+                      variant={tier.isPopular ? 'default' : 'outline'}
+                      size="lg"
+                    >
+                      Start Free Trial
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  )}
 
                   {/* Key Features */}
                   <div className="mt-6 space-y-3">
@@ -259,6 +356,11 @@ export default function PricingPage() {
               </div>
             ))}
           </div>
+
+          <div className="mt-8 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Package className="w-4 h-4" />
+            Need more AI credits? Top-up packs start at $5 from inside the app.
+          </div>
         </div>
       </div>
 
@@ -274,7 +376,7 @@ export default function PricingPage() {
               <thead>
                 <tr className="border-b">
                   <th className="text-left py-4 px-4 font-medium text-muted-foreground">Feature</th>
-                  {tiers.map((tier) => (
+                  {activeTiers.map((tier) => (
                     <th key={tier._id} className="text-center py-4 px-4">
                       <span className="font-bold text-foreground">{tier.displayName}</span>
                       <p className="text-sm font-normal text-muted-foreground">
@@ -288,7 +390,7 @@ export default function PricingPage() {
                 {COMPARISON_FEATURES.map((feature) => (
                   <tr key={feature.key} className="border-b last:border-b-0">
                     <td className="py-4 px-4 text-sm text-foreground">{feature.label}</td>
-                    {tiers.map((tier) => {
+                    {activeTiers.map((tier) => {
                       const value = getFeatureValue(tier, feature.key);
                       return (
                         <td key={tier._id} className="text-center py-4 px-4">
@@ -344,7 +446,7 @@ export default function PricingPage() {
             <div className="bg-white rounded-xl p-6 border">
               <h3 className="font-semibold text-foreground mb-2">Do you offer discounts for annual billing?</h3>
               <p className="text-muted-foreground text-sm">
-                Annual billing is coming soon! Contact us at support@pediascrybe.com if you're interested in annual pricing with discounts.
+                Yes — annual billing saves ~17% across all paid tiers. Switch the toggle above any pricing card to see annual pricing.
               </p>
             </div>
 
@@ -368,7 +470,7 @@ export default function PricingPage() {
             Join hundreds of pediatricians who are saving time and improving patient care with Pediascrybe.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" onClick={() => handleSelectPlan('pro')}>
+            <Button size="lg" onClick={() => handleSelectPlan('professional')}>
               Start Free Trial
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>

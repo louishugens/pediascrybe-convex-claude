@@ -173,7 +173,7 @@ export const handleIncomingWebhook = internalAction({
     );
 
     if (!access.hasAccess) {
-      await sendTextMessage(fromNumber, access.reason || "WhatsApp ScrybeGPT requires a Pro or Premium subscription.");
+      await sendTextMessage(fromNumber, access.reason || "WhatsApp ScrybeGPT requires an active Pediascrybe subscription.");
       return;
     }
 

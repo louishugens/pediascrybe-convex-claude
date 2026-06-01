@@ -19,7 +19,7 @@ async function getSessionId() {
 export const ourFileRouter = {
   appointmentFile: f({
     image: { maxFileSize: "4MB", maxFileCount: 1 },
-    pdf: { maxFileSize: "4MB", maxFileCount: 1 }, 
+    pdf: { maxFileSize: "4MB", maxFileCount: 1 },
     video: { maxFileSize: "32MB", maxFileCount: 1 },
   })
   .middleware(() => getSessionId())
@@ -28,6 +28,15 @@ export const ourFileRouter = {
     console.log("Upload complete for userId:", metadata.userId);
     console.log("file url", file.url);
   }),
+  labResultFile: f({
+    image: { maxFileSize: "8MB", maxFileCount: 1 },
+    pdf: { maxFileSize: "8MB", maxFileCount: 1 },
+  })
+    .middleware(() => getSessionId())
+    .onUploadComplete(async ({ metadata, file }) => {
+      console.log("Lab result upload complete for userId:", metadata.userId);
+      console.log("file url", file.url);
+    }),
 } satisfies FileRouter;
  
 export type OurFileRouter = typeof ourFileRouter;

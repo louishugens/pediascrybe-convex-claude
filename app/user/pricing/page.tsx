@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Check, X, Sparkles, Zap, Crown, ArrowRight, Loader2, ArrowLeft } from 'lucide-react';
+import { Check, X, Sparkles, Zap, Crown, ArrowRight, Loader2, ArrowLeft, Building2, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useQuery, useAction } from 'convex/react';
 import { api } from '@/convex/_generated/api';
@@ -13,13 +13,15 @@ import { toast } from 'sonner';
 // Feature display configuration
 const FEATURE_LABELS: Record<string, { label: string; description?: string }> = {
   emr: { label: 'Patient Management (EMR)', description: 'Full electronic medical records' },
-  basic_growth_charts: { label: 'Basic Growth Charts (3 types)', description: 'Weight, height, and BMI charts' },
-  all_growth_charts: { label: 'All WHO Growth Charts (9 types)', description: 'Complete WHO growth standards' },
+  all_growth_charts: { label: 'WHO Growth Charts (All types)', description: 'Complete WHO growth standards' },
   vaccination_management: { label: 'Vaccination Management', description: 'Immunization schedules & tracking' },
-  ai_diagnostic_suggestions: { label: 'AI Diagnostic Suggestions', description: 'Smart differential diagnosis' },
-  ai_prescription_recommendations: { label: 'AI Prescription Recommendations', description: 'Weight-based dosing suggestions' },
-  ai_lab_proposals: { label: 'AI Lab Exam Proposals', description: 'Pediatric-specific lab recommendations' },
-  ai_report_generation: { label: 'AI Report Generation', description: 'Automated clinical documentation' },
+  scrybegpt: { label: 'ScrybeGPT AI Chat', description: 'General pediatric AI assistant' },
+  ai_diagnostic: { label: 'AI Diagnostic Suggestions', description: 'Smart differential diagnosis' },
+  ai_prescription: { label: 'AI Prescription Recommendations', description: 'Weight-based dosing suggestions' },
+  ai_lab_exam: { label: 'AI Lab Exam Proposals', description: 'Pediatric-specific lab recommendations' },
+  ai_report: { label: 'AI Report Generation', description: 'Automated clinical documentation' },
+  patient_specific_ai: { label: 'Patient-Specific AI Chat', description: 'AI with patient context' },
+  whatsapp_scrybegpt: { label: 'WhatsApp AI Assistant', description: 'ScrybeGPT via WhatsApp' },
   billing_receipts: { label: 'Basic Billing & Receipts' },
   multi_currency: { label: 'Multi-Currency Support' },
   basic_templates: { label: 'Basic Document Templates' },
@@ -34,6 +36,7 @@ const FEATURE_LABELS: Record<string, { label: string; description?: string }> = 
   email_support: { label: 'Email Support (48hr response)' },
   email_chat_support: { label: 'Email + Chat Support (24hr response)' },
   priority_support: { label: '24/7 Priority Support + Phone' },
+  staff_accounts: { label: 'Staff Accounts', description: 'Add staff members to your practice' },
 
 };
 
@@ -42,22 +45,24 @@ const COMPARISON_FEATURES = [
   // Quotas
   { key: 'patients', label: 'Patient Count' },
   { key: 'records', label: 'Record Count' },
-  { key: 'scrybegpt', label: 'ScrybeGPT Messages' },
+  { key: 'ai_credits', label: 'AI Credits / month' },
+  { key: 'whatsapp', label: 'WhatsApp Messages' },
+  { key: 'storage', label: 'File Storage' },
+  { key: 'services', label: 'Service Catalog' },
   // Core Features
   { key: 'emr', label: 'Patient Management (EMR)' },
-  { key: 'basic_growth_charts', label: 'WHO Growth Charts (Basic - 3 types)' },
-  { key: 'all_growth_charts', label: 'WHO Growth Charts (All 9 types)' },
+  { key: 'all_growth_charts', label: 'All WHO Growth Charts' },
   { key: 'vaccination_management', label: 'Vaccination Management' },
-  { key: 'billing_receipts', label: 'Basic Billing & Receipts' },
+  { key: 'billing_receipts', label: 'Billing & Receipts' },
   { key: 'multi_currency', label: 'Multi-Currency Support' },
-  // AI Features (quota-based)
-  { key: 'ai_diagnostic', label: 'AI Diagnostic Suggestions' },
-  { key: 'ai_prescription', label: 'AI Prescription Recommendations' },
-  { key: 'ai_lab_exam', label: 'AI Lab Exam Proposals' },
+  // AI & Portal
+  { key: 'ai_diagnostic', label: 'AI Diagnostic / Rx / Lab' },
   { key: 'ai_report', label: 'AI Report Generation' },
+  { key: 'patient_portal', label: 'Patient Portal' },
+  { key: 'telehealth', label: 'Telehealth' },
   // Analytics & Support
   { key: 'analytics', label: 'Analytics Dashboard' },
-  { key: 'support', label: 'Priority Support' },
+  { key: 'support', label: 'Support Level' },
   { key: 'pdf_export', label: 'Data Export - PDF' },
 ];
 
@@ -69,7 +74,8 @@ function formatPrice(cents: number): string {
 export default function UserPricingPage() {
   const searchParams = useSearchParams();
   const [loadingTier, setLoadingTier] = useState<string | null>(null);
-  
+  const [interval, setInterval] = useState<'month' | 'year'>('month');
+
   const tiers = useQuery(api.stripe.getSubscriptionTiers);
   const currentSubscription = useQuery(api.subscriptions.getCurrentSubscriptionDetails);
   const stripeCustomerId = useQuery(api.stripe.getStripeCustomerId);
@@ -86,6 +92,7 @@ export default function UserPricingPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           tierName,
+          billingInterval: interval,
           customerId: stripeCustomerId,
           successUrl: `${window.location.origin}/user?subscription=success`,
           cancelUrl: `${window.location.origin}/user/pricing?subscription=canceled`,
@@ -109,11 +116,13 @@ export default function UserPricingPage() {
 
   const getTierIcon = (tierName: string) => {
     switch (tierName) {
-      case 'starter':
+      case 'essentials':
         return <Zap className="w-6 h-6" />;
-      case 'pro':
+      case 'professional':
         return <Sparkles className="w-6 h-6" />;
-      case 'premium':
+      case 'complete':
+        return <Crown className="w-6 h-6" />;
+      case 'institution':
         return <Crown className="w-6 h-6" />;
       default:
         return <Zap className="w-6 h-6" />;
@@ -122,28 +131,37 @@ export default function UserPricingPage() {
 
   const getFeatureValue = (tier: typeof tiers extends (infer T)[] | undefined ? T : never, featureKey: string): string | boolean => {
     if (!tier) return false;
-    
+    const limits = tier.limits as any;
+
     switch (featureKey) {
-      // Quota-based limits
       case 'patients':
-        return tier.limits.patientCount === -1 ? 'Unlimited' : `${tier.limits.patientCount.toLocaleString()}`;
+        return `${limits.patientCount.toLocaleString()}`;
       case 'records':
-        return tier.limits.recordCount === -1 ? 'Unlimited' : `${tier.limits.recordCount.toLocaleString()}`;
-      case 'scrybegpt':
-        return tier.limits.scrybegptMessages === -1 ? 'Unlimited' : `${tier.limits.scrybegptMessages}/mo`;
-      // AI features with quotas
-      case 'ai_prescription':
-        return tier.limits.aiPrescription === -1 ? 'Unlimited' : tier.limits.aiPrescription === 0 ? false : `${tier.limits.aiPrescription}/mo`;
-      case 'ai_lab_exam':
-        return tier.limits.aiLabExam === -1 ? 'Unlimited' : tier.limits.aiLabExam === 0 ? false : `${tier.limits.aiLabExam}/mo`;
+        return `${limits.recordCount.toLocaleString()}`;
+      case 'ai_credits':
+        return `${limits.aiCredits}/mo`;
+      case 'whatsapp':
+        if (tier.name === 'essentials') return `${limits.whatsappTrial} trial/mo`;
+        return `${limits.whatsappMessages}/mo`;
+      case 'storage':
+        return limits.fileStorageMB >= 1024
+          ? `${(limits.fileStorageMB / 1024).toFixed(0)} GB`
+          : `${limits.fileStorageMB} MB`;
+      case 'services':
+        return `${limits.services}`;
+      case 'patient_portal':
+        return !!limits.patientPortal;
+      case 'telehealth':
+        if (!limits.telehealth) return false;
+        return `${limits.telehealthMinutes} min/mo`;
       case 'ai_diagnostic':
-        return tier.limits.aiDiagnostic === -1 ? 'Unlimited' : tier.limits.aiDiagnostic === 0 ? false : `${tier.limits.aiDiagnostic}/mo`;
+        return tier.features.includes('ai_diagnostic');
       case 'ai_report':
-        return tier.limits.aiReport === -1 ? 'Unlimited' : tier.limits.aiReport === 0 ? false : `${tier.limits.aiReport}/mo`;
-      // Analytics - show tier-specific value
+        return tier.features.includes('ai_report');
       case 'analytics':
-        return tier.features.includes('advanced_analytics') ? 'Advanced' : 'Basic';
-      // Support - show tier-specific value
+        if (limits.dashboardTier === 'full') return 'Full';
+        if (limits.dashboardTier === 'standard') return 'Standard';
+        return 'Basic';
       case 'support':
         if (tier.features.includes('priority_support')) return '24/7 + Phone';
         if (tier.features.includes('email_chat_support')) return 'Email + Chat';
@@ -163,6 +181,9 @@ export default function UserPricingPage() {
       </div>
     );
   }
+
+  // Hide institution tier for now (isCustom)
+  const activeTiers = tiers.filter(t => !t.isCustom);
 
   return (
     <div className="pb-16">
@@ -194,9 +215,43 @@ export default function UserPricingPage() {
         </div>
       )}
 
+      {/* Billing interval toggle */}
+      <div className="flex items-center justify-center mb-8">
+        <div className="inline-flex items-center rounded-full border bg-white p-1 shadow-sm">
+          <button
+            onClick={() => setInterval('month')}
+            className={cn(
+              'px-4 py-1.5 text-sm font-medium rounded-full transition-all',
+              interval === 'month'
+                ? 'bg-primary text-white shadow'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setInterval('year')}
+            className={cn(
+              'px-4 py-1.5 text-sm font-medium rounded-full transition-all',
+              interval === 'year'
+                ? 'bg-primary text-white shadow'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            Annual
+            <span className={cn(
+              "ml-1.5 text-[10px] font-semibold uppercase tracking-wide",
+              interval === 'year' ? 'text-amber-300' : 'text-amber-600'
+            )}>
+              Save 17%
+            </span>
+          </button>
+        </div>
+      </div>
+
       {/* Pricing Cards */}
-      <div className="grid md:grid-cols-3 gap-6 mb-12">
-        {tiers.map((tier) => {
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+        {activeTiers.map((tier) => {
           const isCurrentPlan = currentTier === tier.name;
           const isLoading = loadingTier === tier.name;
           
@@ -225,9 +280,10 @@ export default function UserPricingPage() {
                 <div className="flex items-center gap-3 mb-4">
                   <div className={cn(
                     "w-12 h-12 rounded-xl flex items-center justify-center",
-                    tier.name === 'starter' && "bg-blue-100 text-blue-600",
-                    tier.name === 'pro' && "bg-primary/10 text-primary",
-                    tier.name === 'premium' && "bg-amber-100 text-amber-600"
+                    tier.name === 'essentials' && "bg-blue-100 text-blue-600",
+                    tier.name === 'professional' && "bg-primary/10 text-primary",
+                    tier.name === 'complete' && "bg-amber-100 text-amber-600",
+                    tier.name === 'institution' && "bg-purple-100 text-purple-600"
                   )}>
                     {getTierIcon(tier.name)}
                   </div>
@@ -239,15 +295,32 @@ export default function UserPricingPage() {
 
                 {/* Price */}
                 <div className="mb-6">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-bold text-foreground">
-                      {formatPrice(tier.priceAmountCents)}
-                    </span>
-                    <span className="text-muted-foreground">/month</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    7-day free trial included
-                  </p>
+                  {(tier as any).isCustom ? (
+                    <>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-4xl font-bold text-foreground">Custom</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1">Contact sales</p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-4xl font-bold text-foreground">
+                          {interval === 'year' && (tier as any).annualPriceAmountCents
+                            ? `$${Math.round((tier as any).annualPriceAmountCents / 12 / 100)}`
+                            : formatPrice(tier.priceAmountCents)}
+                        </span>
+                        <span className="text-muted-foreground text-xs">
+                          {interval === 'year' && (tier as any).annualPriceAmountCents
+                            ? `/mo · billed annually ($${Math.round((tier as any).annualPriceAmountCents / 100)}/yr)`
+                            : '/month'}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        7-day free trial included
+                      </p>
+                    </>
+                  )}
                 </div>
 
                 {/* Limits Summary */}
@@ -255,25 +328,40 @@ export default function UserPricingPage() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Patients</span>
                     <span className="font-medium">
-                      {tier.limits.patientCount === -1 ? 'Unlimited' : tier.limits.patientCount.toLocaleString()}
+                      {tier.limits.patientCount.toLocaleString()}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Records</span>
+                    <span className="text-muted-foreground">Monthly Records</span>
                     <span className="font-medium">
-                      {tier.limits.recordCount === -1 ? 'Unlimited' : tier.limits.recordCount.toLocaleString()}
+                      {tier.limits.recordCount.toLocaleString()}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">ScrybeGPT Messages</span>
+                    <span className="text-muted-foreground">AI Credits</span>
                     <span className="font-medium">
-                      {tier.limits.scrybegptMessages === -1 ? 'Unlimited' : `${tier.limits.scrybegptMessages}/mo`}
+                      {(tier.limits as any).aiCredits}/mo
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">File Storage</span>
+                    <span className="font-medium">
+                      {(tier.limits as any).fileStorageMB >= 1024
+                        ? `${((tier.limits as any).fileStorageMB / 1024).toFixed(0)} GB`
+                        : `${(tier.limits as any).fileStorageMB} MB`}
                     </span>
                   </div>
                 </div>
 
                 {/* CTA Button */}
-                {isCurrentPlan ? (
+                {(tier as any).isCustom ? (
+                  <Button className="w-full" variant="outline" size="lg" asChild>
+                    <Link href="/contact">
+                      Contact Sales
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Link>
+                  </Button>
+                ) : isCurrentPlan ? (
                   <Button disabled className="w-full" variant="outline" size="lg">
                     Current Plan
                   </Button>
@@ -328,6 +416,17 @@ export default function UserPricingPage() {
         })}
       </div>
 
+      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-12">
+        <Package className="w-4 h-4" />
+        Need more AI credits this month?{' '}
+        <Link
+          href="/user/settings/subscription"
+          className="text-primary hover:underline"
+        >
+          Buy a top-up pack
+        </Link>
+      </div>
+
       {/* Feature Comparison Table */}
       <div className="bg-white rounded-2xl border p-6">
         <h2 className="text-xl font-bold text-foreground mb-6">
@@ -339,7 +438,7 @@ export default function UserPricingPage() {
             <thead>
               <tr className="border-b">
                 <th className="text-left py-4 px-4 font-medium text-muted-foreground">Feature</th>
-                {tiers.map((tier) => (
+                {activeTiers.map((tier) => (
                   <th key={tier._id} className="text-center py-4 px-4">
                     <span className="font-bold text-foreground">{tier.displayName}</span>
                     <p className="text-sm font-normal text-muted-foreground">
@@ -353,7 +452,7 @@ export default function UserPricingPage() {
               {COMPARISON_FEATURES.map((feature) => (
                 <tr key={feature.key} className="border-b last:border-b-0">
                   <td className="py-4 px-4 text-sm text-foreground">{feature.label}</td>
-                  {tiers.map((tier) => {
+                  {activeTiers.map((tier) => {
                     const value = getFeatureValue(tier, feature.key);
                     return (
                       <td key={tier._id} className="text-center py-4 px-4">

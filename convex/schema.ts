@@ -41,6 +41,7 @@ const patients = defineTable({
   email: v.optional(v.string()),
   phone: v.optional(v.string()),
   birthdate: v.number(), // Unix timestamp
+  birthWeight: v.optional(v.number()), // grams
   sex: v.optional(v.union(v.literal("male"), v.literal("female"))),
   mothername: v.optional(v.string()),
   profession: v.optional(v.string()),
@@ -99,16 +100,6 @@ const appointments = defineTable({
   respiratory: v.optional(v.number()),
   systolic: v.optional(v.number()),
   diastolic: v.optional(v.number()),
-  // Medical data
-  exams: v.optional(v.array(v.object({
-    exam: v.string(),
-  }))),
-  medication: v.optional(v.array(v.object({
-    drug: v.string(),
-    count: v.number(),
-    unit: v.string(),
-    posology: v.string(),
-  }))),
   // Internal notes (private — never exposed to portal)
   internalNotes: v.optional(v.string()),
   // Transaction
@@ -120,12 +111,111 @@ const appointments = defineTable({
   .index("by_doctorId_startDate", ["doctorId", "startDate"])
   .index("by_patientId_startDate", ["patientId", "startDate"]);
 
+// ==================== Prescriptions & Lab Orders ====================
+
+// Prescriptions — one row per prescribed drug
+const prescriptions = defineTable({
+  doctorId: v.id("doctors"),
+  patientId: v.id("patients"),
+  // Originating visit. Optional so renewals/telephone scripts can exist without one.
+  appointmentId: v.optional(v.id("appointments")),
+  // Drug + posology. Field names preserved from the previous embedded shape:
+  // count + unit = dispense quantity (e.g. 30 + "tablets"); posology = instructions.
+  drug: v.string(),
+  count: v.number(),
+  unit: v.string(),
+  posology: v.string(),
+  // Optional clinical detail — added now so code paths are status- and lifecycle-aware from day one.
+  dose: v.optional(v.string()), // e.g. "500mg" — drug strength, distinct from dispense quantity
+  route: v.optional(v.string()), // "PO" | "IV" | "topical" | etc.
+  startDate: v.optional(v.number()),
+  endDate: v.optional(v.number()),
+  refillsRemaining: v.optional(v.number()),
+  status: v.union(
+    v.literal("active"),
+    v.literal("completed"),
+    v.literal("discontinued"),
+    v.literal("cancelled"),
+  ),
+  discontinuedReason: v.optional(v.string()),
+  // For renewals: link to the prescription this one was cloned from.
+  renewedFromId: v.optional(v.id("prescriptions")),
+  notes: v.optional(v.string()),
+  createdAt: v.number(),
+  updatedAt: v.number(),
+})
+  .index("by_appointmentId", ["appointmentId"])
+  .index("by_patientId", ["patientId"])
+  .index("by_patientId_status", ["patientId", "status"])
+  .index("by_doctorId_createdAt", ["doctorId", "createdAt"])
+  .index("by_doctorId_status", ["doctorId", "status"]);
+
+// Lab orders — one row per ordered exam
+const labOrders = defineTable({
+  doctorId: v.id("doctors"),
+  patientId: v.id("patients"),
+  appointmentId: v.optional(v.id("appointments")),
+  // examName preserves the previous "exam" string. Add examCode later for LOINC mapping.
+  examName: v.string(),
+  clinicalContext: v.optional(v.string()), // why it was ordered — useful for the lab and for AI
+  urgency: v.optional(v.union(
+    v.literal("routine"),
+    v.literal("urgent"),
+    v.literal("stat"),
+  )),
+  status: v.union(
+    v.literal("ordered"),
+    v.literal("collected"),
+    v.literal("resulted"),
+    v.literal("reviewed"),
+    v.literal("cancelled"),
+  ),
+  orderedAt: v.optional(v.number()),
+  collectedAt: v.optional(v.number()),
+  resultedAt: v.optional(v.number()),
+  reviewedAt: v.optional(v.number()),
+  notes: v.optional(v.string()),
+  createdAt: v.number(),
+  updatedAt: v.number(),
+})
+  .index("by_appointmentId", ["appointmentId"])
+  .index("by_patientId", ["patientId"])
+  .index("by_patientId_status", ["patientId", "status"])
+  .index("by_doctorId_status", ["doctorId", "status"])
+  .index("by_doctorId_orderedAt", ["doctorId", "orderedAt"]);
+
+// Lab results — one row per result tied to a labOrder
+const labResults = defineTable({
+  labOrderId: v.id("labOrders"),
+  patientId: v.id("patients"), // denormalized for fast patient-level queries
+  value: v.string(), // string supports numeric, qualitative, ranges
+  unit: v.optional(v.string()),
+  referenceRange: v.optional(v.string()),
+  abnormalFlag: v.optional(v.union(
+    v.literal("normal"),
+    v.literal("low"),
+    v.literal("high"),
+    v.literal("critical"),
+  )),
+  fileId: v.optional(v.id("files")), // scanned PDF/image of result
+  enteredBy: v.union(
+    v.literal("doctor"),
+    v.literal("lab_import"),
+    v.literal("portal_upload"),
+  ),
+  enteredAt: v.number(),
+  notes: v.optional(v.string()),
+})
+  .index("by_labOrderId", ["labOrderId"])
+  .index("by_patientId", ["patientId"]);
+
 // Files table - attachments to appointments
 const files = defineTable({
   appointmentId: v.id("appointments"),
   url: v.string(),
   name: v.string(),
   fileType: v.union(v.literal("IMAGE"), v.literal("PDF"), v.literal("VIDEO")),
+  sizeBytes: v.optional(v.number()),
 })
   .index("by_appointmentId", ["appointmentId"]);
 
@@ -283,6 +373,7 @@ const subscriptions = defineTable({
   ),
   quantity: v.optional(v.number()),
   cancelAtPeriodEnd: v.optional(v.boolean()),
+  billingInterval: v.optional(v.union(v.literal("month"), v.literal("year"))),
   metadata: v.optional(v.record(v.string(), v.string())),
   created: v.number(),
   currentPeriodStart: v.number(),
@@ -352,8 +443,13 @@ const portalNotifications = defineTable({
     v.literal("telehealth_confirmed"),
     v.literal("telehealth_rescheduled"),
     v.literal("telehealth_cancelled"),
-    v.literal("telehealth_reminder")
+    v.literal("telehealth_reminder"),
+    // Prescription/lab lifecycle events not covered by new_prescription / new_lab_exam
+    v.literal("prescription_discontinued"),
+    v.literal("lab_result_available")
   ),
+  prescriptionId: v.optional(v.id("prescriptions")),
+  labOrderId: v.optional(v.id("labOrders")),
   appointmentId: v.optional(v.id("appointments")),
   telehealthAppointmentId: v.optional(v.id("telehealthAppointments")),
   message: v.string(),
@@ -383,15 +479,18 @@ const appUsers = defineTable({
 const usage = defineTable({
   doctorId: v.id("doctors"),
   period: v.string(), // "2026-01" format (YYYY-MM)
-  // All usage counters for the period
-  scrybegptMessages: v.optional(v.number()),
-  aiPrescription: v.optional(v.number()),
-  aiLabExam: v.optional(v.number()),
-  aiDiagnostic: v.optional(v.number()),
-  aiReport: v.optional(v.number()),
-  // Legacy fields (kept for backward compatibility)
-  aiQueries: v.optional(v.number()),
-  documentGeneration: v.optional(v.number()),
+  // Unified AI credit pool (monthly)
+  aiCreditsUsed: v.optional(v.number()),
+  // Purchased pack credits — consumed after included pool, reset monthly
+  packCreditsRemaining: v.optional(v.number()),
+  // WhatsApp trial counter for Essentials (10/month, separate from AI pool)
+  whatsappTrialUsed: v.optional(v.number()),
+  // WhatsApp sub-cap counter for Pro/Complete (300/900, independent of AI pool)
+  whatsappMessagesUsed: v.optional(v.number()),
+  // Telehealth minutes counter (for overage billing)
+  telehealthMinutesUsed: v.optional(v.number()),
+  // File storage running total in bytes
+  storageUsedBytes: v.optional(v.number()),
   createdAt: v.number(),
   updatedAt: v.number(),
 })
@@ -401,19 +500,32 @@ const usage = defineTable({
 // ==================== Subscription Tiers ====================
 
 const subscriptionTiers = defineTable({
-  name: v.string(), // "starter", "pro", "premium"
+  name: v.string(), // "essentials" | "professional" | "complete" | "institution"
   displayName: v.string(),
   description: v.string(),
-  stripePriceId: v.string(), // Single USD price ID
-  priceAmountCents: v.number(), // Price in cents (e.g., 2900 for $29)
+  // Stripe price IDs — one row per tier, both intervals on the same row
+  stripeMonthlyPriceId: v.string(),
+  stripeAnnualPriceId: v.optional(v.string()), // Institution has none
+  priceAmountCents: v.number(), // Monthly price in cents (2900/5900/11900)
+  annualPriceAmountCents: v.optional(v.number()), // Annual total in cents (28800/58800/118800)
+  isCustom: v.optional(v.boolean()), // true for Institution (no checkout)
   limits: v.object({
-    patientCount: v.number(),        // 100, 500, -1 (unlimited)
-    recordCount: v.number(),         // 200, 1000, -1 (unlimited)
-    scrybegptMessages: v.number(),   // 50, 300, -1 (unlimited)
-    aiPrescription: v.number(),      // 20, 100, -1 (unlimited)
-    aiLabExam: v.number(),           // 20, 100, -1 (unlimited)
-    aiDiagnostic: v.number(),        // 20, 100, -1 (unlimited)
-    aiReport: v.number(),            // 0, 50, -1 (unlimited)
+    // Hard caps — NO -1, NO Infinity, every resource has a concrete number
+    patientCount: v.number(),           // lifetime cap
+    recordCount: v.number(),            // monthly cap
+    aiCredits: v.number(),              // monthly unified pool
+    whatsappTrial: v.number(),          // monthly trial cap (essentials only, else 0)
+    whatsappMessages: v.number(),       // monthly WhatsApp sub-cap (0 for essentials)
+    fileStorageMB: v.number(),          // storage cap
+    services: v.number(),               // service catalog entries
+    staffSeats: v.number(),             // 0/0/3
+    auditRetentionDays: v.number(),     // 30/90/365
+    telehealthMinutes: v.number(),      // included minutes (0 if feature disabled)
+    telehealthOverageRate: v.number(),  // dollars per minute past included
+    patientPortal: v.boolean(),
+    telehealth: v.boolean(),
+    dashboardTier: v.union(v.literal("basic"), v.literal("standard"), v.literal("full")),
+    growthCharts: v.union(v.literal("all")),
   }),
   features: v.array(v.string()),
   trialPeriodDays: v.number(),
@@ -423,7 +535,8 @@ const subscriptionTiers = defineTable({
 })
   .index("by_name", ["name"])
   .index("by_sortOrder", ["sortOrder"])
-  .index("by_stripePriceId", ["stripePriceId"]);
+  .index("by_stripeMonthlyPriceId", ["stripeMonthlyPriceId"])
+  .index("by_stripeAnnualPriceId", ["stripeAnnualPriceId"]);
 
 // ==================== Patient Portal AI (Scrybe Assist) ====================
 
@@ -663,6 +776,21 @@ const auditLogs = defineTable({
     v.literal("appointment.create"),
     v.literal("appointment.update"),
     v.literal("appointment.delete"),
+    // Prescription mutations
+    v.literal("prescription.create"),
+    v.literal("prescription.update"),
+    v.literal("prescription.discontinue"),
+    v.literal("prescription.renew"),
+    v.literal("prescription.delete"),
+    // Lab order mutations
+    v.literal("labOrder.create"),
+    v.literal("labOrder.update"),
+    v.literal("labOrder.cancel"),
+    v.literal("labOrder.delete"),
+    // Lab result mutations
+    v.literal("labResult.create"),
+    v.literal("labResult.update"),
+    v.literal("labResult.delete"),
     // Medical data mutations
     v.literal("vaccine.create"),
     v.literal("vaccine.update"),
@@ -707,6 +835,9 @@ export default defineSchema({
   patients,
   services,
   appointments,
+  prescriptions,
+  labOrders,
+  labResults,
   files,
   reports,
   receipts,

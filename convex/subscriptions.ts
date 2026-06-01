@@ -5,37 +5,34 @@ import { Id } from "./_generated/dataModel";
 // ==================== Feature Access Configuration ====================
 
 // Features that require specific subscription tiers
+const ALL_PAID = ["essentials", "professional", "complete", "institution"];
+const PROF_UP = ["professional", "complete", "institution"];
+const COMPLETE_UP = ["complete", "institution"];
+
 const FEATURE_ACCESS: Record<string, string[]> = {
-  // All tiers (Starter+)
-  emr: ["starter", "pro", "premium"],
-  basic_growth_charts: ["starter", "pro", "premium"],
-  billing_receipts: ["starter", "pro", "premium"],
-  multi_currency: ["starter", "pro", "premium"],
-  scrybegpt: ["starter", "pro", "premium"],
-  ai_diagnostic: ["starter", "pro", "premium"],
-  ai_prescription: ["starter", "pro", "premium"],
-  ai_lab_exam: ["starter", "pro", "premium"],
-  basic_analytics: ["starter", "pro", "premium"],
-  pdf_export: ["starter", "pro", "premium"],
-  email_support: ["starter", "pro", "premium"],
+  emr: ALL_PAID,
+  all_growth_charts: ALL_PAID,
+  vaccination_management: ALL_PAID,
+  billing_receipts: ALL_PAID,
+  multi_currency: ALL_PAID,
+  scrybegpt: ALL_PAID,
+  patient_specific_ai: ALL_PAID,
+  ai_diagnostic: ALL_PAID,
+  ai_prescription: ALL_PAID,
+  ai_lab_exam: ALL_PAID,
+  basic_analytics: ALL_PAID,
+  pdf_export: ALL_PAID,
+  email_support: ALL_PAID,
+  whatsapp_scrybegpt: ALL_PAID, // essentials is capped at 10 trial messages/mo
 
-  // Pro+ features
-  vaccination_management: ["pro", "premium"],
-  all_growth_charts: ["pro", "premium"],
-  ai_report: ["pro", "premium"],
-  advanced_analytics: ["pro", "premium"],
-  email_chat_support: ["pro", "premium"],
+  ai_report: PROF_UP,
+  advanced_analytics: PROF_UP,
+  email_chat_support: PROF_UP,
+  patient_portal: PROF_UP,
+  telehealth: PROF_UP,
 
-  // Pro+ portal features
-  patient_portal: ["pro", "premium"],
-
-  // Pro+ WhatsApp ScrybeGPT
-  whatsapp_scrybegpt: ["pro", "premium"],
-
-  // Premium only features (some coming soon)
-  priority_support: ["premium"],
-  telehealth: ["premium"], // Coming soon
-  staff_accounts: ["premium"], // Coming soon
+  priority_support: COMPLETE_UP,
+  staff_accounts: COMPLETE_UP,
 };
 
 // ==================== Queries ====================
@@ -137,15 +134,7 @@ export const getCurrentSubscriptionDetails = query({
         tier: "none",
         tierDisplayName: "No Subscription",
         status: "none",
-        limits: {
-          patientCount: 0,
-          recordCount: 0,
-          scrybegptMessages: 0,
-          aiPrescription: 0,
-          aiLabExam: 0,
-          aiDiagnostic: 0,
-          aiReport: 0,
-        },
+        limits: DEFAULT_LIMITS,
         features: [],
         currentPeriodEnd: null,
         trialEnd: null,
@@ -216,12 +205,7 @@ export const getCurrentSubscriptionDetails = query({
       tier: tierName,
       tierDisplayName: tier?.displayName || tierName,
       status: subscription.status,
-      limits: tier?.limits || {
-        aiQueriesMonthly: 50,
-        activePatients: 500,
-        documentGenerationMonthly: 20,
-        apiCallsMonthly: 0,
-      },
+      limits: tier?.limits || DEFAULT_LIMITS,
       features: tier?.features || [],
       currentPeriodStart: subscription.currentPeriodStart,
       currentPeriodEnd: subscription.currentPeriodEnd,
@@ -274,15 +258,23 @@ export const hasFeatureAccess = query({
   },
 });
 
-// Default limits when no subscription
+// Default limits when no subscription — all zero / disabled
 const DEFAULT_LIMITS = {
   patientCount: 0,
   recordCount: 0,
-  scrybegptMessages: 0,
-  aiPrescription: 0,
-  aiLabExam: 0,
-  aiDiagnostic: 0,
-  aiReport: 0,
+  aiCredits: 0,
+  whatsappTrial: 0,
+  whatsappMessages: 0,
+  fileStorageMB: 0,
+  services: 0,
+  staffSeats: 0,
+  auditRetentionDays: 0,
+  telehealthMinutes: 0,
+  telehealthOverageRate: 0,
+  patientPortal: false,
+  telehealth: false,
+  dashboardTier: "basic" as const,
+  growthCharts: "all" as const,
 };
 
 // Get current user's subscription limits
@@ -392,11 +384,6 @@ export const canAddPatient = query({
           }
         }
       }
-    }
-
-    // -1 means unlimited
-    if (patientLimit === -1) {
-      return { allowed: true, currentCount, limit: -1 };
     }
 
     if (currentCount >= patientLimit) {

@@ -12,6 +12,7 @@ import {
   Video,
   MessageCircle,
   Sparkles,
+  FlaskConical,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -40,9 +41,15 @@ const baseNavItems = [
     icon: Users,
   },
   {
+    title: "Labs inbox",
+    url: "/user/labs",
+    icon: FlaskConical,
+  },
+  {
     title: "Add Patient",
     url: "/user/add-patient",
     icon: UserPlus,
+    feature: "emr",
   },
   {
     title: "Profile",

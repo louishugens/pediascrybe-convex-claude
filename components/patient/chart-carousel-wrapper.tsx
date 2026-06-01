@@ -36,10 +36,10 @@ interface ChartCarouselWrapperProps {
 
 export default async function ChartCarouselWrapper({ patientId }: ChartCarouselWrapperProps) {
   // Fetch patient data
-  const patientData = await fetchAuthQuery(api.charts.getPatientChartData, { 
+  const patientData = await fetchAuthQuery(api.charts.getPatientChartData, {
     patientId: patientId as Id<"patients">,
     chartType: "wfa"
-  });
+  }).catch(() => null);
   
   if (!patientData || !patientData.patient) {
     return null;

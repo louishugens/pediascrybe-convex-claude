@@ -68,6 +68,38 @@ export async function verifyDoctorOwnsAppointment(
 }
 
 /**
+ * Verify the authenticated doctor owns the given prescription.
+ */
+export async function verifyDoctorOwnsPrescription(
+  ctx: QueryCtx | MutationCtx,
+  prescriptionId: Id<"prescriptions">
+) {
+  const doctor = await getAuthenticatedDoctor(ctx);
+  const prescription = await ctx.db.get(prescriptionId);
+  if (!prescription) throw new Error("Prescription not found");
+  if (prescription.doctorId !== doctor._id) {
+    throw new Error("Not authorized — prescription does not belong to this doctor");
+  }
+  return { doctor, prescription };
+}
+
+/**
+ * Verify the authenticated doctor owns the given lab order.
+ */
+export async function verifyDoctorOwnsLabOrder(
+  ctx: QueryCtx | MutationCtx,
+  labOrderId: Id<"labOrders">
+) {
+  const doctor = await getAuthenticatedDoctor(ctx);
+  const labOrder = await ctx.db.get(labOrderId);
+  if (!labOrder) throw new Error("Lab order not found");
+  if (labOrder.doctorId !== doctor._id) {
+    throw new Error("Not authorized — lab order does not belong to this doctor");
+  }
+  return { doctor, labOrder };
+}
+
+/**
  * Verify the authenticated doctor owns a resource linked to a patient.
  * Used for reports, receipts, etc.
  */

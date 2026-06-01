@@ -25,12 +25,16 @@ import { cn } from '@/lib/utils'
 import { WhatsAppQRCode } from '@/components/whatsapp/WhatsAppQRCode'
 import { WhatsAppLinkStatus } from '@/components/whatsapp/WhatsAppLinkStatus'
 import { WhatsAppUnlinkButton } from '@/components/whatsapp/WhatsAppUnlinkButton'
+import { Progress } from '@/components/ui/progress'
+import Link from 'next/link'
 
 export default function WhatsAppSettingsPage() {
   const [isLinking, setIsLinking] = useState(false)
   const [isUnlinking, setIsUnlinking] = useState(false)
 
   const linkStatus = useQuery(api.whatsappLinks.getLinkStatus)
+  const usageWithLimits = useQuery(api.usage.getUsageWithLimits, {})
+  const subscriptionDetails = useQuery(api.subscriptions.getCurrentSubscriptionDetails)
   const generateLinkToken = useMutation(api.whatsappLinks.generateLinkToken)
   const unlinkWhatsApp = useMutation(api.whatsappLinks.unlinkWhatsApp)
 
@@ -73,6 +77,17 @@ export default function WhatsAppSettingsPage() {
   const isPending = status === 'pending'
   const isUnlinked = status === 'unlinked'
 
+  const tier = subscriptionDetails?.tier
+  const isEssentials = tier === 'essentials'
+  const trialUsed = usageWithLimits?.usage.whatsappTrialUsed ?? 0
+  const trialLimit = (usageWithLimits?.limits as any)?.whatsappTrial ?? 10
+  const trialRemaining = Math.max(0, trialLimit - trialUsed)
+  const trialPct = trialLimit > 0 ? Math.min(100, Math.round((trialUsed / trialLimit) * 100)) : 0
+
+  const msgUsed = usageWithLimits?.usage.whatsappMessagesUsed ?? 0
+  const msgLimit = (usageWithLimits?.limits as any)?.whatsappMessages ?? 0
+  const msgPct = msgLimit > 0 ? Math.min(100, Math.round((msgUsed / msgLimit) * 100)) : 0
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Page Header */}
@@ -82,6 +97,59 @@ export default function WhatsAppSettingsPage() {
           Link your WhatsApp number to use ScrybeGPT as an AI assistant directly in your chat
         </p>
       </div>
+
+      {/* Usage / Trial Banner */}
+      {usageWithLimits && tier && (
+        isEssentials ? (
+          <Card className={cn(trialRemaining === 0 && 'border-amber-300 bg-amber-50')}>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <MessageSquare className="w-4 h-4" />
+                WhatsApp Trial — Essentials plan
+              </CardTitle>
+              <CardDescription>
+                You have {trialLimit} free WhatsApp messages per month. Upgrade to Professional for {((subscriptionDetails as any)?.limits?.whatsappMessages) || 300}+ messages/month.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium">Trial messages used</span>
+                <span className="text-muted-foreground">{trialUsed} / {trialLimit}</span>
+              </div>
+              <Progress value={trialPct} className="h-2" />
+              {trialRemaining === 0 && (
+                <div className="flex items-center justify-between gap-4">
+                  <p className="text-sm text-amber-700">
+                    You&apos;ve used all your trial messages this month.
+                  </p>
+                  <Button asChild size="sm">
+                    <Link href="/user/pricing">Upgrade</Link>
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <MessageSquare className="w-4 h-4" />
+                WhatsApp Usage This Month
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium">Messages sent</span>
+                <span className="text-muted-foreground">{msgUsed} / {msgLimit}</span>
+              </div>
+              <Progress value={msgPct} className="h-2" />
+              <p className="text-xs text-muted-foreground">
+                Each WhatsApp reply also deducts 1 AI credit from your monthly pool.
+              </p>
+            </CardContent>
+          </Card>
+        )
+      )}
 
       {/* Status Card */}
       <Card>

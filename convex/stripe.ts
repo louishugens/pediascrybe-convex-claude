@@ -1,5 +1,5 @@
 import { action, internalAction, internalMutation, internalQuery, mutation, query } from "./_generated/server";
-import { components, internal } from "./_generated/api";
+import { api, components, internal } from "./_generated/api";
 import { StripeSubscriptions } from "@convex-dev/stripe";
 import { v } from "convex/values";
 import Stripe from "stripe";
@@ -87,40 +87,47 @@ export const updateAppUserPlan = internalMutation({
 // ==================== Public Actions ====================
 
 // Create a checkout session for a subscription with trial
+// Resolves the monthly or annual price ID from the tier itself
 export const createSubscriptionCheckout = action({
-  args: { 
-    priceId: v.string(),
-    tierName: v.optional(v.string()),
+  args: {
+    tierName: v.string(),
+    billingInterval: v.union(v.literal("month"), v.literal("year")),
   },
   returns: v.object({
     sessionId: v.string(),
     url: v.union(v.string(), v.null()),
   }),
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<{ sessionId: string; url: string | null }> => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
 
+    const tier: { stripeMonthlyPriceId: string; stripeAnnualPriceId?: string; isCustom?: boolean } | null =
+      await ctx.runQuery(api.stripe.getTierByName, { name: args.tierName });
+    if (!tier) throw new Error(`Tier "${args.tierName}" not found`);
+    if (tier.isCustom) throw new Error("Institution tier requires contacting sales");
+
+    const priceId = args.billingInterval === "year" ? tier.stripeAnnualPriceId : tier.stripeMonthlyPriceId;
+    if (!priceId) throw new Error(`Tier "${args.tierName}" missing ${args.billingInterval}ly price`);
+
     const siteUrl = process.env.SITE_URL || "http://localhost:3000";
 
-    // Get or create a Stripe customer
     const customer = await stripeClient.getOrCreateCustomer(ctx, {
       userId: identity.subject,
       email: identity.email,
       name: identity.name,
     });
 
-    // Create checkout session with trial period
     return await stripeClient.createCheckoutSession(ctx, {
-      priceId: args.priceId,
+      priceId,
       customerId: customer.customerId,
       mode: "subscription",
       successUrl: `${siteUrl}/user?subscription=success`,
       cancelUrl: `${siteUrl}/pricing?subscription=canceled`,
-      subscriptionMetadata: { 
+      subscriptionMetadata: {
         userId: identity.subject,
-        tierName: args.tierName || "unknown",
+        tierName: args.tierName,
+        billingInterval: args.billingInterval,
       },
-      // Trial is configured on the price in Stripe
     });
   },
 });
@@ -402,13 +409,18 @@ export const getAppUserByAuthIdInternal = internalQuery({
   },
 });
 
-// Get subscription tier by Stripe price ID
+// Get subscription tier by Stripe price ID — checks both monthly and annual price IDs
 export const getTierByPriceId = internalQuery({
   args: { stripePriceId: v.string() },
   handler: async (ctx, args) => {
+    const monthly = await ctx.db
+      .query("subscriptionTiers")
+      .withIndex("by_stripeMonthlyPriceId", (q) => q.eq("stripeMonthlyPriceId", args.stripePriceId))
+      .first();
+    if (monthly) return monthly;
     return await ctx.db
       .query("subscriptionTiers")
-      .withIndex("by_stripePriceId", (q) => q.eq("stripePriceId", args.stripePriceId))
+      .withIndex("by_stripeAnnualPriceId", (q) => q.eq("stripeAnnualPriceId", args.stripePriceId))
       .first();
   },
 });
@@ -459,9 +471,13 @@ export const debugSubscriptionData = query({
     if (!authUserId) {
       // Return all tiers anyway for debugging
       const allTiers = await ctx.db.query("subscriptionTiers").collect();
-      return { 
-        error: "Pass your email to debug", 
-        allTierPriceIds: allTiers.map(t => ({ name: t.name, stripePriceId: t.stripePriceId })),
+      return {
+        error: "Pass your email to debug",
+        allTierPriceIds: allTiers.map(t => ({
+          name: t.name,
+          stripeMonthlyPriceId: t.stripeMonthlyPriceId,
+          stripeAnnualPriceId: t.stripeAnnualPriceId,
+        })),
       };
     }
 
@@ -484,15 +500,16 @@ export const debugSubscriptionData = query({
     // Get all subscription tiers to check price ID mapping
     const allTiers = await ctx.db.query("subscriptionTiers").collect();
     
-    // Find matching tier by stripePriceId
-    const matchingTier = subscription?.stripePriceId 
-      ? allTiers.find(t => t.stripePriceId === subscription.stripePriceId)
+    // Find matching tier by stripePriceId (checks both monthly and annual)
+    const subPriceId = subscription?.stripePriceId;
+    const matchingTier = subPriceId
+      ? allTiers.find(t => t.stripeMonthlyPriceId === subPriceId || t.stripeAnnualPriceId === subPriceId)
       : null;
 
     return {
-      appUser: appUser ? { 
-        plan: appUser.plan, 
-        stripeCustomerId: appUser.stripeCustomerId 
+      appUser: appUser ? {
+        plan: appUser.plan,
+        stripeCustomerId: appUser.stripeCustomerId
       } : null,
       subscription: subscription ? {
         stripeId: subscription.stripeId,
@@ -503,9 +520,14 @@ export const debugSubscriptionData = query({
       } : null,
       matchingTier: matchingTier ? {
         name: matchingTier.name,
-        stripePriceId: matchingTier.stripePriceId,
+        stripeMonthlyPriceId: matchingTier.stripeMonthlyPriceId,
+        stripeAnnualPriceId: matchingTier.stripeAnnualPriceId,
       } : null,
-      allTierPriceIds: allTiers.map(t => ({ name: t.name, stripePriceId: t.stripePriceId })),
+      allTierPriceIds: allTiers.map(t => ({
+        name: t.name,
+        stripeMonthlyPriceId: t.stripeMonthlyPriceId,
+        stripeAnnualPriceId: t.stripeAnnualPriceId,
+      })),
     };
   },
 });
@@ -576,223 +598,89 @@ export const getSubscriptionByDoctorId = query({
 
 // ==================== Seed Actions ====================
 
-// Seed Stripe products and prices (run once) - USD only
+// Seed Stripe products and prices (run once) — creates monthly + annual prices per tier.
+// Call after `seed.seedSubscriptionTiers` has seeded the tier rows; this action then
+// calls `seed.updateTierStripePriceIds` to write the real Stripe price IDs back.
 export const seedStripeProducts = internalAction({
   args: {},
-  handler: async (ctx) => {
+  handler: async (ctx): Promise<Array<{
+    name: string;
+    productId: string;
+    stripeMonthlyPriceId: string;
+    stripeAnnualPriceId: string;
+  }>> => {
     const stripe = getStripe();
 
     const products = [
       {
-        name: "Starter",
-        description: "Perfect for new pediatricians and low-volume practices",
-        metadata: { tier: "starter" },
-        priceAmountCents: 2900, // $29/month
+        name: "essentials",
+        displayName: "Essentials",
+        description: "For pediatricians starting their digital practice",
+        monthlyCents: 2900,
+        annualCents: 28800,
       },
       {
-        name: "Pro",
-        description: "For established pediatricians with full AI support",
-        metadata: { tier: "pro" },
-        priceAmountCents: 4900, // $49/month
+        name: "professional",
+        displayName: "Professional",
+        description: "For established solo practitioners",
+        monthlyCents: 5900,
+        annualCents: 58800,
       },
       {
-        name: "Premium",
-        description: "For high-volume practitioners preparing for growth",
-        metadata: { tier: "premium" },
-        priceAmountCents: 9900, // $99/month
+        name: "complete",
+        displayName: "Complete",
+        description: "For high-volume practices and clinics",
+        monthlyCents: 11900,
+        annualCents: 118800,
       },
+      // Institution has no checkout — skip
     ];
 
-    const results: Array<{ productId: string; productName: string; priceId: string; priceAmountCents: number }> = [];
+    const results: Array<{
+      name: string;
+      productId: string;
+      stripeMonthlyPriceId: string;
+      stripeAnnualPriceId: string;
+    }> = [];
 
-    for (const productData of products) {
-      // Create product in Stripe
+    for (const p of products) {
       const product = await stripe.products.create({
-        name: productData.name,
-        description: productData.description,
-        metadata: productData.metadata,
+        name: p.displayName,
+        description: p.description,
+        metadata: { tier: p.name },
       });
 
-      // Create single USD price
-      const price = await stripe.prices.create({
+      const monthlyPrice = await stripe.prices.create({
         product: product.id,
-        unit_amount: productData.priceAmountCents,
+        unit_amount: p.monthlyCents,
         currency: "usd",
-        recurring: {
-          interval: "month",
-          trial_period_days: 7,
-        },
-        metadata: {
-          tier: productData.metadata.tier,
-        },
+        recurring: { interval: "month", trial_period_days: 7 },
+        metadata: { tier: p.name, interval: "month" },
+      });
+
+      const annualPrice = await stripe.prices.create({
+        product: product.id,
+        unit_amount: p.annualCents,
+        currency: "usd",
+        recurring: { interval: "year", trial_period_days: 7 },
+        metadata: { tier: p.name, interval: "year" },
+      });
+
+      await ctx.runMutation(internal.seed.updateTierStripePriceIdsInternal, {
+        tierName: p.name,
+        stripeMonthlyPriceId: monthlyPrice.id,
+        stripeAnnualPriceId: annualPrice.id,
       });
 
       results.push({
+        name: p.name,
         productId: product.id,
-        productName: product.name,
-        priceId: price.id,
-        priceAmountCents: productData.priceAmountCents,
+        stripeMonthlyPriceId: monthlyPrice.id,
+        stripeAnnualPriceId: annualPrice.id,
       });
     }
 
-    // Store tier configurations in Convex
-    await ctx.runMutation(internal.stripe.seedSubscriptionTiers, {
-      tiers: results.map((r, index) => ({
-        name: products[index].metadata.tier,
-        displayName: products[index].name,
-        description: products[index].description,
-        stripePriceId: r.priceId,
-        priceAmountCents: r.priceAmountCents,
-        sortOrder: index,
-      })),
-    });
-
     return results;
-  },
-});
-
-// Seed subscription tiers in Convex database
-export const seedSubscriptionTiers = internalMutation({
-  args: {
-    tiers: v.array(
-      v.object({
-        name: v.string(),
-        displayName: v.string(),
-        description: v.string(),
-        stripePriceId: v.string(),
-        priceAmountCents: v.number(),
-        sortOrder: v.number(),
-      })
-    ),
-  },
-  handler: async (ctx, args) => {
-    const tierConfigs = {
-      starter: {
-        limits: {
-          patientCount: 100,
-          recordCount: 200,
-          scrybegptMessages: 50,
-          aiPrescription: 20,
-          aiLabExam: 20,
-          aiDiagnostic: 20,
-          aiReport: 0, // Not available in Starter
-        },
-        features: [
-          "emr",
-          "basic_growth_charts",
-          "billing_receipts",
-          "multi_currency",
-          "scrybegpt",
-          "ai_diagnostic",
-          "ai_prescription",
-          "ai_lab_exam",
-          "basic_analytics",
-          "pdf_export",
-          "email_support",
-        ],
-        isPopular: false,
-      },
-      pro: {
-        limits: {
-          patientCount: 500,
-          recordCount: 1000,
-          scrybegptMessages: 300,
-          aiPrescription: 100,
-          aiLabExam: 100,
-          aiDiagnostic: 100,
-          aiReport: 50,
-        },
-        features: [
-          "emr",
-          "basic_growth_charts",
-          "all_growth_charts",
-          "vaccination_management",
-          "billing_receipts",
-          "multi_currency",
-          "scrybegpt",
-          "ai_diagnostic",
-          "ai_prescription",
-          "ai_lab_exam",
-          "ai_report",
-          "advanced_analytics",
-          "pdf_export",
-          "email_chat_support",
-        ],
-        isPopular: true,
-      },
-      premium: {
-        limits: {
-          patientCount: -1, // unlimited
-          recordCount: -1, // unlimited
-          scrybegptMessages: -1, // unlimited
-          aiPrescription: -1, // unlimited
-          aiLabExam: -1, // unlimited
-          aiDiagnostic: -1, // unlimited
-          aiReport: -1, // unlimited
-        },
-        features: [
-          "emr",
-          "basic_growth_charts",
-          "all_growth_charts",
-          "vaccination_management",
-          "billing_receipts",
-          "multi_currency",
-          "scrybegpt",
-          "ai_diagnostic",
-          "ai_prescription",
-          "ai_lab_exam",
-          "ai_report",
-          "advanced_analytics",
-          "pdf_export",
-          "priority_support",
-          "telehealth", // Coming soon
-          "staff_accounts", // Coming soon
-        ],
-        isPopular: false,
-      },
-    };
-
-    const now = Date.now();
-
-    for (const tier of args.tiers) {
-      const config = tierConfigs[tier.name as keyof typeof tierConfigs];
-      if (!config) continue;
-
-      // Check if tier already exists
-      const existing = await ctx.db
-        .query("subscriptionTiers")
-        .withIndex("by_name", (q) => q.eq("name", tier.name))
-        .first();
-
-      if (existing) {
-        // Update existing tier
-        await ctx.db.patch(existing._id, {
-          displayName: tier.displayName,
-          description: tier.description,
-          stripePriceId: tier.stripePriceId,
-          priceAmountCents: tier.priceAmountCents,
-          limits: config.limits,
-          features: config.features,
-          sortOrder: tier.sortOrder,
-          isPopular: config.isPopular,
-        });
-      } else {
-        // Create new tier
-        await ctx.db.insert("subscriptionTiers", {
-          name: tier.name,
-          displayName: tier.displayName,
-          description: tier.description,
-          stripePriceId: tier.stripePriceId,
-          priceAmountCents: tier.priceAmountCents,
-          limits: config.limits,
-          features: config.features,
-          trialPeriodDays: 7,
-          sortOrder: tier.sortOrder,
-          isPopular: config.isPopular,
-          createdAt: now,
-        });
-      }
-    }
   },
 });
 
@@ -862,13 +750,18 @@ export const linkStripeCustomerByIdOrEmail = mutation({
   },
 });
 
-// Get tier by Stripe price ID (public query for workflow)
+// Get tier by Stripe price ID (public query for workflow) — checks both monthly and annual
 export const getTierByPriceIdPublic = query({
   args: { stripePriceId: v.string() },
   handler: async (ctx, args) => {
+    const monthly = await ctx.db
+      .query("subscriptionTiers")
+      .withIndex("by_stripeMonthlyPriceId", (q) => q.eq("stripeMonthlyPriceId", args.stripePriceId))
+      .first();
+    if (monthly) return monthly;
     return await ctx.db
       .query("subscriptionTiers")
-      .withIndex("by_stripePriceId", (q) => q.eq("stripePriceId", args.stripePriceId))
+      .withIndex("by_stripeAnnualPriceId", (q) => q.eq("stripeAnnualPriceId", args.stripePriceId))
       .first();
   },
 });

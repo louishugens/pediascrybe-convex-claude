@@ -41,7 +41,7 @@ function Chart({patient, type, title, unit, referenceData}: {
           <CardTitle>{title}</CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={480}>
+          <ResponsiveContainer width="100%" height={480} minWidth={0}>
             <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="day" />

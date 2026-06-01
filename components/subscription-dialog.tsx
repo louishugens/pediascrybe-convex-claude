@@ -12,11 +12,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useSubscriptionGuard } from "@/hooks/use-subscription-guard";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import { Sparkles, Users, FileText, Stethoscope, Pill, FlaskConical, ClipboardList, Video } from "lucide-react";
 
 export function SubscriptionDialog() {
   const router = useRouter();
   const { dialogOpen, blockedAction, closeDialog } = useSubscriptionGuard();
+  const tiers = useQuery(api.stripe.getSubscriptionTiers);
 
   const handleViewPlans = () => {
     closeDialog();
@@ -79,20 +82,19 @@ export function SubscriptionDialog() {
             </ul>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 text-center text-xs">
-            <div className="rounded-lg border p-2">
-              <div className="font-semibold">Starter</div>
-              <div className="text-muted-foreground">$29/mo</div>
+          {tiers && (
+            <div className="grid grid-cols-3 gap-2 text-center text-xs">
+              {tiers.filter(t => !t.isCustom).map((tier) => (
+                <div
+                  key={tier._id}
+                  className={`rounded-lg border p-2 ${tier.isPopular ? 'border-primary bg-primary/5' : ''}`}
+                >
+                  <div className="font-semibold">{tier.displayName}</div>
+                  <div className="text-muted-foreground">${Math.round(tier.priceAmountCents / 100)}/mo</div>
+                </div>
+              ))}
             </div>
-            <div className="rounded-lg border border-primary bg-primary/5 p-2">
-              <div className="font-semibold">Pro</div>
-              <div className="text-muted-foreground">$49/mo</div>
-            </div>
-            <div className="rounded-lg border p-2">
-              <div className="font-semibold">Premium</div>
-              <div className="text-muted-foreground">$99/mo</div>
-            </div>
-          </div>
+          )}
         </div>
 
         <AlertDialogFooter className="flex-col sm:flex-row gap-2">

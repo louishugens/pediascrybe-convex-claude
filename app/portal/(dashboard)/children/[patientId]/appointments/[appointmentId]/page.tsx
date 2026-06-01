@@ -36,8 +36,8 @@ export default function AppointmentDetailPage() {
     return <div className="text-center py-20 text-muted-foreground">Appointment not found</div>
   }
 
-  const medications = Array.isArray(appointment.medication) ? appointment.medication : []
-  const exams = Array.isArray(appointment.exams) ? appointment.exams : []
+  const medications = Array.isArray(appointment.prescriptions) ? appointment.prescriptions : []
+  const exams = Array.isArray(appointment.labOrders) ? appointment.labOrders : []
 
   return (
     <div className="space-y-8 max-w-3xl">
@@ -194,7 +194,7 @@ export default function AppointmentDetailPage() {
             {exams.map((exam: any, index: number) => (
               <div key={index} className="flex items-start gap-3">
                 <FlaskConical className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                <p className="text-sm font-medium">{exam.exam || String(exam)}</p>
+                <p className="text-sm font-medium">{exam.examName || exam.exam || String(exam)}</p>
               </div>
             ))}
           </div>
@@ -206,7 +206,7 @@ export default function AppointmentDetailPage() {
         <AIExplainerCard
           type="lab_exam"
           context={{
-            exams: exams.map((e: any) => (typeof e === "string" ? e : e.exam)),
+            exams: exams.map((e: any) => (typeof e === "string" ? e : e.examName ?? e.exam)),
           }}
           patientId={patientId}
           appointmentId={appointmentId}

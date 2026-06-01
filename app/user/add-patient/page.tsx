@@ -9,7 +9,6 @@ import * as z from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
 import { CalendarIcon, ArrowLeft, WifiOff } from "lucide-react"
-import { useSubscriptionGuard } from "@/hooks/use-subscription-guard"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
@@ -55,10 +54,11 @@ const AddPatient = () => {
       "Not a string" 
       }),
     email: z.string().optional(),
-    birthdate: z.date({error: (issue) => issue.input === undefined ? 
+    birthdate: z.date({error: (issue) => issue.input === undefined ?
       "Please enter patient's birth date" :
-      "Not a date" 
+      "Not a date"
       }),
+    birthWeight: z.number().positive("Birth weight must be positive").max(10000, "Birth weight looks too high").optional(),
     mothername: z.string().optional(),
     sex: z.enum(["male", "female"], {error: (issue) => issue.input === undefined ? 
       "Please enter patient's sex" :
@@ -94,7 +94,6 @@ const AddPatient = () => {
 
   const doctor = useDoctor()
   const router = useRouter()
-  const { requireSubscription } = useSubscriptionGuard()
   const { isOnline } = useNetworkStatus()
   const offlineCtx = useOfflineRoute()
 
@@ -113,7 +112,7 @@ const AddPatient = () => {
 
   // Helper: save the patient to IndexedDB + queue for sync
   const savePatientOffline = async (values: FormValues) => {
-    const { firstname, lastname, email, birthdate, mothername, sex, religion, phone, allergies, history, bloodtype, electrophoresis } = values
+    const { firstname, lastname, email, birthdate, birthWeight, mothername, sex, religion, phone, allergies, history, bloodtype, electrophoresis } = values
     if (!effectiveDoctor) {
       toast.error("Doctor profile not available offline. Please try again when connected.")
       return
@@ -130,6 +129,7 @@ const AddPatient = () => {
       email: email || undefined,
       phone: phone || undefined,
       birthdate: birthdate.getTime(),
+      birthWeight: birthWeight ?? undefined,
       sex: sex as "male" | "female",
       mothername: mothername || undefined,
       religion: religion || undefined,
@@ -149,7 +149,7 @@ const AddPatient = () => {
       apiRoute: '/api/patients/addPatient',
       method: 'POST',
       payload: {
-        firstname, lastname, email, birthdate,
+        firstname, lastname, email, birthdate, birthWeight,
         mothername, sex, religion, phone,
         doctorId: effectiveDoctor._id,
         allergies, history, bloodtype, electrophoresis,
@@ -184,14 +184,11 @@ const AddPatient = () => {
       return
     }
 
-    // Online: check subscription before proceeding
-    if (!requireSubscription("add patients")) return
-
     setLoading(true)
 
     try {
-      const { firstname, lastname, email, birthdate, mothername, sex, religion, phone, allergies, history, bloodtype, electrophoresis } = values
-      const body = { firstname, lastname, email, birthdate, mothername, sex, religion, phone, doctorId: doctor!._id, allergies, history, bloodtype, electrophoresis }
+      const { firstname, lastname, email, birthdate, birthWeight, mothername, sex, religion, phone, allergies, history, bloodtype, electrophoresis } = values
+      const body = { firstname, lastname, email, birthdate, birthWeight, mothername, sex, religion, phone, doctorId: doctor!._id, allergies, history, bloodtype, electrophoresis }
 
       const response = await fetch('/api/patients/addPatient', {
         method: 'POST',
@@ -380,6 +377,33 @@ const AddPatient = () => {
                           />
                         </PopoverContent>
                       </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="birthWeight"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Birth Weight (g)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          inputMode="numeric"
+                          min={0}
+                          step="any"
+                          placeholder="e.g. 3200"
+                          value={field.value ?? ""}
+                          onChange={(e) => {
+                            const n = e.target.valueAsNumber;
+                            field.onChange(e.target.value === "" || Number.isNaN(n) ? undefined : n);
+                          }}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                          ref={field.ref}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

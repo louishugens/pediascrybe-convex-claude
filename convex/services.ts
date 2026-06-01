@@ -57,6 +57,36 @@ export const create = mutation({
     const doctor = await getAuthenticatedDoctor(ctx);
     if (doctor._id !== args.doctorId) throw new Error("Not authorized");
 
+    // Enforce tier services cap
+    const subscription = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_doctorId", (q) => q.eq("doctorId", args.doctorId))
+      .order("desc")
+      .first();
+
+    let servicesCap = 0;
+    if (subscription && ["trialing", "active"].includes(subscription.status)) {
+      const tierName = subscription.tierName || subscription.metadata?.tierName;
+      if (tierName) {
+        const tier = await ctx.db
+          .query("subscriptionTiers")
+          .withIndex("by_name", (q) => q.eq("name", tierName))
+          .first();
+        if (tier) servicesCap = tier.limits.services;
+      }
+    }
+
+    const existing = await ctx.db
+      .query("services")
+      .withIndex("by_doctorId", (q) => q.eq("doctorId", args.doctorId))
+      .collect();
+
+    if (existing.length >= servicesCap) {
+      throw new Error(
+        `SERVICE_LIMIT_REACHED:You've reached your plan's service catalog limit (${servicesCap}). Upgrade to add more services.`,
+      );
+    }
+
     const now = Date.now();
     return await ctx.db.insert("services", {
       ...args,

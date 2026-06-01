@@ -84,6 +84,22 @@ http.route({
 
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
+
+        // AI credit pack purchase (one-time payment)
+        if (session.mode === "payment") {
+          const pi = session.payment_intent
+            ? await stripe.paymentIntents.retrieve(session.payment_intent as string)
+            : null;
+          const metadata = pi?.metadata || session.metadata || {};
+          if (metadata.kind === "ai_credit_pack" && metadata.authUserId && metadata.credits) {
+            await ctx.runMutation(internal.aiPacks.applyPackCredits, {
+              authUserId: String(metadata.authUserId),
+              credits: Number(metadata.credits),
+            });
+          }
+          break;
+        }
+
         if (session.mode === "subscription" && session.subscription) {
           // Checkout completed — syncing subscription
           const subscription = await stripe.subscriptions.retrieve(session.subscription as string);

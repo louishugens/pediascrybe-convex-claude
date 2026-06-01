@@ -15,6 +15,7 @@ interface Patient {
   firstname?: string;
   lastname?: string;
   birthdate?: number;
+  birthWeight?: number;
   sex?: string;
   allergies?: string;
   bloodtype?: string;

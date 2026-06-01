@@ -38,20 +38,34 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
             email: doc.email,
           });
 
-          // If user is a doctor, create doctor profile
+          // If user is a doctor, create or relink doctor profile.
+          // Why: re-signups (deleted Better Auth user, fresh signup with the same email)
+          // were producing duplicate doctor rows and orphaning the user's patients.
           if (doc.role === "doctor") {
-            await ctx.db.insert("doctors", {
-              authUserId: String(doc._id),
-              email: doc.email,
-              firstname: doc.firstName ?? doc.name?.split(" ")[0] ?? "",
-              lastname: doc.lastName ?? doc.name?.split(" ").slice(1).join(" ") ?? "",
-              isActive: true,
-              isCompleted: false,
-              isDoctor: true,
-              isMedPro: true,
-              createdAt: now,
-              updatedAt: now,
-            });
+            const existingByEmail = await ctx.db
+              .query("doctors")
+              .withIndex("by_email", (q) => q.eq("email", doc.email))
+              .first();
+
+            if (existingByEmail) {
+              await ctx.db.patch(existingByEmail._id, {
+                authUserId: String(doc._id),
+                updatedAt: now,
+              });
+            } else {
+              await ctx.db.insert("doctors", {
+                authUserId: String(doc._id),
+                email: doc.email,
+                firstname: doc.firstName ?? doc.name?.split(" ")[0] ?? "",
+                lastname: doc.lastName ?? doc.name?.split(" ").slice(1).join(" ") ?? "",
+                isActive: true,
+                isCompleted: false,
+                isDoctor: true,
+                isMedPro: true,
+                createdAt: now,
+                updatedAt: now,
+              });
+            }
           }
 
           // If user is a patient, auto-accept pending invitations

@@ -1,15 +1,32 @@
 import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
+import { Id } from "./_generated/dataModel";
+import { internal } from "./_generated/api";
+
+// ==================== AI Credit Pricing ====================
+
+// Credit cost per AI feature. Source of truth for billable weight.
+export const AI_CREDIT_WEIGHTS = {
+  scrybegpt: 1,
+  patient_chat: 1,
+  prescription: 2,
+  lab_exam: 2,
+  diagnostic: 2,
+  report: 5,
+  whatsapp: 1,
+  classify: 1,
+  completion: 1,
+} as const;
+
+export type AIFeature = keyof typeof AI_CREDIT_WEIGHTS;
 
 // ==================== Helper Functions ====================
 
-// Get current period string (YYYY-MM format)
 function getCurrentPeriod(): string {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
-// Type for quota check result
 interface QuotaCheckResult {
   allowed: boolean;
   reason?: string;
@@ -20,7 +37,7 @@ interface QuotaCheckResult {
 
 // ==================== Queries ====================
 
-// Get current usage for the authenticated doctor
+// Get current usage row for the authenticated doctor
 export const getCurrentUsage = query({
   args: {},
   handler: async (ctx) => {
@@ -45,16 +62,17 @@ export const getCurrentUsage = query({
 
     return {
       period,
-      scrybegptMessages: usage?.scrybegptMessages || 0,
-      aiPrescription: usage?.aiPrescription || 0,
-      aiLabExam: usage?.aiLabExam || 0,
-      aiDiagnostic: usage?.aiDiagnostic || 0,
-      aiReport: usage?.aiReport || 0,
+      aiCreditsUsed: usage?.aiCreditsUsed || 0,
+      packCreditsRemaining: usage?.packCreditsRemaining || 0,
+      whatsappTrialUsed: usage?.whatsappTrialUsed || 0,
+      whatsappMessagesUsed: usage?.whatsappMessagesUsed || 0,
+      telehealthMinutesUsed: usage?.telehealthMinutesUsed || 0,
+      storageUsedBytes: usage?.storageUsedBytes || 0,
     };
   },
 });
 
-// Get usage with limits for display
+// Get usage with tier limits for dashboard display
 export const getUsageWithLimits = query({
   args: {},
   handler: async (ctx) => {
@@ -77,7 +95,6 @@ export const getUsageWithLimits = query({
       )
       .first();
 
-    // Get patient and record counts
     const patients = await ctx.db
       .query("patients")
       .withIndex("by_doctorId", (q) => q.eq("doctorId", doctor._id))
@@ -90,22 +107,29 @@ export const getUsageWithLimits = query({
       .collect();
     const recordCount = appointments.length;
 
-    // Get subscription to determine limits
     const subscription = await ctx.db
       .query("subscriptions")
       .withIndex("by_doctorId", (q) => q.eq("doctorId", doctor._id))
       .order("desc")
       .first();
 
-    // Default limits (no subscription)
+    // Default empty limits (no subscription)
     let limits = {
       patientCount: 0,
       recordCount: 0,
-      scrybegptMessages: 0,
-      aiPrescription: 0,
-      aiLabExam: 0,
-      aiDiagnostic: 0,
-      aiReport: 0,
+      aiCredits: 0,
+      whatsappTrial: 0,
+      whatsappMessages: 0,
+      fileStorageMB: 0,
+      services: 0,
+      staffSeats: 0,
+      auditRetentionDays: 0,
+      telehealthMinutes: 0,
+      telehealthOverageRate: 0,
+      patientPortal: false,
+      telehealth: false,
+      dashboardTier: "basic" as "basic" | "standard" | "full",
+      growthCharts: "all" as const,
     };
 
     if (subscription) {
@@ -117,7 +141,6 @@ export const getUsageWithLimits = query({
             .query("subscriptionTiers")
             .withIndex("by_name", (q) => q.eq("name", tierName))
             .first();
-
           if (tier) {
             limits = tier.limits;
           }
@@ -128,19 +151,20 @@ export const getUsageWithLimits = query({
     const currentUsage = {
       patientCount,
       recordCount,
-      scrybegptMessages: usage?.scrybegptMessages || 0,
-      aiPrescription: usage?.aiPrescription || 0,
-      aiLabExam: usage?.aiLabExam || 0,
-      aiDiagnostic: usage?.aiDiagnostic || 0,
-      aiReport: usage?.aiReport || 0,
+      aiCreditsUsed: usage?.aiCreditsUsed || 0,
+      packCreditsRemaining: usage?.packCreditsRemaining || 0,
+      whatsappTrialUsed: usage?.whatsappTrialUsed || 0,
+      whatsappMessagesUsed: usage?.whatsappMessagesUsed || 0,
+      telehealthMinutesUsed: usage?.telehealthMinutesUsed || 0,
+      storageUsedBytes: usage?.storageUsedBytes || 0,
     };
 
-    // Calculate remaining and percentage for each quota
-    const calculateRemaining = (current: number, limit: number) => 
-      limit === -1 ? -1 : Math.max(0, limit - current);
-    
+    // Every limit is now a concrete number — no -1 sentinel, no Infinity
+    const calculateRemaining = (current: number, limit: number) =>
+      Math.max(0, limit - current);
+
     const calculatePercent = (current: number, limit: number) =>
-      limit === -1 ? 0 : limit > 0 ? Math.round((current / limit) * 100) : 100;
+      limit > 0 ? Math.min(100, Math.round((current / limit) * 100)) : 100;
 
     return {
       period,
@@ -149,20 +173,32 @@ export const getUsageWithLimits = query({
       remaining: {
         patientCount: calculateRemaining(currentUsage.patientCount, limits.patientCount),
         recordCount: calculateRemaining(currentUsage.recordCount, limits.recordCount),
-        scrybegptMessages: calculateRemaining(currentUsage.scrybegptMessages, limits.scrybegptMessages),
-        aiPrescription: calculateRemaining(currentUsage.aiPrescription, limits.aiPrescription),
-        aiLabExam: calculateRemaining(currentUsage.aiLabExam, limits.aiLabExam),
-        aiDiagnostic: calculateRemaining(currentUsage.aiDiagnostic, limits.aiDiagnostic),
-        aiReport: calculateRemaining(currentUsage.aiReport, limits.aiReport),
+        aiCredits: calculateRemaining(currentUsage.aiCreditsUsed, limits.aiCredits),
+        whatsappTrial: calculateRemaining(currentUsage.whatsappTrialUsed, limits.whatsappTrial),
+        whatsappMessages: calculateRemaining(currentUsage.whatsappMessagesUsed, limits.whatsappMessages),
+        fileStorageMB: calculateRemaining(
+          Math.floor(currentUsage.storageUsedBytes / (1024 * 1024)),
+          limits.fileStorageMB,
+        ),
+        telehealthMinutes: calculateRemaining(
+          currentUsage.telehealthMinutesUsed,
+          limits.telehealthMinutes,
+        ),
       },
       percentUsed: {
         patientCount: calculatePercent(currentUsage.patientCount, limits.patientCount),
         recordCount: calculatePercent(currentUsage.recordCount, limits.recordCount),
-        scrybegptMessages: calculatePercent(currentUsage.scrybegptMessages, limits.scrybegptMessages),
-        aiPrescription: calculatePercent(currentUsage.aiPrescription, limits.aiPrescription),
-        aiLabExam: calculatePercent(currentUsage.aiLabExam, limits.aiLabExam),
-        aiDiagnostic: calculatePercent(currentUsage.aiDiagnostic, limits.aiDiagnostic),
-        aiReport: calculatePercent(currentUsage.aiReport, limits.aiReport),
+        aiCredits: calculatePercent(currentUsage.aiCreditsUsed, limits.aiCredits),
+        whatsappTrial: calculatePercent(currentUsage.whatsappTrialUsed, limits.whatsappTrial),
+        whatsappMessages: calculatePercent(currentUsage.whatsappMessagesUsed, limits.whatsappMessages),
+        fileStorageMB: calculatePercent(
+          Math.floor(currentUsage.storageUsedBytes / (1024 * 1024)),
+          limits.fileStorageMB,
+        ),
+        telehealthMinutes: calculatePercent(
+          currentUsage.telehealthMinutesUsed,
+          limits.telehealthMinutes,
+        ),
       },
     };
   },
@@ -212,11 +248,6 @@ export const checkPatientQuota = query({
       }
     }
 
-    // Unlimited
-    if (limit === -1) {
-      return { allowed: true, remaining: -1, limit: -1, usage: 0 };
-    }
-
     if (limit === 0) {
       return {
         allowed: false,
@@ -227,7 +258,6 @@ export const checkPatientQuota = query({
       };
     }
 
-    // Get current patient count
     const patients = await ctx.db
       .query("patients")
       .withIndex("by_doctorId", (q) => q.eq("doctorId", doctor._id))
@@ -291,10 +321,6 @@ export const checkRecordQuota = query({
       }
     }
 
-    if (limit === -1) {
-      return { allowed: true, remaining: -1, limit: -1, usage: 0 };
-    }
-
     if (limit === 0) {
       return {
         allowed: false,
@@ -326,154 +352,266 @@ export const checkRecordQuota = query({
   },
 });
 
-// Generic helper for monthly usage quota checks
-async function checkMonthlyQuota(
-  ctx: any,
-  quotaField: "scrybegptMessages" | "aiPrescription" | "aiLabExam" | "aiDiagnostic" | "aiReport",
-  limitField: "scrybegptMessages" | "aiPrescription" | "aiLabExam" | "aiDiagnostic" | "aiReport",
-  featureName: string
-): Promise<QuotaCheckResult> {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    return { allowed: false, reason: "Not authenticated", remaining: 0, limit: 0, usage: 0 };
-  }
+// ==================== AI Credit Quota ====================
 
-  const doctor = await ctx.db
-    .query("doctors")
-    .withIndex("by_authUserId", (q: any) => q.eq("authUserId", identity.subject))
-    .first();
+// Unified AI credit balance check. Returns remaining credits across both the
+// included monthly pool and any purchased pack balance. Pass `cost` (default 1)
+// to verify the user can afford a specific feature before calling it.
+export const checkAICreditQuota = query({
+  args: { cost: v.optional(v.number()) },
+  handler: async (ctx, args): Promise<QuotaCheckResult & { packBalance: number }> => {
+    const cost = args.cost ?? 1;
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return { allowed: false, reason: "Not authenticated", remaining: 0, limit: 0, usage: 0, packBalance: 0 };
+    }
 
-  if (!doctor) {
-    return { allowed: false, reason: "Doctor profile not found", remaining: 0, limit: 0, usage: 0 };
-  }
+    const doctor = await ctx.db
+      .query("doctors")
+      .withIndex("by_authUserId", (q) => q.eq("authUserId", identity.subject))
+      .first();
 
-  const subscription = await ctx.db
-    .query("subscriptions")
-    .withIndex("by_doctorId", (q: any) => q.eq("doctorId", doctor._id))
-    .order("desc")
-    .first();
+    if (!doctor) {
+      return { allowed: false, reason: "Doctor profile not found", remaining: 0, limit: 0, usage: 0, packBalance: 0 };
+    }
 
-  let limit = 0;
+    const subscription = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_doctorId", (q) => q.eq("doctorId", doctor._id))
+      .order("desc")
+      .first();
 
-  if (subscription) {
-    const activeStatuses = ["trialing", "active"];
-    if (activeStatuses.includes(subscription.status)) {
-      const tierName = subscription.tierName || subscription.metadata?.tierName;
-      if (tierName) {
-        const tier = await ctx.db
-          .query("subscriptionTiers")
-          .withIndex("by_name", (q: any) => q.eq("name", tierName))
-          .first();
-        if (tier) {
-          limit = tier.limits[limitField];
+    let limit = 0;
+    if (subscription) {
+      const activeStatuses = ["trialing", "active"];
+      if (activeStatuses.includes(subscription.status)) {
+        const tierName = subscription.tierName || subscription.metadata?.tierName;
+        if (tierName) {
+          const tier = await ctx.db
+            .query("subscriptionTiers")
+            .withIndex("by_name", (q) => q.eq("name", tierName))
+            .first();
+          if (tier) {
+            limit = tier.limits.aiCredits;
+          }
         }
       }
     }
-  }
 
-  if (limit === -1) {
-    return { allowed: true, remaining: -1, limit: -1, usage: 0 };
-  }
+    const period = getCurrentPeriod();
+    const usageRecord = await ctx.db
+      .query("usage")
+      .withIndex("by_doctorId_period", (q) =>
+        q.eq("doctorId", doctor._id).eq("period", period)
+      )
+      .first();
 
-  if (limit === 0) {
-    return {
-      allowed: false,
-      reason: `${featureName} is not available on your current plan. Please upgrade.`,
-      remaining: 0,
-      limit: 0,
-      usage: 0,
-    };
-  }
+    const usage = usageRecord?.aiCreditsUsed || 0;
+    const packBalance = usageRecord?.packCreditsRemaining || 0;
+    const includedRemaining = Math.max(0, limit - usage);
+    const totalAvailable = includedRemaining + packBalance;
 
-  const period = getCurrentPeriod();
-  const usageRecord = await ctx.db
-    .query("usage")
-    .withIndex("by_doctorId_period", (q: any) =>
-      q.eq("doctorId", doctor._id).eq("period", period)
-    )
-    .first();
+    if (limit === 0 && packBalance === 0) {
+      return {
+        allowed: false,
+        reason: "AI features require an active subscription.",
+        remaining: 0,
+        limit: 0,
+        usage,
+        packBalance: 0,
+      };
+    }
 
-  const usage = usageRecord?.[quotaField] || 0;
-  const remaining = limit - usage;
+    if (totalAvailable < cost) {
+      return {
+        allowed: false,
+        reason: `Not enough AI credits. Buy a credit pack or upgrade your plan.`,
+        remaining: totalAvailable,
+        limit,
+        usage,
+        packBalance,
+      };
+    }
 
-  if (remaining <= 0) {
-    return {
-      allowed: false,
-      reason: `You have reached your monthly ${featureName.toLowerCase()} limit (${limit}). Please upgrade your plan.`,
-      remaining: 0,
-      limit,
-      usage,
-    };
-  }
-
-  return { allowed: true, remaining, limit, usage };
-}
-
-// Check ScrybeGPT quota
-export const checkScrybeGPTQuota = query({
-  args: {},
-  handler: async (ctx): Promise<QuotaCheckResult> => {
-    return checkMonthlyQuota(ctx, "scrybegptMessages", "scrybegptMessages", "ScrybeGPT messages");
+    return { allowed: true, remaining: totalAvailable, limit, usage, packBalance };
   },
 });
 
-// Check AI Prescription quota
-export const checkAIPrescriptionQuota = query({
-  args: {},
-  handler: async (ctx): Promise<QuotaCheckResult> => {
-    return checkMonthlyQuota(ctx, "aiPrescription", "aiPrescription", "AI prescription generation");
-  },
-});
-
-// Check AI Lab Exam quota
-export const checkAILabExamQuota = query({
-  args: {},
-  handler: async (ctx): Promise<QuotaCheckResult> => {
-    return checkMonthlyQuota(ctx, "aiLabExam", "aiLabExam", "AI lab exam generation");
-  },
-});
-
-// Check AI Diagnostic quota
-export const checkAIDiagnosticQuota = query({
-  args: {},
-  handler: async (ctx): Promise<QuotaCheckResult> => {
-    return checkMonthlyQuota(ctx, "aiDiagnostic", "aiDiagnostic", "AI diagnostic generation");
-  },
-});
-
-// Check AI Report quota
-export const checkAIReportQuota = query({
-  args: {},
-  handler: async (ctx): Promise<QuotaCheckResult> => {
-    return checkMonthlyQuota(ctx, "aiReport", "aiReport", "AI report generation");
-  },
-});
-
-// Legacy: Check if user can make an AI query (maps to ScrybeGPT)
+// Legacy: generic AI query check (maps to 1-credit quota)
 export const canMakeAIQuery = query({
   args: {},
   handler: async (ctx): Promise<{ allowed: boolean; reason?: string; remaining: number }> => {
-    const result = await checkMonthlyQuota(ctx, "scrybegptMessages", "scrybegptMessages", "AI queries");
+    const result = await checkAICreditQuotaInline(ctx, 1);
     return { allowed: result.allowed, reason: result.reason, remaining: result.remaining };
   },
 });
 
-// Legacy: Check if user can generate a document (maps to AI Report)
+// Legacy: document generation check (maps to 5-credit report cost)
 export const canGenerateDocument = query({
   args: {},
   handler: async (ctx): Promise<{ allowed: boolean; reason?: string; remaining: number }> => {
-    const result = await checkMonthlyQuota(ctx, "aiReport", "aiReport", "Document generation");
+    const result = await checkAICreditQuotaInline(ctx, 5);
     return { allowed: result.allowed, reason: result.reason, remaining: result.remaining };
   },
 });
 
 // ==================== Mutations ====================
 
-// Generic increment mutation helper
-async function incrementUsageField(
-  ctx: any,
-  field: "scrybegptMessages" | "aiPrescription" | "aiLabExam" | "aiDiagnostic" | "aiReport"
-) {
+// Deduct AI credits — call BEFORE making the AI request.
+// Consumption order: included pool first, then pack balance.
+// Throws NO_CREDITS if the user can't afford the cost.
+export const deductAICredits = mutation({
+  args: {
+    feature: v.union(
+      v.literal("scrybegpt"),
+      v.literal("patient_chat"),
+      v.literal("prescription"),
+      v.literal("lab_exam"),
+      v.literal("diagnostic"),
+      v.literal("report"),
+      v.literal("whatsapp"),
+      v.literal("classify"),
+      v.literal("completion"),
+    ),
+  },
+  handler: async (ctx, args): Promise<{ success: boolean; cost: number; remaining: number }> => {
+    const cost = AI_CREDIT_WEIGHTS[args.feature];
+
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const doctor = await ctx.db
+      .query("doctors")
+      .withIndex("by_authUserId", (q) => q.eq("authUserId", identity.subject))
+      .first();
+
+    if (!doctor) throw new Error("Doctor profile not found");
+
+    // Resolve included monthly limit from subscription tier
+    const subscription = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_doctorId", (q) => q.eq("doctorId", doctor._id))
+      .order("desc")
+      .first();
+
+    let limit = 0;
+    if (subscription) {
+      const activeStatuses = ["trialing", "active"];
+      if (activeStatuses.includes(subscription.status)) {
+        const tierName = subscription.tierName || subscription.metadata?.tierName;
+        if (tierName) {
+          const tier = await ctx.db
+            .query("subscriptionTiers")
+            .withIndex("by_name", (q) => q.eq("name", tierName))
+            .first();
+          if (tier) {
+            limit = tier.limits.aiCredits;
+          }
+        }
+      }
+    }
+
+    const period = getCurrentPeriod();
+    const now = Date.now();
+    const usage = await ctx.db
+      .query("usage")
+      .withIndex("by_doctorId_period", (q) =>
+        q.eq("doctorId", doctor._id).eq("period", period)
+      )
+      .first();
+
+    const currentUsed = usage?.aiCreditsUsed || 0;
+    const packBalance = usage?.packCreditsRemaining || 0;
+    const includedRemaining = Math.max(0, limit - currentUsed);
+
+    if (includedRemaining + packBalance < cost) {
+      throw new Error("NO_CREDITS");
+    }
+
+    // Fill from included pool first, then draw the remainder from pack balance
+    const fromIncluded = Math.min(cost, includedRemaining);
+    const fromPack = cost - fromIncluded;
+
+    if (usage) {
+      await ctx.db.patch(usage._id, {
+        aiCreditsUsed: currentUsed + fromIncluded,
+        packCreditsRemaining: packBalance - fromPack,
+        updatedAt: now,
+      });
+    } else {
+      await ctx.db.insert("usage", {
+        doctorId: doctor._id,
+        period,
+        aiCreditsUsed: fromIncluded,
+        packCreditsRemaining: packBalance - fromPack,
+        whatsappTrialUsed: 0,
+        whatsappMessagesUsed: 0,
+        telehealthMinutesUsed: 0,
+        storageUsedBytes: 0,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
+    const remaining = Math.max(0, limit - (currentUsed + fromIncluded)) + (packBalance - fromPack);
+    return { success: true, cost, remaining };
+  },
+});
+
+// Refund AI credits — call from an AI route's error handler to undo a deduction
+// when the model call actually fails after we've already charged the user.
+export const refundAICredits = mutation({
+  args: {
+    feature: v.union(
+      v.literal("scrybegpt"),
+      v.literal("patient_chat"),
+      v.literal("prescription"),
+      v.literal("lab_exam"),
+      v.literal("diagnostic"),
+      v.literal("report"),
+      v.literal("whatsapp"),
+      v.literal("classify"),
+      v.literal("completion"),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const cost = AI_CREDIT_WEIGHTS[args.feature];
+
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const doctor = await ctx.db
+      .query("doctors")
+      .withIndex("by_authUserId", (q) => q.eq("authUserId", identity.subject))
+      .first();
+
+    if (!doctor) return;
+
+    const period = getCurrentPeriod();
+    const usage = await ctx.db
+      .query("usage")
+      .withIndex("by_doctorId_period", (q) =>
+        q.eq("doctorId", doctor._id).eq("period", period)
+      )
+      .first();
+
+    if (!usage) return;
+
+    // Refund from pool counter first — simpler than tracking which bucket paid.
+    const currentUsed = usage.aiCreditsUsed || 0;
+    await ctx.db.patch(usage._id, {
+      aiCreditsUsed: Math.max(0, currentUsed - cost),
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+// ==================== Legacy Increment Wrappers ====================
+// These map the old per-feature increments onto the unified credit pool so
+// existing AI routes keep working until they're migrated to deductAICredits.
+
+async function deductForFeature(ctx: any, feature: AIFeature) {
+  const cost = AI_CREDIT_WEIGHTS[feature];
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) throw new Error("Not authenticated");
 
@@ -481,7 +619,6 @@ async function incrementUsageField(
     .query("doctors")
     .withIndex("by_authUserId", (q: any) => q.eq("authUserId", identity.subject))
     .first();
-
   if (!doctor) throw new Error("Doctor profile not found");
 
   const period = getCurrentPeriod();
@@ -496,100 +633,395 @@ async function incrementUsageField(
 
   if (usage) {
     await ctx.db.patch(usage._id, {
-      [field]: (usage[field] || 0) + 1,
+      aiCreditsUsed: (usage.aiCreditsUsed || 0) + cost,
       updatedAt: now,
     });
   } else {
     await ctx.db.insert("usage", {
       doctorId: doctor._id,
       period,
-      scrybegptMessages: field === "scrybegptMessages" ? 1 : 0,
-      aiPrescription: field === "aiPrescription" ? 1 : 0,
-      aiLabExam: field === "aiLabExam" ? 1 : 0,
-      aiDiagnostic: field === "aiDiagnostic" ? 1 : 0,
-      aiReport: field === "aiReport" ? 1 : 0,
+      aiCreditsUsed: cost,
+      packCreditsRemaining: 0,
+      whatsappTrialUsed: 0,
+      whatsappMessagesUsed: 0,
+      telehealthMinutesUsed: 0,
+      storageUsedBytes: 0,
       createdAt: now,
       updatedAt: now,
     });
   }
 }
 
-// Increment ScrybeGPT message count
 export const incrementScrybeGPT = mutation({
   args: {},
-  handler: async (ctx) => {
-    await incrementUsageField(ctx, "scrybegptMessages");
-  },
+  handler: async (ctx) => { await deductForFeature(ctx, "scrybegpt"); },
 });
 
-// Increment AI Prescription count
 export const incrementAIPrescription = mutation({
   args: {},
-  handler: async (ctx) => {
-    await incrementUsageField(ctx, "aiPrescription");
-  },
+  handler: async (ctx) => { await deductForFeature(ctx, "prescription"); },
 });
 
-// Increment AI Lab Exam count
 export const incrementAILabExam = mutation({
   args: {},
-  handler: async (ctx) => {
-    await incrementUsageField(ctx, "aiLabExam");
-  },
+  handler: async (ctx) => { await deductForFeature(ctx, "lab_exam"); },
 });
 
-// Increment AI Diagnostic count
 export const incrementAIDiagnostic = mutation({
   args: {},
-  handler: async (ctx) => {
-    await incrementUsageField(ctx, "aiDiagnostic");
-  },
+  handler: async (ctx) => { await deductForFeature(ctx, "diagnostic"); },
 });
 
-// Increment AI Report count
 export const incrementAIReport = mutation({
   args: {},
-  handler: async (ctx) => {
-    await incrementUsageField(ctx, "aiReport");
-  },
+  handler: async (ctx) => { await deductForFeature(ctx, "report"); },
 });
 
-// Legacy: Increment AI query count (maps to ScrybeGPT)
 export const incrementAIQuery = mutation({
   args: {},
-  handler: async (ctx) => {
-    await incrementUsageField(ctx, "scrybegptMessages");
-  },
+  handler: async (ctx) => { await deductForFeature(ctx, "scrybegpt"); },
 });
 
-// Legacy: Increment document generation count (maps to AI Report)
 export const incrementDocumentGeneration = mutation({
   args: {},
-  handler: async (ctx) => {
-    await incrementUsageField(ctx, "aiReport");
-  },
+  handler: async (ctx) => { await deductForFeature(ctx, "report"); },
+});
+
+// Legacy per-feature check wrappers (map to unified credit quota).
+async function checkAICreditQuotaInline(ctx: any, cost: number): Promise<QuotaCheckResult> {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    return { allowed: false, reason: "Not authenticated", remaining: 0, limit: 0, usage: 0 };
+  }
+  const doctor = await ctx.db
+    .query("doctors")
+    .withIndex("by_authUserId", (q: any) => q.eq("authUserId", identity.subject))
+    .first();
+  if (!doctor) {
+    return { allowed: false, reason: "Doctor profile not found", remaining: 0, limit: 0, usage: 0 };
+  }
+  const subscription = await ctx.db
+    .query("subscriptions")
+    .withIndex("by_doctorId", (q: any) => q.eq("doctorId", doctor._id))
+    .order("desc")
+    .first();
+  let limit = 0;
+  if (subscription && ["trialing", "active"].includes(subscription.status)) {
+    const tierName = subscription.tierName || subscription.metadata?.tierName;
+    if (tierName) {
+      const tier = await ctx.db
+        .query("subscriptionTiers")
+        .withIndex("by_name", (q: any) => q.eq("name", tierName))
+        .first();
+      if (tier) limit = tier.limits.aiCredits;
+    }
+  }
+  const period = getCurrentPeriod();
+  const usageRecord = await ctx.db
+    .query("usage")
+    .withIndex("by_doctorId_period", (q: any) =>
+      q.eq("doctorId", doctor._id).eq("period", period)
+    )
+    .first();
+  const used = usageRecord?.aiCreditsUsed || 0;
+  const packBalance = usageRecord?.packCreditsRemaining || 0;
+  const totalAvailable = Math.max(0, limit - used) + packBalance;
+
+  if (limit === 0 && packBalance === 0) {
+    return { allowed: false, reason: "AI features require an active subscription.", remaining: 0, limit: 0, usage: used };
+  }
+  if (totalAvailable < cost) {
+    return { allowed: false, reason: "Not enough AI credits. Buy a pack or upgrade.", remaining: totalAvailable, limit, usage: used };
+  }
+  return { allowed: true, remaining: totalAvailable, limit, usage: used };
+}
+
+export const checkScrybeGPTQuota = query({
+  args: {},
+  handler: async (ctx): Promise<QuotaCheckResult> => checkAICreditQuotaInline(ctx, 1),
+});
+
+export const checkAIPrescriptionQuota = query({
+  args: {},
+  handler: async (ctx): Promise<QuotaCheckResult> => checkAICreditQuotaInline(ctx, 2),
+});
+
+export const checkAILabExamQuota = query({
+  args: {},
+  handler: async (ctx): Promise<QuotaCheckResult> => checkAICreditQuotaInline(ctx, 2),
+});
+
+export const checkAIDiagnosticQuota = query({
+  args: {},
+  handler: async (ctx): Promise<QuotaCheckResult> => checkAICreditQuotaInline(ctx, 2),
+});
+
+export const checkAIReportQuota = query({
+  args: {},
+  handler: async (ctx): Promise<QuotaCheckResult> => checkAICreditQuotaInline(ctx, 5),
 });
 
 // ==================== Internal Mutations ====================
 
-// Reset usage for a new period (can be called by a cron job)
+// Reset the monthly usage row for a specific doctor by zeroing all counters.
+// Called from the monthly cron for each active doctor.
+export const resetDoctorUsageCounters = internalMutation({
+  args: { doctorId: v.id("doctors") },
+  handler: async (ctx, args) => {
+    const period = getCurrentPeriod();
+    const now = Date.now();
+
+    const existing = await ctx.db
+      .query("usage")
+      .withIndex("by_doctorId_period", (q) =>
+        q.eq("doctorId", args.doctorId).eq("period", period)
+      )
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        aiCreditsUsed: 0,
+        packCreditsRemaining: 0, // packs do NOT roll over
+        whatsappTrialUsed: 0,
+        whatsappMessagesUsed: 0,
+        telehealthMinutesUsed: 0,
+        // storageUsedBytes is NOT reset — it's a running total
+        updatedAt: now,
+      });
+    } else {
+      await ctx.db.insert("usage", {
+        doctorId: args.doctorId,
+        period,
+        aiCreditsUsed: 0,
+        packCreditsRemaining: 0,
+        whatsappTrialUsed: 0,
+        whatsappMessagesUsed: 0,
+        telehealthMinutesUsed: 0,
+        storageUsedBytes: 0,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+  },
+});
+
+// Cron entry point — resolves the current period internally so crons.monthly
+// can schedule it without supplying dynamic args.
+export const resetCurrentPeriodUsage = internalMutation({
+  args: {},
+  handler: async (ctx): Promise<void> => {
+    await ctx.runMutation(internal.usage.resetUsageForPeriod, {
+      period: getCurrentPeriod(),
+    });
+  },
+});
+
+// Monthly cron entry point — resets counters for every doctor.
 export const resetUsageForPeriod = internalMutation({
   args: { period: v.string() },
   handler: async (ctx, args) => {
-    const oldUsage = await ctx.db
-      .query("usage")
-      .filter((q) => q.lt(q.field("period"), args.period))
-      .collect();
-
-    // Keep last 12 months of usage data
+    // Garbage-collect usage rows older than 12 months
     const cutoffDate = new Date();
     cutoffDate.setMonth(cutoffDate.getMonth() - 12);
     const cutoffPeriod = `${cutoffDate.getFullYear()}-${String(cutoffDate.getMonth() + 1).padStart(2, "0")}`;
 
-    for (const usage of oldUsage) {
-      if (usage.period < cutoffPeriod) {
-        await ctx.db.delete(usage._id);
+    const oldUsage = await ctx.db
+      .query("usage")
+      .filter((q) => q.lt(q.field("period"), cutoffPeriod))
+      .collect();
+
+    for (const u of oldUsage) {
+      await ctx.db.delete(u._id);
+    }
+
+    // Zero this month's counters for every doctor
+    const doctors = await ctx.db.query("doctors").collect();
+    for (const doctor of doctors) {
+      const existing = await ctx.db
+        .query("usage")
+        .withIndex("by_doctorId_period", (q) =>
+          q.eq("doctorId", doctor._id).eq("period", args.period)
+        )
+        .first();
+
+      const now = Date.now();
+      if (existing) {
+        await ctx.db.patch(existing._id, {
+          aiCreditsUsed: 0,
+          packCreditsRemaining: 0,
+          whatsappTrialUsed: 0,
+          whatsappMessagesUsed: 0,
+          telehealthMinutesUsed: 0,
+          updatedAt: now,
+        });
       }
+    }
+  },
+});
+
+// Credit a doctor's pack balance after a successful pack purchase.
+// Called from the Stripe webhook (one-time payment mode).
+export const creditPackBalance = internalMutation({
+  args: {
+    doctorId: v.id("doctors"),
+    credits: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const period = getCurrentPeriod();
+    const now = Date.now();
+
+    const existing = await ctx.db
+      .query("usage")
+      .withIndex("by_doctorId_period", (q) =>
+        q.eq("doctorId", args.doctorId).eq("period", period)
+      )
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        packCreditsRemaining: (existing.packCreditsRemaining || 0) + args.credits,
+        updatedAt: now,
+      });
+    } else {
+      await ctx.db.insert("usage", {
+        doctorId: args.doctorId,
+        period,
+        aiCreditsUsed: 0,
+        packCreditsRemaining: args.credits,
+        whatsappTrialUsed: 0,
+        whatsappMessagesUsed: 0,
+        telehealthMinutesUsed: 0,
+        storageUsedBytes: 0,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+  },
+});
+
+// Adjust a doctor's running storage total. Positive `deltaBytes` on upload,
+// negative on delete. Callers must ensure deltas are signed correctly.
+export const adjustStorageUsage = internalMutation({
+  args: {
+    doctorId: v.id("doctors"),
+    deltaBytes: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const period = getCurrentPeriod();
+    const now = Date.now();
+
+    const existing = await ctx.db
+      .query("usage")
+      .withIndex("by_doctorId_period", (q) =>
+        q.eq("doctorId", args.doctorId).eq("period", period)
+      )
+      .first();
+
+    if (existing) {
+      const current = existing.storageUsedBytes || 0;
+      await ctx.db.patch(existing._id, {
+        storageUsedBytes: Math.max(0, current + args.deltaBytes),
+        updatedAt: now,
+      });
+    } else {
+      await ctx.db.insert("usage", {
+        doctorId: args.doctorId,
+        period,
+        aiCreditsUsed: 0,
+        packCreditsRemaining: 0,
+        whatsappTrialUsed: 0,
+        whatsappMessagesUsed: 0,
+        telehealthMinutesUsed: 0,
+        storageUsedBytes: Math.max(0, args.deltaBytes),
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+  },
+});
+
+// Increment telehealth minutes counter (called on session end).
+export const addTelehealthMinutes = internalMutation({
+  args: {
+    doctorId: v.id("doctors"),
+    minutes: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const period = getCurrentPeriod();
+    const now = Date.now();
+
+    const existing = await ctx.db
+      .query("usage")
+      .withIndex("by_doctorId_period", (q) =>
+        q.eq("doctorId", args.doctorId).eq("period", period)
+      )
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        telehealthMinutesUsed: (existing.telehealthMinutesUsed || 0) + args.minutes,
+        updatedAt: now,
+      });
+    } else {
+      await ctx.db.insert("usage", {
+        doctorId: args.doctorId,
+        period,
+        aiCreditsUsed: 0,
+        packCreditsRemaining: 0,
+        whatsappTrialUsed: 0,
+        whatsappMessagesUsed: 0,
+        telehealthMinutesUsed: args.minutes,
+        storageUsedBytes: 0,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+  },
+});
+
+// Increment WhatsApp trial counter (essentials only) or WhatsApp sub-cap
+// counter (pro/complete). Called from the WhatsApp webhook handler.
+export const incrementWhatsappCounter = internalMutation({
+  args: {
+    doctorId: v.id("doctors"),
+    field: v.union(v.literal("trial"), v.literal("message")),
+  },
+  handler: async (ctx, args) => {
+    const period = getCurrentPeriod();
+    const now = Date.now();
+
+    const existing = await ctx.db
+      .query("usage")
+      .withIndex("by_doctorId_period", (q) =>
+        q.eq("doctorId", args.doctorId).eq("period", period)
+      )
+      .first();
+
+    if (existing) {
+      if (args.field === "trial") {
+        await ctx.db.patch(existing._id, {
+          whatsappTrialUsed: (existing.whatsappTrialUsed || 0) + 1,
+          updatedAt: now,
+        });
+      } else {
+        await ctx.db.patch(existing._id, {
+          whatsappMessagesUsed: (existing.whatsappMessagesUsed || 0) + 1,
+          updatedAt: now,
+        });
+      }
+    } else {
+      await ctx.db.insert("usage", {
+        doctorId: args.doctorId,
+        period,
+        aiCreditsUsed: 0,
+        packCreditsRemaining: 0,
+        whatsappTrialUsed: args.field === "trial" ? 1 : 0,
+        whatsappMessagesUsed: args.field === "message" ? 1 : 0,
+        telehealthMinutesUsed: 0,
+        storageUsedBytes: 0,
+        createdAt: now,
+        updatedAt: now,
+      });
     }
   },
 });

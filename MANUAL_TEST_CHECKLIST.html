@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pediascrybe — Manual Test Checklist</title>
+<style>
+  :root{
+    --bg:#0f1419;--panel:#1a2129;--panel2:#222b35;--border:#2d3845;
+    --text:#e6edf3;--muted:#8b98a5;--accent:#4c9eeb;
+    --pass:#2ea043;--fail:#e5534b;--blocked:#d29922;--na:#6e7681;--pending:#3d4754;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-size:14px;line-height:1.55;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  header{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,#16202b,#131a22);
+    border-bottom:1px solid var(--border);padding:14px 22px;backdrop-filter:blur(6px);}
+  header h1{margin:0 0 3px;font-size:19px;}
+  header .sub{color:var(--muted);font-size:12px;}
+  .wrap{max-width:1080px;margin:0 auto;padding:22px;}
+  .bar-outer{height:9px;background:var(--panel2);border-radius:6px;overflow:hidden;margin-top:9px;}
+  .bar-inner{height:100%;background:linear-gradient(90deg,var(--pass),#3fb950);width:0%;transition:width .3s;}
+  .stats{display:flex;gap:13px;flex-wrap:wrap;margin-top:9px;font-size:12px;}
+  .stat{display:flex;align-items:center;gap:6px;}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+  .dot.pass{background:var(--pass);}.dot.fail{background:var(--fail);}
+  .dot.blocked{background:var(--blocked);}.dot.na{background:var(--na);}.dot.pending{background:var(--pending);}
+  .toolbar{display:flex;gap:8px;margin-top:11px;flex-wrap:wrap;}
+  button.tool{background:var(--panel2);color:var(--text);border:1px solid var(--border);
+    padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;}
+  button.tool:hover{border-color:var(--accent);}
+  .legend{font-size:11px;color:var(--muted);margin-top:6px;}
+  .intro{background:#11212c;border-left:3px solid var(--accent);padding:12px 16px;border-radius:6px;margin:18px 0;color:#bcd5e6;font-size:13px;}
+  .intro b{color:#fff;}
+  section.group{background:var(--panel);border:1px solid var(--border);border-radius:10px;margin:16px 0;overflow:hidden;}
+  .group-head{display:flex;align-items:center;justify-content:space-between;padding:13px 17px;cursor:pointer;user-select:none;background:var(--panel2);}
+  .group-head:hover{background:#283340;}
+  .group-head h2{margin:0;font-size:15px;}
+  .group-head .phase{color:var(--accent);font-weight:700;margin-right:8px;}
+  .group-head .meta{color:var(--muted);font-size:12px;}
+  .group-note{padding:9px 17px;color:var(--muted);font-size:12px;border-bottom:1px solid var(--border);background:#161d25;}
+  .group.collapsed .group-body{display:none;}
+  .test{display:grid;grid-template-columns:1fr 140px;gap:12px;padding:12px 17px;border-bottom:1px solid var(--border);align-items:start;}
+  .test:last-child{border-bottom:none;}
+  .test .title{font-weight:600;}
+  .test .steps{color:var(--muted);font-size:12.5px;margin-top:3px;}
+  .test .exp{font-size:12.5px;margin-top:3px;color:#9fb4c4;}
+  .test .exp b{color:#cfe3f2;}
+  .controls{display:flex;flex-direction:column;gap:6px;}
+  select.status{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px;font-size:12px;}
+  select.status.pass{border-color:var(--pass);color:#6fdc8c;}
+  select.status.fail{border-color:var(--fail);color:#ff8b82;}
+  select.status.blocked{border-color:var(--blocked);color:#e3b341;}
+  select.status.na{border-color:var(--na);}
+  textarea.notes{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px;font-size:11px;resize:vertical;min-height:26px;font-family:inherit;}
+  .pri{display:inline-block;font-size:10px;padding:1px 7px;border-radius:10px;margin-left:8px;vertical-align:middle;}
+  .pri.p1{background:#3a1416;color:#ff8b82;border:1px solid #5c2125;}
+  .pri.p2{background:#3a2e0f;color:#e3b341;border:1px solid #5c4a1f;}
+  .pri.must{background:#10271a;color:#6fdc8c;border:1px solid #1f5c3a;}
+  code{background:#0c1218;padding:1px 5px;border-radius:4px;font-size:12px;color:#9ecbff;}
+  table.matrix{width:100%;border-collapse:collapse;margin:6px 0;font-size:12px;}
+  table.matrix th,table.matrix td{border:1px solid var(--border);padding:5px 8px;text-align:left;}
+  table.matrix th{background:#161d25;color:var(--muted);}
+  footer{margin-top:40px;padding-top:14px;border-top:1px solid var(--border);color:var(--muted);font-size:12px;}
+</style>
+</head>
+<body>
+<header>
+  <h1>🩺 Pediascrybe — Manual Test Checklist</h1>
+  <div class="sub">Ordered by the real product flow: set up → subscribe → configure → use. Progress saved in your browser.</div>
+  <div class="bar-outer"><div class="bar-inner" id="bar"></div></div>
+  <div class="stats" id="stats"></div>
+  <div class="toolbar">
+    <button class="tool" onclick="expandAll(true)">Expand all</button>
+    <button class="tool" onclick="expandAll(false)">Collapse all</button>
+    <button class="tool" onclick="exportJSON()">Export (JSON)</button>
+    <button class="tool" onclick="resetAll()">Reset</button>
+  </div>
+  <div class="legend">⬜ Pending · ✅ Pass · ❌ Fail · ⛔ Blocked · ➖ N/A &nbsp;|&nbsp;
+    <span class="pri must">DO FIRST</span> proper-flow prerequisite &nbsp;
+    <span class="pri p1">P1</span> critical path &nbsp; <span class="pri p2">P2</span> important</div>
+</header>
+<div class="wrap">
+  <div class="intro">
+    <b>How to use:</b> Test in order — many later steps need earlier ones (you can't test patient limits before subscribing). Use <b>two accounts</b>: a <b>doctor</b> and a <b>parent/portal</b> user, plus a second doctor to check data isolation. Stripe is in <b>test mode</b> — use card <code>4242 4242 4242 4242</code>, any future expiry, any CVC/ZIP. Items marked <span class="pri p1">P1</span> in §6 (<b>add prescription, create report, create receipt</b>) are the three flows automated testing could NOT confirm — verify these carefully.
+  </div>
+  <div id="root"></div>
+  <footer>Pediascrybe manual QA checklist · companion to <code>TEST_REPORT.html</code> (automated results). Generated 2026-05-26.</footer>
+</div>
+
+<script>
+const DATA = [
+ { id:"p0", phase:"0", title:"Environment & accounts", open:true, note:"Get the playground ready before testing.",
+   tests:[
+     {id:"p0-1",t:"App loads",pri:"must",s:"Open the app URL; the login/landing page renders.",e:"No console errors; page renders fully."},
+     {id:"p0-2",t:"Have a doctor email + a parent email",pri:"must",s:"Two real inboxes you can receive verification emails at.",e:"Both can receive mail (Resend test)."},
+     {id:"p0-3",t:"Second doctor account for isolation checks",pri:"p2",s:"A separate doctor used later to confirm no cross-account data leaks.",e:"Exists and can log in."},
+   ]},
+
+ { id:"p1", phase:"1", title:"Auth & onboarding", note:"Account creation must work before anything else.",
+   tests:[
+     {id:"p1-1",t:"Doctor signup",pri:"must",s:"Sign up at /signup with name + email + password (≥8 chars).",e:"Account created; verification email sent."},
+     {id:"p1-2",t:"Email verification",pri:"must",s:"Open the verification link from the email.",e:"Email marked verified; you can now log in (login is blocked until verified)."},
+     {id:"p1-3",t:"Login + role redirect",pri:"must",s:"Sign in on the home page.",e:"Doctor → /user; parent → /portal."},
+     {id:"p1-4",t:"Password reset (recently fixed)",pri:"p1",s:"Use 'Forgot password?' → enter email → open the reset link → set a new password → log in.",e:"Reset email arrives; new password works. (Was 404 before fix.)"},
+     {id:"p1-5",t:"Logout + session persistence",pri:"p2",s:"Log out; refresh; close/reopen tab while logged in.",e:"Session persists across refresh; logout clears it."},
+     {id:"p1-6",t:"Complete doctor profile",pri:"must",s:"Fill the profile/edit-profile form (name, clinic, contact, etc.) and save.",e:"Profile saved; isCompleted becomes true."},
+     {id:"p1-7",t:"Role guards",pri:"p1",s:"As a logged-out user open /user; as a parent open /user; as a doctor open /portal.",e:"/user shows the login form (gated); cross-role routes blocked — no data leak."},
+   ]},
+
+ { id:"p2", phase:"2", title:"Subscription & billing (Stripe test)", note:"Most features are gated behind a paid plan. Subscribe FIRST, then test the tier matrix.",
+   tests:[
+     {id:"p2-1",t:"Pricing page renders plans",pri:"must",s:"Open /user/pricing.",e:"Essentials $29 / Professional $59 / Complete $119 shown with CTAs; monthly/annual toggle works."},
+     {id:"p2-2",t:"Subscribe to Essentials (test card)",pri:"must",s:"Click Essentials CTA → Stripe checkout → card 4242… → submit.",e:"Redirects back to /user?subscription=success; subscription becomes active/trialing."},
+     {id:"p2-3",t:"New user with NO prior Stripe customer can subscribe (recently fixed)",pri:"p1",s:"Use a fresh doctor with no Stripe history and subscribe.",e:"Checkout succeeds (previously 500'd: customer_creation bug — now fixed)."},
+     {id:"p2-4",t:"ESSENTIALS gate matrix",pri:"p1",s:"While on Essentials, try each feature group below.",e:"See matrix:",matrix:[["EMR, growth charts, vaccines, billing, ScrybeGPT, AI dx/Rx/lab","✅ allowed"],["ai_report, advanced analytics, patient portal, telehealth","🔒 gated → upgrade prompt"],["priority support, staff accounts","🔒 gated"]]},
+     {id:"p2-5",t:"Upgrade to Professional",pri:"p1",s:"From pricing/settings, switch to Professional (via billing portal).",e:"Plan updates; ai_report, analytics, patient portal, telehealth now ALLOWED; priority support/staff still gated."},
+     {id:"p2-6",t:"Upgrade to Complete",pri:"p1",s:"Switch to Complete.",e:"Everything allowed — no gates remain."},
+     {id:"p2-7",t:"Downgrade / cancel",pri:"p2",s:"Downgrade a tier and cancel via the Stripe customer portal.",e:"Plan reflects change; features re-gate appropriately at period end."},
+     {id:"p2-8",t:"Manage billing (customer portal)",pri:"p2",s:"Settings → Subscription → Manage Billing.",e:"Opens Stripe customer portal."},
+     {id:"p2-9",t:"Subscription settings usage meters",pri:"p2",s:"Open /user/settings/subscription.",e:"Shows current plan, status badge, patients/records/AI-credit usage bars, plan limits, feature list."},
+     {id:"p2-10",t:"Buy AI credit pack",pri:"p2",s:"Settings → Buy credit pack → pick a pack → Stripe checkout (4242).",e:"Pack credits added to balance after webhook."},
+     {id:"p2-11",t:"Transactions page",pri:"p2",s:"Open /user/transactions; change the date.",e:"Lists transactions for the day with totals; empty state for empty days."},
+     {id:"p2-12",t:"Webhook provisioning",pri:"p1",s:"After any checkout, confirm the app reflects the new plan within a few seconds.",e:"customer.subscription.* webhooks update tier/usage."},
+   ]},
+
+ { id:"p3", phase:"3", title:"Configuration (record types & vaccines)", note:"Set up the data the clinical flows depend on.",
+   tests:[
+     {id:"p3-1",t:"Add record types / services",pri:"must",s:"Add at least one service/record type (with a cost).",e:"Appears in the appointment 'Service' dropdown."},
+     {id:"p3-2",t:"Add vaccines to track",pri:"must",s:"Profile → add vaccines (and doses) to your tracked list.",e:"Appear in the vaccine record 'Vaccine' dropdown."},
+     {id:"p3-3",t:"Vaccine references / schedule",pri:"p2",s:"Review the vaccine reference schedule.",e:"Reference doses display correctly by age."},
+   ]},
+
+ { id:"p4", phase:"4", title:"Patients", note:"Core EMR — verified working in automation.",
+   tests:[
+     {id:"p4-1",t:"Create patient",pri:"p1",s:"/user/add-patient → firstname, lastname, birthdate (date picker), sex → Add Patient.",e:"Patient created; appears in /user/patients."},
+     {id:"p4-2",t:"Patient list + search",pri:"p2",s:"Open /user/patients; search by name.",e:"All your patients listed; search filters."},
+     {id:"p4-3",t:"Patient detail",pri:"p1",s:"Open a patient.",e:"Demographics, records table, charts/tabs render."},
+     {id:"p4-4",t:"Edit patient",pri:"p2",s:"Edit demographics and save.",e:"Changes persist."},
+     {id:"p4-5",t:"Patient limit gate",pri:"p2",s:"On Essentials, create patients up to the plan limit.",e:"At the limit, an upgrade prompt appears (gate works)."},
+   ]},
+
+ { id:"p5", phase:"5", title:"Appointments / records", note:"Record create verified; deletion uses a native confirm dialog.",
+   tests:[
+     {id:"p5-1",t:"Create a record with vitals",pri:"p1",s:"Patient → Add Record → motif + height/weight/etc. → Add Record. (Do NOT click the AI 'Yes' unless testing AI.)",e:"Record saved; appears in the records table."},
+     {id:"p5-2",t:"Appointment detail sections",pri:"p1",s:"Open a record.",e:"Signs & symptoms, diagnostic, prescription, lab exams, vitals, recommendations, files all render."},
+     {id:"p5-3",t:"Edit record",pri:"p2",s:"Edit a record's vitals/notes and save.",e:"Changes persist."},
+     {id:"p5-4",t:"Delete record",pri:"p2",s:"Delete a record; confirm the dialog.",e:"Record removed."},
+     {id:"p5-5",t:"AI diagnostic (optional, burns credits)",pri:"p2",s:"In Add Record, fill motif then click the AI 'Yes' to generate.",e:"Diagnostic suggestions stream in; 1 AI credit deducted; clean NO_CREDITS error at zero."},
+   ]},
+
+ { id:"p6", phase:"6", title:"Clinical: exams, prescriptions, lab worklist", note:"⚠️ The 3 P1 create-submit flows here are the ones automation could NOT confirm — test carefully.",
+   tests:[
+     {id:"p6-1",t:"Add exams to a visit (manual)",pri:"p1",s:"Visit → Lab exams → Add or edit → add exam name(s) → save. (Avoid AI 'Yes'.)",e:"Exams saved and shown on the visit."},
+     {id:"p6-2",t:"Add prescription (manual) ⚠️ UNVERIFIED",pri:"p1",s:"Visit → Prescription → Add or edit → fill Drug/Count/Unit/Posology → Save Prescription. (Avoid 'Generate with ScrybeGPT'.)",e:"Prescription saves and shows on the visit. (Automation could not confirm — verify.)"},
+     {id:"p6-3",t:"Add recommendation (recently fixed)",pri:"p1",s:"Visit → Recommendations → Add or edit → save.",e:"Page loads (was a 500 before fix) and recommendation saves."},
+     {id:"p6-4",t:"Lab worklist loads & groups",pri:"p1",s:"Open /user/labs.",e:"Pending orders grouped Patient → Visit → Exam; Stat/awaiting-review auto-expand; search/filter/sort work."},
+     {id:"p6-5",t:"Mark collected / mark reviewed",pri:"p1",s:"On the worklist, mark an order collected, then reviewed.",e:"Status advances; UI updates."},
+     {id:"p6-6",t:"Enter lab results (batch dialog)",pri:"p1",s:"Visit group → Enter results → fill values/units/ranges/flags → Save all results.",e:"Results saved; order → resulted; parent notified."},
+     {id:"p6-7",t:"AI lab-result upload (PDF + image)",pri:"p1",s:"Upload result → choose a PDF, then an image → review extracted values → confirm.",e:"AI extracts values; review is editable; new orders auto-create for unmatched; original file stored; status → resulted. Clean NO_CREDITS at zero; >8MB rejected."},
+   ]},
+
+ { id:"p7", phase:"7", title:"Reports & receipts", note:"Detail/list verified; create flows partially unverified.",
+   tests:[
+     {id:"p7-1",t:"Create report (manual) ⚠️ UNVERIFIED",pri:"p1",s:"Patient → Reports → Create → pick type (Report/Certificate/ReferenceNote) → type content → Save report. (Avoid 'Generate with ScrybeGPT'.)",e:"Report saves and appears in the list. (Automation could not confirm — verify.)"},
+     {id:"p7-2",t:"AI report (Professional+ only)",pri:"p2",s:"On Pro/Complete, use 'Generate with ScrybeGPT' on a report.",e:"Content streams in (ai_report is PROF_UP gated; blocked on Essentials)."},
+     {id:"p7-3",t:"View / edit report",pri:"p2",s:"Open a report; edit it; save.",e:"Renders and persists."},
+     {id:"p7-4",t:"Create receipt ⚠️ UNVERIFIED",pri:"p1",s:"Patient → Receipts → Create → date + currency + service line(s) + price → Save receipt.",e:"Receipt saves and appears in the list. (Automation could not confirm — verify.)"},
+     {id:"p7-5",t:"View / edit receipt + multi-currency",pri:"p2",s:"Open a receipt; edit; try a non-USD currency.",e:"Renders, persists, currency formats correctly."},
+   ]},
+
+ { id:"p8", phase:"8", title:"Vaccines", note:"Add-record (queue→save) verified working.",
+   tests:[
+     {id:"p8-1",t:"Add vaccine record",pri:"p1",s:"Patient → Vaccines → Add record → pick vaccine + dose, manufacturer, lot, dates → add to queue → Save All.",e:"Record(s) saved; appear in the vaccine list."},
+     {id:"p8-2",t:"Vaccine list + record detail",pri:"p2",s:"View the vaccine list and open a record.",e:"Doses, dates, schedule status render."},
+     {id:"p8-3",t:"Vaccine print",pri:"p2",s:"Open the vaccines print page.",e:"Printable certificate renders cleanly."},
+     {id:"p8-4",t:"Parent portal vaccine notification",pri:"p2",s:"After adding a vaccine for a portal-linked child, check the parent's notifications.",e:"Notification appears."},
+   ]},
+
+ { id:"p9", phase:"9", title:"Growth charts", note:"",
+   tests:[
+     {id:"p9-1",t:"Chart rendering (WFL/WFA/HFA/HCFA/BFA)",pri:"p1",s:"Open the charts hub and each chart for a patient with measurements.",e:"Patient data plotted on correct percentile curves."},
+     {id:"p9-2",t:"Print variants (0–2 & 5–19 ranges)",pri:"p2",s:"Open each print-* chart.",e:"Layout intact, correct age range, no clipping."},
+   ]},
+
+ { id:"p10", phase:"10", title:"Printing", note:"Verified rendering in automation.",
+   tests:[
+     {id:"p10-1",t:"Print appointment / exams / prescription",pri:"p2",s:"Open each print view from a visit.",e:"Clean printable layout; print dialog works."},
+   ]},
+
+ { id:"p11", phase:"11", title:"Dashboard & analytics", note:"Verified rendering.",
+   tests:[
+     {id:"p11-1",t:"Dashboard stats & charts",pri:"p2",s:"Open /user.",e:"Total patients, revenue, records, age/gender distribution, common conditions render with real data."},
+     {id:"p11-2",t:"Advanced analytics (Professional+)",pri:"p2",s:"On Pro/Complete, check advanced analytics widgets.",e:"Visible on Pro+; gated on Essentials."},
+   ]},
+
+ { id:"p12", phase:"12", title:"Telehealth (Professional+)", note:"Gated to PROF_UP. Needs two participants for a call.",
+   tests:[
+     {id:"p12-1",t:"Set availability",pri:"p1",s:"/user/telehealth/availability → toggle days, add slots, set durations.",e:"Schedule saves (Convex mutation)."},
+     {id:"p12-2",t:"Parent books a slot",pri:"p1",s:"From the portal, book an available slot.",e:"Appointment appears for both doctor and parent."},
+     {id:"p12-3",t:"Join the video call (LiveKit)",pri:"p1",s:"Both sides open the call page at the time.",e:"Both join the room; audio/video work."},
+     {id:"p12-4",t:"Telehealth notifications",pri:"p2",s:"Check booking/reminder notifications.",e:"Fire correctly."},
+   ]},
+
+ { id:"p13", phase:"13", title:"Patient portal (Professional+)", note:"Gated to PROF_UP.",
+   tests:[
+     {id:"p13-1",t:"Invite parent",pri:"p1",s:"From a patient, invite the parent by email.",e:"Invitation email sent; status badge shows pending."},
+     {id:"p13-2",t:"Parent signup auto-accepts invite",pri:"p1",s:"Parent signs up at /portal/signup with the invited email.",e:"Invitation auto-accepted; child linked to parent."},
+     {id:"p13-3",t:"Portal child views",pri:"p1",s:"As parent: children list, child detail, growth, labs, medications, vaccines, uploads.",e:"All render the child's data (read-only)."},
+     {id:"p13-4",t:"Portal appointment + prints",pri:"p2",s:"Open an appointment and its print-exams/print-prescription.",e:"Render correctly."},
+     {id:"p13-5",t:"Portal notifications",pri:"p2",s:"Trigger an appointment/vaccine/lab event; check parent notifications.",e:"Notifications populate."},
+     {id:"p13-6",t:"Portal join flow",pri:"p2",s:"Test /portal/join.",e:"Works."},
+   ]},
+
+ { id:"p14", phase:"14", title:"WhatsApp / ScrybeGPT", note:"Essentials = 10 trial msgs/mo; Pro+ = full. Needs a real WhatsApp number.",
+   tests:[
+     {id:"p14-1",t:"Link WhatsApp number",pri:"p2",s:"Settings → WhatsApp → generate QR → scan with phone → send the link message.",e:"Status → Connected; linked number shown."},
+     {id:"p14-2",t:"Inbound message → agent reply",pri:"p2",s:"Message ScrybeGPT on WhatsApp (patient lookup, drug ref, etc.).",e:"Agent replies; pending-action confirm flow works; AI credit deducted."},
+     {id:"p14-3",t:"WhatsApp PDF/chart generation",pri:"p2",s:"Request a growth chart / prescription / report PDF via WhatsApp.",e:"Correct PDF/chart delivered."},
+     {id:"p14-4",t:"Trial message cap (Essentials)",pri:"p2",s:"On Essentials, exhaust the 10 trial messages.",e:"Cap enforced; upgrade prompt shown."},
+   ]},
+
+ { id:"p15", phase:"15", title:"Offline / PWA", note:"",
+   tests:[
+     {id:"p15-1",t:"Install PWA",pri:"p2",s:"Use the install prompt.",e:"App installs and launches standalone."},
+     {id:"p15-2",t:"Offline reads",pri:"p1",s:"Go offline (DevTools) and open cached patients/appointments.",e:"Cached data loads; offline auth via cached user; network banner shows offline."},
+     {id:"p15-3",t:"Offline edit → sync on reconnect",pri:"p1",s:"Make a change offline, then reconnect.",e:"Sync queue flushes; conflict dialog resolves conflicts."},
+   ]},
+
+ { id:"p16", phase:"16", title:"AI credits & gating edge cases", note:"Gates ARE features — confirm they behave.",
+   tests:[
+     {id:"p16-1",t:"AI feature gated on free/no plan",pri:"p1",s:"With no plan, try any AI feature.",e:"Upgrade/subscription dialog appears (no AI call)."},
+     {id:"p16-2",t:"NO_CREDITS handled cleanly",pri:"p1",s:"Drain AI credits then use an AI feature.",e:"Clean 'no credits' message, not a 500."},
+     {id:"p16-3",t:"Rate limiting",pri:"p2",s:"Fire an AI feature rapidly.",e:"Rate limit enforced gracefully."},
+     {id:"p16-4",t:"All AI surfaces",pri:"p2",s:"Try ScrybeGPT (general + per-patient), chat, diagnostic, exams, prescriptions, report, classify-conditions.",e:"Each returns sensible output when allowed + credited."},
+   ]},
+
+ { id:"p17", phase:"17", title:"Cross-cutting (do throughout)", note:"Keep an eye on these during every flow.",
+   tests:[
+     {id:"p17-1",t:"No console errors / 500s",pri:"p1",s:"Keep DevTools open during all testing.",e:"No unhandled errors or 5xx anywhere."},
+     {id:"p17-2",t:"Multi-tenancy isolation",pri:"p1",s:"As doctor B, try to view doctor A's patients/records/labs (URLs + lists).",e:"Doctor B never sees doctor A's data."},
+     {id:"p17-3",t:"Responsive / mobile",pri:"p2",s:"Check labs worklist, patient detail, portal at mobile widths.",e:"Usable, no broken layout."},
+     {id:"p17-4",t:"Error boundary",pri:"p2",s:"Trigger an error (e.g. /user/test-error).",e:"Friendly 'Something went wrong' boundary, recoverable."},
+   ]},
+];
+
+const STORE="pediascrybe_manual_checklist_v1";
+const STATUSES=["pending","pass","fail","blocked","na"];
+const LABEL={pending:"⬜ Pending",pass:"✅ Pass",fail:"❌ Fail",blocked:"⛔ Blocked",na:"➖ N/A"};
+const PRILBL={must:["DO FIRST","must"],p1:["P1","p1"],p2:["P2","p2"]};
+let state=JSON.parse(localStorage.getItem(STORE)||"{}");
+function save(){localStorage.setItem(STORE,JSON.stringify(state));}
+function get(id){return state[id]||{};}
+
+function render(){
+  const root=document.getElementById("root");root.innerHTML="";
+  for(const g of DATA){
+    const sec=document.createElement("section");
+    sec.className="group"+(g.open?"":" collapsed");
+    const counts=g.tests.reduce((a,t)=>{const s=get(t.id).status||"pending";a[s]=(a[s]||0)+1;return a;},{});
+    const done=(counts.pass||0)+(counts.na||0);
+    sec.innerHTML=`
+      <div class="group-head" onclick="this.parentElement.classList.toggle('collapsed')">
+        <h2><span class="phase">Phase ${g.phase}</span>${g.title}</h2>
+        <span class="meta">${done}/${g.tests.length}${counts.fail?` · <span style="color:var(--fail)">${counts.fail} fail</span>`:""}${counts.blocked?` · <span style="color:var(--blocked)">${counts.blocked} blocked</span>`:""}</span>
+      </div>
+      ${g.note?`<div class="group-note">${g.note}</div>`:""}
+      <div class="group-body"></div>`;
+    const body=sec.querySelector(".group-body");
+    for(const t of g.tests){
+      const cur=get(t.id);const status=cur.status||"pending";
+      const pri=t.pri?`<span class="pri ${PRILBL[t.pri][1]}">${PRILBL[t.pri][0]}</span>`:"";
+      let mtx="";
+      if(t.matrix){mtx=`<table class="matrix"><tr><th>Feature group</th><th>Expected</th></tr>${t.matrix.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("")}</table>`;}
+      const row=document.createElement("div");row.className="test";
+      row.innerHTML=`
+        <div>
+          <div class="title">${t.t}${pri}</div>
+          <div class="steps">${t.s}</div>
+          <div class="exp"><b>Expect:</b> ${t.e}</div>
+          ${mtx}
+        </div>
+        <div class="controls">
+          <select class="status ${status}" data-id="${t.id}">${STATUSES.map(s=>`<option value="${s}" ${s===status?"selected":""}>${LABEL[s]}</option>`).join("")}</select>
+          <textarea class="notes" data-id="${t.id}" placeholder="notes…">${cur.notes||""}</textarea>
+        </div>`;
+      body.appendChild(row);
+    }
+    root.appendChild(sec);
+  }
+  bind();updateStats();
+}
+function bind(){
+  document.querySelectorAll("select.status").forEach(el=>{el.onchange=e=>{const id=e.target.dataset.id;state[id]={...get(id),status:e.target.value};save();render();};});
+  document.querySelectorAll("textarea.notes").forEach(el=>{el.onblur=e=>{const id=e.target.dataset.id;state[id]={...get(id),notes:e.target.value};save();};});
+}
+function updateStats(){
+  const all=DATA.flatMap(g=>g.tests);const c={pass:0,fail:0,blocked:0,na:0,pending:0};
+  for(const t of all){const s=get(t.id).status||"pending";c[s]=(c[s]||0)+1;}
+  const total=all.length,done=c.pass+c.na;
+  document.getElementById("bar").style.width=(100*done/total).toFixed(1)+"%";
+  document.getElementById("stats").innerHTML=`
+    <span class="stat"><span class="dot pass"></span>${c.pass} pass</span>
+    <span class="stat"><span class="dot fail"></span>${c.fail} fail</span>
+    <span class="stat"><span class="dot blocked"></span>${c.blocked} blocked</span>
+    <span class="stat"><span class="dot na"></span>${c.na} n/a</span>
+    <span class="stat"><span class="dot pending"></span>${c.pending} pending</span>
+    <span class="stat" style="color:var(--muted)">· ${done}/${total} complete</span>`;
+}
+function expandAll(o){document.querySelectorAll("section.group").forEach(s=>s.classList.toggle("collapsed",!o));}
+function resetAll(){if(confirm("Clear all statuses and notes?")){state={};save();render();}}
+function exportJSON(){
+  const out=DATA.map(g=>({phase:g.phase,group:g.title,tests:g.tests.map(t=>({id:t.id,title:t.t,priority:t.pri||"",status:get(t.id).status||"pending",notes:get(t.id).notes||""}))}));
+  const blob=new Blob([JSON.stringify(out,null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="pediascrybe-manual-results.json";a.click();
+}
+render();
+</script>
+</body>
+</html>

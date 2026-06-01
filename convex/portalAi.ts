@@ -17,6 +17,7 @@ Rules:
 - Format with clear headings using markdown`;
 
 const FREE_LIMIT = 5;
+const PREMIUM_LIMIT = 50;
 
 // ==================== Helpers ====================
 
@@ -178,14 +179,11 @@ export const canUseAI = query({
       .withIndex("by_authUserId", (q) => q.eq("authUserId", identity.subject))
       .first();
 
-    if (
+    const isPremium =
       subscription?.plan === "premium" &&
-      (subscription.status === "active" || subscription.status === "trialing")
-    ) {
-      return { allowed: true, remaining: -1, limit: -1, isPremium: true };
-    }
+      (subscription.status === "active" || subscription.status === "trialing");
 
-    // Check free usage
+    // Check usage against applicable limit (premium = 50/mo, free = 5/mo)
     const period = getCurrentPeriod();
     const usage = await ctx.db
       .query("patientUsage")
@@ -195,12 +193,13 @@ export const canUseAI = query({
       .first();
 
     const used = usage?.aiExplanations ?? 0;
+    const limit = isPremium ? PREMIUM_LIMIT : FREE_LIMIT;
     return {
-      allowed: used < FREE_LIMIT,
-      remaining: FREE_LIMIT - used,
-      limit: FREE_LIMIT,
+      allowed: used < limit,
+      remaining: Math.max(0, limit - used),
+      limit,
       used,
-      isPremium: false,
+      isPremium,
     };
   },
 });
@@ -261,16 +260,15 @@ export const requestExplanation = action({
       subscription?.plan === "premium" &&
       (subscription.status === "active" || subscription.status === "trialing");
 
-    if (!isPremium) {
-      const period = getCurrentPeriod();
-      const usage = await ctx.runQuery(internal.portalAi.getUsageInternal, {
-        authUserId: identity.subject,
-        period,
-      });
-      const used = usage?.aiExplanations ?? 0;
-      if (used >= FREE_LIMIT) {
-        throw new Error("FREE_LIMIT_REACHED");
-      }
+    const period = getCurrentPeriod();
+    const usage = await ctx.runQuery(internal.portalAi.getUsageInternal, {
+      authUserId: identity.subject,
+      period,
+    });
+    const used = usage?.aiExplanations ?? 0;
+    const applicableLimit = isPremium ? PREMIUM_LIMIT : FREE_LIMIT;
+    if (used >= applicableLimit) {
+      throw new Error(isPremium ? "PREMIUM_LIMIT_REACHED" : "FREE_LIMIT_REACHED");
     }
 
     // Build the type-specific prompt
@@ -294,7 +292,6 @@ export const requestExplanation = action({
     });
 
     // Increment usage (only for non-cached)
-    const period = getCurrentPeriod();
     await ctx.runMutation(internal.portalAi.incrementUsage, {
       authUserId: identity.subject,
       period,
@@ -374,10 +371,13 @@ function buildDiagnosticPrompt(data: {
 }
 
 function buildLabExamPrompt(data: {
-  exams: Array<{ exam: string } | string>;
+  exams: Array<{ examName?: string; exam?: string } | string>;
 }): string {
   const examList = data.exams
-    .map((e, i) => `${i + 1}. ${typeof e === "string" ? e : e.exam}`)
+    .map((e, i) => {
+      const name = typeof e === "string" ? e : (e.examName ?? e.exam ?? "");
+      return `${i + 1}. ${name}`;
+    })
     .join("\n");
 
   return `A doctor has ordered the following lab exams/tests for a child:

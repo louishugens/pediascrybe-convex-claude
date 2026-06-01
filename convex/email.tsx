@@ -179,7 +179,14 @@ export const sendPortalNotificationEmail = async (
     parentName?: string;
     childName: string;
     doctorName: string;
-    notificationType: "new_prescription" | "new_lab_exam" | "appointment_summary" | "new_vaccine_record" | "new_report";
+    notificationType:
+      | "new_prescription"
+      | "new_lab_exam"
+      | "appointment_summary"
+      | "new_vaccine_record"
+      | "new_report"
+      | "prescription_discontinued"
+      | "lab_result_available";
     message: string;
     portalUrl: string;
   },
@@ -190,6 +197,8 @@ export const sendPortalNotificationEmail = async (
     appointment_summary: `Appointment summary for ${childName}`,
     new_vaccine_record: `Vaccination update for ${childName}`,
     new_report: `New report for ${childName}`,
+    prescription_discontinued: `Medication discontinued for ${childName}`,
+    lab_result_available: `Lab results available for ${childName}`,
   };
 
   await resend.sendEmail(ctx, {
@@ -221,7 +230,9 @@ export const sendPortalNotificationAction = internalAction({
       v.literal("new_lab_exam"),
       v.literal("appointment_summary"),
       v.literal("new_vaccine_record"),
-      v.literal("new_report")
+      v.literal("new_report"),
+      v.literal("prescription_discontinued"),
+      v.literal("lab_result_available")
     ),
     message: v.string(),
     portalUrl: v.string(),

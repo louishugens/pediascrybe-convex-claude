@@ -239,8 +239,8 @@ export const book = mutation({
       throw new Error("Doctor's subscription is not active");
     }
     const tierName = doctorSubscription.tierName || doctorSubscription.metadata?.tierName || "free";
-    if (tierName !== "premium") {
-      throw new Error("Telehealth requires a Premium subscription");
+    if (!["professional", "complete", "institution"].includes(tierName)) {
+      throw new Error("Telehealth requires a Professional or Complete subscription");
     }
 
     // Validate the slot is still available
@@ -606,11 +606,49 @@ export const handleRoomFinished = internalMutation({
       .first();
 
     if (apt && apt.status === "confirmed") {
+      const endedAt = Date.now();
       await ctx.db.patch(apt._id, {
-        sessionEndedAt: Date.now(),
+        sessionEndedAt: endedAt,
         status: "completed",
-        updatedAt: Date.now(),
+        updatedAt: endedAt,
       });
+
+      // Accumulate minutes into the doctor's current-period usage row.
+      // We don't block long calls — overages are invoiced by the monthly cron.
+      const startedAt = apt.sessionStartedAt || apt.doctorJoinedAt || apt.patientJoinedAt;
+      if (startedAt) {
+        const minutes = Math.max(0, Math.ceil((endedAt - startedAt) / 60000));
+        if (minutes > 0) {
+          const now = new Date(endedAt);
+          const period = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+          const usage = await ctx.db
+            .query("usage")
+            .withIndex("by_doctorId_period", (q) =>
+              q.eq("doctorId", apt.doctorId).eq("period", period),
+            )
+            .first();
+
+          if (usage) {
+            await ctx.db.patch(usage._id, {
+              telehealthMinutesUsed: (usage.telehealthMinutesUsed || 0) + minutes,
+              updatedAt: endedAt,
+            });
+          } else {
+            await ctx.db.insert("usage", {
+              doctorId: apt.doctorId,
+              period,
+              aiCreditsUsed: 0,
+              packCreditsRemaining: 0,
+              whatsappTrialUsed: 0,
+              whatsappMessagesUsed: 0,
+              telehealthMinutesUsed: minutes,
+              storageUsedBytes: 0,
+              createdAt: endedAt,
+              updatedAt: endedAt,
+            });
+          }
+        }
+      }
     }
   },
 });
