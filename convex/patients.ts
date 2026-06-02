@@ -176,46 +176,7 @@ export const create = mutation({
       throw new Error("Birthdate is too far in the past");
     }
 
-    // Get current patient count
-    const patients = await ctx.db
-      .query("patients")
-      .withIndex("by_doctorId", (q) => q.eq("doctorId", args.doctorId))
-      .collect();
-    const currentCount = patients.length;
-
-    // Get subscription to determine limit
-    const subscription = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_doctorId", (q) => q.eq("doctorId", args.doctorId))
-      .order("desc")
-      .first();
-
-    let patientLimit = 10; // Free tier limit
-
-    if (subscription) {
-      const activeStatuses = ["trialing", "active"];
-      if (activeStatuses.includes(subscription.status)) {
-        // Use tierName directly from subscription
-        const tierName = subscription.tierName || subscription.metadata?.tierName;
-        if (tierName) {
-          const tier = await ctx.db
-            .query("subscriptionTiers")
-            .withIndex("by_name", (q) => q.eq("name", tierName))
-            .first();
-
-          if (tier) {
-            patientLimit = tier.limits.patientCount;
-          }
-        }
-      }
-    }
-
-    if (currentCount >= patientLimit) {
-      throw new Error(
-        `Patient limit reached (${patientLimit}). Please upgrade your subscription to add more patients.`
-      );
-    }
-
+    // STANDALONE: billing removed — no patient limit.
     const createdAt = Date.now();
     return await ctx.db.insert("patients", {
       ...args,

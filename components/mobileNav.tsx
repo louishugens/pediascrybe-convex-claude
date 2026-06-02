@@ -59,13 +59,7 @@ export function MobileNav() {
             >
               Signin
             </MobileLink>
-            <MobileLink
-              href={"/signup" as any}
-              onOpenChange={setOpen}
-              className="text-sm text-muted w-fit bg-primary px-4 py-1 rounded-full"
-            >
-              Signup
-            </MobileLink>
+            {/* Signup removed — standalone deployment blocks new registrations */}
           </div>
         </ScrollArea>
       </SheetContent>

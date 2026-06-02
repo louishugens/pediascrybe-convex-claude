@@ -26,12 +26,10 @@ export function SiteHeader() {
             >
               Contact
             </Link> */}
-            <Link href="/" className="text-sm text-foreground border border-primary bg-muted px-4 py-1 rounded-full">
+            <Link href="/" className="text-sm text-white bg-primary px-4 py-1 rounded-full">
               Login
             </Link>
-            <Link href={"/signup" as any} className="text-sm text-white bg-primary px-4 py-1 rounded-full">
-              Sign Up
-            </Link>
+            {/* Sign Up removed — standalone deployment blocks new registrations */}
             {/* <ModeToggle /> */}
           </nav>
         </div>

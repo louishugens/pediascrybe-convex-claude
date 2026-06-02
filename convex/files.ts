@@ -83,41 +83,7 @@ export const create = mutation({
     const appointment = await ctx.db.get(args.appointmentId);
     if (!appointment) throw new Error("Appointment not found");
 
-    // Enforce storage cap if we know the size
-    if (args.sizeBytes && args.sizeBytes > 0) {
-      const subscription = await ctx.db
-        .query("subscriptions")
-        .withIndex("by_doctorId", (q) => q.eq("doctorId", appointment.doctorId))
-        .order("desc")
-        .first();
-
-      let capBytes = 0;
-      if (subscription && ["trialing", "active"].includes(subscription.status)) {
-        const tierName = subscription.tierName || subscription.metadata?.tierName;
-        if (tierName) {
-          const tier = await ctx.db
-            .query("subscriptionTiers")
-            .withIndex("by_name", (q) => q.eq("name", tierName))
-            .first();
-          if (tier) capBytes = tier.limits.fileStorageMB * 1024 * 1024;
-        }
-      }
-
-      const period = getCurrentPeriod();
-      const usage = await ctx.db
-        .query("usage")
-        .withIndex("by_doctorId_period", (q) =>
-          q.eq("doctorId", appointment.doctorId).eq("period", period),
-        )
-        .first();
-      const currentBytes = usage?.storageUsedBytes || 0;
-
-      if (currentBytes + args.sizeBytes > capBytes) {
-        throw new Error(
-          `STORAGE_LIMIT_REACHED:Uploading this file would exceed your plan's storage cap (${Math.floor(capBytes / (1024 * 1024))} MB). Upgrade or delete files to free space.`,
-        );
-      }
-    }
+    // STANDALONE: billing removed — no file storage cap.
 
     const fileId = await ctx.db.insert("files", args);
     if (args.sizeBytes) {

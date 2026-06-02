@@ -39,25 +39,7 @@ export const createInvitation = mutation({
       throw new Error("Patient not found");
     }
 
-    // Verify doctor has patient_portal feature access
-    const subscription = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_doctorId", (q) => q.eq("doctorId", doctor._id))
-      .order("desc")
-      .first();
-
-    if (!subscription) {
-      throw new Error("No active subscription found");
-    }
-    const activeStatuses = ["trialing", "active"];
-    if (!activeStatuses.includes(subscription.status)) {
-      throw new Error("Subscription is not active");
-    }
-    const tierName = subscription.tierName || subscription.metadata?.tierName || "free";
-    // patient_portal requires Professional, Complete, or Institution
-    if (!["professional", "complete", "institution"].includes(tierName)) {
-      throw new Error("Patient portal requires a Professional or Complete subscription");
-    }
+    // STANDALONE: billing removed — patient portal available to all.
 
     // Check for existing pending invitation for same email + patient
     const existingInvitations = await ctx.db

@@ -70,8 +70,8 @@ const CTASection = () => {
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.6 }}
           className="bg-white text-primary px-8 py-4 rounded-full text-lg w-fit font-semibold hover:bg-muted"
         >
-          <Link href={"/signup" as any} >
-            Start Free Trial
+          <Link href={"/" as any} >
+            Login
           </Link>
         </motion.div>
       </div>

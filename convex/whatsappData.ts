@@ -940,80 +940,9 @@ export const incrementUsageByDoctorId = internalMutation({
  */
 export const checkQuotaByDoctorId = internalQuery({
   args: { doctorId: v.id("doctors") },
-  handler: async (ctx, args) => {
-    const period = getCurrentPeriod();
-
-    const usage = await ctx.db
-      .query("usage")
-      .withIndex("by_doctorId_period", (q) =>
-        q.eq("doctorId", args.doctorId).eq("period", period)
-      )
-      .first();
-
-    const subscription = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_doctorId", (q) => q.eq("doctorId", args.doctorId))
-      .order("desc")
-      .first();
-
-    if (!subscription || !["trialing", "active"].includes(subscription.status)) {
-      return { allowed: false, reason: "No active subscription", remaining: 0 };
-    }
-
-    const tierName = subscription.tierName || subscription.metadata?.tierName;
-    if (!tierName) {
-      return { allowed: false, reason: "No subscription tier", remaining: 0 };
-    }
-
-    const tier = await ctx.db
-      .query("subscriptionTiers")
-      .withIndex("by_name", (q) => q.eq("name", tierName))
-      .first();
-
-    if (!tier) {
-      return { allowed: false, reason: "Tier not found", remaining: 0 };
-    }
-
-    // Essentials: 10-message WhatsApp trial
-    if (tierName === "essentials") {
-      const trialUsed = usage?.whatsappTrialUsed || 0;
-      const trialLimit = tier.limits.whatsappTrial;
-      const trialRemaining = Math.max(0, trialLimit - trialUsed);
-      if (trialRemaining <= 0) {
-        return {
-          allowed: false,
-          reason: `You've used your ${trialLimit} free WhatsApp messages this month. Upgrade to Professional for more.`,
-          remaining: 0,
-        };
-      }
-      return { allowed: true, remaining: trialRemaining };
-    }
-
-    // Pro/Complete: enforce WhatsApp sub-cap AND AI credit balance
-    const messagesUsed = usage?.whatsappMessagesUsed || 0;
-    const messageCap = tier.limits.whatsappMessages;
-    const messageRemaining = Math.max(0, messageCap - messagesUsed);
-    if (messageRemaining <= 0) {
-      return {
-        allowed: false,
-        reason: `Monthly WhatsApp limit reached (${messageCap}). Upgrade for more.`,
-        remaining: 0,
-      };
-    }
-
-    const creditsUsed = usage?.aiCreditsUsed || 0;
-    const packBalance = usage?.packCreditsRemaining || 0;
-    const creditLimit = tier.limits.aiCredits;
-    const creditsAvailable = Math.max(0, creditLimit - creditsUsed) + packBalance;
-    if (creditsAvailable < 1) {
-      return {
-        allowed: false,
-        reason: "Out of AI credits. Buy a credit pack or upgrade your plan.",
-        remaining: 0,
-      };
-    }
-
-    return { allowed: true, remaining: Math.min(messageRemaining, creditsAvailable) };
+  handler: async (): Promise<{ allowed: boolean; reason?: string; remaining: number }> => {
+    // STANDALONE: billing removed — unlimited WhatsApp quota.
+    return { allowed: true, remaining: 999999 };
   },
 });
 
@@ -1024,40 +953,8 @@ export const checkQuotaByDoctorId = internalQuery({
  */
 export const checkFeatureAccess = internalQuery({
   args: { doctorId: v.id("doctors") },
-  handler: async (ctx, args) => {
-    const subscription = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_doctorId", (q) => q.eq("doctorId", args.doctorId))
-      .order("desc")
-      .first();
-
-    if (!subscription || !["trialing", "active"].includes(subscription.status)) {
-      return { hasAccess: false, reason: "No active subscription" };
-    }
-
-    let tierName = subscription.tierName || subscription.metadata?.tierName;
-
-    if (!tierName) {
-      const doctor = await ctx.db.get(args.doctorId);
-      if (doctor?.authUserId) {
-        const appUser = await ctx.db
-          .query("appUsers")
-          .withIndex("by_authUserId", (q) => q.eq("authUserId", doctor.authUserId))
-          .first();
-        if (appUser?.plan && appUser.plan !== "none") {
-          tierName = appUser.plan;
-        }
-      }
-    }
-
-    const allowedTiers = ["essentials", "professional", "complete", "institution"];
-    if (!tierName || !allowedTiers.includes(tierName.toLowerCase())) {
-      return {
-        hasAccess: false,
-        reason: "WhatsApp ScrybeGPT requires an active subscription. Upgrade at pediascrybe.com/pricing",
-      };
-    }
-
+  handler: async (): Promise<{ hasAccess: boolean; reason?: string }> => {
+    // STANDALONE: billing removed — WhatsApp ScrybeGPT available to all.
     return { hasAccess: true };
   },
 });

@@ -35,47 +35,33 @@ const FEATURE_ACCESS: Record<string, string[]> = {
   staff_accounts: COMPLETE_UP,
 };
 
+// ==================== STANDALONE DEPLOYMENT ====================
+// Billing and subscription gating are removed for the single-client deployment.
+// Every authenticated user gets the full, unlimited "institution" feature set.
+const ALL_FEATURES = [
+  "emr", "all_growth_charts", "vaccination_management", "billing_receipts", "multi_currency",
+  "scrybegpt", "patient_specific_ai", "ai_diagnostic", "ai_prescription", "ai_lab_exam",
+  "ai_report", "basic_analytics", "advanced_analytics", "pdf_export", "email_support",
+  "email_chat_support", "priority_support", "staff_accounts", "patient_portal", "telehealth",
+  "whatsapp_scrybegpt",
+];
+const UNLIMITED_LIMITS = {
+  patientCount: 999999, recordCount: 999999, aiCredits: 999999, whatsappTrial: 999999,
+  whatsappMessages: 999999, fileStorageMB: 999999, services: 999999, staffSeats: 999,
+  auditRetentionDays: 3650, telehealthMinutes: 999999, telehealthOverageRate: 0,
+  patientPortal: true, telehealth: true, dashboardTier: "full" as const, growthCharts: "all" as const,
+};
+
 // ==================== Queries ====================
 
 // Get current user's subscription tier name
 export const getCurrentTier = query({
   args: {},
   handler: async (ctx): Promise<string | null> => {
+    // STANDALONE: billing removed — everyone is on the unlimited "institution" tier.
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
-
-    // Get the app user to check their plan
-    const appUser = await ctx.db
-      .query("appUsers")
-      .withIndex("by_authUserId", (q) => q.eq("authUserId", identity.subject))
-      .first();
-
-    if (!appUser) return null;
-
-    // Get the doctor record
-    const doctor = await ctx.db
-      .query("doctors")
-      .withIndex("by_authUserId", (q) => q.eq("authUserId", identity.subject))
-      .first();
-
-    if (!doctor) return null;
-
-    // Get the active subscription
-    const subscription = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_doctorId", (q) => q.eq("doctorId", doctor._id))
-      .order("desc")
-      .first();
-
-    if (!subscription) return null;
-
-    // Check if subscription is active
-    const activeStatuses = ["trialing", "active"];
-    if (!activeStatuses.includes(subscription.status)) return null;
-
-    // Get tier name directly from subscription
-    const tierName = subscription.tierName || subscription.metadata?.tierName;
-    return tierName || null;
+    return "institution";
   },
 });
 
@@ -83,26 +69,9 @@ export const getCurrentTier = query({
 export const hasActiveSubscription = query({
   args: {},
   handler: async (ctx): Promise<boolean> => {
+    // STANDALONE: billing removed — always active for authenticated users.
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return false;
-
-    const doctor = await ctx.db
-      .query("doctors")
-      .withIndex("by_authUserId", (q) => q.eq("authUserId", identity.subject))
-      .first();
-
-    if (!doctor) return false;
-
-    const subscription = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_doctorId", (q) => q.eq("doctorId", doctor._id))
-      .order("desc")
-      .first();
-
-    if (!subscription) return false;
-
-    const activeStatuses = ["trialing", "active"];
-    return activeStatuses.includes(subscription.status);
+    return !!identity;
   },
 });
 
@@ -110,108 +79,20 @@ export const hasActiveSubscription = query({
 export const getCurrentSubscriptionDetails = query({
   args: {},
   handler: async (ctx) => {
+    // STANDALONE: billing removed — report full, unlimited access for any authenticated user.
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
-
-    // Get the doctor record
-    const doctor = await ctx.db
-      .query("doctors")
-      .withIndex("by_authUserId", (q) => q.eq("authUserId", identity.subject))
-      .first();
-
-    if (!doctor) return null;
-
-    // Get the active subscription
-    const subscription = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_doctorId", (q) => q.eq("doctorId", doctor._id))
-      .order("desc")
-      .first();
-
-    if (!subscription) {
-      // Return no subscription state
-      return {
-        tier: "none",
-        tierDisplayName: "No Subscription",
-        status: "none",
-        limits: DEFAULT_LIMITS,
-        features: [],
-        currentPeriodEnd: null,
-        trialEnd: null,
-        cancelAtPeriodEnd: false,
-      };
-    }
-
-    // Try to get tier name from multiple sources
-    let tierName: string = "unknown";
-
-    // First try from subscription tierName field (new approach)
-    if (subscription.tierName) {
-      tierName = subscription.tierName;
-    }
-    // Then try from subscription metadata
-    else if (subscription.metadata?.tierName) {
-      tierName = subscription.metadata.tierName;
-    } 
-    // Then try from price/product
-    else if (subscription.priceId) {
-      const price = await ctx.db.get(subscription.priceId);
-      if (price) {
-        const product = await ctx.db.get(price.productId);
-        if (product?.metadata?.tier) {
-          tierName = product.metadata.tier;
-        }
-      }
-    }
-
-    // Get the tier configuration
-    const tier = await ctx.db
-      .query("subscriptionTiers")
-      .withIndex("by_name", (q) => q.eq("name", tierName))
-      .first();
-
-    // If we still don't have tier info, check appUser plan
-    if (!tier) {
-      const appUser = await ctx.db
-        .query("appUsers")
-        .withIndex("by_authUserId", (q) => q.eq("authUserId", identity.subject))
-        .first();
-      
-      if (appUser?.plan && appUser.plan !== "none") {
-        tierName = appUser.plan;
-        const tierFromPlan = await ctx.db
-          .query("subscriptionTiers")
-          .withIndex("by_name", (q) => q.eq("name", tierName))
-          .first();
-        
-        if (tierFromPlan) {
-          return {
-            tier: tierName,
-            tierDisplayName: tierFromPlan.displayName,
-            status: subscription.status,
-            limits: tierFromPlan.limits,
-            features: tierFromPlan.features,
-            currentPeriodStart: subscription.currentPeriodStart,
-            currentPeriodEnd: subscription.currentPeriodEnd,
-            trialStart: subscription.trialStart,
-            trialEnd: subscription.trialEnd,
-            cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
-          };
-        }
-      }
-    }
-
     return {
-      tier: tierName,
-      tierDisplayName: tier?.displayName || tierName,
-      status: subscription.status,
-      limits: tier?.limits || DEFAULT_LIMITS,
-      features: tier?.features || [],
-      currentPeriodStart: subscription.currentPeriodStart,
-      currentPeriodEnd: subscription.currentPeriodEnd,
-      trialStart: subscription.trialStart,
-      trialEnd: subscription.trialEnd,
-      cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+      tier: "institution",
+      tierDisplayName: "Full Access",
+      status: "active",
+      limits: UNLIMITED_LIMITS,
+      features: ALL_FEATURES,
+      currentPeriodStart: null,
+      currentPeriodEnd: null,
+      trialStart: null,
+      trialEnd: null,
+      cancelAtPeriodEnd: false,
     };
   },
 });
@@ -219,42 +100,10 @@ export const getCurrentSubscriptionDetails = query({
 // Check if current user has access to a specific feature
 export const hasFeatureAccess = query({
   args: { feature: v.string() },
-  handler: async (ctx, args): Promise<boolean> => {
+  handler: async (ctx): Promise<boolean> => {
+    // STANDALONE: billing removed — all features unlocked for authenticated users.
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return false;
-
-    // Get the doctor record
-    const doctor = await ctx.db
-      .query("doctors")
-      .withIndex("by_authUserId", (q) => q.eq("authUserId", identity.subject))
-      .first();
-
-    if (!doctor) return false;
-
-    // Get the active subscription
-    const subscription = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_doctorId", (q) => q.eq("doctorId", doctor._id))
-      .order("desc")
-      .first();
-
-    // If no subscription, check if feature is available to free tier
-    if (!subscription) {
-      return false; // No features for free tier except basic EMR
-    }
-
-    // Check if subscription is active
-    const activeStatuses = ["trialing", "active"];
-    if (!activeStatuses.includes(subscription.status)) return false;
-
-    // Get tier name directly from subscription
-    const tierName = subscription.tierName || subscription.metadata?.tierName || "free";
-
-    // Check if the feature is available for this tier
-    const allowedTiers = FEATURE_ACCESS[args.feature];
-    if (!allowedTiers) return false;
-
-    return allowedTiers.includes(tierName);
+    return !!identity;
   },
 });
 
@@ -280,56 +129,9 @@ const DEFAULT_LIMITS = {
 // Get current user's subscription limits
 export const getSubscriptionLimits = query({
   args: {},
-  handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return DEFAULT_LIMITS;
-    }
-
-    // Get the doctor record
-    const doctor = await ctx.db
-      .query("doctors")
-      .withIndex("by_authUserId", (q) => q.eq("authUserId", identity.subject))
-      .first();
-
-    if (!doctor) {
-      return DEFAULT_LIMITS;
-    }
-
-    // Get the active subscription
-    const subscription = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_doctorId", (q) => q.eq("doctorId", doctor._id))
-      .order("desc")
-      .first();
-
-    if (!subscription) {
-      return DEFAULT_LIMITS;
-    }
-
-    // Check if subscription is active
-    const activeStatuses = ["trialing", "active"];
-    if (!activeStatuses.includes(subscription.status)) {
-      return DEFAULT_LIMITS;
-    }
-
-    // Get tier name directly from subscription
-    const tierName = subscription.tierName || subscription.metadata?.tierName;
-    if (!tierName) {
-      return DEFAULT_LIMITS;
-    }
-
-    // Get the tier configuration
-    const tier = await ctx.db
-      .query("subscriptionTiers")
-      .withIndex("by_name", (q) => q.eq("name", tierName))
-      .first();
-
-    if (!tier) {
-      return DEFAULT_LIMITS;
-    }
-
-    return tier.limits;
+  handler: async () => {
+    // STANDALONE: billing removed — unlimited limits.
+    return UNLIMITED_LIMITS;
   },
 });
 
@@ -337,65 +139,19 @@ export const getSubscriptionLimits = query({
 export const canAddPatient = query({
   args: {},
   handler: async (ctx): Promise<{ allowed: boolean; reason?: string; currentCount: number; limit: number }> => {
+    // STANDALONE: billing removed — always allowed (currentCount kept for display).
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
       return { allowed: false, reason: "Not authenticated", currentCount: 0, limit: 0 };
     }
-
-    // Get the doctor record
     const doctor = await ctx.db
       .query("doctors")
       .withIndex("by_authUserId", (q) => q.eq("authUserId", identity.subject))
       .first();
-
-    if (!doctor) {
-      return { allowed: false, reason: "Doctor profile not found", currentCount: 0, limit: 0 };
-    }
-
-    // Get current patient count
-    const patients = await ctx.db
-      .query("patients")
-      .withIndex("by_doctorId", (q) => q.eq("doctorId", doctor._id))
-      .collect();
-    const currentCount = patients.length;
-
-    // Get subscription limits
-    const subscription = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_doctorId", (q) => q.eq("doctorId", doctor._id))
-      .order("desc")
-      .first();
-
-    let patientLimit = 0; // No subscription = no patients
-
-    if (subscription) {
-      const activeStatuses = ["trialing", "active"];
-      if (activeStatuses.includes(subscription.status)) {
-        // Get tier name directly from subscription
-        const tierName = subscription.tierName || subscription.metadata?.tierName;
-        if (tierName) {
-          const tier = await ctx.db
-            .query("subscriptionTiers")
-            .withIndex("by_name", (q) => q.eq("name", tierName))
-            .first();
-
-          if (tier) {
-            patientLimit = tier.limits.patientCount;
-          }
-        }
-      }
-    }
-
-    if (currentCount >= patientLimit) {
-      return {
-        allowed: false,
-        reason: `You have reached your patient limit (${patientLimit}). Please upgrade your plan to add more patients.`,
-        currentCount,
-        limit: patientLimit,
-      };
-    }
-
-    return { allowed: true, currentCount, limit: patientLimit };
+    const currentCount = doctor
+      ? (await ctx.db.query("patients").withIndex("by_doctorId", (q) => q.eq("doctorId", doctor._id)).collect()).length
+      : 0;
+    return { allowed: true, currentCount, limit: 999999 };
   },
 });
 

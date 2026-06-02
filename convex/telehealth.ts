@@ -224,24 +224,7 @@ export const book = mutation({
       throw new Error("Not authorized to book for this patient");
     }
 
-    // Verify doctor has telehealth feature access (Premium tier)
-    const doctorSubscription = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_doctorId", (q) => q.eq("doctorId", args.doctorId))
-      .order("desc")
-      .first();
-
-    if (!doctorSubscription) {
-      throw new Error("Doctor does not have an active subscription");
-    }
-    const activeStatuses = ["trialing", "active"];
-    if (!activeStatuses.includes(doctorSubscription.status)) {
-      throw new Error("Doctor's subscription is not active");
-    }
-    const tierName = doctorSubscription.tierName || doctorSubscription.metadata?.tierName || "free";
-    if (!["professional", "complete", "institution"].includes(tierName)) {
-      throw new Error("Telehealth requires a Professional or Complete subscription");
-    }
+    // STANDALONE: billing removed — telehealth available to all.
 
     // Validate the slot is still available
     const existing = await ctx.db

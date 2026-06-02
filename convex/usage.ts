@@ -107,46 +107,15 @@ export const getUsageWithLimits = query({
       .collect();
     const recordCount = appointments.length;
 
-    const subscription = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_doctorId", (q) => q.eq("doctorId", doctor._id))
-      .order("desc")
-      .first();
-
-    // Default empty limits (no subscription)
-    let limits = {
-      patientCount: 0,
-      recordCount: 0,
-      aiCredits: 0,
-      whatsappTrial: 0,
-      whatsappMessages: 0,
-      fileStorageMB: 0,
-      services: 0,
-      staffSeats: 0,
-      auditRetentionDays: 0,
-      telehealthMinutes: 0,
-      telehealthOverageRate: 0,
-      patientPortal: false,
-      telehealth: false,
-      dashboardTier: "basic" as "basic" | "standard" | "full",
+    // STANDALONE: billing removed — unlimited limits so usage meters sit near 0%.
+    const limits = {
+      patientCount: 999999, recordCount: 999999, aiCredits: 999999, whatsappTrial: 999999,
+      whatsappMessages: 999999, fileStorageMB: 999999, services: 999999, staffSeats: 999,
+      auditRetentionDays: 3650, telehealthMinutes: 999999, telehealthOverageRate: 0,
+      patientPortal: true, telehealth: true,
+      dashboardTier: "full" as "basic" | "standard" | "full",
       growthCharts: "all" as const,
     };
-
-    if (subscription) {
-      const activeStatuses = ["trialing", "active"];
-      if (activeStatuses.includes(subscription.status)) {
-        const tierName = subscription.tierName || subscription.metadata?.tierName;
-        if (tierName) {
-          const tier = await ctx.db
-            .query("subscriptionTiers")
-            .withIndex("by_name", (q) => q.eq("name", tierName))
-            .first();
-          if (tier) {
-            limits = tier.limits;
-          }
-        }
-      }
-    }
 
     const currentUsage = {
       patientCount,
@@ -209,146 +178,18 @@ export const getUsageWithLimits = query({
 // Check patient quota
 export const checkPatientQuota = query({
   args: {},
-  handler: async (ctx): Promise<QuotaCheckResult> => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return { allowed: false, reason: "Not authenticated", remaining: 0, limit: 0, usage: 0 };
-    }
-
-    const doctor = await ctx.db
-      .query("doctors")
-      .withIndex("by_authUserId", (q) => q.eq("authUserId", identity.subject))
-      .first();
-
-    if (!doctor) {
-      return { allowed: false, reason: "Doctor profile not found", remaining: 0, limit: 0, usage: 0 };
-    }
-
-    const subscription = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_doctorId", (q) => q.eq("doctorId", doctor._id))
-      .order("desc")
-      .first();
-
-    let limit = 0;
-
-    if (subscription) {
-      const activeStatuses = ["trialing", "active"];
-      if (activeStatuses.includes(subscription.status)) {
-        const tierName = subscription.tierName || subscription.metadata?.tierName;
-        if (tierName) {
-          const tier = await ctx.db
-            .query("subscriptionTiers")
-            .withIndex("by_name", (q) => q.eq("name", tierName))
-            .first();
-          if (tier) {
-            limit = tier.limits.patientCount;
-          }
-        }
-      }
-    }
-
-    if (limit === 0) {
-      return {
-        allowed: false,
-        reason: "You need an active subscription to add patients.",
-        remaining: 0,
-        limit: 0,
-        usage: 0,
-      };
-    }
-
-    const patients = await ctx.db
-      .query("patients")
-      .withIndex("by_doctorId", (q) => q.eq("doctorId", doctor._id))
-      .collect();
-    const usage = patients.length;
-    const remaining = limit - usage;
-
-    if (remaining <= 0) {
-      return {
-        allowed: false,
-        reason: `You have reached your patient limit (${limit}). Please upgrade your plan.`,
-        remaining: 0,
-        limit,
-        usage,
-      };
-    }
-
-    return { allowed: true, remaining, limit, usage };
+  handler: async (): Promise<QuotaCheckResult> => {
+    // STANDALONE: billing removed — unlimited patient quota.
+    return { allowed: true, remaining: 999999, limit: 999999, usage: 0 };
   },
 });
 
 // Check record/appointment quota
 export const checkRecordQuota = query({
   args: {},
-  handler: async (ctx): Promise<QuotaCheckResult> => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return { allowed: false, reason: "Not authenticated", remaining: 0, limit: 0, usage: 0 };
-    }
-
-    const doctor = await ctx.db
-      .query("doctors")
-      .withIndex("by_authUserId", (q) => q.eq("authUserId", identity.subject))
-      .first();
-
-    if (!doctor) {
-      return { allowed: false, reason: "Doctor profile not found", remaining: 0, limit: 0, usage: 0 };
-    }
-
-    const subscription = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_doctorId", (q) => q.eq("doctorId", doctor._id))
-      .order("desc")
-      .first();
-
-    let limit = 0;
-
-    if (subscription) {
-      const activeStatuses = ["trialing", "active"];
-      if (activeStatuses.includes(subscription.status)) {
-        const tierName = subscription.tierName || subscription.metadata?.tierName;
-        if (tierName) {
-          const tier = await ctx.db
-            .query("subscriptionTiers")
-            .withIndex("by_name", (q) => q.eq("name", tierName))
-            .first();
-          if (tier) {
-            limit = tier.limits.recordCount;
-          }
-        }
-      }
-    }
-
-    if (limit === 0) {
-      return {
-        allowed: false,
-        reason: "You need an active subscription to add records.",
-        remaining: 0,
-        limit: 0,
-        usage: 0,
-      };
-    }
-
-    const appointments = await ctx.db
-      .query("appointments")
-      .withIndex("by_doctorId", (q) => q.eq("doctorId", doctor._id))
-      .collect();
-    const usage = appointments.length;
-    const remaining = limit - usage;
-
-    if (remaining <= 0) {
-      return {
-        allowed: false,
-        reason: `You have reached your record limit (${limit}). Please upgrade your plan.`,
-        remaining: 0,
-        limit,
-        usage,
-      };
-    }
-
-    return { allowed: true, remaining, limit, usage };
+  handler: async (): Promise<QuotaCheckResult> => {
+    // STANDALONE: billing removed — unlimited record quota.
+    return { allowed: true, remaining: 999999, limit: 999999, usage: 0 };
   },
 });
 
@@ -359,81 +200,13 @@ export const checkRecordQuota = query({
 // to verify the user can afford a specific feature before calling it.
 export const checkAICreditQuota = query({
   args: { cost: v.optional(v.number()) },
-  handler: async (ctx, args): Promise<QuotaCheckResult & { packBalance: number }> => {
-    const cost = args.cost ?? 1;
+  handler: async (ctx): Promise<QuotaCheckResult & { packBalance: number }> => {
+    // STANDALONE: billing removed — unlimited AI credits.
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
       return { allowed: false, reason: "Not authenticated", remaining: 0, limit: 0, usage: 0, packBalance: 0 };
     }
-
-    const doctor = await ctx.db
-      .query("doctors")
-      .withIndex("by_authUserId", (q) => q.eq("authUserId", identity.subject))
-      .first();
-
-    if (!doctor) {
-      return { allowed: false, reason: "Doctor profile not found", remaining: 0, limit: 0, usage: 0, packBalance: 0 };
-    }
-
-    const subscription = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_doctorId", (q) => q.eq("doctorId", doctor._id))
-      .order("desc")
-      .first();
-
-    let limit = 0;
-    if (subscription) {
-      const activeStatuses = ["trialing", "active"];
-      if (activeStatuses.includes(subscription.status)) {
-        const tierName = subscription.tierName || subscription.metadata?.tierName;
-        if (tierName) {
-          const tier = await ctx.db
-            .query("subscriptionTiers")
-            .withIndex("by_name", (q) => q.eq("name", tierName))
-            .first();
-          if (tier) {
-            limit = tier.limits.aiCredits;
-          }
-        }
-      }
-    }
-
-    const period = getCurrentPeriod();
-    const usageRecord = await ctx.db
-      .query("usage")
-      .withIndex("by_doctorId_period", (q) =>
-        q.eq("doctorId", doctor._id).eq("period", period)
-      )
-      .first();
-
-    const usage = usageRecord?.aiCreditsUsed || 0;
-    const packBalance = usageRecord?.packCreditsRemaining || 0;
-    const includedRemaining = Math.max(0, limit - usage);
-    const totalAvailable = includedRemaining + packBalance;
-
-    if (limit === 0 && packBalance === 0) {
-      return {
-        allowed: false,
-        reason: "AI features require an active subscription.",
-        remaining: 0,
-        limit: 0,
-        usage,
-        packBalance: 0,
-      };
-    }
-
-    if (totalAvailable < cost) {
-      return {
-        allowed: false,
-        reason: `Not enough AI credits. Buy a credit pack or upgrade your plan.`,
-        remaining: totalAvailable,
-        limit,
-        usage,
-        packBalance,
-      };
-    }
-
-    return { allowed: true, remaining: totalAvailable, limit, usage, packBalance };
+    return { allowed: true, remaining: 999999, limit: 999999, usage: 0, packBalance: 0 };
   },
 });
 
@@ -475,86 +248,11 @@ export const deductAICredits = mutation({
     ),
   },
   handler: async (ctx, args): Promise<{ success: boolean; cost: number; remaining: number }> => {
+    // STANDALONE: billing removed — AI credits are unlimited; never block or charge.
     const cost = AI_CREDIT_WEIGHTS[args.feature];
-
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
-
-    const doctor = await ctx.db
-      .query("doctors")
-      .withIndex("by_authUserId", (q) => q.eq("authUserId", identity.subject))
-      .first();
-
-    if (!doctor) throw new Error("Doctor profile not found");
-
-    // Resolve included monthly limit from subscription tier
-    const subscription = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_doctorId", (q) => q.eq("doctorId", doctor._id))
-      .order("desc")
-      .first();
-
-    let limit = 0;
-    if (subscription) {
-      const activeStatuses = ["trialing", "active"];
-      if (activeStatuses.includes(subscription.status)) {
-        const tierName = subscription.tierName || subscription.metadata?.tierName;
-        if (tierName) {
-          const tier = await ctx.db
-            .query("subscriptionTiers")
-            .withIndex("by_name", (q) => q.eq("name", tierName))
-            .first();
-          if (tier) {
-            limit = tier.limits.aiCredits;
-          }
-        }
-      }
-    }
-
-    const period = getCurrentPeriod();
-    const now = Date.now();
-    const usage = await ctx.db
-      .query("usage")
-      .withIndex("by_doctorId_period", (q) =>
-        q.eq("doctorId", doctor._id).eq("period", period)
-      )
-      .first();
-
-    const currentUsed = usage?.aiCreditsUsed || 0;
-    const packBalance = usage?.packCreditsRemaining || 0;
-    const includedRemaining = Math.max(0, limit - currentUsed);
-
-    if (includedRemaining + packBalance < cost) {
-      throw new Error("NO_CREDITS");
-    }
-
-    // Fill from included pool first, then draw the remainder from pack balance
-    const fromIncluded = Math.min(cost, includedRemaining);
-    const fromPack = cost - fromIncluded;
-
-    if (usage) {
-      await ctx.db.patch(usage._id, {
-        aiCreditsUsed: currentUsed + fromIncluded,
-        packCreditsRemaining: packBalance - fromPack,
-        updatedAt: now,
-      });
-    } else {
-      await ctx.db.insert("usage", {
-        doctorId: doctor._id,
-        period,
-        aiCreditsUsed: fromIncluded,
-        packCreditsRemaining: packBalance - fromPack,
-        whatsappTrialUsed: 0,
-        whatsappMessagesUsed: 0,
-        telehealthMinutesUsed: 0,
-        storageUsedBytes: 0,
-        createdAt: now,
-        updatedAt: now,
-      });
-    }
-
-    const remaining = Math.max(0, limit - (currentUsed + fromIncluded)) + (packBalance - fromPack);
-    return { success: true, cost, remaining };
+    return { success: true, cost, remaining: 999999 };
   },
 });
 
@@ -688,52 +386,13 @@ export const incrementDocumentGeneration = mutation({
 });
 
 // Legacy per-feature check wrappers (map to unified credit quota).
-async function checkAICreditQuotaInline(ctx: any, cost: number): Promise<QuotaCheckResult> {
+async function checkAICreditQuotaInline(ctx: any, _cost: number): Promise<QuotaCheckResult> {
+  // STANDALONE: billing removed — unlimited AI credits for authenticated users.
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
     return { allowed: false, reason: "Not authenticated", remaining: 0, limit: 0, usage: 0 };
   }
-  const doctor = await ctx.db
-    .query("doctors")
-    .withIndex("by_authUserId", (q: any) => q.eq("authUserId", identity.subject))
-    .first();
-  if (!doctor) {
-    return { allowed: false, reason: "Doctor profile not found", remaining: 0, limit: 0, usage: 0 };
-  }
-  const subscription = await ctx.db
-    .query("subscriptions")
-    .withIndex("by_doctorId", (q: any) => q.eq("doctorId", doctor._id))
-    .order("desc")
-    .first();
-  let limit = 0;
-  if (subscription && ["trialing", "active"].includes(subscription.status)) {
-    const tierName = subscription.tierName || subscription.metadata?.tierName;
-    if (tierName) {
-      const tier = await ctx.db
-        .query("subscriptionTiers")
-        .withIndex("by_name", (q: any) => q.eq("name", tierName))
-        .first();
-      if (tier) limit = tier.limits.aiCredits;
-    }
-  }
-  const period = getCurrentPeriod();
-  const usageRecord = await ctx.db
-    .query("usage")
-    .withIndex("by_doctorId_period", (q: any) =>
-      q.eq("doctorId", doctor._id).eq("period", period)
-    )
-    .first();
-  const used = usageRecord?.aiCreditsUsed || 0;
-  const packBalance = usageRecord?.packCreditsRemaining || 0;
-  const totalAvailable = Math.max(0, limit - used) + packBalance;
-
-  if (limit === 0 && packBalance === 0) {
-    return { allowed: false, reason: "AI features require an active subscription.", remaining: 0, limit: 0, usage: used };
-  }
-  if (totalAvailable < cost) {
-    return { allowed: false, reason: "Not enough AI credits. Buy a pack or upgrade.", remaining: totalAvailable, limit, usage: used };
-  }
-  return { allowed: true, remaining: totalAvailable, limit, usage: used };
+  return { allowed: true, remaining: 999999, limit: 999999, usage: 0 };
 }
 
 export const checkScrybeGPTQuota = query({

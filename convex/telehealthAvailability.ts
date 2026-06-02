@@ -18,24 +18,8 @@ async function getAuthenticatedDoctor(ctx: QueryCtx | MutationCtx) {
   return doctor;
 }
 
-async function verifyTelehealthAccess(ctx: QueryCtx | MutationCtx, doctorId: Id<"doctors">) {
-  const subscription = await ctx.db
-    .query("subscriptions")
-    .withIndex("by_doctorId", (q) => q.eq("doctorId", doctorId))
-    .order("desc")
-    .first();
-
-  if (!subscription) throw new Error("No active subscription");
-
-  const activeStatuses = ["trialing", "active"];
-  if (!activeStatuses.includes(subscription.status)) {
-    throw new Error("Subscription is not active");
-  }
-
-  const tierName = subscription.tierName || subscription.metadata?.tierName || "free";
-  if (!["professional", "complete", "institution"].includes(tierName)) {
-    throw new Error("Telehealth requires a Professional or Complete subscription");
-  }
+async function verifyTelehealthAccess(_ctx: QueryCtx | MutationCtx, _doctorId: Id<"doctors">) {
+  // STANDALONE: billing removed — telehealth available to all; no-op.
 }
 
 // ==================== Helpers ====================

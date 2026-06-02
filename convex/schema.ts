@@ -825,11 +825,23 @@ const auditLogs = defineTable({
   .index("by_action", ["action"])
   .index("by_timestamp", ["timestamp"]);
 
+// ==================== Migration ====================
+// Temporary: maps legacy Supabase/Prisma primary keys to new Convex _ids during
+// the one-time data import. Used to remap foreign keys (parents before children)
+// and to make the import idempotent/resumable. Safe to drop after migration.
+const migrationMap = defineTable({
+  entity: v.string(), // "Doctor" | "Patient" | "Appointment" | "Service" | "Vaccin" | "Dose"
+  legacyId: v.string(), // the Supabase/Prisma text/uuid PK
+  convexId: v.string(), // the new Convex _id
+}).index("by_entity_legacy", ["entity", "legacyId"]);
+
 // ==================== Export Schema ====================
 
 export default defineSchema({
   // App users (auth link)
   appUsers,
+  // Migration (temporary)
+  migrationMap,
   // Domain tables
   doctors,
   patients,

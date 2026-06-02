@@ -42,3 +42,8 @@ next-env.d.ts
 /e2e/.auth/
 /playwright-report/
 .env.e2e
+
+# Supabase/Convex data exports (PHI) — never commit
+reference-export/
+*-export.zip
+source-export*

@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PediaScrybe — Standalone Client Migration Plan</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#141b24; --panel-2:#1b232e; --ink:#e6edf3; --muted:#9aa7b4;
+    --line:#243040; --accent:#4f9cf9; --accent-2:#7c5cff; --good:#3fb950; --warn:#d29922;
+    --bad:#f85149; --code:#0b1017; --chip:#22303f;
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;font-size:15.5px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{display:grid;grid-template-columns:280px 1fr;max-width:1440px;margin:0 auto}
+  /* Sidebar TOC */
+  nav.toc{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;padding:28px 18px;border-right:1px solid var(--line);background:var(--panel)}
+  nav.toc h1{font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+  nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px}
+  nav.toc ol{list-style:none;margin:0;padding:0;counter-reset:item}
+  nav.toc ol li{margin:2px 0}
+  nav.toc ol li a{display:block;padding:5px 10px;border-radius:7px;color:var(--muted);font-size:13.5px;border-left:2px solid transparent}
+  nav.toc ol li a:hover{background:var(--panel-2);color:var(--ink);text-decoration:none}
+  main{padding:40px 52px 120px;min-width:0}
+  header.hero{border:1px solid var(--line);background:linear-gradient(135deg,#15202c,#0f1620);border-radius:16px;padding:34px 36px;margin-bottom:34px;position:relative;overflow:hidden}
+  header.hero:before{content:"";position:absolute;inset:-40% -40% auto auto;width:440px;height:440px;background:radial-gradient(closest-side,rgba(124,92,255,.22),transparent);}
+  header.hero h1{margin:0 0 10px;font-size:30px;letter-spacing:-.02em}
+  header.hero p{margin:0;color:var(--muted);max-width:760px}
+  .pillrow{margin-top:18px;display:flex;flex-wrap:wrap;gap:8px}
+  .pill{font-size:12px;background:var(--chip);border:1px solid var(--line);color:var(--ink);padding:4px 11px;border-radius:999px}
+  .pill.good{border-color:#1f5b2c;color:#7ee695}
+  .pill.warn{border-color:#5a4715;color:#f0cd6b}
+  .pill.bad{border-color:#5a1f1f;color:#ff9b94}
+  h2{font-size:23px;margin:46px 0 6px;letter-spacing:-.01em;scroll-margin-top:20px}
+  h2 .num{color:var(--accent);font-variant-numeric:tabular-nums;margin-right:10px;font-weight:700}
+  h3{font-size:17px;margin:26px 0 6px;color:#cfe1f5}
+  h4{font-size:14.5px;margin:18px 0 4px;color:#bcd0e6;text-transform:uppercase;letter-spacing:.05em}
+  p{margin:8px 0}
+  .lead{color:var(--muted)}
+  hr{border:none;border-top:1px solid var(--line);margin:30px 0}
+  section{border-top:1px solid transparent}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:16px 0}
+  .card.tight{padding:14px 16px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:1080px){.grid2,.grid3{grid-template-columns:1fr}.wrap{grid-template-columns:1fr}nav.toc{display:none}}
+  code{font-family:var(--mono);font-size:.86em;background:var(--chip);padding:1.5px 6px;border-radius:5px;color:#e9d9ff;white-space:nowrap}
+  pre{background:var(--code);border:1px solid var(--line);border-radius:10px;padding:16px 18px;overflow-x:auto;margin:14px 0}
+  pre code{background:none;padding:0;white-space:pre;color:#d7e2ee;font-size:13px;line-height:1.55}
+  .tok-c{color:#6a7c8c;font-style:italic} /* comment */
+  .tok-k{color:#ff7b72} /* keyword */
+  .tok-s{color:#a5d6ff} /* string */
+  .tok-f{color:#d2a8ff} /* fn */
+  .tok-t{color:#7ee787} /* type */
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+  th{background:var(--panel-2);color:#cfe1f5;font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.03em}
+  tbody tr:nth-child(odd){background:rgba(255,255,255,.012)}
+  td code{white-space:normal}
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;letter-spacing:.03em;text-transform:uppercase}
+  .t-del{background:#3a1518;color:#ff9b94;border:1px solid #5a1f1f}
+  .t-stub{background:#3a2f12;color:#f0cd6b;border:1px solid #5a4715}
+  .t-keep{background:#10301a;color:#7ee695;border:1px solid #1f5b2c}
+  .t-new{background:#161f3a;color:#9db8ff;border:1px solid #25356a}
+  .t-edit{background:#241a3a;color:#c9b3ff;border:1px solid #3c2c66}
+  ul,ol{margin:8px 0;padding-left:22px}
+  li{margin:4px 0}
+  .callout{border-left:4px solid var(--accent);background:var(--panel-2);border-radius:0 10px 10px 0;padding:12px 16px;margin:14px 0}
+  .callout.warn{border-color:var(--warn)}
+  .callout.bad{border-color:var(--bad)}
+  .callout.good{border-color:var(--good)}
+  .callout .h{font-weight:700;margin-bottom:2px;font-size:13px;text-transform:uppercase;letter-spacing:.04em}
+  .callout.warn .h{color:#f0cd6b}.callout.bad .h{color:#ff9b94}.callout.good .h{color:#7ee695}.callout .h{color:#9db8ff}
+  .step{display:flex;gap:14px;margin:10px 0;align-items:flex-start}
+  .step .n{flex:0 0 30px;height:30px;border-radius:8px;background:var(--accent);color:#06101f;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:14px;margin-top:2px}
+  .step .body{flex:1}
+  .step .body b{color:#dbe7f3}
+  .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0;font-size:13px}
+  .flow .box{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:7px 12px}
+  .flow .arr{color:var(--accent);font-weight:700}
+  .kbd{font-family:var(--mono);font-size:12px;background:#0b1017;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:2px 7px}
+  .muted{color:var(--muted)}
+  .small{font-size:13px}
+  footer{color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);margin-top:60px;padding-top:18px}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 0;font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+  <h1>Migration Plan</h1>
+  <div class="sub">PediaScrybe → Standalone Client</div>
+  <ol>
+    <li><a href="#tldr">0 · How it will work</a></li>
+    <li><a href="#current">1 · What you have today</a></li>
+    <li><a href="#target">2 · Target architecture</a></li>
+    <li><a href="#a-stripe">3 · Remove Stripe &amp; gating</a></li>
+    <li><a href="#b-auth">4 · Auth: import + lazy passwords</a></li>
+    <li><a href="#b-signup">5 · Block new signups</a></li>
+    <li><a href="#c-data">6 · Data migration (Supabase→Convex)</a></li>
+    <li><a href="#mapping">7 · Field mapping reference</a></li>
+    <li><a href="#seed">8 · Reference / seed data</a></li>
+    <li><a href="#files">9 · Files &amp; storage</a></li>
+    <li><a href="#env">10 · Environment variables</a></li>
+    <li><a href="#runbook">11 · Execution runbook</a></li>
+    <li><a href="#validate">12 · Validation &amp; test user</a></li>
+    <li><a href="#risks">13 · Risks &amp; rollback</a></li>
+    <li><a href="#checklist">14 · Master checklist</a></li>
+    <li><a href="#need">15 · What I need from you</a></li>
+    <li><a href="#prod">16 · Prod / go-live &amp; dual-env</a></li>
+  </ol>
+  <div class="legend">
+    <span><span class="tag t-del">delete</span></span>
+    <span><span class="tag t-stub">stub</span></span>
+    <span><span class="tag t-edit">edit</span></span>
+    <span><span class="tag t-new">new</span></span>
+    <span><span class="tag t-keep">keep</span></span>
+  </div>
+</nav>
+
+<main>
+
+<header class="hero">
+  <h1>Standalone Client Migration Plan</h1>
+  <p>Turn this copy of <b>PediaScrybe</b> (Next.js 16 + Convex + Better Auth) into a private, single-client deployment: strip all Stripe billing and subscription gating so every feature is unlocked, block new public signups, and migrate every user (with their existing passwords) plus all clinical data from the client's older Supabase build into the fresh Convex project.</p>
+  <div class="pillrow">
+    <span class="pill">Next.js 16 · App Router</span>
+    <span class="pill">Convex backend</span>
+    <span class="pill">Better Auth (scrypt)</span>
+    <span class="pill good">✓ New Convex project linked</span>
+    <span class="pill good">✓ Full Postgres access to source</span>
+    <span class="pill warn">Lazy bcrypt → scrypt passwords</span>
+    <span class="pill bad">Remove Stripe + gating</span>
+    <span class="pill bad">Block signups</span>
+  </div>
+</header>
+
+<!-- ============================================ -->
+<section id="tldr">
+<h2><span class="num">0</span>How it will work — the short version</h2>
+<p class="lead">Three independent workstreams, run in this order. Each is reversible until you cut over.</p>
+
+<div class="grid3">
+  <div class="card tight">
+    <h4 style="color:#ff9b94">A · Ungate everything</h4>
+    <p class="small">The app is unlocked by <b>centralizing</b> the "do you have access?" checks so they all answer <i>yes, unlimited</i>. We don't rip gates out of dozens of call-sites — we make the handful of gate functions return an unlimited "institution-equivalent" plan. Then we remove only the things that actively reach out to Stripe (webhook route, billing cron, customer-creation on signup) and neutralize the billing UI.</p>
+  </div>
+  <div class="card tight">
+    <h4 style="color:#9db8ff">B · Auth migration</h4>
+    <p class="small">Every Supabase user is recreated in Better Auth with their email, name, role and <b>original bcrypt password hash</b>. A custom <code>verify()</code> hook detects bcrypt vs scrypt at login: bcrypt users sign in with their existing password and are transparently re-hashed to scrypt. Public signup is turned off at the API and in the UI.</p>
+  </div>
+  <div class="card tight">
+    <h4 style="color:#7ee695">C · Data migration</h4>
+    <p class="small">A one-shot script reads the Supabase Postgres tables, transforms them (dates → epoch-ms, embedded meds/exams → standalone rows), and inserts them into Convex through internal mutations. Because Convex generates its own IDs, a <code>migrationMap</code> table remaps every foreign key as rows are inserted, parents before children.</p>
+  </div>
+</div>
+
+<div class="callout good">
+  <div class="h">End state</div>
+  The client opens the app, logs in with the <i>same</i> email + password they had on the old Supabase system, and sees all their patients, appointments, prescriptions, labs, vaccines, reports and receipts — with every feature (AI, telehealth, WhatsApp ScrybeGPT, patient portal) fully enabled and no paywall, trial banner, or usage meter anywhere. Nobody new can self-register.
+</div>
+
+<div class="flow">
+  <span class="box">Supabase Postgres (old app)</span>
+  <span class="arr">→</span>
+  <span class="box">migrate-from-supabase.ts (reads + transforms)</span>
+  <span class="arr">→</span>
+  <span class="box">Convex internal mutations</span>
+  <span class="arr">→</span>
+  <span class="box">Better Auth users + appUsers + doctors + patients + …</span>
+  <span class="arr">→</span>
+  <span class="box">New Convex project</span>
+</div>
+</section>
+
+<!-- ============================================ -->
+<section id="current">
+<h2><span class="num">1</span>What you have today (verified in the repo)</h2>
+
+<div class="grid2">
+<div class="card tight">
+<h4>Stack</h4>
+<ul class="small">
+  <li><b>Frontend:</b> Next.js 16 App Router, React 19, Tailwind v4, PWA (Serwist).</li>
+  <li><b>Backend:</b> Convex (~60 modules in <code>convex/</code>).</li>
+  <li><b>Auth:</b> <code>@convex-dev/better-auth@0.10.9</code> + <code>better-auth</code> (email/password, email-verify, scrypt hashing).</li>
+  <li><b>Billing:</b> <code>@convex-dev/stripe@0.1.2</code> + custom Stripe code.</li>
+  <li><b>Other:</b> Resend (email), LiveKit (telehealth video), Kapso (WhatsApp), Upstash (rate-limit), OpenAI / Vercel AI Gateway, UploadThing (files), PostHog.</li>
+</ul>
+</div>
+<div class="card tight">
+<h4>Roles &amp; tenancy</h4>
+<ul class="small">
+  <li>Three roles on the Better Auth user: <code>doctor</code>, <code>patient</code> (parent/guardian), <code>admin</code>.</li>
+  <li><b>Doctor</b> is the tenant root — owns patients, appointments, prescriptions, labs, services, vaccines, telehealth, WhatsApp.</li>
+  <li><b>Patient/parent</b> accounts link to patient records via <code>patientAccounts</code> and use the <code>/portal</code> area.</li>
+  <li>You said: <i>no clinic concept — just migrate all users.</i> We keep the existing doctor/patient model and import every account as-is.</li>
+</ul>
+</div>
+</div>
+
+<h3>How identity is wired (the chain you must preserve)</h3>
+<pre><code><span class="tok-c">// Better Auth user (in the betterAuth component)  ──┐</span>
+<span class="tok-c">//   user._id : string                              │  String(user._id)</span>
+<span class="tok-c">//                                                  ▼</span>
+appUsers.authUserId      <span class="tok-c">// bridge row: { role, plan, email }</span>
+doctors.authUserId       <span class="tok-c">// the doctor profile (only for role==="doctor")</span>
+patientAccounts.authUserId  <span class="tok-c">// parent ↔ patient link (role==="patient")</span>
+<span class="tok-c">// every clinical table hangs off doctors._id / patients._id</span>
+patients.doctorId → doctors._id
+appointments.{doctorId,patientId} → doctors._id / patients._id
+prescriptions / labOrders / labResults / services / vaccins / vaccinationRecords / reports / receipts / files …</code></pre>
+
+<div class="callout">
+  <div class="h">Key fact that drives the whole migration</div>
+  <code>convex/auth.ts</code> has an <b>onCreate trigger</b> on the Better Auth <code>user</code> table. When a user is created it automatically: (1) inserts an <code>appUsers</code> row, (2) for doctors, creates-or-relinks a <code>doctors</code> row <i>by email</i>, (3) for patients, auto-accepts any pending <code>patientInvitations</code>, (4) schedules a Stripe customer + welcome email. We lean on (1)–(3) during import and remove (4).
+</div>
+</section>
+
+<!-- ============================================ -->
+<section id="target">
+<h2><span class="num">2</span>Target architecture for the standalone client</h2>
+<table>
+<thead><tr><th>Concern</th><th>Today</th><th>Standalone target</th></tr></thead>
+<tbody>
+<tr><td>Billing</td><td>Stripe checkout, portal, webhooks, overage cron</td><td><b>Removed.</b> No Stripe calls anywhere.</td></tr>
+<tr><td>Feature access</td><td>Gated by subscription tier + status + monthly usage quotas</td><td><b>Unlimited.</b> Gate functions return an "institution-equivalent" plan; quotas effectively ∞.</td></tr>
+<tr><td>Signup</td><td>Public doctor + patient self-registration</td><td><b>Closed.</b> <code>disableSignUp</code> at the API; signup routes/CTAs removed.</td></tr>
+<tr><td>Login</td><td>Better Auth email+password (scrypt), email-verify required</td><td>Same, plus a <b>bcrypt fallback verifier</b> for migrated users; verified flag pre-set on import.</td></tr>
+<tr><td>Users</td><td>Created by self-signup</td><td><b>Imported</b> from Supabase, passwords preserved.</td></tr>
+<tr><td>Clinical data</td><td>Entered in-app</td><td><b>Imported</b> from Supabase Postgres.</td></tr>
+<tr><td>Marketing pages</td><td>Landing, pricing, public signup</td><td>Pricing removed; landing becomes the login entry only (optional).</td></tr>
+</tbody>
+</table>
+</section>
+
+<!-- ============================================ -->
+<section id="a-stripe">
+<h2><span class="num">3</span>Workstream A — Remove Stripe &amp; all gating</h2>
+<p class="lead">Strategy: <b>centralize the unlock, then prune the Stripe edges.</b> The billing UI and feature guards all read a small set of Convex queries. If those queries report "unlimited everything", the entire app behaves as fully paid with zero changes to call-sites. We then delete only the code paths that actually talk to Stripe (so nothing errors with the keys removed).</p>
+
+<h3>3.1 Stub the gate functions to "unlimited" <span class="tag t-stub">stub</span></h3>
+<p class="small">These are the only functions the rest of the app consults for access. Make them all answer green.</p>
+<table>
+<thead><tr><th>File</th><th>Function(s)</th><th>New behavior</th></tr></thead>
+<tbody>
+<tr><td><code>convex/subscriptions.ts</code></td><td><code>hasFeatureAccess</code></td><td>always <code>return true</code></td></tr>
+<tr><td><code>convex/subscriptions.ts</code></td><td><code>getCurrentSubscriptionDetails</code></td><td>return a synthetic "active / institution" object with all <code>limits</code> = <code>999999</code> and <code>features</code> = full list</td></tr>
+<tr><td><code>convex/subscriptions.ts</code></td><td><code>canAddPatient</code></td><td><code>{ allowed:true, limit:999999 }</code></td></tr>
+<tr><td><code>convex/usage.ts</code></td><td><code>checkPatientQuota</code>, <code>checkRecordQuota</code>, <code>checkAICreditQuota</code>, <code>checkScrybeGPTQuota</code>, <code>checkAIPrescriptionQuota</code> &amp; siblings</td><td><code>{ allowed:true, remaining:999999, limit:999999 }</code></td></tr>
+<tr><td><code>convex/usage.ts</code></td><td><code>deductAICredits</code></td><td>no-op (never throw <code>NO_CREDITS</code>); optionally still record usage for analytics</td></tr>
+<tr><td><code>convex/usage.ts</code></td><td><code>getUsageWithLimits</code></td><td>return usage with unlimited caps so meters render at 0%</td></tr>
+<tr><td><code>convex/portalAi.ts</code></td><td><code>canUseAI</code></td><td><code>{ allowed:true, remaining:999999, isPremium:true }</code></td></tr>
+<tr><td><code>convex/patients.ts</code></td><td><code>createPatient</code> inline limit (≈ lines 186–217)</td><td>remove the <code>patientLimit</code> throw</td></tr>
+<tr><td><code>convex/services.ts</code>, <code>invitations.ts</code>, <code>telehealth.ts</code>, <code>telehealthAvailability.ts</code>, <code>files.ts</code></td><td>subscription-status guards</td><td>remove the "requires active subscription" throws</td></tr>
+<tr><td><code>convex/whatsappData.ts</code></td><td><code>checkWhatsappQuota</code>, <code>canAccessWhatsappFeature</code></td><td><code>{ allowed:true }</code> / <code>{ hasAccess:true }</code></td></tr>
+</tbody>
+</table>
+
+<div class="callout warn">
+  <div class="h">Why stub instead of delete</div>
+  The doctor layout (<code>app/user/layout.tsx</code>) mounts <code>SubscriptionGuardProvider</code>, <code>SubscriptionBanner</code>, <code>SubscriptionSync</code>, and feature-aware links read <code>hasFeatureAccess</code>. With the stubs returning "unlimited", the banner never shows, guards always pass, and meters sit at 0% — <b>no UI rewrites needed</b>. You can delete those components later as cosmetic cleanup.
+</div>
+
+<h3>3.2 Remove the live Stripe edges <span class="tag t-del">delete</span> <span class="tag t-edit">edit</span></h3>
+<table>
+<thead><tr><th>Action</th><th>Where</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td><span class="tag t-edit">edit</span></td><td><code>convex/auth.ts</code> onCreate trigger</td><td>Delete the <code>scheduler.runAfter(0, internal.stripe.createStripeCustomer,…)</code> block (and gate the welcome email behind a <code>MIGRATION_MODE</code> flag so the bulk import stays silent).</td></tr>
+<tr><td><span class="tag t-edit">edit</span></td><td><code>convex/http.ts</code></td><td>Remove the entire <code>/stripe/webhook</code> route (lines 14–204). Keep LiveKit + WhatsApp routes and <code>authComponent.registerRoutes</code>.</td></tr>
+<tr><td><span class="tag t-edit">edit</span></td><td><code>convex/crons.ts</code></td><td>Remove <code>telehealth-overage-billing</code>. Keep or simplify <code>reset-monthly-usage</code> (harmless with unlimited caps; can drop it).</td></tr>
+<tr><td><span class="tag t-edit">edit</span></td><td><code>convex/convex.config.ts</code></td><td>Remove <code>app.use(stripe)</code> and the import (the <code>@convex-dev/stripe</code> component).</td></tr>
+<tr><td><span class="tag t-del">delete</span></td><td><code>convex/stripeWebhooks.ts</code>, <code>convex/billingCrons.ts</code>, <code>convex/patientSubscriptions.ts</code></td><td>Pure Stripe code, no longer referenced once the webhook + cron are gone.</td></tr>
+<tr><td><span class="tag t-edit">edit</span></td><td><code>convex/stripe.ts</code></td><td><b>Trim, don't delete.</b> Remove all checkout/portal/customer actions + <code>createStripeCustomer</code>. <b>Keep</b> the read query <code>getSubscriptionTiers</code> (so <code>/api/pricing</code> &amp; any UI that still imports it compile) returning the static seed tiers, or repoint those callers. Simplest: keep a stub <code>getSubscriptionTiers</code> + <code>getStripeCustomerId</code> returning empty.</td></tr>
+<tr><td><span class="tag t-del">delete</span></td><td><code>app/api/stripe/checkout/route.ts</code>, <code>app/api/stripe/portal/route.ts</code></td><td>Checkout + portal endpoints.</td></tr>
+<tr><td><span class="tag t-del">delete</span></td><td><code>app/(public)/pricing/page.tsx</code>, <code>app/user/pricing/page.tsx</code></td><td>Pricing pages.</td></tr>
+<tr><td><span class="tag t-edit">edit</span></td><td><code>app/user/settings/subscription/page.tsx</code></td><td>Either delete the route, or replace its body with a simple "Your plan: Full access — no billing" panel (it currently calls <code>getCurrentSubscriptionDetails</code>/<code>getUsageWithLimits</code>, which now report unlimited, so it won't crash either way).</td></tr>
+<tr><td><span class="tag t-edit">edit</span></td><td><code>app/api/pricing/route.ts</code>, <code>app/api/checkout/route.ts</code>, <code>convex/http.ts</code> <code>/api/pricing</code></td><td>Pricing API is public-marketing only — remove or leave returning the static tier list. Not needed for the client app.</td></tr>
+</tbody>
+</table>
+
+<div class="callout">
+  <div class="h">Schema tables</div>
+  You can leave the billing tables (<code>subscriptions</code>, <code>subscriptionTiers</code>, <code>products</code>, <code>prices</code>, <code>usage</code>, <code>patientSubscriptions</code>, <code>patientUsage</code>) defined in <code>schema.ts</code> — unused, they cost nothing and keep diffs small. Don't migrate any data into them.
+</div>
+
+<h3>3.3 Quick compile guard</h3>
+<p class="small">After edits, run a project-wide search for <code>api.stripe.</code>, <code>internal.stripe.</code>, <code>api.patientSubscriptions.</code>, <code>internal.billingCrons.</code>, and <code>internal.stripeWebhooks.</code> and resolve every remaining reference. <code>npx convex dev</code> will fail loudly on any dangling reference — use it as the checker.</p>
+</section>
+
+<!-- ============================================ -->
+<section id="b-auth">
+<h2><span class="num">4</span>Workstream B — Auth: import users + lazy password migration</h2>
+
+<h3>4.1 The password problem &amp; the fix</h3>
+<p>Supabase Auth (GoTrue) stores <b>bcrypt</b> hashes (<code>$2a$…</code>) in <code>auth.users.encrypted_password</code>. Better Auth stores <b>scrypt</b> hashes in the format <code>salt:hexkey</code> in <code>account.password</code>. They are not interchangeable — but Better Auth lets us supply a custom verifier. We register one that handles <b>both</b> formats:</p>
+
+<pre><code><span class="tok-c">// convex/auth.ts → createAuthOptions(...)</span>
+<span class="tok-k">import</span> bcrypt <span class="tok-k">from</span> <span class="tok-s">"bcryptjs"</span>;
+<span class="tok-k">import</span> { hashPassword, verifyPassword } <span class="tok-k">from</span> <span class="tok-s">"better-auth/crypto"</span>; <span class="tok-c">// scrypt default</span>
+
+emailAndPassword: {
+  enabled: <span class="tok-k">true</span>,
+  disableSignUp: <span class="tok-k">true</span>,            <span class="tok-c">// ← closes public registration (§5)</span>
+  requireEmailVerification: <span class="tok-k">false</span>, <span class="tok-c">// migrated users are imported pre-verified</span>
+  sendResetPassword: <span class="tok-k">async</span> ({ user, url }) => { <span class="tok-c">/* unchanged */</span> },
+  password: {
+    hash: (pw) => hashPassword(pw),       <span class="tok-c">// new/rehashed passwords → scrypt</span>
+    verify: <span class="tok-k">async</span> ({ password, hash }) => {
+      <span class="tok-k">if</span> (hash.startsWith(<span class="tok-s">"$2"</span>)) {       <span class="tok-c">// bcrypt from Supabase</span>
+        <span class="tok-k">return</span> bcrypt.compare(password, hash);
+      }
+      <span class="tok-k">return</span> verifyPassword({ password, hash }); <span class="tok-c">// native scrypt</span>
+    },
+  },
+},</code></pre>
+
+<div class="callout good">
+  <div class="h">Result</div>
+  A migrated user types their old password → <code>verify()</code> sees a <code>$2…</code> hash → bcrypt match → logged in. Native (post-reset / new) passwords use scrypt. <b>Zero friction, no mass password reset.</b> Add <code>bcryptjs</code> to <code>convex/</code> deps (pure-JS, runs in Convex's runtime).
+</div>
+
+<h3>4.2 Rehash-on-login (optional, recommended)</h3>
+<p class="small">To migrate each user off bcrypt permanently, re-hash on first successful login. Better Auth's <code>verify()</code> is pure, so do the rehash in a sign-in lifecycle hook (Better Auth <code>databaseHooks</code> / an <code>after</code> sign-in callback) that, when the stored hash is bcrypt, computes <code>hashPassword(plaintext)</code> and updates <code>account.password</code>. If wiring that hook is fiddly in the Convex adapter, it's safe to <b>skip</b> — the dual verifier works indefinitely; bcrypt simply lingers until the user next changes their password.</p>
+
+<h3>4.3 Creating the users during import</h3>
+<p>Each Supabase user becomes a Better Auth <code>user</code> + a <code>credential</code> <code>account</code> carrying the bcrypt hash. Do this through the Better Auth component adapter inside a Convex internal mutation so the <code>onCreate</code> trigger fires and auto-builds <code>appUsers</code>/<code>doctors</code>:</p>
+<pre><code><span class="tok-c">// convex/migration.ts</span>
+<span class="tok-k">export const</span> <span class="tok-f">importUser</span> = internalMutation({
+  args: { email: v.string(), name: v.string(), role: v.string(),
+          firstName: v.optional(v.string()), lastName: v.optional(v.string()),
+          bcryptHash: v.string(), legacyUserId: v.string() },
+  handler: <span class="tok-k">async</span> (ctx, a) => {
+    <span class="tok-k">const</span> adapter = authComponent.adapter(ctx);
+    <span class="tok-c">// 1) create the Better Auth user (fires onCreate → appUsers + doctors/relink)</span>
+    <span class="tok-k">const</span> user = <span class="tok-k">await</span> adapter.create({ model: <span class="tok-s">"user"</span>, data: {
+      email: a.email, name: a.name, emailVerified: <span class="tok-k">true</span>,
+      role: a.role, firstName: a.firstName, lastName: a.lastName,
+      createdAt: Date.now(), updatedAt: Date.now(),
+    }});
+    <span class="tok-c">// 2) attach the credential account with the original bcrypt hash</span>
+    <span class="tok-k">await</span> adapter.create({ model: <span class="tok-s">"account"</span>, data: {
+      userId: user.id, accountId: user.id, providerId: <span class="tok-s">"credential"</span>,
+      password: a.bcryptHash, createdAt: Date.now(), updatedAt: Date.now(),
+    }});
+    <span class="tok-c">// 3) record legacy→convex id mapping for FK remapping</span>
+    <span class="tok-k">await</span> ctx.db.insert(<span class="tok-s">"migrationMap"</span>, {
+      entity: <span class="tok-s">"user"</span>, legacyId: a.legacyUserId, convexId: user.id });
+    <span class="tok-k">return</span> user.id;
+  },
+});</code></pre>
+<p class="small"><b>Note:</b> exact adapter method names (<code>create</code> vs <code>createUser</code>) are confirmed against <code>@convex-dev/better-auth@0.10.9</code> during implementation — the shape above matches its adapter surface. The <code>onCreate</code> trigger already <i>relinks doctors by email</i>, so importing a doctor user produces a bare <code>doctors</code> row that step 6.4 then enriches with the full profile.</p>
+
+<div class="callout warn">
+  <div class="h">Turn off side-effects during import</div>
+  Set <code>MIGRATION_MODE=1</code> (Convex env) and guard the welcome-email scheduling in the <code>onCreate</code> trigger on it, so importing N users doesn't send N welcome emails. The Stripe-customer scheduling is already removed in §3.2.
+</div>
+</section>
+
+<!-- ============================================ -->
+<section id="b-signup">
+<h2><span class="num">5</span>Block all new signups</h2>
+<div class="grid2">
+<div class="card tight">
+<h4>Backend (authoritative)</h4>
+<ul class="small">
+  <li><span class="tag t-edit">edit</span> <code>convex/auth.ts</code>: add <code>disableSignUp: true</code> under <code>emailAndPassword</code> (shown in §4.1). Better Auth's sign-up route now rejects every request — verified in <code>better-auth/dist/api/routes/sign-up.mjs</code>.</li>
+  <li>This is the real lock: even a hand-crafted POST to <code>/api/auth/sign-up/email</code> returns <code>400</code>.</li>
+</ul>
+</div>
+<div class="card tight">
+<h4>Frontend (cosmetic)</h4>
+<ul class="small">
+  <li><span class="tag t-del">delete</span> <code>app/(public)/signup/*</code> and <code>app/portal/signup/*</code> (and <code>signup/success</code>).</li>
+  <li><span class="tag t-edit">edit</span> remove "Sign Up" CTAs in <code>components/siteHeader.tsx</code> and the "create account" links on the sign-in (<code>app/(public)/page.tsx</code>) and <code>app/portal/join</code> pages.</li>
+  <li>Keep sign-in + forgot-password flows intact.</li>
+</ul>
+</div>
+</div>
+<div class="callout">
+  <div class="h">New patients/parents later?</div>
+  Public self-signup is off, but the doctor can still invite a parent via the existing <code>patientInvitations</code> flow if you keep the portal. If you don't want <i>any</i> new accounts at all, also disable the invite-accept path. Your call — say the word and I'll specify it.
+</div>
+</section>
+
+<!-- ============================================ -->
+<section id="c-data">
+<h2><span class="num">6</span>Workstream C — Data migration (Supabase → Convex)</h2>
+<p class="lead">Because the source is an <b>older version of this same app</b>, tables line up closely. The work is: connect to Postgres, transform values to Convex conventions, and insert parents-before-children while remapping IDs.</p>
+
+<h3>6.1 The ID-remapping mechanism</h3>
+<p>Convex assigns its own <code>_id</code> on insert — you cannot carry Supabase UUIDs into <code>_id</code>. So we keep a translation table and resolve every foreign key through it.</p>
+<pre><code><span class="tok-c">// add to convex/schema.ts (temporary; drop after migration)</span>
+migrationMap: defineTable({
+  entity: v.string(),     <span class="tok-c">// "doctor" | "patient" | "appointment" | …</span>
+  legacyId: v.string(),   <span class="tok-c">// the Supabase PK (uuid/int as text)</span>
+  convexId: v.string(),   <span class="tok-c">// the new Convex _id</span>
+}).index(<span class="tok-s">"by_entity_legacy"</span>, [<span class="tok-s">"entity"</span>, <span class="tok-s">"legacyId"</span>]),</code></pre>
+<p class="small">Each import mutation writes its <code>(entity, legacyId) → convexId</code> row, and child imports call a <code>resolve(entity, legacyId)</code> helper to fill in <code>doctorId</code>, <code>patientId</code>, <code>appointmentId</code>, etc. Idempotent: re-running checks the map first and skips/updates.</p>
+
+<h3>6.2 Order of operations (parents before children)</h3>
+<div class="step"><div class="n">1</div><div class="body"><b>Users</b> (doctors first, then patients) → <code>importUser</code> (§4.3). Trigger builds <code>appUsers</code> + bare <code>doctors</code>. Map <code>user</code> + (by email) <code>doctor</code>.</div></div>
+<div class="step"><div class="n">2</div><div class="body"><b>Enrich doctor profiles</b> — patch each <code>doctors</code> row (phone, address, spec, title, summary, experience, cost, duration, timezone, availability, flags) by matching on email.</div></div>
+<div class="step"><div class="n">3</div><div class="body"><b>Patients</b> → resolve <code>doctorId</code> from map; insert; map <code>patient</code> legacy→new.</div></div>
+<div class="step"><div class="n">4</div><div class="body"><b>patientAccounts</b> (parent ↔ patient links) → resolve parent <code>authUserId</code> + <code>patientId</code>.</div></div>
+<div class="step"><div class="n">5</div><div class="body"><b>Appointments</b> → resolve <code>doctorId</code>+<code>patientId</code>; convert vitals/dates. If the old schema embedded <code>medication[]</code>/<code>exams[]</code> on the visit, <b>split them out</b> into <code>prescriptions</code> / <code>labOrders</code> (the repo already did this once via <code>migrateEmbeddedClinical.ts</code> — reuse that mapping logic).</div></div>
+<div class="step"><div class="n">6</div><div class="body"><b>Children of appointments/patients</b> — <code>prescriptions</code>, <code>labOrders</code> + <code>labResults</code>, <code>services</code>, <code>vaccins</code> → <code>doses</code> → <code>vaccinationRecords</code>, <code>reports</code>, <code>receipts</code>, <code>files</code>, <code>doctorImages</code>. Resolve all FKs through the map.</div></div>
+<div class="step"><div class="n">7</div><div class="body"><b>Verify counts</b> per table vs source, then run the test-user validation (§12).</div></div>
+
+<h3>6.3 The runner script</h3>
+<pre><code><span class="tok-c">// scripts/migrate-from-supabase.ts  (run with: tsx)</span>
+<span class="tok-k">import</span> { Client } <span class="tok-k">from</span> <span class="tok-s">"pg"</span>;
+<span class="tok-k">import</span> { ConvexHttpClient } <span class="tok-k">from</span> <span class="tok-s">"convex/browser"</span>;
+<span class="tok-k">import</span> { internal } <span class="tok-k">from</span> <span class="tok-s">"../convex/_generated/api"</span>;
+
+<span class="tok-k">const</span> pg = <span class="tok-k">new</span> Client({ connectionString: process.env.SUPABASE_DB_URL });
+<span class="tok-k">const</span> convex = <span class="tok-k">new</span> ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+convex.setAdminAuth(process.env.CONVEX_DEPLOY_KEY!); <span class="tok-c">// admin → can call internal.*</span>
+
+<span class="tok-c">// 1) users (join auth.users + your doctors/profiles table)</span>
+<span class="tok-k">const</span> { rows: users } = <span class="tok-k">await</span> pg.query(`
+  select u.id, u.email, u.encrypted_password as hash,
+         p.firstname, p.lastname, p.role
+  from auth.users u join profiles p on p.user_id = u.id`);
+<span class="tok-k">for</span> (<span class="tok-k">const</span> u <span class="tok-k">of</span> users) {
+  <span class="tok-k">await</span> convex.mutation(internal.migration.importUser, {
+    email: u.email, name: `${u.firstname} ${u.lastname}`.trim(),
+    role: u.role ?? <span class="tok-s">"doctor"</span>, firstName: u.firstname, lastName: u.lastname,
+    bcryptHash: u.hash, legacyUserId: u.id });
+}
+<span class="tok-c">// 2..6) patients → appointments → prescriptions → … (same pattern, FK via map)</span></code></pre>
+<p class="small">The script does the SQL reads + value transforms; all writes go through versioned Convex <code>internal.migration.*</code> mutations so validation and idempotency live in one place. Use <code>CONVEX_DEPLOY_KEY</code> (already in your <code>.env.local</code>) for admin access to internal functions.</p>
+</section>
+
+<!-- ============================================ -->
+<section id="mapping">
+<h2><span class="num">7</span>Field-mapping reference (Supabase → Convex)</h2>
+<p class="lead">Target columns &amp; required/optional flags are taken from the live <code>convex/schema.ts</code>. Confirm the exact source column names against the client's Postgres; the transforms below are the ones that matter.</p>
+
+<h3>Universal transforms</h3>
+<table>
+<thead><tr><th>From (Postgres)</th><th>To (Convex)</th><th>Transform</th></tr></thead>
+<tbody>
+<tr><td><code>timestamptz</code> / ISO date</td><td><code>number</code></td><td><code>new Date(x).getTime()</code> → epoch <b>ms</b> (Convex stores all dates as numbers)</td></tr>
+<tr><td><code>uuid</code> PK / FK</td><td>Convex <code>_id</code></td><td>via <code>migrationMap</code> resolve — never copy a uuid into <code>_id</code></td></tr>
+<tr><td><code>boolean</code>, <code>numeric</code></td><td><code>boolean</code>/<code>number</code></td><td>direct; coerce <code>null</code> → omit (optional) or sensible default (required)</td></tr>
+<tr><td>enum text</td><td><code>v.union(v.literal(...))</code></td><td>map exact strings (e.g. sex <code>"M"/"F"</code> → <code>"male"/"female"</code>)</td></tr>
+</tbody>
+</table>
+
+<h3>Per-table required fields (must be present or defaulted)</h3>
+<table>
+<thead><tr><th>Convex table</th><th>Required fields to satisfy</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><code>doctors</code></td><td><code>authUserId, email, firstname, lastname, isActive, isCompleted, isDoctor, isMedPro, createdAt, updatedAt</code></td><td>bare row created by trigger; patch the rest (phone, address, spec, title, summary, experience, cost, duration, timezone, availability[])</td></tr>
+<tr><td><code>patients</code></td><td><code>doctorId, firstname, lastname, birthdate, isCompleted, createdAt, updatedAt</code></td><td>optional: email, phone, sex(male/female), birthWeight(g), mothername, allergies, history, bloodtype, electrophoresis, portalEnabled</td></tr>
+<tr><td><code>appointments</code></td><td><code>doctorId, patientId, startDate</code></td><td>vitals all optional (height, weight, head, temperature, pulse, systolic…); split embedded meds/exams out</td></tr>
+<tr><td><code>prescriptions</code></td><td><code>doctorId, patientId, drug, count, unit, posology, status, createdAt, updatedAt</code></td><td><code>status</code>∈ active/completed/discontinued/cancelled; link <code>appointmentId</code> if known</td></tr>
+<tr><td><code>labOrders</code></td><td><code>doctorId, patientId, examName, status, createdAt, updatedAt</code></td><td><code>status</code>∈ ordered/collected/resulted/reviewed/cancelled</td></tr>
+<tr><td><code>labResults</code></td><td><code>labOrderId, patientId, value, enteredBy, enteredAt</code></td><td><code>enteredBy</code>∈ doctor/lab_import/portal_upload</td></tr>
+<tr><td><code>services</code></td><td><code>doctorId, name, price, currency, type, createdAt, updatedAt</code></td><td><code>type</code>∈ clinical/documentation</td></tr>
+<tr><td><code>vaccins</code></td><td><code>doctorId, name</code></td><td>then <code>doses</code> (<code>vaccinId, doseType</code>) and <code>vaccinationRecords</code> (<code>patientId, vaccinId, doseId, date, manufacturer, lotNumber, expiration, dosage, route, site</code>)</td></tr>
+<tr><td><code>reports</code></td><td><code>patientId, reportType, content, createdAt</code></td><td><code>reportType</code>∈ Report/Certificate/ReferenceNote</td></tr>
+<tr><td><code>receipts</code></td><td><code>patientId, createdAt</code></td><td><code>services[]</code> + cost/currency/date optional</td></tr>
+<tr><td><code>files</code></td><td><code>appointmentId, url, name, fileType</code></td><td><code>fileType</code>∈ IMAGE/PDF/VIDEO — see §9 about where bytes live</td></tr>
+<tr><td><code>patientAccounts</code></td><td><code>authUserId, patientId, relationship, isPrimary, createdAt</code></td><td><code>relationship</code>∈ parent/guardian</td></tr>
+</tbody>
+</table>
+
+<div class="callout warn">
+  <div class="h">Watch-outs</div>
+  <ul class="small" style="margin:4px 0">
+    <li>Table is spelled <code>vaccins</code> (not <code>vaccines</code>) in the schema — easy to miss.</li>
+    <li>Legacy appointments may carry <code>medication[]</code>/<code>exams[]</code> arrays; current schema expects those as standalone <code>prescriptions</code>/<code>labOrders</code>. Split during import.</li>
+    <li>Don't migrate <code>auditLogs</code>, embeddings (<code>documents</code>, <code>clinicalDecisionLog.embedding</code>), WhatsApp/telehealth state, or any billing tables — they regenerate or are intentionally fresh.</li>
+  </ul>
+</div>
+</section>
+
+<!-- ============================================ -->
+<section id="seed">
+<h2><span class="num">8</span>Reference / seed data</h2>
+<p>These are <b>global templates</b>, not client data. Seed them into the new Convex project once:</p>
+<table>
+<thead><tr><th>Data</th><th>Seeder</th><th>Action</th></tr></thead>
+<tbody>
+<tr><td>WHO growth charts (<code>charts</code>)</td><td><code>convex/seed.ts → seedChart</code></td><td>Run for each chart id (wfa/hfa/bfa/hcfa, boys/girls).</td></tr>
+<tr><td>Vaccine reference schedule (<code>vaccinReferences</code>+<code>vaccinReferenceDoses</code>)</td><td><code>seedVaccinReference</code></td><td>Seed standard schedule.</td></tr>
+<tr><td>Subscription tiers (<code>subscriptionTiers</code>)</td><td><code>seedSubscriptionTiers</code></td><td><b>Optional.</b> Not needed once gating is stubbed; seed only if you keep the settings page reading tier display data.</td></tr>
+</tbody>
+</table>
+<div class="callout good">
+  <div class="h">Resolved: source = the old Convex project</div>
+  The chart/vaccine payload is missing from this copy (<code>scripts/</code> was empty), but it lives in <b>another Convex project</b> you own. Plan: <code>npx convex export</code> that project → feed the three tables (<code>charts</code>, <code>vaccinReferences</code>, <code>vaccinReferenceDoses</code>) into the FK-safe <code>seedChart</code> / <code>seedVaccinReference</code> mutations. <b>Still needed from you:</b> the old project's folder path, or its deploy key, or a <code>convex export</code> zip (see §15.3).
+</div>
+
+<h3>8.1 Seed BOTH dev and prod in one pass</h3>
+<p>Reference data is identical across environments, so we seed both deployments together. Runner: <code>scripts/seed-reference-data.ts</code> (already written). It derives each deployment's URL from its deploy-key name and re-seeds through the idempotent mutations.</p>
+<table>
+<thead><tr><th>Env</th><th>Deployment</th><th>Deploy key</th></tr></thead>
+<tbody>
+<tr><td><b>dev</b></td><td><code>knowing-partridge-62</code></td><td><code>CONVEX_DEPLOY_KEY</code></td></tr>
+<tr><td><b>prod</b></td><td><code>doting-dogfish-499</code></td><td><code>CONVEX_DEPLOY_KEY_Prod</code> ✓ set</td></tr>
+</tbody>
+</table>
+<pre><code><span class="tok-c"># 1) export the reference tables from the OLD project (its folder):</span>
+npx convex export --path /tmp/old.zip   <span class="tok-c"># then unzip into ./reference-export</span>
+<span class="tok-c"># 2) seed dev + prod together (idempotent; safe to re-run):</span>
+npx tsx scripts/seed-reference-data.ts --export ./reference-export
+<span class="tok-c"># scope to one env or preview first:</span>
+npx tsx scripts/seed-reference-data.ts --export ./reference-export --only prod
+npx tsx scripts/seed-reference-data.ts --export ./reference-export --dry-run</code></pre>
+<div class="callout warn">
+  <div class="h">Before seeding prod</div>
+  Prod must already have the code+schema deployed (<code>npx convex deploy</code>, ideally <i>after</i> Phase 1 so it carries no Stripe code) and its own env vars set (Convex env is per-deployment — see §16). Seeding prod only writes the reference tables; it doesn't deploy code or set env.
+</div>
+</section>
+
+<!-- ============================================ -->
+<section id="files">
+<h2><span class="num">9</span>Files &amp; storage</h2>
+<p>The app stores <i>file URLs</i> (UploadThing: <code>utfs.io</code>/<code>uploadthing.com</code>) in <code>files</code>, <code>patientFiles</code>, <code>doctorImages</code> — not the bytes themselves. Two cases:</p>
+<ul>
+  <li><b>If the old app already used the same UploadThing/CDN URLs:</b> migrate the URL strings as-is — they keep working. Easiest path; verify a few links resolve.</li>
+  <li><b>If files live in Supabase Storage:</b> they must be copied to the new file host (UploadThing) and the URLs rewritten during import. This is an extra sub-step — tell me which case applies (your "Auth + uploaded files/storage" wasn't the selected source option, so likely case 1, but confirm).</li>
+</ul>
+<p class="small"><code>next.config.ts</code> only allow-lists <code>uploadthing.com</code> and <code>utfs.io</code> for <code>next/image</code> — if any migrated URL points elsewhere, add its host there.</p>
+</section>
+
+<!-- ============================================ -->
+<section id="env">
+<h2><span class="num">10</span>Environment variables</h2>
+<div class="grid2">
+<div class="card tight">
+<h4 style="color:#7ee695">Keep (already set for new project)</h4>
+<ul class="small">
+  <li><code>CONVEX_DEPLOYMENT</code>, <code>NEXT_PUBLIC_CONVEX_URL</code>, <code>NEXT_PUBLIC_CONVEX_SITE_URL</code>, <code>CONVEX_DEPLOY_KEY</code></li>
+  <li><code>SITE_URL</code> / <code>NEXT_PUBLIC_SITE_URL</code> — set to the client's domain (Better Auth <code>baseURL</code> + reset links use it)</li>
+  <li><code>RESEND_API_KEY</code> (verify emails / password reset)</li>
+  <li><code>OPENAI_API_KEY</code> / <code>AI_GATEWAY_API_KEY</code>, <code>UPSTASH_*</code>, <code>LIVEKIT_*</code>, <code>KAPSO_*</code>, <code>POSTHOG_*</code> — keep features that the client uses</li>
+</ul>
+</div>
+<div class="card tight">
+<h4 style="color:#ff9b94">Remove / add</h4>
+<ul class="small">
+  <li><span class="tag t-del">remove</span> <code>STRIPE_SECRET_KEY</code>, <code>STRIPE_WEBHOOK_SECRET</code>, <code>PATIENT_STRIPE_PRICE_ID</code></li>
+  <li><span class="tag t-new">add (temp)</span> <code>SUPABASE_DB_URL</code> (Postgres connection string w/ service role) — for the migration script only; delete after</li>
+  <li><span class="tag t-new">add (temp)</span> <code>MIGRATION_MODE=1</code> on the Convex deployment during import; unset after</li>
+</ul>
+</div>
+</div>
+<p class="small"><b>Important:</b> set these on the <i>Convex deployment</i> (<code>npx convex env set …</code>) as well as <code>.env.local</code> — Convex functions read Convex env, not the Next.js <code>.env</code>.</p>
+</section>
+
+<!-- ============================================ -->
+<section id="runbook">
+<h2><span class="num">11</span>Execution runbook</h2>
+
+<h4>Phase 0 — Branch &amp; baseline</h4>
+<div class="step"><div class="n">0</div><div class="body">Create a branch (<code>git checkout -b standalone-client</code>). Confirm <code>npx convex dev</code> connects to the <b>new</b> deployment. Commit the empty-scripts / missing-seed state so the diff is clean.</div></div>
+
+<h4>Phase 1 — De-Stripe &amp; ungate (Workstream A)</h4>
+<div class="step"><div class="n">1</div><div class="body">Apply §3.1 stubs → §3.2 edits/deletes. Run <code>npx convex dev</code> until it compiles clean (it'll flag any dangling <code>api.stripe.*</code>). Run <code>next build</code>. Click through the app: no paywall, no banner, AI/telehealth/portal all open.</div></div>
+
+<h4>Phase 2 — Close signups (Workstream B-1)</h4>
+<div class="step"><div class="n">2</div><div class="body">Add <code>disableSignUp:true</code> + the dual <code>verify()</code>; remove signup routes/CTAs. Confirm <code>/api/auth/sign-up/email</code> returns 400 and sign-in still works.</div></div>
+
+<h4>Phase 3 — Build the importers (Workstream C scaffolding)</h4>
+<div class="step"><div class="n">3</div><div class="body">Add <code>migrationMap</code> to schema; write <code>convex/migration.ts</code> (<code>importUser</code>, <code>enrichDoctor</code>, <code>importPatient</code>, … one mutation per entity, each writing to the map). Write <code>scripts/migrate-from-supabase.ts</code> with the SQL reads + transforms.</div></div>
+
+<h4>Phase 4 — Dry run with the test user</h4>
+<div class="step"><div class="n">4</div><div class="body">Set <code>MIGRATION_MODE=1</code>. Run the importer scoped to <b>just the test user</b> (a <code>WHERE email = …</code> filter) and their patients/appointments. Validate end-to-end (§12). Fix mapping bugs. This is the go/no-go gate.</div></div>
+
+<h4>Phase 5 — Full import</h4>
+<div class="step"><div class="n">5</div><div class="body">Run the importer for all users + all data. Watch counts per table. Re-run is safe (idempotent via map). Spot-check several doctors/patients.</div></div>
+
+<h4>Phase 6 — Cutover &amp; cleanup</h4>
+<div class="step"><div class="n">6</div><div class="body">Unset <code>MIGRATION_MODE</code>; remove <code>SUPABASE_DB_URL</code>; optionally drop <code>migrationMap</code> + the temporary <code>scripts</code>. Set <code>requireEmailVerification</code> back to <code>true</code> if you want it for any future invited users (migrated users are already verified). Deploy (<code>npx convex deploy</code> + Vercel). Hand the client their login URL.</div></div>
+</section>
+
+<!-- ============================================ -->
+<section id="validate">
+<h2><span class="num">12</span>Validation with your test user</h2>
+<table>
+<thead><tr><th>Check</th><th>Expected</th></tr></thead>
+<tbody>
+<tr><td>Log in with the test user's <b>old Supabase password</b></td><td>Succeeds via bcrypt path; lands on <code>/user</code> (doctor) or <code>/portal</code> (parent)</td></tr>
+<tr><td>(If rehash enabled) inspect <code>account.password</code> after login</td><td>Now scrypt (<code>salt:hex</code>), no longer <code>$2…</code></td></tr>
+<tr><td>Patient list, open a patient, open an appointment</td><td>All migrated records present; vitals, meds, labs, vaccines render</td></tr>
+<tr><td>Counts: patients/appointments/prescriptions/labs per doctor</td><td>Match the Supabase source counts exactly</td></tr>
+<tr><td>Use an AI feature (diagnostic / ScrybeGPT)</td><td>Works, no "credits" or "upgrade" prompt</td></tr>
+<tr><td>Open telehealth + WhatsApp settings</td><td>Accessible, no subscription gate</td></tr>
+<tr><td>Visit former pricing/subscription URLs</td><td>404 or "Full access" panel — no Stripe</td></tr>
+<tr><td>Attempt to register a new account</td><td>Blocked (no UI; API returns 400)</td></tr>
+<tr><td>Forgot-password on the test user</td><td>Reset email sends (Resend), new scrypt password set</td></tr>
+</tbody>
+</table>
+</section>
+
+<!-- ============================================ -->
+<section id="risks">
+<h2><span class="num">13</span>Risks &amp; rollback</h2>
+<table>
+<thead><tr><th>Risk</th><th>Likelihood</th><th>Mitigation</th></tr></thead>
+<tbody>
+<tr><td>Source column names differ from assumptions</td><td>Med</td><td>Dry-run on the test user first; mapping lives in one script, cheap to fix &amp; re-run</td></tr>
+<tr><td>bcrypt variant mismatch (<code>$2a/$2b/$2y</code>)</td><td>Low</td><td><code>bcryptjs</code> handles all three; verified on the test user before full run</td></tr>
+<tr><td>Missing WHO chart / vaccine seed data (§8)</td><td>High</td><td>Recover the seed payload from the original repo or export from old deployment <b>before</b> cutover</td></tr>
+<tr><td>Files hosted in Supabase Storage, not UploadThing (§9)</td><td>Unknown</td><td>Confirm host; add a copy-and-rewrite sub-step if needed</td></tr>
+<tr><td>Dangling Stripe references break <code>convex dev</code></td><td>Med</td><td>The compiler is the safety net — it won't deploy with a broken reference</td></tr>
+<tr><td>Duplicate users on re-run</td><td>Low</td><td><code>importUser</code> checks email/map and skips existing; trigger relinks doctors by email</td></tr>
+</tbody>
+</table>
+<div class="callout good">
+  <div class="h">Rollback is cheap</div>
+  Everything targets a <b>fresh, empty Convex project</b> and a <b>git branch</b>. If the import goes wrong: clear the Convex tables (or spin a new dev deployment) and re-run. The source Supabase data is read-only throughout — never mutated. Nothing is destructive until you point the client's domain at the new deployment.
+</div>
+</section>
+
+<!-- ============================================ -->
+<section id="checklist">
+<h2><span class="num">14</span>Master checklist</h2>
+<div class="grid2">
+<div class="card tight">
+<h4 style="color:#ff9b94">A · Stripe &amp; gating</h4>
+<ul class="small">
+<li>☐ Stub gate fns → unlimited (<code>subscriptions/usage/portalAi/whatsappData</code>)</li>
+<li>☐ Remove patient-limit throw in <code>patients.createPatient</code></li>
+<li>☐ Remove subscription throws in services/invitations/telehealth/files</li>
+<li>☐ Delete <code>/stripe/webhook</code> in <code>http.ts</code></li>
+<li>☐ Remove billing cron(s) in <code>crons.ts</code></li>
+<li>☐ Drop <code>app.use(stripe)</code> in <code>convex.config.ts</code></li>
+<li>☐ Remove Stripe scheduling + gate welcome email in <code>auth.ts</code> trigger</li>
+<li>☐ Delete stripeWebhooks / billingCrons / patientSubscriptions</li>
+<li>☐ Trim <code>stripe.ts</code> to read-only stubs</li>
+<li>☐ Delete stripe API routes + pricing pages</li>
+<li>☐ <code>convex dev</code> + <code>next build</code> clean</li>
+</ul>
+</div>
+<div class="card tight">
+<h4 style="color:#9db8ff">B · Auth</h4>
+<ul class="small">
+<li>☐ Add <code>bcryptjs</code> dep</li>
+<li>☐ Dual <code>password.verify()</code> (bcrypt + scrypt)</li>
+<li>☐ <code>disableSignUp:true</code></li>
+<li>☐ (opt) rehash-on-login hook</li>
+<li>☐ Delete signup routes + CTAs</li>
+<li>☐ <code>importUser</code> mutation via adapter</li>
+<li>☐ <code>MIGRATION_MODE</code> guard on side-effects</li>
+</ul>
+<h4 style="color:#7ee695;margin-top:14px">C · Data</h4>
+<ul class="small">
+<li>☐ <code>migrationMap</code> table + resolve helper</li>
+<li>☐ Per-entity import mutations</li>
+<li>☐ <code>migrate-from-supabase.ts</code> runner</li>
+<li>☐ Seed charts + vaccine references (<b>recover data first</b>)</li>
+<li>☐ Confirm file-host case (§9)</li>
+<li>☐ Dry-run test user → validate → full run</li>
+<li>☐ Cutover + cleanup temp env/tables</li>
+</ul>
+</div>
+</div>
+
+<div class="callout">
+  <div class="h">Two things I need from you before coding</div>
+  <ol class="small" style="margin:4px 0">
+    <li><b>The seed data</b> (WHO growth charts + vaccine schedule) — it's missing from this copy. Do you still have the original project, or should we export <code>charts</code>/<code>vaccinReferences</code> from the old deployment?</li>
+    <li><b>Where the uploaded files live</b> — same UploadThing/CDN as now (URLs just carry over) or in Supabase Storage (need a copy step)?</li>
+  </ol>
+  Answer those and I can start implementing Phase 1 immediately.
+</div>
+</section>
+
+<!-- ============================================ -->
+<section id="need">
+<h2><span class="num">15</span>What I need from you</h2>
+<p class="lead">Grouped by when it's needed. <span class="pill bad" style="font-size:11px">Blocker</span> = I can't proceed past that phase without it. <span class="pill warn" style="font-size:11px">Needed soon</span> = required before the full run/cutover. <span class="pill" style="font-size:11px">Decision</span> = a choice only you can make.</p>
+
+<h3>15.1 To start the data work (Phase 3–4)</h3>
+<table>
+<thead><tr><th>Item</th><th>Why</th><th>Form</th></tr></thead>
+<tbody>
+<tr><td><span class="pill bad" style="font-size:11px">Blocker</span> Supabase Postgres connection string</td><td>Read source tables incl. <code>auth.users.encrypted_password</code> (bcrypt)</td><td><code>SUPABASE_DB_URL</code> = <code>postgresql://…</code> (service-role/direct DB)</td></tr>
+<tr><td><span class="pill bad" style="font-size:11px">Blocker</span> Source schema dump</td><td>Exact table + column names so the field mapping is correct (yours will differ from my assumptions)</td><td><code>pg_dump --schema-only</code> output, or just the column list for: users/profiles, patients, appointments, prescriptions, labs, services, vaccines, reports, receipts, files, portal links</td></tr>
+<tr><td><span class="pill bad" style="font-size:11px">Blocker</span> The user↔doctor join key</td><td>How <code>auth.users</code> links to your doctor/profile table</td><td>e.g. "<code>profiles.user_id = auth.users.id</code>, role in <code>profiles.role</code>"</td></tr>
+<tr><td><span class="pill warn" style="font-size:11px">Needed soon</span> Are meds/exams embedded?</td><td>Decide whether to split appointment arrays into <code>prescriptions</code>/<code>labOrders</code></td><td>"separate tables" or "arrays on the visit row"</td></tr>
+<tr><td><span class="pill warn" style="font-size:11px">Needed soon</span> Are there patient/parent accounts in the source?</td><td>Whether to import <code>patient</code>-role users + <code>patientAccounts</code> links, or doctors only</td><td>yes/no (+ which table holds them)</td></tr>
+</tbody>
+</table>
+
+<h3>15.2 The test user (Phase 4 go/no-go)</h3>
+<table>
+<thead><tr><th>Item</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td><span class="pill bad" style="font-size:11px">Blocker</span> Test user email</td><td>Scope the dry-run import to one account</td></tr>
+<tr><td><span class="pill bad" style="font-size:11px">Blocker</span> A known password for that test user</td><td>To prove the bcrypt→login path works end-to-end (I never see other users' passwords — they stay hashed)</td></tr>
+<tr><td><span class="pill warn" style="font-size:11px">Needed soon</span> Confirm the test user has real data</td><td>So validation (patients/appointments/labs render) is meaningful</td></tr>
+</tbody>
+</table>
+
+<h3>15.3 The missing seed data (Phase 5 blocker)</h3>
+<div class="callout bad">
+  <div class="h">This one is the biggest gap</div>
+  The WHO growth-chart numbers + vaccine schedule are <b>not in this copy</b> (<code>scripts/migrate-reference-data.ts</code> is gone, <code>scripts/</code> is empty). Without them, growth charts and the vaccine catalog are empty. I need <b>one</b> of:
+  <ul class="small" style="margin:6px 0">
+    <li>The <b>original project folder</b> (path), so I can lift the seed file; <b>or</b></li>
+    <li>Access to the <b>old Convex deployment</b> to export <code>charts</code>, <code>vaccinReferences</code>, <code>vaccinReferenceDoses</code>; <b>or</b></li>
+    <li>Confirmation those tables also exist in <b>Supabase</b> so I can pull them with the rest.</li>
+  </ul>
+</div>
+
+<h3>15.4 Files / storage (§9)</h3>
+<table>
+<thead><tr><th>Item</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td><span class="pill" style="font-size:11px">Decision</span> Where uploaded files live</td><td>"Same UploadThing/CDN (URLs carry over)" → nothing to do. "Supabase Storage" → I add a copy-and-rewrite step + need bucket access.</td></tr>
+<tr><td><span class="pill warn" style="font-size:11px">Needed soon</span> UploadThing token for the new app</td><td>So <i>new</i> uploads work in the standalone app (the dep is present but I didn't see <code>UPLOADTHING_TOKEN</code> in your env)</td></tr>
+</tbody>
+</table>
+
+<h3>15.5 Service keys for the new Convex project</h3>
+<p class="small">Convex functions read <b>Convex</b> env (set via <code>npx convex env set</code>), separate from <code>.env.local</code>. For each feature the client keeps, I need its key on the new deployment — or a "drop this feature" decision.</p>
+<table>
+<thead><tr><th>Service</th><th>Env</th><th>Keep or drop?</th></tr></thead>
+<tbody>
+<tr><td>Resend (password-reset / verify emails)</td><td><code>RESEND_API_KEY</code> + a <b>verified sending domain</b></td><td><span class="pill bad" style="font-size:11px">Blocker</span> needed for any login-recovery; tell me the from-domain (keep <code>pediascrybe.com</code> or the client's own → needs DNS verify)</td></tr>
+<tr><td>AI (OpenAI / Vercel Gateway)</td><td><code>OPENAI_API_KEY</code> / <code>AI_GATEWAY_API_KEY</code></td><td>key for the new project (has billing impact) — keep AI features?</td></tr>
+<tr><td>LiveKit (telehealth video)</td><td><code>LIVEKIT_*</code></td><td><span class="pill" style="font-size:11px">Decision</span> keep telehealth? if so, new keys</td></tr>
+<tr><td>Kapso (WhatsApp ScrybeGPT)</td><td><code>KAPSO_*</code> + phone number</td><td><span class="pill" style="font-size:11px">Decision</span> keep WhatsApp? if so, re-point the webhook to the new Convex URL</td></tr>
+<tr><td>Upstash (rate-limit), PostHog (analytics)</td><td><code>UPSTASH_*</code>, <code>POSTHOG_*</code></td><td>keep/drop + keys</td></tr>
+</tbody>
+</table>
+
+<h3>15.6 Deployment &amp; branding</h3>
+<table>
+<thead><tr><th>Item</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td><span class="pill warn" style="font-size:11px">Needed soon</span> The client's domain/URL</td><td>Sets <code>SITE_URL</code>/<code>NEXT_PUBLIC_SITE_URL</code> (Better Auth <code>baseURL</code> + reset links) and the CORS allow-list in <code>http.ts</code> (currently hard-codes <code>pediascrybe.com</code>)</td></tr>
+<tr><td><span class="pill" style="font-size:11px">Decision</span> Hosting + who deploys</td><td>Vercel project (which one?) and whether I deploy or you do</td></tr>
+<tr><td><span class="pill" style="font-size:11px">Decision</span> Branding</td><td>Keep "PediaScrybe" name/logo/from-email, or rebrand for the client?</td></tr>
+<tr><td><span class="pill" style="font-size:11px">Decision</span> Signup policy depth</td><td>You said block new signups. Should the doctor still be able to <i>invite</i> parents to the portal, or no new accounts <b>at all</b>?</td></tr>
+</tbody>
+</table>
+
+<h3>15.7 Cutover logistics</h3>
+<table>
+<thead><tr><th>Item</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td><span class="pill warn" style="font-size:11px">Needed soon</span> Is the old Supabase app still in active use?</td><td>If data is still changing, we need a freeze window (or a delta re-run) before final import. If it's frozen, the import is one-and-done.</td></tr>
+<tr><td><span class="pill warn" style="font-size:11px">Needed soon</span> Confirm <code>CONVEX_DEPLOY_KEY</code> in <code>.env.local</code> is the new project's admin key</td><td>The migration script uses it to call <code>internal.*</code> mutations</td></tr>
+</tbody>
+</table>
+
+<div class="callout good">
+  <div class="h">Minimum to unblock me right now</div>
+  I can start <b>Phase 1 (de-Stripe + ungate)</b> and <b>Phase 2 (close signups)</b> with <u>nothing from you</u> — they're pure code changes on this repo. To move into the data migration I most need: <b>(1)</b> the Supabase connection string, <b>(2)</b> the source schema/column list + join key, <b>(3)</b> the test user email + password, and <b>(4)</b> the seed-data source (§15.3).
+</div>
+</section>
+
+<!-- ============================================ -->
+<section id="prod">
+<h2><span class="num">16</span>Prod / go-live &amp; dual-environment</h2>
+<p class="lead">This project has two isolated Convex deployments. Everything is built &amp; validated on <b>dev</b>, then promoted to <b>prod</b> for the client. Reference data is seeded into both; users + clinical data are imported into prod at cutover.</p>
+
+<table>
+<thead><tr><th>Deployment</th><th>Name</th><th>URL</th><th>Key</th></tr></thead>
+<tbody>
+<tr><td><b>dev</b></td><td><code>knowing-partridge-62</code></td><td><code>https://knowing-partridge-62.convex.cloud</code></td><td><code>CONVEX_DEPLOY_KEY</code></td></tr>
+<tr><td><b>prod</b></td><td><code>doting-dogfish-499</code></td><td><code>https://doting-dogfish-499.convex.cloud</code></td><td><code>CONVEX_DEPLOY_KEY_Prod</code> ✓</td></tr>
+</tbody>
+</table>
+
+<div class="callout warn">
+  <div class="h">Convex env vars are per-deployment</div>
+  Dev env does <b>not</b> carry to prod. Before prod works, set its full key set independently with <code>npx convex env set --prod …</code> (or via dashboard): <code>RESEND_API_KEY</code>, <code>OPENAI_API_KEY</code>/<code>AI_GATEWAY_API_KEY</code>, <code>LIVEKIT_*</code>, <code>KAPSO_*</code>, <code>UPSTASH_*</code>, and <code>SITE_URL</code> = the client's real domain (Better Auth <code>baseURL</code> + reset links). Same for <code>MIGRATION_MODE=1</code> during the prod import.
+</div>
+
+<h3>16.1 Go-live sequence</h3>
+<div class="step"><div class="n">1</div><div class="body"><b>Finish &amp; validate on dev</b> — Phases 1–5 (de-Stripe, auth, seed dev, test-user import, full dev import). Sign off via §12.</div></div>
+<div class="step"><div class="n">2</div><div class="body"><b>Deploy code to prod</b> — <code>npx convex deploy</code> (carries the de-Striped schema + functions). Build the Next.js app for the client's domain.</div></div>
+<div class="step"><div class="n">3</div><div class="body"><b>Set prod env vars</b> — full key set (callout above), <code>SITE_URL</code> = client domain. Also update the CORS allow-list in <code>convex/http.ts</code> to the client's domain.</div></div>
+<div class="step"><div class="n">4</div><div class="body"><b>Seed reference data into prod</b> — same export, <code>npx tsx scripts/seed-reference-data.ts --export ./reference-export</code> (writes dev + prod) or <code>--only prod</code>.</div></div>
+<div class="step"><div class="n">5</div><div class="body"><b>Freeze the old Supabase app</b> (or take a final snapshot), then run the <b>full user + clinical import against prod</b> (the migration script pointed at the prod URL + <code>CONVEX_DEPLOY_KEY_Prod</code>, <code>MIGRATION_MODE=1</code>).</div></div>
+<div class="step"><div class="n">6</div><div class="body"><b>Re-point external webhooks</b> to the prod Convex site URL — LiveKit + Kapso/WhatsApp. Unset <code>MIGRATION_MODE</code>.</div></div>
+<div class="step"><div class="n">7</div><div class="body"><b>Cut over the domain</b> to the prod deployment. Smoke-test with the test user against prod. Done.</div></div>
+
+<h3>16.2 Dual-environment seeding (already wired)</h3>
+<p class="small">The seed runner reads both <code>CONVEX_DEPLOY_KEY</code> and <code>CONVEX_DEPLOY_KEY_Prod</code> from <code>.env.local</code>, derives each URL from the key's deployment name, and seeds both in one invocation (or one via <code>--only dev|prod</code>). Idempotent — the underlying mutations upsert, so re-runs are safe. See §8.1.</p>
+</section>
+
+<footer>
+  Generated for the standalone-client deployment of PediaScrybe · Plan reflects the repository state at <code>/Users/louishugens/Documents/projects/next/pediascrybe-convex-claude</code> · Convex + Better Auth 0.10.9 + Stripe 0.1.2.
+</footer>
+
+</main>
+</div>
+</body>
+</html>

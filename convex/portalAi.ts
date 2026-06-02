@@ -162,45 +162,10 @@ export const incrementUsage = internalMutation({
 export const canUseAI = query({
   args: {},
   handler: async (ctx) => {
+    // STANDALONE: billing removed — portal AI is unlimited for authenticated patients.
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return { allowed: false, remaining: 0, limit: FREE_LIMIT };
-
-    const appUser = await ctx.db
-      .query("appUsers")
-      .withIndex("by_authUserId", (q) => q.eq("authUserId", identity.subject))
-      .first();
-    if (!appUser || appUser.role !== "patient") {
-      return { allowed: false, remaining: 0, limit: FREE_LIMIT };
-    }
-
-    // Check subscription
-    const subscription = await ctx.db
-      .query("patientSubscriptions")
-      .withIndex("by_authUserId", (q) => q.eq("authUserId", identity.subject))
-      .first();
-
-    const isPremium =
-      subscription?.plan === "premium" &&
-      (subscription.status === "active" || subscription.status === "trialing");
-
-    // Check usage against applicable limit (premium = 50/mo, free = 5/mo)
-    const period = getCurrentPeriod();
-    const usage = await ctx.db
-      .query("patientUsage")
-      .withIndex("by_authUserId_period", (q) =>
-        q.eq("authUserId", identity.subject).eq("period", period)
-      )
-      .first();
-
-    const used = usage?.aiExplanations ?? 0;
-    const limit = isPremium ? PREMIUM_LIMIT : FREE_LIMIT;
-    return {
-      allowed: used < limit,
-      remaining: Math.max(0, limit - used),
-      limit,
-      used,
-      isPremium,
-    };
+    if (!identity) return { allowed: false, remaining: 0, limit: PREMIUM_LIMIT };
+    return { allowed: true, remaining: 999999, limit: 999999, used: 0, isPremium: true };
   },
 });
 
@@ -252,24 +217,8 @@ export const requestExplanation = action({
       return { explanation: cached.explanation, contextHash };
     }
 
-    // Check subscription/quota
-    const subscription = await ctx.runQuery(internal.portalAi.getSubscriptionInternal, {
-      authUserId: identity.subject,
-    });
-    const isPremium =
-      subscription?.plan === "premium" &&
-      (subscription.status === "active" || subscription.status === "trialing");
-
+    // STANDALONE: billing removed — no portal AI quota enforcement.
     const period = getCurrentPeriod();
-    const usage = await ctx.runQuery(internal.portalAi.getUsageInternal, {
-      authUserId: identity.subject,
-      period,
-    });
-    const used = usage?.aiExplanations ?? 0;
-    const applicableLimit = isPremium ? PREMIUM_LIMIT : FREE_LIMIT;
-    if (used >= applicableLimit) {
-      throw new Error(isPremium ? "PREMIUM_LIMIT_REACHED" : "FREE_LIMIT_REACHED");
-    }
 
     // Build the type-specific prompt
     const userPrompt = buildPrompt(args.type, args.context);

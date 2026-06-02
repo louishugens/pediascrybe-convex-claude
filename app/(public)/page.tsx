@@ -149,13 +149,7 @@ export default function Home() {
             )}
           </form>
 
-          {/* Sign Up Link */}
-          <p className='text-center mt-8 text-muted-foreground'>
-            Don&apos;t have an account?{' '}
-            <Link href={"/signup" as any} className='text-primary font-semibold hover:underline'>
-              Create one
-            </Link>
-          </p>
+          {/* Sign-up link removed — standalone deployment blocks new registrations */}
         </div>
       </div>
 

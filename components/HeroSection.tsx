@@ -49,8 +49,8 @@ const HeroSection = () => {
           <motion.div
             variants={item}
           >
-            <Link href={"/signup" as any} className="text-base md:text-xl font-medium text-foreground bg-primary w-fit px-8 py-4 rounded-full">
-              Sign up for Free
+            <Link href={"/" as any} className="text-base md:text-xl font-medium text-foreground bg-primary w-fit px-8 py-4 rounded-full">
+              Login
             </Link>
           </motion.div>
         </motion.div>

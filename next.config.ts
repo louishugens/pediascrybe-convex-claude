@@ -72,4 +72,8 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["esbuild", "esbuild-wasm"],
 }
 
-export default withWorkflow(withBotId(nextConfig))
+// DEV_LITE=1 skips the (beta) Vercel Workflow plugin — used by the `dev:web`
+// script for a minimal, low-process frontend dev server while testing.
+export default process.env.DEV_LITE
+  ? withBotId(nextConfig)
+  : withWorkflow(withBotId(nextConfig))

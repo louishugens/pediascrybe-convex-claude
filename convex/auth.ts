@@ -7,7 +7,8 @@ import { betterAuth, type BetterAuthOptions } from "better-auth/minimal";
 import authConfig from "./auth.config";
 import { requireActionCtx } from "@convex-dev/better-auth/utils";
 import { sendEmailVerification, sendResetPassword } from "./email";
-import authSchema from "./betterAuth/schema"; 
+import authSchema from "./betterAuth/schema";
+import bcrypt from "bcryptjs";
 
 const siteUrl = process.env.SITE_URL!;
 
@@ -110,17 +111,10 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
             }
           }
 
-          // Schedule Stripe customer creation (only for doctors)
-          if (doc.role === "doctor") {
-            await ctx.scheduler.runAfter(0, internal.stripe.createStripeCustomer, {
-              authUserId: String(doc._id),
-              email: doc.email,
-              name: doc.name ?? undefined,
-            });
-          }
+          // STANDALONE: Stripe removed — no customer creation on signup.
 
-          // Schedule welcome email (only for doctors — patients get the invitation email)
-          if (doc.role === "doctor") {
+          // Schedule welcome email (only for doctors; skipped during bulk migration import).
+          if (doc.role === "doctor" && !process.env.MIGRATION_MODE) {
             await ctx.scheduler.runAfter(0, internal.email.sendWelcomeEmailAction, {
               to: doc.email,
               userName: doc.lastName ?? doc.firstName ?? doc.name?.split(" ").pop(),
@@ -167,12 +161,21 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
     },
     emailAndPassword: {
       enabled: true,
-      requireEmailVerification: true,
+      // STANDALONE: block all new self-registration — only imported users can log in.
+      disableSignUp: true,
+      // Migrated users are imported pre-verified; new signups are blocked anyway.
+      requireEmailVerification: false,
       sendResetPassword: async ({ user, url }) => {
         await sendResetPassword(requireActionCtx(ctx), {
           to: user.email,
           url,
         });
+      },
+      // Bcrypt for hash + verify (per Better Auth's Supabase migration guide), so the
+      // imported Supabase bcrypt hashes verify directly and new/reset passwords match.
+      password: {
+        hash: async (password) => bcrypt.hash(password, 10),
+        verify: async ({ hash, password }) => bcrypt.compare(password, hash),
       },
     },
     plugins: [
