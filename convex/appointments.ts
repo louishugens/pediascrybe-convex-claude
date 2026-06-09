@@ -1,5 +1,6 @@
 import { query, mutation, MutationCtx, QueryCtx } from "./_generated/server";
 import { v } from "convex/values";
+import { paginationOptsValidator } from "convex/server";
 import { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import {
@@ -446,47 +447,42 @@ export const getTodayPatientCount = query({
   },
 });
 
-// Get daily transactions for a specific date
-export const getDailyTransactions = query({
+// Transactions (appointments enriched with patient/service), newest first, paginated
+export const getTransactionsPaginated = query({
   args: {
-    date: v.number(), // Unix timestamp for the date
+    paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, args) => {
     const doctor = await getAuthenticatedDoctor(ctx);
-    const dateObj = new Date(args.date);
-    const startOfDay = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()).getTime();
-    const endOfDay = startOfDay + (24 * 60 * 60 * 1000) - 1;
 
-    const appointments = await ctx.db
+    const result = await ctx.db
       .query("appointments")
       .withIndex("by_doctorId_startDate", (q) => q.eq("doctorId", doctor._id))
       .order("desc")
-      .collect();
+      .paginate(args.paginationOpts);
 
-    const dayAppointments = appointments.filter(apt =>
-      apt.startDate >= startOfDay && apt.startDate <= endOfDay
-    );
-    
-    // Enrich with patient and service data
-    const transactions = await Promise.all(
-      dayAppointments.map(async (apt) => {
+    const page = await Promise.all(
+      result.page.map(async (apt) => {
         const [patient, service] = await Promise.all([
           ctx.db.get(apt.patientId),
           apt.serviceId ? ctx.db.get(apt.serviceId) : null,
         ]);
-        
+
         return {
           id: apt._id,
           date: apt.startDate,
-          patientName: patient ? `${patient.firstname} ${patient.lastname}` : "Unknown",
+          patientName: patient ? `${patient.firstname} ${patient.lastname}` : null,
           serviceName: service?.name || "No service assigned",
           price: apt.cost || 0,
           currency: service?.currency || "USD",
         };
       })
     );
-    
-    return transactions.filter(t => t.patientName !== "Unknown");
+
+    return {
+      ...result,
+      page: page.filter((t): t is typeof t & { patientName: string } => t.patientName !== null),
+    };
   },
 });
 
