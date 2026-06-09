@@ -57,7 +57,7 @@ const EditPatient = ({patient, doctorId}) => {
       z.literal('')
     ]).optional(),
     birthdate: z.date({ message: "Please enter patient's birth date" }),
-    birthWeight: z.number().positive("Birth weight must be positive").max(10000, "Birth weight looks too high").optional(),
+    birthWeight: z.number().positive("Birth weight must be positive").max(10, "Birth weight looks too high (enter kg, e.g. 3.2)").optional(),
     mothername: z.string().optional(),
     sex: z.string().min(1, { message: "Please select patient's sex" }),
     religion: z.string().optional(),
@@ -79,7 +79,8 @@ const EditPatient = ({patient, doctorId}) => {
       email: patient.email || "",
       phone: patient.phone || "",
       birthdate: new Date(patient.birthdate) || undefined,
-      birthWeight: typeof patient.birthWeight === "number" ? patient.birthWeight : undefined,
+      // stored in grams, edited in kg
+      birthWeight: typeof patient.birthWeight === "number" ? patient.birthWeight / 1000 : undefined,
       mothername: patient.mothername || "",
       sex: patient.sex || "",
       religion: patient.religion || "",
@@ -105,7 +106,9 @@ const EditPatient = ({patient, doctorId}) => {
  
     try{
       const {firstname, lastname, email, birthdate, birthWeight, mothername, sex, religion, phone, allergies, history, bloodtype, electrophoresis} = values
-      const body = {firstname, lastname, email, birthdate, birthWeight, mothername, sex, religion, phone, id: patient._id, allergies, history, bloodtype, electrophoresis}
+      // birthWeight is edited in kg but stored in grams
+      const birthWeightGrams = typeof birthWeight === "number" ? Math.round(birthWeight * 1000) : undefined
+      const body = {firstname, lastname, email, birthdate, birthWeight: birthWeightGrams, mothername, sex, religion, phone, id: patient._id, allergies, history, bloodtype, electrophoresis}
       await fetch('/api/patients/updatePatient', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -299,14 +302,14 @@ const EditPatient = ({patient, doctorId}) => {
                 name="birthWeight"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Birth Weight (g)</FormLabel>
+                    <FormLabel>Birth Weight (kg)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
-                        inputMode="numeric"
+                        inputMode="decimal"
                         min={0}
                         step="any"
-                        placeholder="e.g. 3200"
+                        placeholder="e.g. 3.2"
                         value={field.value ?? ""}
                         onChange={(e) => {
                           const n = e.target.valueAsNumber;

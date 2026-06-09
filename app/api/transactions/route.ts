@@ -12,14 +12,9 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams
     const dateStr = searchParams.get('date')
-    const doctorId = searchParams.get('doctorId')
 
     if (!dateStr) {
       return NextResponse.json({ error: 'Date parameter is required' }, { status: 400 })
-    }
-
-    if (!doctorId) {
-      return NextResponse.json({ error: 'Doctor ID is required' }, { status: 400 })
     }
 
     const date = new Date(dateStr)
@@ -35,7 +30,6 @@ export async function GET(request: NextRequest) {
     console.log(`API: Parsed local date: ${localDate.toISOString()}`)
 
     const transactions = await fetchAuthQuery(api.appointments.getDailyTransactions, {
-      doctorId: doctorId as any,
       date: localDate.getTime(),
     })
     

@@ -449,23 +449,21 @@ export const getTodayPatientCount = query({
 // Get daily transactions for a specific date
 export const getDailyTransactions = query({
   args: {
-    doctorId: v.id("doctors"),
     date: v.number(), // Unix timestamp for the date
   },
   handler: async (ctx, args) => {
     const doctor = await getAuthenticatedDoctor(ctx);
-    if (doctor._id !== args.doctorId) throw new Error("Not authorized");
     const dateObj = new Date(args.date);
     const startOfDay = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()).getTime();
     const endOfDay = startOfDay + (24 * 60 * 60 * 1000) - 1;
-    
+
     const appointments = await ctx.db
       .query("appointments")
-      .withIndex("by_doctorId_startDate", (q) => q.eq("doctorId", args.doctorId))
+      .withIndex("by_doctorId_startDate", (q) => q.eq("doctorId", doctor._id))
       .order("desc")
       .collect();
-    
-    const dayAppointments = appointments.filter(apt => 
+
+    const dayAppointments = appointments.filter(apt =>
       apt.startDate >= startOfDay && apt.startDate <= endOfDay
     );
     
