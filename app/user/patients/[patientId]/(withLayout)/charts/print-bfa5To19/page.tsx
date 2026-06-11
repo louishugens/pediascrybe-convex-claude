@@ -25,7 +25,7 @@ const PrintPage = async (props: { params: Params }) => {
 
   const appointments = patient.appointments;
   const referenceData = await fetchAuthQuery(api.charts.getChartReference, {
-    chartId: patient.sex === 'female' ? 'gbfa5To19' : 'bbfa5To19'
+    chartId: patient.sex === 'female' ? 'gbfa_5_19' : 'bbfa_5_19'
   });
 
   let formatted: { age: number; value: number }[] = [];
