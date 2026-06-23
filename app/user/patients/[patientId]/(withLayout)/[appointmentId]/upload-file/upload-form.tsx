@@ -28,6 +28,7 @@ interface UploadFormProps {
 export default function UploadForm({ patientId, appointmentId }: UploadFormProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [fileMeta, setFileMeta] = useState<{ name: string; type: string } | null>(null)
 
   const schema = z.object({
     url: z.string({
@@ -48,11 +49,14 @@ export default function UploadForm({ patientId, appointmentId }: UploadFormProps
 
   async function onSubmit(data: z.infer<typeof schema>) {
     setLoading(true)
-    const extension = data.url?.split('.').pop()?.toLowerCase() ?? ''
-    const videoFormats = ['mp4', 'mov', 'avi', 'wmv', 'flv']
-    const isVideo = videoFormats.includes(extension)
+    // v7 upload URLs have no extension — use the uploaded file's MIME type
+    // (with the original filename's extension as a fallback).
+    const mime = fileMeta?.type ?? ''
+    const extension = (fileMeta?.name ?? data.url)?.split('.').pop()?.toLowerCase() ?? ''
+    const videoFormats = ['mp4', 'mov', 'avi', 'wmv', 'flv', 'webm']
+    const isVideo = mime.startsWith('video/') || videoFormats.includes(extension)
     const fileType = isVideo ? 'VIDEO' :
-      extension === 'pdf' ? 'PDF' : 'IMAGE'
+      (mime === 'application/pdf' || extension === 'pdf') ? 'PDF' : 'IMAGE'
     const { url, name } = data
 
     const res = await fetch(`/api/patients/saveFile`, {
@@ -98,6 +102,12 @@ export default function UploadForm({ patientId, appointmentId }: UploadFormProps
                     endpoint="appointmentFile"
                     value={field.value}
                     onChange={field.onChange}
+                    onUpload={(meta) => {
+                      setFileMeta(meta)
+                      if (!form.getValues('name')) {
+                        form.setValue('name', meta.name, { shouldValidate: true })
+                      }
+                    }}
                   />
                 </FormControl>
                 <FormMessage>{form.formState.errors.url?.message}</FormMessage>

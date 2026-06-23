@@ -21,6 +21,11 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'utfs.io',
       },
+      {
+        // UploadThing v7 serves files from <appId>.ufs.sh
+        protocol: 'https',
+        hostname: '*.ufs.sh',
+      },
       // "uploadthing.com", "utfs.io"
     ],
   },

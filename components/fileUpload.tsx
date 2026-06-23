@@ -1,13 +1,11 @@
-
+import { useState } from 'react';
 import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
 import { X, FileIcon } from 'lucide-react';
 import Image from 'next/image';
 
 import { UploadDropzone } from "@/lib/uploadthing"
 
 import "@uploadthing/react/styles.css"
-import { url } from 'inspector';
 
 const videoMimeTypes = {
   mp4: 'video/mp4',
@@ -20,14 +18,16 @@ interface FileUploadProps {
   endpoint: "appointmentFile",
   value: string,
   onChange: (url?: string) => void,
+  onUpload?: (meta: { url: string; name: string; type: string }) => void,
 }
-export default function FileUpoad({endpoint, value,  onChange}: FileUploadProps) {
+export default function FileUpoad({endpoint, value, onChange, onUpload}: FileUploadProps) {
+  // UploadThing v7 file URLs no longer contain a file extension, so prefer the
+  // upload's MIME type for detection and fall back to the URL extension.
+  const [uploadedType, setUploadedType] = useState<string | null>(null);
   const extension = value?.split('.').pop()?.toLowerCase();
-  const isPDF = extension === 'pdf';
-  const isVideo = ['mp4', 'mov', 'avi', 'webm'].includes(extension || '');
+  const isPDF = uploadedType ? uploadedType === 'application/pdf' : extension === 'pdf';
+  const isVideo = uploadedType ? uploadedType.startsWith('video/') : ['mp4', 'mov', 'avi', 'webm'].includes(extension || '');
   const fileType = isPDF ? 'PDF' : isVideo ? 'VIDEO' : 'IMAGE';
-
-  console.log(fileType)
 
   // const router = useRouter()
 
@@ -69,9 +69,9 @@ export default function FileUpoad({endpoint, value,  onChange}: FileUploadProps)
             playsInline
             preload="metadata"
           >
-            <source 
-              src={value} 
-              type={videoMimeTypes[extension as keyof typeof videoMimeTypes]} 
+            <source
+              src={value}
+              type={uploadedType ?? videoMimeTypes[extension as keyof typeof videoMimeTypes]}
             />
             Your browser does not support the video tag.
           </video>
@@ -116,9 +116,12 @@ export default function FileUpoad({endpoint, value,  onChange}: FileUploadProps)
       endpoint={endpoint}
       className="w-full h-full mb-4"
       onClientUploadComplete={(res) => {
-        console.log('res :>> ', res);
-        onChange(res?.[0].url);
-        // saveFile(res?.[0].url, fileType, appointmentId)
+        const f = res?.[0];
+        if (f) {
+          onChange(f.url);
+          setUploadedType(f.type ?? null);
+          onUpload?.({ url: f.url, name: f.name, type: f.type });
+        }
         toast.success("File uploaded successfully 👏")
       }}
       onUploadError={(err: Error) => {
