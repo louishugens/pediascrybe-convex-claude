@@ -77,6 +77,12 @@ export default function UploadForm({ patientId, appointmentId }: UploadFormProps
       toast.success("File saved! 👏")
       refresh([`/user/patients/${patientId}/${appointmentId}`])
       router.push(`/user/patients/${patientId}/${appointmentId}/`)
+      // Reset transient state so a cached/preserved instance of this page
+      // (Next keeps route segments in the client router cache) doesn't show the
+      // previous upload's preview or a stuck loading spinner next time.
+      form.reset()
+      setFileMeta(null)
+      setLoading(false)
     } else {
       toast.error("Something went wrong! 😢")
       setLoading(false)
