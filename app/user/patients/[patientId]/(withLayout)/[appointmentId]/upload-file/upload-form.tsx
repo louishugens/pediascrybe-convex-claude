@@ -79,8 +79,9 @@ export default function UploadForm({ patientId, appointmentId }: UploadFormProps
       router.push(`/user/patients/${patientId}/${appointmentId}/`)
       // Reset transient state so a cached/preserved instance of this page
       // (Next keeps route segments in the client router cache) doesn't show the
-      // previous upload's preview or a stuck loading spinner next time.
-      form.reset()
+      // previous upload's preview, filename, or a stuck loading spinner next
+      // time. Reset to "" (not undefined) so the controlled name input clears.
+      form.reset({ url: "", name: "" })
       setFileMeta(null)
       setLoading(false)
     } else {
@@ -111,7 +112,9 @@ export default function UploadForm({ patientId, appointmentId }: UploadFormProps
                     onUpload={(meta) => {
                       setFileMeta(meta)
                       if (!form.getValues('name')) {
-                        form.setValue('name', meta.name, { shouldValidate: true })
+                        // Prefill with the original filename minus its extension.
+                        const nameNoExt = meta.name.replace(/\.[^/.]+$/, '')
+                        form.setValue('name', nameNoExt, { shouldValidate: true })
                       }
                     }}
                   />
