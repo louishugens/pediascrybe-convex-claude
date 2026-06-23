@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     const { file } = await req.json();
 
     await fetchAuthMutation(api.files.deleteFile, {
-      fileId: file.id,
+      fileId: file._id,
     });
 
     // Delete from uploadthing

@@ -18,20 +18,21 @@ const UploadedFile = ({file}) => {
   const deleteFile = async () =>{
     try{
       setLoading(true)
-      const body = {file}
-      await fetch('/api/patients/deleteFile', {
+      const res = await fetch('/api/patients/deleteFile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-        next: { tags: ['file']}
+        body: JSON.stringify({ file }),
       })
+      if (!res.ok) {
+        throw new Error('Failed to delete file')
+      }
       router.refresh()
-      // router.push(`/user/patients/${patientId}/${appointment.id}`) 
     }
     catch(err){
-      toast.error(err.message)
+      toast.error(err instanceof Error ? err.message : 'Failed to delete file')
+      setLoading(false)
     }
-  } 
+  }
 
   console.log(file)
 
