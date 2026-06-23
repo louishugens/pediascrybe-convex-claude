@@ -4,8 +4,11 @@ import { X, FileIcon } from 'lucide-react';
 import Image from 'next/image';
 
 import { UploadDropzone } from "@/lib/uploadthing"
-
-import "@uploadthing/react/styles.css"
+// NOTE: the prebuilt "@uploadthing/react/styles.css" is intentionally NOT
+// imported — it injects a global Tailwind utility layer + preflight that
+// overrides app classes (it forced the sidebar's `hidden md:block` to
+// display:none on this page). Styling now comes from our own Tailwind via the
+// `uploadthing/tw/v4.css` import + `@source` in css/globals.css.
 
 const videoMimeTypes = {
   mp4: 'video/mp4',

@@ -2,6 +2,14 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* UploadThing v7 (Tailwind v4 integration): registers ut-* variants and lets
+   our own Tailwind style the uploader. Replaces the prebuilt
+   `@uploadthing/react/styles.css`, which shipped a duplicate global utility
+   layer + preflight that clobbered app classes (e.g. forced `hidden md:block`
+   sidebars to display:none on pages importing the uploader). */
+@import "uploadthing/tw/v4";
+@source "../node_modules/@uploadthing/react/dist";
+
 @plugin "tailwindcss-animate";
 @plugin "@tailwindcss/typography";
 
