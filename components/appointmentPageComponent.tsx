@@ -240,7 +240,7 @@ const AppointmentPageComponent = ({appointment, patientId}: AppointmentPageCompo
           {
             appointment.files?.length > 0 
             ?
-              appointment.files?.map((file, index) => <UploadedFile key={index} file={file}/>
+              appointment.files?.map((file) => <UploadedFile key={file._id} file={file}/>
 
               )
             :
